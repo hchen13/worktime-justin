@@ -20,3 +20,6 @@ node_modules/
 # Test artifacts (reports are regenerated; keep dir structure via .gitkeep)
 tests/reports/*
 !tests/reports/.gitkeep
+
+# Rejected sprite exploration archives stay local; only accepted production samples are versioned.
+docs/assets/sprites/exploration-*/
