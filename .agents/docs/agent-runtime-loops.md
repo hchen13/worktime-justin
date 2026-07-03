@@ -101,6 +101,7 @@ TL loop:
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and provide final branch/commit evidence at `review`
+- before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
 - returns finished work to PM review
 
 DESIGN loop:

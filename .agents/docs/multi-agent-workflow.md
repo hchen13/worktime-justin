@@ -166,7 +166,8 @@ Implementation handoff contract:
 
 - While a TL card is `in progress`, PM checks only whether the card has an owner, next action, and enough progress context. PM should not repeatedly interrupt TL for every local branch or worktree observation.
 - TL may use a shared worktree, `commit-tree`, or other local mechanics as long as `main` history is not changed outside PM control.
-- When TL judges the work ready, TL must move the card to `review`, set `负责人 = PM`, and record the final branch, final commit, build/run evidence, residual risks, and recommended next route.
+- Before TL moves implementation work to `review`, TL must run `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>`. If it fails, TL fixes the branch/evidence in the same active loop and does not hand off yet.
+- When TL judges the work ready and preflight passes, TL moves the card to `review`, sets `负责人 = PM`, and records the final branch, final commit, preflight output, build/run evidence, residual risks, and recommended next route.
 - PM performs branch/commit verification after review handoff.
 - If final branch, final commit, or evidence is missing or inconsistent, but PM has not found a real product/code defect, PM keeps the card in `review`, sets `负责人 = TL`, and writes a metadata-only correction. This is not a development rejection.
 - If PM finds a real code, behavior, security, packaging, or acceptance defect, PM routes the card back to `todo` or `in progress` with the required rework.
@@ -256,6 +257,7 @@ TL handoff must include:
 
 - final branch name
 - final commit hash
+- passing `.agents/tools/tl_handoff_check.py` output
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card
 - whether TL recommends PM acceptance, QA testing, or further TL work
