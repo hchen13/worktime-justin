@@ -1,88 +1,8 @@
 {
-  "missing_count": 45,
+  "updated_at_cst": "2026-07-04 06:54",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+  "missing_count": 36,
   "items": [
-    {
-      "word": "milk",
-      "first_letter": "M",
-      "display_name": "Milk",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/milk.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.milk"
-    },
-    {
-      "word": "monkey",
-      "first_letter": "M",
-      "display_name": "Monkey",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/monkey.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.monkey"
-    },
-    {
-      "word": "nest",
-      "first_letter": "N",
-      "display_name": "Nest",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/nest.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.nest"
-    },
-    {
-      "word": "nose",
-      "first_letter": "N",
-      "display_name": "Nose",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/nose.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.nose"
-    },
-    {
-      "word": "net",
-      "first_letter": "N",
-      "display_name": "Net",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/net.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.net"
-    },
-    {
-      "word": "noodle",
-      "first_letter": "N",
-      "display_name": "Noodle",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/noodle.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.noodle"
-    },
-    {
-      "word": "owl",
-      "first_letter": "O",
-      "display_name": "Owl",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/owl.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.owl"
-    },
-    {
-      "word": "octopus",
-      "first_letter": "O",
-      "display_name": "Octopus",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/octopus.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.octopus"
-    },
-    {
-      "word": "oven",
-      "first_letter": "O",
-      "display_name": "Oven",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/oven.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.oven"
-    },
     {
       "word": "pear",
       "first_letter": "P",
@@ -408,7 +328,6 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 05:28",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -517,6 +436,60 @@
       "word": "lemon",
       "asset_path": "docs/assets/production-pack-b/sprites/lemon.png",
       "resolved_at_cst": "2026-07-04 05:28"
+    },
+    {
+      "card_id": "WTJ-20260704-041",
+      "word": "milk",
+      "asset_path": "docs/assets/production-pack-b/sprites/milk.png",
+      "resolved_at_cst": "2026-07-04 05:42"
+    },
+    {
+      "card_id": "WTJ-20260704-041",
+      "word": "monkey",
+      "asset_path": "docs/assets/production-pack-b/sprites/monkey.png",
+      "resolved_at_cst": "2026-07-04 05:42"
+    },
+    {
+      "card_id": "WTJ-20260704-042",
+      "word": "nest",
+      "asset_path": "docs/assets/production-pack-b/sprites/nest.png",
+      "resolved_at_cst": "2026-07-04 06:02"
+    },
+    {
+      "card_id": "WTJ-20260704-042",
+      "word": "nose",
+      "asset_path": "docs/assets/production-pack-b/sprites/nose.png",
+      "resolved_at_cst": "2026-07-04 06:02"
+    },
+    {
+      "card_id": "WTJ-20260704-042",
+      "word": "net",
+      "asset_path": "docs/assets/production-pack-b/sprites/net.png",
+      "resolved_at_cst": "2026-07-04 06:02"
+    },
+    {
+      "card_id": "WTJ-20260704-042",
+      "word": "noodle",
+      "asset_path": "docs/assets/production-pack-b/sprites/noodle.png",
+      "resolved_at_cst": "2026-07-04 06:02"
+    },
+    {
+      "card_id": "WTJ-20260704-043",
+      "word": "owl",
+      "asset_path": "docs/assets/production-pack-b/sprites/owl.png",
+      "resolved_at_cst": "2026-07-04 06:26"
+    },
+    {
+      "card_id": "WTJ-20260704-043",
+      "word": "octopus",
+      "asset_path": "docs/assets/production-pack-b/sprites/octopus.png",
+      "resolved_at_cst": "2026-07-04 06:26"
+    },
+    {
+      "card_id": "WTJ-20260704-043",
+      "word": "oven",
+      "asset_path": "docs/assets/production-pack-b/sprites/oven.png",
+      "resolved_at_cst": "2026-07-04 06:26"
     }
   ]
 }
