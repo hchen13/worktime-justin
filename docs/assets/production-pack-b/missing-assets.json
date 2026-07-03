@@ -1,25 +1,7 @@
 {
-  "missing_count": 62,
+  "missing_count": 60,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "eye",
-      "first_letter": "E",
-      "display_name": "Eye",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/eye.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.eye"
-    },
-    {
-      "word": "envelope",
-      "first_letter": "E",
-      "display_name": "Envelope",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/envelope.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.envelope"
-    },
     {
       "word": "goat",
       "first_letter": "G",
@@ -561,13 +543,25 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 03:58",
+  "updated_at_cst": "2026-07-04 04:16",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
       "word": "alligator",
       "asset_path": "docs/assets/production-pack-b/sprites/alligator.png",
       "resolved_at_cst": "2026-07-04 03:58"
+    },
+    {
+      "card_id": "WTJ-20260704-034",
+      "word": "eye",
+      "asset_path": "docs/assets/production-pack-b/sprites/eye.png",
+      "resolved_at_cst": "2026-07-04 04:16"
+    },
+    {
+      "card_id": "WTJ-20260704-034",
+      "word": "envelope",
+      "asset_path": "docs/assets/production-pack-b/sprites/envelope.png",
+      "resolved_at_cst": "2026-07-04 04:16"
     }
   ]
 }

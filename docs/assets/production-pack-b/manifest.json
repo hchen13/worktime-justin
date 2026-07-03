@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 38,
-  "stubbed_pending_count": 62,
+  "production_ready_count": 40,
+  "stubbed_pending_count": 60,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -18,7 +18,12 @@
     "sheet_03_alpha": "docs/assets/production-pack-b/source/secret-words-sheet-03-alpha.png",
     "alligator_source_magenta": "docs/assets/production-pack-b/source/alligator-source-magenta.png",
     "alligator_alpha_raw": "docs/assets/production-pack-b/source/alligator-alpha-raw.png",
-    "alligator_prompt_record": "docs/assets/production-pack-b/source/alligator-prompt.md"
+    "alligator_prompt_record": "docs/assets/production-pack-b/source/alligator-prompt.md",
+    "eye_source_green": "docs/assets/production-pack-b/source/eye-source-green.png",
+    "eye_alpha_raw": "docs/assets/production-pack-b/source/eye-alpha-raw.png",
+    "envelope_source_green": "docs/assets/production-pack-b/source/envelope-source-green.png",
+    "envelope_alpha_raw": "docs/assets/production-pack-b/source/envelope-alpha-raw.png",
+    "letter_e_prompt_record": "docs/assets/production-pack-b/source/letter-e-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -215,9 +220,9 @@
       "word": "eye",
       "first_letter": "E",
       "display_name": "Eye",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/eye.png",
       "sound_key": "secret.word.eye",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/eye.png"
     },
@@ -225,9 +230,9 @@
       "word": "envelope",
       "first_letter": "E",
       "display_name": "Envelope",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/envelope.png",
       "sound_key": "secret.word.envelope",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/envelope.png"
     },
@@ -1032,7 +1037,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 03:58",
+  "updated_at_cst": "2026-07-04 04:16",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1041,6 +1046,15 @@
         "alligator"
       ],
       "changes": "Generated production alligator sprite, replaced placeholder asset_path, and marked status ready."
+    },
+    {
+      "card_id": "WTJ-20260704-034",
+      "updated_at_cst": "2026-07-04 04:16",
+      "words": [
+        "eye",
+        "envelope"
+      ],
+      "changes": "Generated production eye and envelope sprites, replaced placeholder asset_paths, and marked both ready."
     }
   ]
 }
