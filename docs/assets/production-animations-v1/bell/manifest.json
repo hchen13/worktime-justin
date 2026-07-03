@@ -1,0 +1,83 @@
+{
+  "pack_id": "production-animations-v1-bell",
+  "card_id": "WTJ-20260704-031",
+  "created_by": "DESIGN",
+  "updated_at_cst": "2026-07-04 03:31",
+  "source": "docs/assets/production-animations-v1/source/bell-base.png",
+  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
+  "asset_spec": {
+    "format": "PNG frames",
+    "color_mode": "RGBA",
+    "canvas": "1024x1024",
+    "background": "transparent"
+  },
+  "contact_sheet": "docs/assets/production-animations-v1/bell/bell-contact-sheet.png",
+  "previews": {
+    "ring": "docs/assets/production-animations-v1/previews/bell-ring-preview.gif"
+  },
+  "animations": {
+    "idle": {
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/bell/sheets/idle-sheet.png",
+      "bounds": [
+        297,
+        177,
+        726,
+        846
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/bell/idle/bell_idle_000.png"
+      ]
+    },
+    "ring": {
+      "fps": 14,
+      "loop": true,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/bell/sheets/ring-sheet.png",
+      "bounds": [
+        224,
+        155,
+        816,
+        867
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_000.png",
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_001.png",
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_002.png",
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_003.png",
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_004.png",
+        "docs/assets/production-animations-v1/bell/ring/bell_ring_005.png"
+      ]
+    },
+    "settle": {
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/bell/sheets/settle-sheet.png",
+      "bounds": [
+        237,
+        170,
+        803,
+        852
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/bell/settle/bell_settle_000.png",
+        "docs/assets/production-animations-v1/bell/settle/bell_settle_001.png",
+        "docs/assets/production-animations-v1/bell/settle/bell_settle_002.png",
+        "docs/assets/production-animations-v1/bell/settle/bell_settle_003.png"
+      ]
+    }
+  },
+  "scope_note": "This card intentionally covers bell only. The v1 animation preserves the Pack A bell material and simulates ringing with subtle rotation, squash, sound arcs, and glints."
+}
