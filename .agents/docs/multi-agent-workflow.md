@@ -165,7 +165,40 @@ Non-PM handoff rule:
 - They finish by moving the card to `review` and assigning PM.
 - PM performs the actual routing decision.
 
-## 8. PM Workflow
+## 8. Task Size And Review Depth
+
+PM chooses the review depth when creating or routing a card. The goal is to keep rigor where it matters and avoid making obvious small fixes wait behind heavyweight process.
+
+Use `完整流程` for complex or high-risk work:
+
+- architecture or technology choice
+- cross-module behavior
+- packaging, fullscreen safety, keyboard interception, permissions, or security
+- production asset standards or large asset batches
+- user-facing behavior that can regress multiple systems
+- unclear requirements or non-obvious tradeoffs
+
+For `完整流程`, TL should use the full process: at least three technical review subagents, implementation, adversarial review, verification, then PM review.
+
+Use `轻量流程` for small, clear, low-risk cards:
+
+- obvious CSS/layout fixes, including image aspect-ratio bugs
+- copy corrections and settled requirement wording
+- single-file documentation fixes
+- small implementation slices with explicit acceptance criteria and low coupling
+- test maintenance where existing patterns are clear
+
+For `轻量流程`:
+
+- TL may implement directly or with one dev agent.
+- Three-way technical review is not required.
+- Adversarial review can be a focused single reviewer or checklist, proportional to risk.
+- QA can use targeted smoke/regression checks instead of designing a full new suite, unless behavior risk justifies more.
+- The card still returns to PM review with evidence.
+
+If a light card uncovers unclear requirements, cross-module coupling, or high-risk behavior, TL/QA must stop, record the reason, and return it to PM for rerouting as `完整流程`.
+
+## 9. PM Workflow
 
 PM responsibilities:
 
@@ -184,22 +217,23 @@ PM acceptance requires:
 - Required QA has passed, or PM explicitly marks QA as not required.
 - Any follow-up work is represented by a new card before the current card is closed.
 
-## 9. TL Workflow
+## 10. TL Workflow
 
 TL responsibilities:
 
 1. Process cards assigned to TL.
-2. For non-trivial technical work, spawn at least three subagents to review technical approaches in parallel.
-3. Choose the implementation approach and assign dev subagents.
-4. Run adversarial code review through a separate agent before accepting implementation.
-5. Iterate until TL judges the work ready for PM review or QA.
-6. Own git version control on non-main branches.
+2. Follow the PM-selected review depth: `完整流程` for complex or high-risk work, `轻量流程` for small and clear work.
+3. For non-trivial `完整流程` technical work, spawn at least three subagents to review technical approaches in parallel.
+4. Choose the implementation approach and assign dev subagents.
+5. Run adversarial code review through a separate agent before accepting implementation, scaled to card risk.
+6. Iterate until TL judges the work ready for PM review or QA.
+7. Own git version control on non-main branches.
 
 TL must not merge directly to `main`.
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
-## 10. DESIGN Workflow
+## 11. DESIGN Workflow
 
 DESIGN responsibilities:
 
@@ -213,7 +247,7 @@ Design cards move to `review` with `负责人 = PM`. DESIGN may recommend TL imp
 
 Detailed production asset standard: [production-asset-quality.md](production-asset-quality.md).
 
-## 11. QA Workflow
+## 12. QA Workflow
 
 QA responsibilities:
 
@@ -235,7 +269,7 @@ Detailed QA protocol: [.agents/docs/qa-testing-protocol.md](qa-testing-protocol.
 
 Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agent-runtime-loops.md).
 
-## 12. Blocker Handling
+## 13. Blocker Handling
 
 Use `blocking` only when progress genuinely requires another role or Ethan.
 
@@ -253,7 +287,7 @@ Resolution:
 - Technical/design/QA issue resolved by owner: owner records evidence and moves card forward.
 - Work no longer needed: PM moves card to `_deprecated`.
 
-## 13. Local Skills
+## 14. Local Skills
 
 Hyperframes skills from `heygen-com/hyperframes` are installed project-locally under `.codex/skills/` for Codex and `.claude/skills/` for Claude Code.
 

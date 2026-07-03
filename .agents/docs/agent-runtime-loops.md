@@ -44,7 +44,7 @@ Each role loop repeats this sequence:
 3. Read board cards where `负责人` is the current role.
 4. Prioritize in this order: `blocking`, `review`, `in progress`, `testing`, `todo`, `backlog`.
 5. Pick one actionable card and update `最新进展` before meaningful work begins.
-6. Do the work required by the card.
+6. Do the work required by the card, using the PM-selected review depth: `轻量流程` for small clear cards and `完整流程` for complex or high-risk cards.
 7. Update `状态`, `负责人`, `下一步动作`, `产物/证据`, and role-specific fields.
 8. If the role is not PM and the assigned work is finished, return the card to `review` with `负责人 = PM`.
 9. Continue until no actionable cards remain or a real blocker prevents progress.
@@ -95,6 +95,7 @@ TL loop:
 - works only cards assigned to TL
 - owns non-main branches
 - may spawn technical review/dev/review subagents as defined in the workflow
+- uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - returns finished work to PM review
 
 DESIGN loop:

@@ -8,6 +8,8 @@ If a behavior is worth testing once and can be reproduced, it should become a re
 
 One-off testing is acceptable only when the target is exploratory, impossible to reproduce, or explicitly marked as not worth preserving by PM.
 
+For cards explicitly routed as `轻量流程`, QA may use existing reusable tests plus focused smoke checks instead of creating a full new test suite. If the light card changes behavior in a way that is not already covered, QA should add the smallest durable test asset that covers the new risk.
+
 Every durable test case must state:
 
 - what to test
