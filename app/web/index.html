@@ -11,6 +11,7 @@
   <title>WorkTime Justin</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="hud.css" />
+  <link rel="stylesheet" href="secretword.css" />
 </head>
 <body>
   <canvas id="stage"></canvas>
@@ -30,5 +31,8 @@
   <script src="keyboard.js"></script>
   <script src="app.js"></script>
   <script src="hud.js"></script>
+  <!-- secretword.js 需在 keyboard.js 之后（订阅 WTJ_KEYBOARD.onLetter）；放在 hud.js 之后
+       确保命中时 WTJ_HUD.setSlot 已就绪（五槽联动）。见 app/web/secretword/SECRETWORD-API.md。 -->
+  <script src="secretword.js"></script>
 </body>
 </html>
