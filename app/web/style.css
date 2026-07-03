@@ -17,7 +17,12 @@ html, body {
 
 #stage {
   position: fixed;
-  inset: 0;
+  /* Safari 14 兼容：inset 简写属性是 Safari 14.1+ 才支持，14.0 下整条声明被忽略，
+     拆成四个独立的物理属性（同 hud.css 的 .wtj-hud-root / .wtj-hud-tray-bg）。 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: block;
   width: 100vw;
   height: 100vh;
@@ -27,7 +32,9 @@ html, body {
 
 .debug-overlay {
   position: fixed;
-  top: 10px;
+  /* top 从 10px 下移到 44px：WTJ-20260704-007 新增了顶部极简标题栏（.wtj-hud-topbar，
+     高度 34px），下移量确保 debug 叠层与顶栏/家长入口锁形 glyph 不重叠。 */
+  top: 44px;
   right: 12px;
   padding: 8px 10px;
   background: rgba(23, 29, 39, 0.55);
@@ -39,6 +46,15 @@ html, body {
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  /* 默认隐藏：验收要求默认画布右侧只有一个低调问号，回显 key/mouse/fps/audio 四行的
+     调试面板不应默认可见（否则可能被判为"终端回显条"变体，触犯 REQ-SEC-01/REQ-TASK-01
+     红线）。只有 URL 带 ?debug=1 时才由 hud.js 加上 .is-debug-visible 类恢复显示，
+     供 008 等后续卡片调试用。 */
+  display: none;
+}
+
+.debug-overlay.is-debug-visible {
+  display: block;
 }
 
 .debug-overlay span {

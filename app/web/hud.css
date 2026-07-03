@@ -1,0 +1,243 @@
+/* WTJ-20260704-007 — 主 HUD 样式（默认画布首屏：顶栏 / 问号 / 五槽托盘 / 工作状态灯）
+   延续 style.css 的深色低调基调（#0e1117 系）。全部元素默认 pointer-events:none，
+   只有 .wtj-hud-question 单独开启 pointer-events:auto（见 hud.js 顶部注释）。
+   过渡时长 <= 300ms；prefers-reduced-motion 下关闭全部过渡。 */
+
+.wtj-hud-root {
+  position: fixed;
+  /* Safari 14 兼容：inset 简写属性是 Safari 14.1+ 才支持，14.0 下整条声明会被忽略
+     （其余声明仍生效，但 top/right/bottom/left 均为 auto，等于没有铺满），拆成四个
+     独立的物理属性。 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5; /* 高于 canvas（无 z-index，画布自身 z-index:auto），低于 debug-overlay / esc-progress-wrap（10） */
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #f4f7fb;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 顶栏：极简标题 + 家长入口锁形 glyph（低调、极细）                    */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: linear-gradient(180deg, rgba(9, 12, 17, 0.34), rgba(9, 12, 17, 0));
+  pointer-events: none;
+}
+
+.wtj-hud-title {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: rgba(244, 247, 251, 0.48);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wtj-hud-lock {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.36;
+  cursor: default;
+  transition: opacity 0.2s ease;
+}
+
+/* 当前 .wtj-hud-lock 继承父级 pointer-events:none，因此 hover 与 title 提示暂不会触发；
+   实际长按 Esc 退出判定与是否开放 pointer-events 由 017 卡接管，此规则先行保留。 */
+.wtj-hud-lock:hover {
+  opacity: 0.6;
+}
+
+/* ------------------------------------------------------------------ */
+/* 右侧问号：唯一可交互的 HUD 元素                                     */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-question {
+  position: fixed;
+  top: 50%;
+  right: clamp(16px, 3vw, 32px);
+  transform: translateY(-50%);
+  width: clamp(56px, 6vw, 72px);
+  height: clamp(56px, 6vw, 72px);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 0.8;
+  cursor: pointer;
+  pointer-events: auto; /* HUD 内唯一开启 pointer-events 的元素 */
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Safari 14 兼容：:focus-visible 是 Safari 14 完全不识别的伪类，写在同一个选择器列表里
+   （如 `:hover, :focus-visible { ... }`）会导致*整条规则*因含非法选择器而被丢弃——
+   连 :hover 效果也会一并失效。拆成两条独立规则：:hover 单独一条（Safari 14 正常生效），
+   :focus-visible 单独一条（Safari 14 下这条规则本身被忽略，只是没有焦点样式，不影响
+   hover）。 */
+.wtj-hud-question:hover {
+  opacity: 1;
+}
+
+.wtj-hud-question:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.wtj-hud-question:focus-visible {
+  opacity: 1;
+  outline: 2px solid rgba(94, 231, 255, 0.55);
+  outline-offset: 3px;
+}
+
+.wtj-hud-question-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 底部五槽托盘：底图 + 5 个槽位状态指示点                              */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-tray-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  width: clamp(260px, 30vw, 380px);
+  /* Safari 14 兼容：aspect-ratio 是 Safari 15+ 才支持的属性，Safari 14 下该声明被整条
+     忽略——容器没有任何其他方式撑出高度，塌为 0，子元素（托盘背景图 + 5 个槽位）全部
+     absolute 定位在一个零高度容器里，视觉上完全不可见（目标机验收致命项）。
+     用 sips 核实 five-slot-tray.png 确实是 1024x1024 正方形画布（`sips -g pixelWidth
+     -g pixelHeight` 输出 1024/1024，见 assets/PROVENANCE.md），因此用与 width 完全相同
+     的 clamp() 表达式显式声明 height，等价于 aspect-ratio: 1 / 1 的效果，但不依赖该属性、
+     Safari 14 及以下同样生效。若后续托盘图重新出图导致画布不再是正方形，这里的 height
+     表达式需要同步改成按新宽高比换算的 clamp()。 */
+  height: clamp(260px, 30vw, 380px);
+  /* 托盘图形只占据这个正方形画布中段约 29.3% 的可见高度（其余为透明留白，供动画缩放
+     边距，见 PROVENANCE.md）。用自身高度的百分比向下平移，把可见托盘图形的下边缘对齐到
+     bottom 处，不依赖具体的显示宽度数值（分辨率无关）。 */
+  transform: translate(-50%, 35.5%);
+  pointer-events: none;
+}
+
+.wtj-hud-tray-bg {
+  position: absolute;
+  /* Safari 14 兼容：inset 简写是 Safari 14.1+ 才支持，拆成四个物理属性，见 .wtj-hud-root
+     顶部同类注释。 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.96;
+}
+
+.wtj-hud-slot {
+  position: absolute;
+  top: 48.8%; /* 槽位在 five-slot-tray.png 中的垂直中心百分比，采样方法见 PROVENANCE.md */
+  width: 12%;
+  height: 12%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.wtj-hud-slot.is-empty::after {
+  content: "";
+  display: block;
+  width: 46%;
+  height: 46%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.wtj-hud-slot-star {
+  display: block;
+  font-size: clamp(14px, 1.6vw, 20px);
+  line-height: 1;
+  color: #ffd95a;
+  text-shadow: 0 0 8px rgba(255, 217, 90, 0.65);
+}
+
+.wtj-hud-slot-sprite {
+  display: block;
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255, 217, 90, 0.4));
+}
+
+/* ------------------------------------------------------------------ */
+/* 左下角工作状态灯                                                    */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-lights {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  /* Safari 14 兼容：flex 容器的 gap 是 Safari 14.1+ 才支持，14.0 下被忽略、灯与灯之间
+     贴在一起。改用相邻兄弟选择器给非首个灯加 margin-left 实现同等间距。 */
+  pointer-events: none;
+}
+
+.wtj-hud-light + .wtj-hud-light {
+  margin-left: 8px;
+}
+
+.wtj-hud-light {
+  display: block;
+  width: clamp(22px, 2.2vw, 28px);
+  height: clamp(22px, 2.2vw, 28px);
+  object-fit: contain;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+.wtj-hud-light.is-off {
+  /* 熄灭态：原先 brightness(0.55) + opacity 0.5 在深色背景（#0e1117 系）上几乎不可辨识，
+     不满足"低调但仍是可见元素"的验收要求。减弱压暗程度并把 opacity 提到 0.65，
+     在保持"熄灭"观感的同时确保角落状态灯轮廓仍可见。 */
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.65;
+}
+
+.wtj-hud-light.is-on {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(141, 242, 124, 0.55));
+}
+
+/* ------------------------------------------------------------------ */
+/* 无障碍偏好：关闭一切过渡，无循环动画（本文件本就不含 @keyframes）    */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-hud-lock,
+  .wtj-hud-question,
+  .wtj-hud-slot,
+  .wtj-hud-light {
+    transition: none !important;
+  }
+}
