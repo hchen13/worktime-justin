@@ -51,6 +51,8 @@ Each role loop repeats this sequence:
 
 Do not process multiple cards in parallel inside one role session unless the role protocol explicitly calls for subagents, such as TL technical review or QA tester review.
 
+Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
+
 ## 4. Claiming Work
 
 To avoid two agents working the same card:
@@ -118,6 +120,8 @@ QA loop:
 - separates scripted tests from agentic visual tests
 - performs adversarial review before accepting new test assets
 - returns test result cards to PM review
+- before answering any "why is this not moving" or card-ownership question, re-read the board live and quote the current `状态` and `负责人`
+- during an active sprint with nonterminal development cards, an idle QA loop should wake again within 10 minutes; use longer idle delays only when the whole board is quiet or PM has explicitly paused QA work
 
 ## 7. Stop Conditions
 

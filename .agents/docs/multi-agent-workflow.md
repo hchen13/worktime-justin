@@ -63,7 +63,7 @@ Required fields:
 - `对抗评审`: adversarial review status or evidence for the test case/test script.
 - `阻塞负责人`: role expected to unblock, when relevant.
 - `阻塞问题`: exact question or missing decision, when blocked.
-- `依赖`: upstream card IDs or dependencies.
+- `依赖`: upstream card IDs or dependencies. Prefix blocking dependencies with `Hard:` and non-blocking coordination dependencies with `Soft:`. If the field contains unqualified card IDs, PM must clarify them before the owner treats them as a stop condition.
 - `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`.
 - `产物/证据`: PR, commit, screenshot, generated asset path, test report, or other proof.
 - `最新进展`: concise human-written status note.
@@ -152,6 +152,8 @@ Additional rules:
 - Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
 - A card in `blocking` must have `阻塞负责人`, `阻塞问题`, and `下一步动作`.
+- A dependency only blocks intake when it is explicitly marked `Hard:` and its required condition is unmet. `Soft:` dependencies are coordination or merge-order notes; the owner may start work, use stubs, or prepare implementation while preserving the stated integration boundary.
+- When PM wants parallel work despite an upstream card still being active, PM must write that permission directly in `依赖`, `下一步动作`, or `最新进展`. Role agents should not infer this permission silently.
 - An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
 - For implementation cards, branch hygiene is a handoff gate. When TL moves work to `review`, `分支` and `产物/证据` must include the final branch, final commit, verification evidence, known risks, and the recommended PM route.
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
