@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 47,
-  "stubbed_pending_count": 53,
+  "production_ready_count": 51,
+  "stubbed_pending_count": 49,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -40,7 +40,16 @@
     "insect_alpha_raw": "docs/assets/production-pack-b/source/insect-alpha-raw.png",
     "island_source_magenta": "docs/assets/production-pack-b/source/island-source-magenta.png",
     "island_alpha_raw": "docs/assets/production-pack-b/source/island-alpha-raw.png",
-    "letter_i_prompt_record": "docs/assets/production-pack-b/source/letter-i-prompt.md"
+    "letter_i_prompt_record": "docs/assets/production-pack-b/source/letter-i-prompt.md",
+    "juice_source_green": "docs/assets/production-pack-b/source/juice-source-green.png",
+    "juice_alpha_raw": "docs/assets/production-pack-b/source/juice-alpha-raw.png",
+    "jar_source_green": "docs/assets/production-pack-b/source/jar-source-green.png",
+    "jar_alpha_raw": "docs/assets/production-pack-b/source/jar-alpha-raw.png",
+    "jellyfish_source_green": "docs/assets/production-pack-b/source/jellyfish-source-green.png",
+    "jellyfish_alpha_raw": "docs/assets/production-pack-b/source/jellyfish-alpha-raw.png",
+    "jam_source_magenta": "docs/assets/production-pack-b/source/jam-source-magenta.png",
+    "jam_alpha_raw": "docs/assets/production-pack-b/source/jam-alpha-raw.png",
+    "letter_j_prompt_record": "docs/assets/production-pack-b/source/letter-j-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -417,9 +426,9 @@
       "word": "juice",
       "first_letter": "J",
       "display_name": "Juice",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/juice.png",
       "sound_key": "secret.word.juice",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/juice.png"
     },
@@ -427,9 +436,9 @@
       "word": "jam",
       "first_letter": "J",
       "display_name": "Jam",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/jam.png",
       "sound_key": "secret.word.jam",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/jam.png"
     },
@@ -437,9 +446,9 @@
       "word": "jar",
       "first_letter": "J",
       "display_name": "Jar",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/jar.png",
       "sound_key": "secret.word.jar",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/jar.png"
     },
@@ -447,9 +456,9 @@
       "word": "jellyfish",
       "first_letter": "J",
       "display_name": "Jellyfish",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png",
       "sound_key": "secret.word.jellyfish",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png"
     },
@@ -1054,7 +1063,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:42",
+  "updated_at_cst": "2026-07-04 04:57",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1100,6 +1109,17 @@
         "island"
       ],
       "changes": "Generated production igloo, insect, and island sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-038",
+      "updated_at_cst": "2026-07-04 04:57",
+      "words": [
+        "juice",
+        "jam",
+        "jar",
+        "jellyfish"
+      ],
+      "changes": "Generated production juice, jam, jar, and jellyfish sprites, replaced placeholder asset_paths, and marked all four ready."
     }
   ]
 }

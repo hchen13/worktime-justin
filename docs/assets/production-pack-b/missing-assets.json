@@ -1,43 +1,7 @@
 {
-  "missing_count": 53,
+  "missing_count": 49,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "juice",
-      "first_letter": "J",
-      "display_name": "Juice",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/juice.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.juice"
-    },
-    {
-      "word": "jam",
-      "first_letter": "J",
-      "display_name": "Jam",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/jam.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.jam"
-    },
-    {
-      "word": "jar",
-      "first_letter": "J",
-      "display_name": "Jar",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/jar.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.jar"
-    },
-    {
-      "word": "jellyfish",
-      "first_letter": "J",
-      "display_name": "Jellyfish",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.jellyfish"
-    },
     {
       "word": "koala",
       "first_letter": "K",
@@ -480,7 +444,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:42",
+  "updated_at_cst": "2026-07-04 04:57",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -541,6 +505,30 @@
       "word": "island",
       "asset_path": "docs/assets/production-pack-b/sprites/island.png",
       "resolved_at_cst": "2026-07-04 04:42"
+    },
+    {
+      "card_id": "WTJ-20260704-038",
+      "word": "juice",
+      "asset_path": "docs/assets/production-pack-b/sprites/juice.png",
+      "resolved_at_cst": "2026-07-04 04:57"
+    },
+    {
+      "card_id": "WTJ-20260704-038",
+      "word": "jam",
+      "asset_path": "docs/assets/production-pack-b/sprites/jam.png",
+      "resolved_at_cst": "2026-07-04 04:57"
+    },
+    {
+      "card_id": "WTJ-20260704-038",
+      "word": "jar",
+      "asset_path": "docs/assets/production-pack-b/sprites/jar.png",
+      "resolved_at_cst": "2026-07-04 04:57"
+    },
+    {
+      "card_id": "WTJ-20260704-038",
+      "word": "jellyfish",
+      "asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png",
+      "resolved_at_cst": "2026-07-04 04:57"
     }
   ]
 }
