@@ -1,0 +1,105 @@
+{
+  "pack_id": "production-animations-v1-treasure-chest",
+  "card_id": "WTJ-20260704-029",
+  "created_by": "DESIGN",
+  "updated_at_cst": "2026-07-04 03:04",
+  "source": "docs/assets/production-animations-v1/source/treasure-chest-base.png",
+  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
+  "asset_spec": {
+    "format": "PNG frames",
+    "color_mode": "RGBA",
+    "canvas": "1024x1024",
+    "background": "transparent"
+  },
+  "contact_sheet": "docs/assets/production-animations-v1/treasure-chest/treasure-chest-contact-sheet.png",
+  "previews": {
+    "opening": "docs/assets/production-animations-v1/previews/treasure-chest-opening-preview.gif",
+    "reward_pop": "docs/assets/production-animations-v1/previews/treasure-chest-reward-pop-preview.gif"
+  },
+  "animations": {
+    "closed": {
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.85
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/closed-sheet.png",
+      "bounds": [
+        122,
+        156,
+        902,
+        867
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/treasure-chest/closed/chest_closed_000.png"
+      ]
+    },
+    "opening": {
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.85
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/opening-sheet.png",
+      "bounds": [
+        118,
+        97,
+        902,
+        867
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_000.png",
+        "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_001.png",
+        "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_002.png",
+        "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_003.png",
+        "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_004.png"
+      ]
+    },
+    "open": {
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.85
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/open-sheet.png",
+      "bounds": [
+        122,
+        97,
+        902,
+        867
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/treasure-chest/open/chest_open_000.png"
+      ]
+    },
+    "reward_pop": {
+      "fps": 12,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.85
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/reward-pop-sheet.png",
+      "bounds": [
+        122,
+        38,
+        902,
+        867
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_000.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_001.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_002.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_003.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_004.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_005.png",
+        "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_006.png"
+      ]
+    }
+  },
+  "scope_note": "This card intentionally covers treasure-chest only. Faucet and horse assets are handled by their own cards.",
+  "rework_note": "2026-07-04 DESIGN rework: replaced emoji-like smiley sticker in reward_pop with non-face gift box, star, sparkle, coins, and gem glints; closed/opening/open structure preserved."
+}
