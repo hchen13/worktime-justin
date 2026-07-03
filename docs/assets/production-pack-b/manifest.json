@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 40,
-  "stubbed_pending_count": 60,
+  "production_ready_count": 44,
+  "stubbed_pending_count": 56,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -23,7 +23,17 @@
     "eye_alpha_raw": "docs/assets/production-pack-b/source/eye-alpha-raw.png",
     "envelope_source_green": "docs/assets/production-pack-b/source/envelope-source-green.png",
     "envelope_alpha_raw": "docs/assets/production-pack-b/source/envelope-alpha-raw.png",
-    "letter_e_prompt_record": "docs/assets/production-pack-b/source/letter-e-prompt.md"
+    "letter_e_prompt_record": "docs/assets/production-pack-b/source/letter-e-prompt.md",
+    "goat_source_green": "docs/assets/production-pack-b/source/goat-source-green.png",
+    "goat_alpha_raw": "docs/assets/production-pack-b/source/goat-alpha-raw.png",
+    "gift_source_green": "docs/assets/production-pack-b/source/gift-source-green.png",
+    "gift_alpha_raw": "docs/assets/production-pack-b/source/gift-alpha-raw.png",
+    "guitar_source_green": "docs/assets/production-pack-b/source/guitar-source-green.png",
+    "guitar_alpha_raw": "docs/assets/production-pack-b/source/guitar-alpha-raw.png",
+    "letter_g_prompt_record": "docs/assets/production-pack-b/source/letter-g-prompt.md",
+    "house_source_green": "docs/assets/production-pack-b/source/house-source-green.png",
+    "house_alpha_raw": "docs/assets/production-pack-b/source/house-alpha-raw.png",
+    "letter_h_prompt_record": "docs/assets/production-pack-b/source/letter-h-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -280,9 +290,9 @@
       "word": "goat",
       "first_letter": "G",
       "display_name": "Goat",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/goat.png",
       "sound_key": "secret.word.goat",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/goat.png"
     },
@@ -300,9 +310,9 @@
       "word": "gift",
       "first_letter": "G",
       "display_name": "Gift",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/gift.png",
       "sound_key": "secret.word.gift",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/gift.png"
     },
@@ -310,9 +320,9 @@
       "word": "guitar",
       "first_letter": "G",
       "display_name": "Guitar",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/guitar.png",
       "sound_key": "secret.word.guitar",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/guitar.png"
     },
@@ -350,9 +360,9 @@
       "word": "house",
       "first_letter": "H",
       "display_name": "House",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/house.png",
       "sound_key": "secret.word.house",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/house.png"
     },
@@ -1037,7 +1047,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:16",
+  "updated_at_cst": "2026-07-04 04:25",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1055,6 +1065,24 @@
         "envelope"
       ],
       "changes": "Generated production eye and envelope sprites, replaced placeholder asset_paths, and marked both ready."
+    },
+    {
+      "card_id": "WTJ-20260704-035",
+      "updated_at_cst": "2026-07-04 04:35",
+      "words": [
+        "goat",
+        "gift",
+        "guitar"
+      ],
+      "changes": "Generated production goat, gift, and guitar sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-036",
+      "updated_at_cst": "2026-07-04 04:25",
+      "words": [
+        "house"
+      ],
+      "changes": "Generated production house sprite, replaced placeholder asset_path, and marked it ready."
     }
   ]
 }

@@ -1,43 +1,7 @@
 {
-  "missing_count": 60,
+  "missing_count": 56,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "goat",
-      "first_letter": "G",
-      "display_name": "Goat",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/goat.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.goat"
-    },
-    {
-      "word": "gift",
-      "first_letter": "G",
-      "display_name": "Gift",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/gift.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.gift"
-    },
-    {
-      "word": "guitar",
-      "first_letter": "G",
-      "display_name": "Guitar",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/guitar.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.guitar"
-    },
-    {
-      "word": "house",
-      "first_letter": "H",
-      "display_name": "House",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/house.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.house"
-    },
     {
       "word": "igloo",
       "first_letter": "I",
@@ -543,7 +507,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:16",
+  "updated_at_cst": "2026-07-04 04:25",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -562,6 +526,30 @@
       "word": "envelope",
       "asset_path": "docs/assets/production-pack-b/sprites/envelope.png",
       "resolved_at_cst": "2026-07-04 04:16"
+    },
+    {
+      "card_id": "WTJ-20260704-035",
+      "word": "goat",
+      "asset_path": "docs/assets/production-pack-b/sprites/goat.png",
+      "resolved_at_cst": "2026-07-04 04:35"
+    },
+    {
+      "card_id": "WTJ-20260704-035",
+      "word": "gift",
+      "asset_path": "docs/assets/production-pack-b/sprites/gift.png",
+      "resolved_at_cst": "2026-07-04 04:35"
+    },
+    {
+      "card_id": "WTJ-20260704-035",
+      "word": "guitar",
+      "asset_path": "docs/assets/production-pack-b/sprites/guitar.png",
+      "resolved_at_cst": "2026-07-04 04:35"
+    },
+    {
+      "card_id": "WTJ-20260704-036",
+      "word": "house",
+      "asset_path": "docs/assets/production-pack-b/sprites/house.png",
+      "resolved_at_cst": "2026-07-04 04:25"
     }
   ]
 }
