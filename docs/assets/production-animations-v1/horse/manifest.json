@@ -1,0 +1,92 @@
+{
+  "pack_id": "production-animations-v1-horse",
+  "card_id": "WTJ-20260704-028",
+  "created_by": "DESIGN",
+  "updated_at_cst": "2026-07-04 02:40",
+  "source": "docs/assets/production-animations-v1/source/horse-base.png",
+  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
+  "asset_spec": {
+    "format": "PNG frames",
+    "color_mode": "RGBA",
+    "canvas": "1024x1024",
+    "background": "transparent"
+  },
+  "contact_sheet": "docs/assets/production-animations-v1/horse/horse-contact-sheet.png",
+  "previews": {
+    "idle": "docs/assets/production-animations-v1/previews/horse-idle-preview.gif",
+    "run": "docs/assets/production-animations-v1/previews/horse-run-preview.gif",
+    "stop_success": "docs/assets/production-animations-v1/previews/horse-stop-success-preview.gif"
+  },
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/idle-sheet.png",
+      "bounds": [
+        152,
+        149,
+        872,
+        881
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/horse/idle/horse_idle_000.png",
+        "docs/assets/production-animations-v1/horse/idle/horse_idle_001.png",
+        "docs/assets/production-animations-v1/horse/idle/horse_idle_002.png",
+        "docs/assets/production-animations-v1/horse/idle/horse_idle_003.png"
+      ]
+    },
+    "run": {
+      "fps": 12,
+      "loop": true,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/run-sheet.png",
+      "bounds": [
+        63,
+        125,
+        887,
+        889
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/horse/run/horse_run_000.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_001.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_002.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_003.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_004.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_005.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_006.png",
+        "docs/assets/production-animations-v1/horse/run/horse_run_007.png"
+      ]
+    },
+    "stop_success": {
+      "fps": 9,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/stop-success-sheet.png",
+      "bounds": [
+        81,
+        133,
+        901,
+        883
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_000.png",
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_001.png",
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_002.png",
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_003.png",
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_004.png",
+        "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_005.png"
+      ]
+    }
+  },
+  "scope_note": "This card intentionally covers horse only. Faucet assets are accepted through WTJ-20260704-026 and are not part of this acceptance evidence."
+}
