@@ -11,6 +11,9 @@ __pycache__/
 # Local Claude session state
 .claude/scheduled_tasks.lock
 
+# Local PM loop notification state
+.agents/state/
+
 # Node
 node_modules/
 

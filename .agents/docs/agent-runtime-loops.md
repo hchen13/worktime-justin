@@ -32,7 +32,7 @@ You are QA for WorkTime Justin. Read AGENTS.md, multi-agent workflow, and QA tes
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, and own main branch decisions.
+You are PM for WorkTime Justin. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, run the whole-board completion notification check, and own main branch decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -69,6 +69,7 @@ Recommended PM cron responsibilities:
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
 - groom `backlog` proposals into official cards or `_deprecated`
+- run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
 - summarize board health and urgent decisions
 
 PM automation must use PM Feishu credentials and must not impersonate TL, DESIGN, or QA.
@@ -79,6 +80,13 @@ Automation should be bounded:
 - do not merge code unless the card explicitly calls for PM git work and evidence is complete
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
+
+Whole-board completion notification:
+
+- Run `.agents/tools/pm_completion_notify.py` after no-stale routing is finished.
+- The tool treats the board as incomplete if any nonblank card is `backlog`, `todo`, `in progress`, `review`, `testing`, `blocking`, has a missing status, or has an unknown status.
+- When all nonblank cards are terminal (`done` or `_deprecated`), the tool sends Ethan a Feishu text message using `PM_APP_ID` / `PM_APP_SECRET` and `ETHAN_FEISHU_OPEN_ID` from `.env`.
+- The tool writes local state under `.agents/state/` so the same terminal board snapshot is not announced repeatedly.
 
 ## 6. Non-PM Role Loops
 
@@ -115,4 +123,3 @@ A loop should stop and report when:
 - the next step is destructive or outside the assigned card
 
 When stopping, update the current card if one was active. Do not leave a card in `in progress` without `最新进展` and `下一步动作`.
-

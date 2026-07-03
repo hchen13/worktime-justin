@@ -117,6 +117,13 @@ Allowed side paths:
 - `done`: accepted and no further work remains on this card.
 - `_deprecated`: intentionally retired, not silently abandoned.
 
+Whole-board completion:
+
+- The project is considered complete only when every nonblank official card is in a terminal state: `done` or `_deprecated`.
+- `backlog`, `todo`, `in progress`, `review`, `testing`, `blocking`, missing status, or any unknown status means the board is not complete.
+- PM loop must run `.agents/tools/pm_completion_notify.py` after each board scan. If the board is complete, the tool sends Ethan a one-time Feishu direct message using PM app credentials and records local notification state under `.agents/state/` to avoid duplicate messages.
+- If new active work appears after a completion notification, the notification state resets; the next all-terminal state may notify again.
+
 ## 6. No-Stale Rules
 
 Every active card must have:
@@ -168,6 +175,7 @@ PM responsibilities:
 4. Accept or reject TL, DESIGN, and QA outputs.
 5. Handle blockers that need Ethan clarification or PM decision.
 6. Decide all cross-role routing after cards return to `review`.
+7. Notify Ethan through Feishu when the entire board reaches whole-board completion.
 
 PM acceptance requires:
 
