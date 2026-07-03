@@ -1,16 +1,7 @@
 {
-  "missing_count": 63,
+  "missing_count": 62,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "alligator",
-      "first_letter": "A",
-      "display_name": "Alligator",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/alligator.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.alligator"
-    },
     {
       "word": "eye",
       "first_letter": "E",
@@ -568,6 +559,15 @@
       "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
       "planned_batch": "batch-04",
       "sound_key": "secret.word.zucchini"
+    }
+  ],
+  "updated_at_cst": "2026-07-04 03:58",
+  "resolved": [
+    {
+      "card_id": "WTJ-20260704-033",
+      "word": "alligator",
+      "asset_path": "docs/assets/production-pack-b/sprites/alligator.png",
+      "resolved_at_cst": "2026-07-04 03:58"
     }
   ]
 }

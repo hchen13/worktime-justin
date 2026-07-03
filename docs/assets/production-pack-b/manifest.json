@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 37,
-  "stubbed_pending_count": 63,
+  "production_ready_count": 38,
+  "stubbed_pending_count": 62,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -15,7 +15,10 @@
     "sheet_02_source": "docs/assets/production-pack-b/source/secret-words-sheet-02-source.png",
     "sheet_02_alpha": "docs/assets/production-pack-b/source/secret-words-sheet-02-alpha.png",
     "sheet_03_source": "docs/assets/production-pack-b/source/secret-words-sheet-03-source.png",
-    "sheet_03_alpha": "docs/assets/production-pack-b/source/secret-words-sheet-03-alpha.png"
+    "sheet_03_alpha": "docs/assets/production-pack-b/source/secret-words-sheet-03-alpha.png",
+    "alligator_source_magenta": "docs/assets/production-pack-b/source/alligator-source-magenta.png",
+    "alligator_alpha_raw": "docs/assets/production-pack-b/source/alligator-alpha-raw.png",
+    "alligator_prompt_record": "docs/assets/production-pack-b/source/alligator-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -62,9 +65,9 @@
       "word": "alligator",
       "first_letter": "A",
       "display_name": "Alligator",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/alligator.png",
       "sound_key": "secret.word.alligator",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/alligator.png"
     },
@@ -1027,6 +1030,17 @@
       "status": "pending_sprite_stubbed",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
+    }
+  ],
+  "updated_at_cst": "2026-07-04 03:58",
+  "updates": [
+    {
+      "card_id": "WTJ-20260704-033",
+      "updated_at_cst": "2026-07-04 03:58",
+      "words": [
+        "alligator"
+      ],
+      "changes": "Generated production alligator sprite, replaced placeholder asset_path, and marked status ready."
     }
   ]
 }
