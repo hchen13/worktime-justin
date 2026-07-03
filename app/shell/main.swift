@@ -53,6 +53,16 @@ final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
     }
 }
 
+// MARK: - Kiosk 窗口
+
+/// borderless NSWindow 的 canBecomeKey / canBecomeMain 默认为 false：
+/// makeKeyAndOrderFront 无法使其成为 key window，WKWebView 拿不到 first responder，
+/// kiosk 模式下 DOM 将收不到任何键盘事件。覆写两个属性修复（P0-1）。
+final class KioskWindow: NSWindow {
+    override var canBecomeKey: Bool { return true }
+    override var canBecomeMain: Bool { return true }
+}
+
 // MARK: - AppDelegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler {
@@ -82,6 +92,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyMonitor = nil
+        }
+        escProgressTimer?.invalidate()
+        escProgressTimer = nil
     }
 
     // MARK: 菜单 / 键盘
@@ -118,11 +137,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     /// 返回 nil 表示吞掉该事件（不再继续分发）；返回原 event 表示放行。
     private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
         if event.keyCode == 53 { // Esc
-            // 与 Cmd+Q/W/H 一致：返回 nil 吞掉事件，不交给系统默认处理。
+            // 弹窗模态期间放行 Esc，允许其触发 NSAlert 的取消（P2-2）；
+            // 字母键本就放行（家长需要在文本框里输入口令）。
+            if alertShowing { return event }
+            // 平时与 Cmd+Q/W/H 一致：返回 nil 吞掉事件，不交给系统默认处理。
             // 「转发给退出计时逻辑」= 上一行已同步调用 handleEscKeyDown()；
             // 「转发给 web 层」= 由 checkEscProgress -> notifyEscProgress 经
-            // evaluateJavaScript 调用 window.wtjEscProgress(seconds) 完成，
-            // 不依赖把原始 keyDown 事件继续派发给 WKWebView 的 DOM。
+            // evaluateJavaScript 调用 window.wtjEscProgress(seconds) 完成。
             handleEscKeyDown()
             return nil
         }
@@ -186,8 +207,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         )
     }
 
-    /// 弹窗期间（NSAlert.runModal 是同步阻塞调用，非并发 API）计时已提前停止，
-    /// 相当于"暂停计时"；关闭弹窗后如需再次长按 Esc 会重新从 0 开始计时。
+    /// 弹窗弹出前计时器已失效并清零（NSAlert.runModal 是同步阻塞调用，非并发 API）；
+    /// 关闭弹窗后需重新长按 Esc 满 5 秒才会再次弹出。
     private func showExitPasswordPrompt() {
         alertShowing = true
         let alert = NSAlert()
@@ -206,8 +227,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             NSApp.terminate(nil)
             return
         }
-        // 口令错误或取消：不做任何退出动作，窗口本就在前台，直接回到全屏内容。
+        // 口令错误或取消：复位 web 层进度条（避免卡在 100%，P2-1），
+        // 回到全屏内容并把 first responder 还给 webView（弹窗曾夺走焦点）。
+        notifyEscProgress(0)
         window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(webView)
     }
 
     // MARK: 窗口
@@ -224,10 +248,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             window = w
         } else {
             let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
-            let w = NSWindow(contentRect: frame,
-                              styleMask: [.borderless],
-                              backing: .buffered,
-                              defer: false)
+            // 必须用 KioskWindow（覆写 canBecomeKey/canBecomeMain），见类定义注释（P0-1）。
+            let w = KioskWindow(contentRect: frame,
+                                 styleMask: [.borderless],
+                                 backing: .buffered,
+                                 defer: false)
             w.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 1)
             w.collectionBehavior = [.fullScreenPrimary]
             w.isOpaque = true
@@ -242,7 +267,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-        config.mediaTypesRequiringUserActionForPlayback = [] // 否则音频全程静音
+        // 该设置只影响 HTMLMediaElement（<audio>/<video>）的自动播放策略，对 Web Audio API
+        // 无效；Web Audio 的解锁靠 web 层在用户手势里 AudioContext.resume()（见 app.js）。
+        // 保留此设置是为后续卡片的 <audio> 标签播放预留（P2-6 注释修正）。
+        config.mediaTypesRequiringUserActionForPlayback = []
 
         let contentController = WKUserContentController()
         let proxy = WeakScriptMessageHandler(target: self)
@@ -275,6 +303,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         webView.evaluateJavaScript("window.__shellReady = true;", completionHandler: nil)
+        // 确保 DOM 能收到键盘事件（P0-1；local monitor 仍是兜底通道）。
+        window.makeFirstResponder(webView)
     }
 
     // MARK: WKScriptMessageHandler

@@ -25,9 +25,12 @@
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // idle 挂起期间窗口尺寸变化后也要恢复重绘（canvas 重设尺寸会清空内容）。
+    // 注意：初始 resize() 调用被放在渲染循环状态变量声明之后（见文件底部）——
+    // 若在 var running = false 执行前先跑一次 ensureRunning()，该后置初始化
+    // 会把标志复位，底部再调 ensureRunning() 就会排出第二个 rAF 循环。
+    ensureRunning();
   }
-  window.addEventListener('resize', resize, false);
-  resize();
 
   // ---------------------------------------------------------------------
   // 事件可视化数据：字母淡出 / 鼠标尾迹 / 点击圆环
@@ -260,7 +263,12 @@
     requestAnimationFrame(draw);
   }
 
-  // 首帧启动，绘制底色，随后按 5 秒无输入规则自动挂起。
+  // 初始画布尺寸 + resize 监听（此时渲染循环状态变量已初始化完毕，
+  // resize() 内部的 ensureRunning() 可以安全启动循环，见 resize() 注释）。
+  window.addEventListener('resize', resize, false);
+  resize();
+
+  // 首帧启动（resize() 已启动时为幂等 no-op），绘制底色，随后按 5 秒无输入规则自动挂起。
   ensureRunning();
 
   // ---------------------------------------------------------------------

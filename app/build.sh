@@ -6,7 +6,7 @@
 #
 # 交叉编译 x86_64 + arm64 两个 slice，lipo 合成 universal 二进制，组装
 # .app bundle，ad-hoc 签名，打包 .dmg，并在构建后自动验证关键约束
-# （universal archs、x64 slice 的最低部署版本、签名有效性）。
+# （universal archs、双 slice 最低部署版本、并发硬门禁、签名有效性）。
 #
 set -euo pipefail
 
@@ -50,12 +50,14 @@ X64_BIN="$BUILD_DIR/${APP_NAME}-x86_64"
 ARM64_BIN="$BUILD_DIR/${APP_NAME}-arm64"
 UNIVERSAL_BIN="$MACOS_DIR/${APP_NAME}"
 
+# -swift-version 5：钉死 Swift 5 语言模式，防止未来默认切到 Swift 6 语言模式后
+# 引入 @MainActor 隐式并发（Big Sur 缺 _Concurrency 回退库，启动即崩）。
 echo "==> 编译 x86_64 slice（交付目标：Intel 2014 MacBook Air / Big Sur 11）"
-swiftc -O -target "x86_64-apple-macosx${MIN_OS}" -sdk "$SDK" \
+swiftc -O -swift-version 5 -target "x86_64-apple-macosx${MIN_OS}" -sdk "$SDK" \
   -o "$X64_BIN" shell/main.swift
 
 echo "==> 编译 arm64 slice（本机 Apple Silicon 原生冒烟用）"
-swiftc -O -target "arm64-apple-macosx${MIN_OS}" -sdk "$SDK" \
+swiftc -O -swift-version 5 -target "arm64-apple-macosx${MIN_OS}" -sdk "$SDK" \
   -o "$ARM64_BIN" shell/main.swift
 
 echo "==> lipo 合成 universal 二进制"
@@ -64,7 +66,7 @@ chmod +x "$UNIVERSAL_BIN"
 
 echo "==> 拷贝 web 资源到 Resources/web/"
 mkdir -p "$RESOURCES_DIR/web"
-cp web/index.html web/style.css web/app.js "$RESOURCES_DIR/web/"
+cp -R "$SCRIPT_DIR/web/"* "$RESOURCES_DIR/web/"
 
 echo "==> 写入 Info.plist"
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -117,15 +119,35 @@ echo "$LIPO_ARCHS" | grep -q "x86_64" || { echo "错误：universal 二进制缺
 echo "$LIPO_ARCHS" | grep -q "arm64" || { echo "错误：universal 二进制缺少 arm64 slice" >&2; exit 1; }
 
 echo ""
-echo "--- x64 slice LC_BUILD_VERSION（otool -l，应为 platform=macos(1) / minos=${MIN_OS}）---"
-X64_BUILD_VERSION=$(otool -l "$X64_BIN" | grep -A4 LC_BUILD_VERSION || true)
-if [ -z "$X64_BUILD_VERSION" ]; then
-  echo "错误：x64 slice 未找到 LC_BUILD_VERSION" >&2
-  exit 1
-fi
-echo "$X64_BUILD_VERSION"
-echo "$X64_BUILD_VERSION" | grep -q "platform 1" || { echo "错误：x64 slice platform 不是 macos(1)" >&2; exit 1; }
-echo "$X64_BUILD_VERSION" | grep -q "minos ${MIN_OS}" || { echo "错误：x64 slice minos 不是 ${MIN_OS}" >&2; exit 1; }
+echo "--- LC_BUILD_VERSION（otool -l，两个 slice 均应为 platform=macos(1) / minos=${MIN_OS}）---"
+for SLICE_BIN in "$X64_BIN" "$ARM64_BIN"; do
+  SLICE_NAME=$(basename "$SLICE_BIN")
+  BUILD_VERSION=$(otool -l "$SLICE_BIN" | grep -A4 LC_BUILD_VERSION || true)
+  if [ -z "$BUILD_VERSION" ]; then
+    echo "错误：$SLICE_NAME 未找到 LC_BUILD_VERSION" >&2
+    exit 1
+  fi
+  echo "[$SLICE_NAME]"
+  echo "$BUILD_VERSION"
+  echo "$BUILD_VERSION" | grep -q "platform 1" || { echo "错误：$SLICE_NAME platform 不是 macos(1)" >&2; exit 1; }
+  echo "$BUILD_VERSION" | grep -q "minos ${MIN_OS}" || { echo "错误：$SLICE_NAME minos 不是 ${MIN_OS}" >&2; exit 1; }
+done
+
+echo ""
+echo "--- 并发硬门禁（两个 slice：禁止链接并发运行时库 / 禁止并发符号引用）---"
+for SLICE_BIN in "$X64_BIN" "$ARM64_BIN"; do
+  SLICE_NAME=$(basename "$SLICE_BIN")
+  if otool -L "$SLICE_BIN" | grep -q libswift_Concurrency; then
+    echo "错误：$SLICE_NAME 链接了并发运行时库 libswift_Concurrency" >&2
+    exit 1
+  fi
+  if nm -u "$SLICE_BIN" | grep -qiE 'swift_task|MainActor'; then
+    echo "错误：$SLICE_NAME 存在并发符号引用（swift_task/MainActor）" >&2
+    nm -u "$SLICE_BIN" | grep -iE 'swift_task|MainActor' >&2
+    exit 1
+  fi
+  echo "[$SLICE_NAME] 未链接 libswift_Concurrency，无 swift_task/MainActor 符号引用"
+done
 
 echo ""
 echo "--- codesign -v ---"
