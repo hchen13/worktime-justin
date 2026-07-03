@@ -4,6 +4,14 @@
 
 **Swift/AppKit + WKWebView 极薄原生壳**，画布内容用 HTML/CSS/Canvas2D 实现。选择这个组合是因为交付目标机是 **2014 款 MacBook Air（Intel x86_64，macOS Big Sur 11，4GB 内存，HD5000 核显）**：Electron/Chromium 类方案对 4GB 内存和老核显不友好，且 Big Sur 缺少 Swift Concurrency 的运行时回退库（`_Concurrency` fallback），用现代 Electron/Node 工具链风险更高；原生 AppKit 外壳启动快、内存占用低，WKWebView 复用系统自带的 WebKit，不需要额外打包一个浏览器内核。
 
+## 产品参数与数据模型（manifest）
+
+`web/manifest.js`（`window.WTJ_MANIFEST`）收敛了需求文档 `docs/index.html` 中散落的阈值、
+秘密词词池、任务模板、素材与音频引用，作为应用可读的单一参照来源；`web/index.html` 在
+`app.js` 之前加载它。改阈值、加词、换素材路径优先编辑这个文件，而不是散改各引擎代码里的
+硬编码常量。各域字段含义、消费方（键盘/秘密词/槽位/任务/奖励/音频/退出桥各后续卡）如何读取、
+新增词池条目的步骤，见 [`web/MANIFEST.md`](web/MANIFEST.md)。
+
 ## 本地开发
 
 Web 层（`web/index.html`、`web/app.js`、`web/style.css`）零外部依赖、零构建步骤，两种方式均可直接调试：
