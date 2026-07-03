@@ -1,0 +1,1327 @@
+{
+  "$schema_note": "WTJ-20260704-016 音频/TTS/SFX 授权与来源缺口清单。本文件不在运行时被 fetch 读取（app/web/audio.js 不依赖本文件，见 AUDIO-API.md 说明），仅供 PM/DESIGN/QA 人工审阅与采购排期使用。",
+  "cardId": "WTJ-20260704-016",
+  "generatedAtCst": "2026-07-04",
+  "sourceOfTruth": {
+    "secretWordRange": "docs/assets/production-pack-b/manifest.json（100 词目标词池，卡 WTJ-20260704-006）——不是 app/web/manifest.js 当前运行时样例的 8 词子集。",
+    "runtimePathConvention": "app/web/manifest.js secretWords.pool[].audioFile 与 tasks.templates.*.examples[].voicePrompt/successAudio 的路径约定（audio/words/<word>.m4a 、 audio/tasks/<id>.m4a 、 audio/sfx/<key>.m4a）。"
+  },
+  "summary": {
+    "note": "三大必选类目（验收标准 6）：secretWords / sfx / taskVoice。compositePhrases 为支撑 REQ-AST-08 组合任务语音运行时拼接架构的额外补充清单，非验收标准硬要求，但与 audio.js 的 playComposite 直接对应。",
+    "secretWords": {
+      "packBTotal": 100,
+      "additionalManifestOnlyWords": 1,
+      "totalNotDelivered": 101,
+      "byPackBBatch": {
+        "ready-v1": 37,
+        "batch-02": 24,
+        "batch-03": 27,
+        "batch-04": 12
+      }
+    },
+    "sfx": {
+      "totalNotDelivered": 20,
+      "byCategory": {
+        "ui": 5,
+        "animal": 8,
+        "bell": 2,
+        "water": 3,
+        "chest": 2
+      }
+    },
+    "taskVoice": {
+      "totalNotDelivered": 6
+    },
+    "compositePhrases": {
+      "totalNotDelivered": 10
+    },
+    "grandTotalNotDelivered": 137
+  },
+  "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
+  "secretWords": [
+    {
+      "word": "apple",
+      "soundKey": "secret.word.apple",
+      "path": "audio/words/apple.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "ant",
+      "soundKey": "secret.word.ant",
+      "path": "audio/words/ant.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "airplane",
+      "soundKey": "secret.word.airplane",
+      "path": "audio/words/airplane.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "alligator",
+      "soundKey": "secret.word.alligator",
+      "path": "audio/words/alligator.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "ball",
+      "soundKey": "secret.word.ball",
+      "path": "audio/words/ball.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "basket",
+      "soundKey": "secret.word.basket",
+      "path": "audio/words/basket.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "bell",
+      "soundKey": "secret.word.bell",
+      "path": "audio/words/bell.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "banana",
+      "soundKey": "secret.word.banana",
+      "path": "audio/words/banana.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "cat",
+      "soundKey": "secret.word.cat",
+      "path": "audio/words/cat.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "car",
+      "soundKey": "secret.word.car",
+      "path": "audio/words/car.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "cup",
+      "soundKey": "secret.word.cup",
+      "path": "audio/words/cup.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "cake",
+      "soundKey": "secret.word.cake",
+      "path": "audio/words/cake.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "dog",
+      "soundKey": "secret.word.dog",
+      "path": "audio/words/dog.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "door",
+      "soundKey": "secret.word.door",
+      "path": "audio/words/door.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "duck",
+      "soundKey": "secret.word.duck",
+      "path": "audio/words/duck.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "drum",
+      "soundKey": "secret.word.drum",
+      "path": "audio/words/drum.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "egg",
+      "soundKey": "secret.word.egg",
+      "path": "audio/words/egg.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "elephant",
+      "soundKey": "secret.word.elephant",
+      "path": "audio/words/elephant.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "eye",
+      "soundKey": "secret.word.eye",
+      "path": "audio/words/eye.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "envelope",
+      "soundKey": "secret.word.envelope",
+      "path": "audio/words/envelope.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "fish",
+      "soundKey": "secret.word.fish",
+      "path": "audio/words/fish.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "flower",
+      "soundKey": "secret.word.flower",
+      "path": "audio/words/flower.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "frog",
+      "soundKey": "secret.word.frog",
+      "path": "audio/words/frog.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "faucet",
+      "soundKey": "secret.word.faucet",
+      "path": "audio/words/faucet.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "goat",
+      "soundKey": "secret.word.goat",
+      "path": "audio/words/goat.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "grapes",
+      "soundKey": "secret.word.grapes",
+      "path": "audio/words/grapes.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "gift",
+      "soundKey": "secret.word.gift",
+      "path": "audio/words/gift.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "guitar",
+      "soundKey": "secret.word.guitar",
+      "path": "audio/words/guitar.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "horse",
+      "soundKey": "secret.word.horse",
+      "path": "audio/words/horse.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "hat",
+      "soundKey": "secret.word.hat",
+      "path": "audio/words/hat.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "heart",
+      "soundKey": "secret.word.heart",
+      "path": "audio/words/heart.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "house",
+      "soundKey": "secret.word.house",
+      "path": "audio/words/house.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "icecream",
+      "soundKey": "secret.word.icecream",
+      "path": "audio/words/icecream.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "igloo",
+      "soundKey": "secret.word.igloo",
+      "path": "audio/words/igloo.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "insect",
+      "soundKey": "secret.word.insect",
+      "path": "audio/words/insect.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "island",
+      "soundKey": "secret.word.island",
+      "path": "audio/words/island.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "juice",
+      "soundKey": "secret.word.juice",
+      "path": "audio/words/juice.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "jam",
+      "soundKey": "secret.word.jam",
+      "path": "audio/words/jam.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "jar",
+      "soundKey": "secret.word.jar",
+      "path": "audio/words/jar.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "jellyfish",
+      "soundKey": "secret.word.jellyfish",
+      "path": "audio/words/jellyfish.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "key",
+      "soundKey": "secret.word.key",
+      "path": "audio/words/key.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "kite",
+      "soundKey": "secret.word.kite",
+      "path": "audio/words/kite.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "koala",
+      "soundKey": "secret.word.koala",
+      "path": "audio/words/koala.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "kettle",
+      "soundKey": "secret.word.kettle",
+      "path": "audio/words/kettle.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "lamp",
+      "soundKey": "secret.word.lamp",
+      "path": "audio/words/lamp.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "leaf",
+      "soundKey": "secret.word.leaf",
+      "path": "audio/words/leaf.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "lion",
+      "soundKey": "secret.word.lion",
+      "path": "audio/words/lion.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "lemon",
+      "soundKey": "secret.word.lemon",
+      "path": "audio/words/lemon.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "moon",
+      "soundKey": "secret.word.moon",
+      "path": "audio/words/moon.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "mouse",
+      "soundKey": "secret.word.mouse",
+      "path": "audio/words/mouse.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "milk",
+      "soundKey": "secret.word.milk",
+      "path": "audio/words/milk.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "monkey",
+      "soundKey": "secret.word.monkey",
+      "path": "audio/words/monkey.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "nest",
+      "soundKey": "secret.word.nest",
+      "path": "audio/words/nest.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "nose",
+      "soundKey": "secret.word.nose",
+      "path": "audio/words/nose.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "net",
+      "soundKey": "secret.word.net",
+      "path": "audio/words/net.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "noodle",
+      "soundKey": "secret.word.noodle",
+      "path": "audio/words/noodle.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-02",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "orange",
+      "soundKey": "secret.word.orange",
+      "path": "audio/words/orange.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "owl",
+      "soundKey": "secret.word.owl",
+      "path": "audio/words/owl.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "octopus",
+      "soundKey": "secret.word.octopus",
+      "path": "audio/words/octopus.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "oven",
+      "soundKey": "secret.word.oven",
+      "path": "audio/words/oven.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "pig",
+      "soundKey": "secret.word.pig",
+      "path": "audio/words/pig.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "pear",
+      "soundKey": "secret.word.pear",
+      "path": "audio/words/pear.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "pencil",
+      "soundKey": "secret.word.pencil",
+      "path": "audio/words/pencil.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "pizza",
+      "soundKey": "secret.word.pizza",
+      "path": "audio/words/pizza.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "queen",
+      "soundKey": "secret.word.queen",
+      "path": "audio/words/queen.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "quilt",
+      "soundKey": "secret.word.quilt",
+      "path": "audio/words/quilt.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "quail",
+      "soundKey": "secret.word.quail",
+      "path": "audio/words/quail.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "quarter",
+      "soundKey": "secret.word.quarter",
+      "path": "audio/words/quarter.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "rocket",
+      "soundKey": "secret.word.rocket",
+      "path": "audio/words/rocket.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "robot",
+      "soundKey": "secret.word.robot",
+      "path": "audio/words/robot.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "rainbow",
+      "soundKey": "secret.word.rainbow",
+      "path": "audio/words/rainbow.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "ring",
+      "soundKey": "secret.word.ring",
+      "path": "audio/words/ring.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "star",
+      "soundKey": "secret.word.star",
+      "path": "audio/words/star.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "sun",
+      "soundKey": "secret.word.sun",
+      "path": "audio/words/sun.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "shoe",
+      "soundKey": "secret.word.shoe",
+      "path": "audio/words/shoe.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "spoon",
+      "soundKey": "secret.word.spoon",
+      "path": "audio/words/spoon.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "treasure",
+      "soundKey": "secret.word.treasure",
+      "path": "audio/words/treasure.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "ready-v1",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "tree",
+      "soundKey": "secret.word.tree",
+      "path": "audio/words/tree.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "train",
+      "soundKey": "secret.word.train",
+      "path": "audio/words/train.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "turtle",
+      "soundKey": "secret.word.turtle",
+      "path": "audio/words/turtle.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "umbrella",
+      "soundKey": "secret.word.umbrella",
+      "path": "audio/words/umbrella.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "unicorn",
+      "soundKey": "secret.word.unicorn",
+      "path": "audio/words/unicorn.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "ukulele",
+      "soundKey": "secret.word.ukulele",
+      "path": "audio/words/ukulele.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "uniform",
+      "soundKey": "secret.word.uniform",
+      "path": "audio/words/uniform.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "van",
+      "soundKey": "secret.word.van",
+      "path": "audio/words/van.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "vase",
+      "soundKey": "secret.word.vase",
+      "path": "audio/words/vase.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "violin",
+      "soundKey": "secret.word.violin",
+      "path": "audio/words/violin.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "volcano",
+      "soundKey": "secret.word.volcano",
+      "path": "audio/words/volcano.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-03",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "whale",
+      "soundKey": "secret.word.whale",
+      "path": "audio/words/whale.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "watch",
+      "soundKey": "secret.word.watch",
+      "path": "audio/words/watch.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "window",
+      "soundKey": "secret.word.window",
+      "path": "audio/words/window.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "wagon",
+      "soundKey": "secret.word.wagon",
+      "path": "audio/words/wagon.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "xylophone",
+      "soundKey": "secret.word.xylophone",
+      "path": "audio/words/xylophone.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "xray",
+      "soundKey": "secret.word.xray",
+      "path": "audio/words/xray.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "yoyo",
+      "soundKey": "secret.word.yoyo",
+      "path": "audio/words/yoyo.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "yarn",
+      "soundKey": "secret.word.yarn",
+      "path": "audio/words/yarn.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "yak",
+      "soundKey": "secret.word.yak",
+      "path": "audio/words/yak.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "zebra",
+      "soundKey": "secret.word.zebra",
+      "path": "audio/words/zebra.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "zipper",
+      "soundKey": "secret.word.zipper",
+      "path": "audio/words/zipper.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "zucchini",
+      "soundKey": "secret.word.zucchini",
+      "path": "audio/words/zucchini.m4a",
+      "status": "not-delivered",
+      "source": "production-pack-b",
+      "packBBatch": "batch-04",
+      "packBSpriteStatus": "pending_sprite_stubbed",
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+    },
+    {
+      "word": "treasurechest",
+      "soundKey": "secret.word.treasurechest",
+      "path": "audio/words/treasurechest.m4a",
+      "status": "not-delivered",
+      "source": "manifest-current-pool-only",
+      "packBBatch": null,
+      "packBSpriteStatus": null,
+      "licenseNeed": "同上；另注意该词不在 Pack B 的 100 词范围内（Pack B 用的是 'treasure'，不是 'treasurechest'）。app/web/manifest.js 当前 secretWords.pool 直接引用了 'treasurechest' 这个 token（复用 REQ-AST-12 已验收 sprite），该差异已在 app/web/MANIFEST.md 「已知的文档/素材对齐问题」中记录，本卡不自行裁决是否保留该词，仅如实登记音频缺口。"
+    }
+  ],
+  "sfx": [
+    {
+      "sfxKey": "task-success",
+      "category": "ui",
+      "purpose": "任务成功通用反馈音（REQ-TASK-07~10 各模板 successAudio 共用；该路径已被 app/web/manifest.js 硬编码引用为 audio/sfx/task-success.m4a，必须保持一致）",
+      "path": "audio/sfx/task-success.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权/原创音效素材，来源待定"
+    },
+    {
+      "sfxKey": "light-hint-chime",
+      "category": "ui",
+      "purpose": "任务 15 秒未完成轻提示音效（REQ-TASK-03）",
+      "path": "audio/sfx/light-hint-chime.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权/原创音效素材，来源待定"
+    },
+    {
+      "sfxKey": "slot-light-up",
+      "category": "ui",
+      "purpose": "发现槽点亮反馈（REQ-SLOT-01 / REQ-SLOT-02）",
+      "path": "audio/sfx/slot-light-up.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权/原创音效素材，来源待定"
+    },
+    {
+      "sfxKey": "keyboard-milestone-chime",
+      "category": "ui",
+      "purpose": "键盘探索里程碑达成反馈（REQ-SLOT-03）",
+      "path": "audio/sfx/keyboard-milestone-chime.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权/原创音效素材，来源待定"
+    },
+    {
+      "sfxKey": "streak-reward-fanfare",
+      "category": "ui",
+      "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈（REQ-RWD-05 / REQ-RWD-06）",
+      "path": "audio/sfx/streak-reward-fanfare.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权/原创音效素材，来源待定"
+    },
+    {
+      "sfxKey": "dog-bark",
+      "category": "animal",
+      "purpose": "小狗相关任务/秘密词伴随叫声（REQ-AST-09 动物叫声）",
+      "path": "audio/sfx/dog-bark.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "cat-meow",
+      "category": "animal",
+      "purpose": "小猫相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/cat-meow.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "duck-quack",
+      "category": "animal",
+      "purpose": "小鸭子相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/duck-quack.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "horse-neigh",
+      "category": "animal",
+      "purpose": "“让小马跑起来”点击任务伴随叫声（REQ-TASK-08 示例 / REQ-AST-09）",
+      "path": "audio/sfx/horse-neigh.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "pig-oink",
+      "category": "animal",
+      "purpose": "小猪相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/pig-oink.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "frog-croak",
+      "category": "animal",
+      "purpose": "小青蛙相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/frog-croak.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "elephant-trumpet",
+      "category": "animal",
+      "purpose": "大象相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/elephant-trumpet.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "mouse-squeak",
+      "category": "animal",
+      "purpose": "小老鼠相关任务/秘密词伴随叫声（REQ-AST-09）",
+      "path": "audio/sfx/mouse-squeak.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权动物叫声素材，来源待定"
+    },
+    {
+      "sfxKey": "bell-ring",
+      "category": "bell",
+      "purpose": "点击类任务「按铃铛」（REQ-TASK-08 示例 / REQ-AST-09 铃铛）",
+      "path": "audio/sfx/bell-ring.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权铃铛音效素材，来源待定"
+    },
+    {
+      "sfxKey": "bell-jingle",
+      "category": "bell",
+      "purpose": "轻量装饰性铃铛反馈（可选，正反馈变体）",
+      "path": "audio/sfx/bell-jingle.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权铃铛音效素材，来源待定"
+    },
+    {
+      "sfxKey": "water-tap-flow",
+      "category": "water",
+      "purpose": "点击类任务「关水龙头」前的水流声（REQ-TASK-08 示例 / REQ-AST-09 水声）",
+      "path": "audio/sfx/water-tap-flow.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权水声素材，来源待定"
+    },
+    {
+      "sfxKey": "water-drop",
+      "category": "water",
+      "purpose": "滴水声，水龙头关闭后的收尾反馈",
+      "path": "audio/sfx/water-drop.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权水声素材，来源待定"
+    },
+    {
+      "sfxKey": "water-splash",
+      "category": "water",
+      "purpose": "水花声（可选，装饰性水相关任务）",
+      "path": "audio/sfx/water-splash.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权水声素材，来源待定"
+    },
+    {
+      "sfxKey": "chest-open",
+      "category": "chest",
+      "purpose": "宝箱开启主音效（REQ-SLOT-02 / REQ-RWD-01~03，rewards.chest.formsAllowed 包含 'new-sfx'；REQ-AST-09 开箱声）",
+      "path": "audio/sfx/chest-open.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权开箱音效素材，来源待定"
+    },
+    {
+      "sfxKey": "chest-lid-creak",
+      "category": "chest",
+      "purpose": "宝箱开启前的吱呀铺垫音（可选）",
+      "path": "audio/sfx/chest-lid-creak.m4a",
+      "status": "not-delivered",
+      "licenseSource": "需授权开箱音效素材，来源待定"
+    }
+  ],
+  "taskVoice": [
+    {
+      "taskId": "drag-apple-to-basket",
+      "templateReqId": "REQ-TASK-07",
+      "voicePromptPath": "audio/tasks/drag-apple-to-basket.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": null
+    },
+    {
+      "taskId": "drag-dog-home",
+      "templateReqId": "REQ-TASK-07",
+      "voicePromptPath": "audio/tasks/drag-dog-home.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": null
+    },
+    {
+      "taskId": "click-lamp-on",
+      "templateReqId": "REQ-TASK-08",
+      "voicePromptPath": "audio/tasks/click-lamp-on.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": null
+    },
+    {
+      "taskId": "find-the-dog",
+      "templateReqId": "REQ-TASK-09",
+      "voicePromptPath": "audio/tasks/find-the-dog.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": null
+    },
+    {
+      "taskId": "press-letter-a",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-a.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "注意：任务 id 与语音文件名并不一致（app/web/manifest.js 原文如此）——id 是 'press-letter-a'，但 voicePrompt 指向 'press-a.m4a'。消费方若使用 WTJ_AUDIO.playTaskVoice() 的字符串快捷式（按 taskKey 约定拼路径）需传 'press-a' 而非 'press-letter-a'；更稳妥的用法是直接传入整个 manifest 任务对象让 playTaskVoice 直接读取 voicePrompt 字段（见 AUDIO-API.md）。"
+    },
+    {
+      "taskId": "press-digit-3",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-3.m4a",
+      "status": "not-delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "同上：id 'press-digit-3' 与文件名 'press-3' 不一致。"
+    }
+  ],
+  "compositePhrases": [
+    {
+      "phraseKey": "find",
+      "purpose": "“找到...”引导语，与秘密词语音拼接成 find 类任务提示（REQ-AST-08 组合任务）",
+      "path": "audio/phrases/find.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "pick-up",
+      "purpose": "“捡起...”",
+      "path": "audio/phrases/pick-up.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "put-into",
+      "purpose": "“放进...”",
+      "path": "audio/phrases/put-into.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "take-to",
+      "purpose": "“带到...”",
+      "path": "audio/phrases/take-to.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "press",
+      "purpose": "“按...”",
+      "path": "audio/phrases/press.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "click",
+      "purpose": "“点一下...”",
+      "path": "audio/phrases/click.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "turn-on",
+      "purpose": "“打开...”",
+      "path": "audio/phrases/turn-on.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "turn-off",
+      "purpose": "“关掉...”",
+      "path": "audio/phrases/turn-off.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "good-job",
+      "purpose": "“做得好！”（正反馈变体，可选）",
+      "path": "audio/phrases/good-job.m4a",
+      "status": "not-delivered"
+    },
+    {
+      "phraseKey": "lets-go",
+      "purpose": "“我们开始吧！”（任务起始语气词，可选）",
+      "path": "audio/phrases/lets-go.m4a",
+      "status": "not-delivered"
+    }
+  ]
+}
