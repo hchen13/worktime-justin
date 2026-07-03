@@ -93,13 +93,19 @@
     if (letters.length > 40) letters.shift();
   }
 
-  function spawnTrailDot(x, y) {
-    trail.push({ x: x, y: y, born: performance.now(), life: 500 });
+  // intensity ∈ [0,1]（可选，缺省 1）：WTJ-20260704-012 起，鼠标尾迹/点击圆环的浓度由
+  // window.WTJ_POINTER（pointer.js）算出的强度驱动，详见下方"指针引擎订阅"一节。intensity
+  // 存在每个 dot/ring 自己身上（而不是全局一个值），因为衰减中的尾迹和刚触发的尾迹可能同时
+  // 共存在 trail 数组里，各自要按各自诞生时的强度淡出，不能共用一个正在变化的全局值。
+  function spawnTrailDot(x, y, intensity) {
+    var inten = (typeof intensity === 'number') ? intensity : 1;
+    trail.push({ x: x, y: y, born: performance.now(), life: 500, intensity: inten });
     if (trail.length > 80) trail.shift();
   }
 
-  function spawnRing(x, y) {
-    rings.push({ x: x, y: y, born: performance.now(), life: 600 });
+  function spawnRing(x, y, intensity) {
+    var inten = (typeof intensity === 'number') ? intensity : 1;
+    rings.push({ x: x, y: y, born: performance.now(), life: 600, intensity: inten });
     if (rings.length > 20) rings.shift();
   }
 
@@ -180,6 +186,44 @@
   }
 
   // ---------------------------------------------------------------------
+  // 指针引擎订阅（WTJ-20260704-012）：鼠标尾迹/点击圆环的"要不要出、出多浓"改由
+  // window.WTJ_POINTER（pointer.js，index.html 中在 app.js 之前加载）算出的强度驱动——
+  // pointer.js 是唯一权威的 mousemove/mousedown/mouseup/click 逻辑监听方（判定尾迹强度/
+  // 点击强度/拖拽状态机/悬停判定），app.js 不再在自己的原始 mousemove/click 监听器里无条件
+  // spawnTrailDot/spawnRing，只负责订阅引擎事件后按强度渲染到 Canvas（drawTrail/drawRings
+  // 仍是 app.js 领域，只是浓度受传入强度控制），避免"引擎驱动"与"直连"两条路径同时给同一次
+  // 输入各画一份，出现尾迹/圆环重复渲染。防御式：pointer.js 未加载/加载失败时只 console.warn
+  // 并跳过订阅（不重新实现一套直连兜底逻辑，避免两条实现分叉、日后不一致），与 WTJ_KEYBOARD
+  // 缺失时的降级方式保持同一约定；此时鼠标尾迹/点击圆环功能不可用，但 poke()/dbgMouse/
+  // unlockAudio 等 app.js 自身逻辑（见下方原始监听器）不受影响。
+  // ---------------------------------------------------------------------
+  if (window.WTJ_POINTER && typeof window.WTJ_POINTER.onMove === 'function') {
+    window.WTJ_POINTER.onMove(function (x, y, trailIntensity) {
+      // REQ-PTR-01：subtle 尾迹，强度趋近 0（衰减到底）时基本不再新增点；强度越低命中概率
+      // 越低，尾迹点越稀疏——避免"衰减"只体现在透明度、频率却不变导致观感仍然很满的问题。
+      if (trailIntensity <= 0.02) return;
+      if (Math.random() > trailIntensity) return;
+      spawnTrailDot(x, y, trailIntensity);
+    });
+  } else {
+    console.warn('[WTJ] window.WTJ_POINTER 未找到（pointer.js 未加载或加载失败），鼠标尾迹功能不可用。');
+  }
+
+  if (window.WTJ_POINTER && typeof window.WTJ_POINTER.onClickFeedback === 'function') {
+    window.WTJ_POINTER.onClickFeedback(function (x, y, feedback) {
+      // REQ-PTR-02：浓度随引擎给出的点击强度变化；soundless 预留——当前 app.js/audio.js
+      // 还没有接通用的"点击音效"播放入口，先不出声，等音效接线时在此处按该标志跳过播放即可。
+      var intensity = (feedback && typeof feedback.intensity === 'number') ? feedback.intensity : 1;
+      // P2-6：与上方 onMove 的下限跳过对齐——狂点衰减到 intensity≈0 时不再新增几乎全透明的空圆环
+      // （既是无意义的绘制开销，也避免 rings 数组被一堆隐形环占满挤掉真正可见的环）。
+      if (intensity <= 0.02) return;
+      spawnRing(x, y, intensity);
+    });
+  } else {
+    console.warn('[WTJ] window.WTJ_POINTER 未找到（pointer.js 未加载或加载失败），点击圆环功能不可用。');
+  }
+
+  // ---------------------------------------------------------------------
   // 输入事件
   // ---------------------------------------------------------------------
 
@@ -202,15 +246,19 @@
   }, false);
 
   window.addEventListener('mousemove', function (e) {
+    // 尾迹渲染已移交上方 window.WTJ_POINTER.onMove 订阅（按引擎强度 spawnTrailDot），此处
+    // 只保留 app.js 自身职责：节能唤醒、debug 叠层坐标文本，不再无条件 spawnTrailDot，
+    // 避免与引擎驱动路径重复渲染。
     poke();
     dbgMouse.textContent = Math.round(e.clientX) + ', ' + Math.round(e.clientY);
-    spawnTrailDot(e.clientX, e.clientY);
   }, false);
 
   window.addEventListener('click', function (e) {
+    // 点击圆环渲染已移交上方 window.WTJ_POINTER.onClickFeedback 订阅（按引擎强度
+    // spawnRing），此处只保留 app.js 自身职责：节能唤醒、首次手势音频解锁，不再无条件
+    // spawnRing，避免与引擎驱动路径重复渲染。
     poke();
     if (!audioUnlockAttempted) unlockAudio();
-    spawnRing(e.clientX, e.clientY);
   }, false);
 
   // ---------------------------------------------------------------------
@@ -231,9 +279,12 @@
         continue;
       }
       var t = 1 - age / p.life;
+      // REQ-PTR-01：浓度受 pointer.js 给出的强度控制（p.intensity，衰减期间明显更淡），
+      // 半径也随强度轻微收缩，subtle 上限本身已经由引擎强度封顶，这里只是再乘一层。
+      var trailAlpha = t * 0.5 * p.intensity;
       ctx.beginPath();
-      ctx.fillStyle = 'rgba(94, 231, 255, ' + (t * 0.5) + ')';
-      ctx.arc(p.x, p.y, 3 + t * 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(94, 231, 255, ' + trailAlpha + ')';
+      ctx.arc(p.x, p.y, 3 + t * 3 * Math.max(0.4, p.intensity), 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -251,9 +302,11 @@
       // IndexSizeError（Safari/Chrome 均如此）。Math.max(0, ...) 兜底，drawTrail 的
       // `3 + t*3` 因公式不同（1 - age/life）天然不会出现同类负值，故不动。
       var radius = Math.max(0, 10 + t * 70);
+      // REQ-PTR-02：浓度受 pointer.js 给出的点击强度控制（r.intensity，连续狂点时明显更淡）。
+      var ringAlpha = (1 - t) * r.intensity;
       ctx.beginPath();
       ctx.lineWidth = 2 + (1 - t) * 3;
-      ctx.strokeStyle = 'rgba(255, 217, 90, ' + (1 - t) + ')';
+      ctx.strokeStyle = 'rgba(255, 217, 90, ' + ringAlpha + ')';
       ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
       ctx.stroke();
     }
