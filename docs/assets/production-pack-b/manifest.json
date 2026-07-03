@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 44,
-  "stubbed_pending_count": 56,
+  "production_ready_count": 47,
+  "stubbed_pending_count": 53,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -33,7 +33,14 @@
     "letter_g_prompt_record": "docs/assets/production-pack-b/source/letter-g-prompt.md",
     "house_source_green": "docs/assets/production-pack-b/source/house-source-green.png",
     "house_alpha_raw": "docs/assets/production-pack-b/source/house-alpha-raw.png",
-    "letter_h_prompt_record": "docs/assets/production-pack-b/source/letter-h-prompt.md"
+    "letter_h_prompt_record": "docs/assets/production-pack-b/source/letter-h-prompt.md",
+    "igloo_source_magenta": "docs/assets/production-pack-b/source/igloo-source-magenta.png",
+    "igloo_alpha_raw": "docs/assets/production-pack-b/source/igloo-alpha-raw.png",
+    "insect_source_magenta": "docs/assets/production-pack-b/source/insect-source-magenta.png",
+    "insect_alpha_raw": "docs/assets/production-pack-b/source/insect-alpha-raw.png",
+    "island_source_magenta": "docs/assets/production-pack-b/source/island-source-magenta.png",
+    "island_alpha_raw": "docs/assets/production-pack-b/source/island-alpha-raw.png",
+    "letter_i_prompt_record": "docs/assets/production-pack-b/source/letter-i-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -380,9 +387,9 @@
       "word": "igloo",
       "first_letter": "I",
       "display_name": "Igloo",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/igloo.png",
       "sound_key": "secret.word.igloo",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/igloo.png"
     },
@@ -390,9 +397,9 @@
       "word": "insect",
       "first_letter": "I",
       "display_name": "Insect",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/insect.png",
       "sound_key": "secret.word.insect",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/insect.png"
     },
@@ -400,9 +407,9 @@
       "word": "island",
       "first_letter": "I",
       "display_name": "Island",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/island.png",
       "sound_key": "secret.word.island",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/island.png"
     },
@@ -1047,7 +1054,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:25",
+  "updated_at_cst": "2026-07-04 04:42",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1083,6 +1090,16 @@
         "house"
       ],
       "changes": "Generated production house sprite, replaced placeholder asset_path, and marked it ready."
+    },
+    {
+      "card_id": "WTJ-20260704-037",
+      "updated_at_cst": "2026-07-04 04:42",
+      "words": [
+        "igloo",
+        "insect",
+        "island"
+      ],
+      "changes": "Generated production igloo, insect, and island sprites, replaced placeholder asset_paths, and marked all three ready."
     }
   ]
 }

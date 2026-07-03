@@ -1,34 +1,7 @@
 {
-  "missing_count": 56,
+  "missing_count": 53,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "igloo",
-      "first_letter": "I",
-      "display_name": "Igloo",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/igloo.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.igloo"
-    },
-    {
-      "word": "insect",
-      "first_letter": "I",
-      "display_name": "Insect",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/insect.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.insect"
-    },
-    {
-      "word": "island",
-      "first_letter": "I",
-      "display_name": "Island",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/island.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.island"
-    },
     {
       "word": "juice",
       "first_letter": "J",
@@ -507,7 +480,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:25",
+  "updated_at_cst": "2026-07-04 04:42",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -550,6 +523,24 @@
       "word": "house",
       "asset_path": "docs/assets/production-pack-b/sprites/house.png",
       "resolved_at_cst": "2026-07-04 04:25"
+    },
+    {
+      "card_id": "WTJ-20260704-037",
+      "word": "igloo",
+      "asset_path": "docs/assets/production-pack-b/sprites/igloo.png",
+      "resolved_at_cst": "2026-07-04 04:42"
+    },
+    {
+      "card_id": "WTJ-20260704-037",
+      "word": "insect",
+      "asset_path": "docs/assets/production-pack-b/sprites/insect.png",
+      "resolved_at_cst": "2026-07-04 04:42"
+    },
+    {
+      "card_id": "WTJ-20260704-037",
+      "word": "island",
+      "asset_path": "docs/assets/production-pack-b/sprites/island.png",
+      "resolved_at_cst": "2026-07-04 04:42"
     }
   ]
 }
