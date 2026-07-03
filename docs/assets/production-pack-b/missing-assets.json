@@ -1,43 +1,7 @@
 {
-  "missing_count": 49,
+  "missing_count": 45,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "koala",
-      "first_letter": "K",
-      "display_name": "Koala",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/koala.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.koala"
-    },
-    {
-      "word": "kettle",
-      "first_letter": "K",
-      "display_name": "Kettle",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/kettle.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.kettle"
-    },
-    {
-      "word": "lion",
-      "first_letter": "L",
-      "display_name": "Lion",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/lion.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.lion"
-    },
-    {
-      "word": "lemon",
-      "first_letter": "L",
-      "display_name": "Lemon",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/lemon.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-02",
-      "sound_key": "secret.word.lemon"
-    },
     {
       "word": "milk",
       "first_letter": "M",
@@ -444,7 +408,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:57",
+  "updated_at_cst": "2026-07-04 05:28",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -529,6 +493,30 @@
       "word": "jellyfish",
       "asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png",
       "resolved_at_cst": "2026-07-04 04:57"
+    },
+    {
+      "card_id": "WTJ-20260704-039",
+      "word": "koala",
+      "asset_path": "docs/assets/production-pack-b/sprites/koala.png",
+      "resolved_at_cst": "2026-07-04 05:17"
+    },
+    {
+      "card_id": "WTJ-20260704-039",
+      "word": "kettle",
+      "asset_path": "docs/assets/production-pack-b/sprites/kettle.png",
+      "resolved_at_cst": "2026-07-04 05:17"
+    },
+    {
+      "card_id": "WTJ-20260704-040",
+      "word": "lion",
+      "asset_path": "docs/assets/production-pack-b/sprites/lion.png",
+      "resolved_at_cst": "2026-07-04 05:28"
+    },
+    {
+      "card_id": "WTJ-20260704-040",
+      "word": "lemon",
+      "asset_path": "docs/assets/production-pack-b/sprites/lemon.png",
+      "resolved_at_cst": "2026-07-04 05:28"
     }
   ]
 }

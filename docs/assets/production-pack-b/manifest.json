@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 51,
-  "stubbed_pending_count": 49,
+  "production_ready_count": 55,
+  "stubbed_pending_count": 45,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -49,7 +49,17 @@
     "jellyfish_alpha_raw": "docs/assets/production-pack-b/source/jellyfish-alpha-raw.png",
     "jam_source_magenta": "docs/assets/production-pack-b/source/jam-source-magenta.png",
     "jam_alpha_raw": "docs/assets/production-pack-b/source/jam-alpha-raw.png",
-    "letter_j_prompt_record": "docs/assets/production-pack-b/source/letter-j-prompt.md"
+    "letter_j_prompt_record": "docs/assets/production-pack-b/source/letter-j-prompt.md",
+    "koala_source_green": "docs/assets/production-pack-b/source/koala-source-green.png",
+    "koala_alpha_raw": "docs/assets/production-pack-b/source/koala-alpha-raw.png",
+    "kettle_source_green": "docs/assets/production-pack-b/source/kettle-source-green.png",
+    "kettle_alpha_raw": "docs/assets/production-pack-b/source/kettle-alpha-raw.png",
+    "letter_k_prompt_record": "docs/assets/production-pack-b/source/letter-k-prompt.md",
+    "lion_source_green": "docs/assets/production-pack-b/source/lion-source-green.png",
+    "lion_alpha_raw": "docs/assets/production-pack-b/source/lion-alpha-raw.png",
+    "lemon_source_green": "docs/assets/production-pack-b/source/lemon-source-green.png",
+    "lemon_alpha_raw": "docs/assets/production-pack-b/source/lemon-alpha-raw.png",
+    "letter_l_prompt_record": "docs/assets/production-pack-b/source/letter-l-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -486,9 +496,9 @@
       "word": "koala",
       "first_letter": "K",
       "display_name": "Koala",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/koala.png",
       "sound_key": "secret.word.koala",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/koala.png"
     },
@@ -496,9 +506,9 @@
       "word": "kettle",
       "first_letter": "K",
       "display_name": "Kettle",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/kettle.png",
       "sound_key": "secret.word.kettle",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/kettle.png"
     },
@@ -526,9 +536,9 @@
       "word": "lion",
       "first_letter": "L",
       "display_name": "Lion",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/lion.png",
       "sound_key": "secret.word.lion",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/lion.png"
     },
@@ -536,9 +546,9 @@
       "word": "lemon",
       "first_letter": "L",
       "display_name": "Lemon",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/lemon.png",
       "sound_key": "secret.word.lemon",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-02",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/lemon.png"
     },
@@ -1063,7 +1073,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 04:57",
+  "updated_at_cst": "2026-07-04 05:28",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1120,6 +1130,24 @@
         "jellyfish"
       ],
       "changes": "Generated production juice, jam, jar, and jellyfish sprites, replaced placeholder asset_paths, and marked all four ready."
+    },
+    {
+      "card_id": "WTJ-20260704-039",
+      "updated_at_cst": "2026-07-04 05:17",
+      "words": [
+        "koala",
+        "kettle"
+      ],
+      "changes": "Generated production koala and kettle sprites, replaced placeholder asset_paths, and marked both ready."
+    },
+    {
+      "card_id": "WTJ-20260704-040",
+      "updated_at_cst": "2026-07-04 05:28",
+      "words": [
+        "lion",
+        "lemon"
+      ],
+      "changes": "Generated production lion and lemon sprites, replaced placeholder asset_paths, and marked both ready."
     }
   ]
 }
