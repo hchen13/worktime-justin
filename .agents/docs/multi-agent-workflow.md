@@ -18,6 +18,17 @@ Canonical board:
 
 https://my.feishu.cn/wiki/QsKfwHvaDihj4QkTPMzclmQpnob?fromScene=spaceOverview&table=tblZfqKOydgqr7XS&view=vews2l5ddY
 
+Preferred access path:
+
+- Use the globally installed `lark-cli` and Lark skills for Feishu/Lark operations.
+- Codex sessions read Lark skills from `/Users/claire/.codex/skills/lark-*`.
+- Claude Code sessions read Lark skills from `/Users/claire/.claude/skills/lark-*`.
+- For Base/Bitable card operations, use the `lark-base` skill and `lark-cli base +...` commands first.
+- For Wiki URL/token resolution, use `lark-wiki`.
+- For Feishu direct messages, use `lark-im`.
+- Do not write another role-local Feishu client for normal board reads, writes, view changes, or message sends when `lark-cli` covers the operation.
+- Existing project scripts under `.agents/tools/` remain allowed for idempotent project setup, compatibility with already-written automation, and narrow fallback when `lark-cli` cannot complete a required operation. Any fallback use must be recorded in the card evidence or latest progress.
+
 Use the role-specific Feishu app credentials in the project `.env`:
 
 - PM: `PM_APP_ID`, `PM_APP_SECRET`

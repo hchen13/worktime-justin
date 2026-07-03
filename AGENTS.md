@@ -9,6 +9,7 @@ Detailed protocol:
 - Agent runtime loops and automations: [.agents/docs/agent-runtime-loops.md](.agents/docs/agent-runtime-loops.md)
 - Production asset quality bar: [.agents/docs/production-asset-quality.md](.agents/docs/production-asset-quality.md)
 - Feishu board setup script: [.agents/tools/setup_feishu_board.py](.agents/tools/setup_feishu_board.py)
+- Global Lark CLI skills for Feishu access: `/Users/claire/.codex/skills/lark-*` and `/Users/claire/.claude/skills/lark-*`
 - Project-local Hyperframes skills for Codex: [.codex/skills/](.codex/skills/)
 - Project-local Hyperframes skills for Claude Code: [.claude/skills/](.claude/skills/)
 
@@ -21,11 +22,12 @@ Core rules:
 5. PM owns official card creation, cross-role routing, and final acceptance. Non-PM roles submit completed work to PM review instead of assigning follow-up work directly to other roles.
 6. PM owns `main`; TL owns non-main implementation branches. Do not merge to `main` outside the PM workflow.
 7. Use the role-specific Feishu app identity from `.env` when reading or writing the board.
-8. Hyperframes skills are installed locally under `.codex/skills/` and `.claude/skills/`; do not install them globally for this project.
-9. QA assets are persistent project assets. New behavior must add or update reusable test cases under `tests/`, not only run a one-off check.
-10. Role sessions may run as loops. Follow [.agents/docs/agent-runtime-loops.md](.agents/docs/agent-runtime-loops.md) for Claude Code loops, Codex role loops, and PM automation/cron behavior.
-11. Documentation mockups and production assets are different quality classes. Real app sprites, treasure chests, stickers, and reward visuals must satisfy [.agents/docs/production-asset-quality.md](.agents/docs/production-asset-quality.md); rough mockups, emoji, or placeholder-looking art must not ship as product assets.
-12. PM loop must check for whole-board completion. When every official card is terminal (`done` or `_deprecated`) and no active card remains, PM sends Ethan a one-time Feishu DM using the PM app identity via [.agents/tools/pm_completion_notify.py](.agents/tools/pm_completion_notify.py).
-13. Use the lightweight task path for small, clear, low-risk cards. Full multi-agent technical review is required for complex architecture, cross-module behavior, packaging/security, production asset standards, and other high-risk work; it is not required for obvious CSS/doc/copy fixes or tightly scoped implementation slices with clear acceptance checks.
-14. Implementation handoff has two different failure modes. Missing final branch/commit/evidence is a `review` handoff correction, not technical rework: PM keeps the card in `review`, assigns TL, and asks only for the missing handoff metadata. Real code or behavior defects may be routed back to `todo` or `in progress`. TL review handoff must name the final branch, final commit, verification evidence, risks, and recommended PM route.
-15. TL must run [.agents/tools/tl_handoff_check.py](.agents/tools/tl_handoff_check.py) before moving implementation work to `review`. If the preflight fails, TL fixes the branch/evidence in the same loop and does not hand off to PM yet.
+8. Use the global `lark-cli` and Lark skills first for Feishu/Lark work. Do not create a new ad hoc Feishu client when an installed Lark skill or `lark-cli` command covers the operation.
+9. Hyperframes skills are installed locally under `.codex/skills/` and `.claude/skills/`; do not install them globally for this project.
+10. QA assets are persistent project assets. New behavior must add or update reusable test cases under `tests/`, not only run a one-off check.
+11. Role sessions may run as loops. Follow [.agents/docs/agent-runtime-loops.md](.agents/docs/agent-runtime-loops.md) for Claude Code loops, Codex role loops, and PM automation/cron behavior.
+12. Documentation mockups and production assets are different quality classes. Real app sprites, treasure chests, stickers, and reward visuals must satisfy [.agents/docs/production-asset-quality.md](.agents/docs/production-asset-quality.md); rough mockups, emoji, or placeholder-looking art must not ship as product assets.
+13. PM loop must check for whole-board completion. When every official card is terminal (`done` or `_deprecated`) and no active card remains, PM sends Ethan a one-time Feishu DM using the PM app identity via [.agents/tools/pm_completion_notify.py](.agents/tools/pm_completion_notify.py).
+14. Use the lightweight task path for small, clear, low-risk cards. Full multi-agent technical review is required for complex architecture, cross-module behavior, packaging/security, production asset standards, and other high-risk work; it is not required for obvious CSS/doc/copy fixes or tightly scoped implementation slices with clear acceptance checks.
+15. Implementation handoff has two different failure modes. Missing final branch/commit/evidence is a `review` handoff correction, not technical rework: PM keeps the card in `review`, assigns TL, and asks only for the missing handoff metadata. Real code or behavior defects may be routed back to `todo` or `in progress`. TL review handoff must name the final branch, final commit, verification evidence, risks, and recommended PM route.
+16. TL must run [.agents/tools/tl_handoff_check.py](.agents/tools/tl_handoff_check.py) before moving implementation work to `review`. If the preflight fails, TL fixes the branch/evidence in the same loop and does not hand off to PM yet.
