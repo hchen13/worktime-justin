@@ -1,8 +1,16 @@
+<!--
+  工程约束（v0.1，卡片 WTJ-20260703-002）：
+  - 零 JavaScript：不引入 script 标签，不使用 on 前缀内联事件属性。
+  - 零外部请求：不引入 CDN、外部字体、外部样式；所有资源均为本地相对路径。
+  - file:// 直接双击打开必须完美渲染，不依赖本地服务器或构建步骤。
+  - 拆分 CSS / 引入 JS 的触发条件：文件行数 > 2000 行，或 DESIGN 素材引用 > 10 处时，在 v0.2+ 评估。
+-->
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="WorkTime Justin（小小工作台）产品需求文档 v0.1——给三岁孩子在旧 MacBook 上安全自由探索的全屏桌面应用。" />
   <title>WorkTime Justin / 小小工作台 - 需求说明 v0.1</title>
   <style>
     :root {
@@ -27,6 +35,7 @@
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    figure { margin: 0; }
     body {
       margin: 0;
       color: var(--ink);
@@ -37,6 +46,37 @@
 
     a { color: var(--cyan); text-decoration: none; }
     a:hover { text-decoration: underline; }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: var(--panel-2);
+      color: var(--ink);
+      padding: 10px 16px;
+      border-radius: 6px;
+      z-index: 999;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+    }
+
+    .skip-link:focus {
+      left: 16px;
+      top: 16px;
+      outline: 2px solid var(--cyan);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     .page {
       width: min(1180px, calc(100% - 40px));
@@ -167,7 +207,6 @@
     }
 
     .card-pad { padding: 18px; }
-    .span-3 { grid-column: span 3; }
     .span-4 { grid-column: span 4; }
     .span-5 { grid-column: span 5; }
     .span-6 { grid-column: span 6; }
@@ -175,10 +214,19 @@
     .span-8 { grid-column: span 8; }
     .span-12 { grid-column: span 12; }
 
+    .mt-16 { margin-top: 16px; }
+    .mb-16 { margin-bottom: 16px; }
+
     .mock-image {
       width: 100%;
+      max-width: 100%;
+      height: auto;
       display: block;
       background: #10151e;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
     }
 
     .caption {
@@ -187,6 +235,22 @@
       font-size: 13px;
       border-top: 1px solid var(--line);
       background: rgba(0,0,0,.18);
+    }
+
+    .req-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 6px;
+      padding: 1px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 10.5px;
+      letter-spacing: .02em;
+      color: var(--cyan);
+      background: rgba(94,231,255,.08);
+      border: 1px solid rgba(94,231,255,.28);
+      border-radius: 5px;
+      vertical-align: middle;
+      white-space: nowrap;
     }
 
     .app-wireframe {
@@ -234,10 +298,10 @@
       animation: popfade 3.6s ease-in-out infinite;
     }
 
-    .letter.a { left: 11%; top: 28%; color: var(--yellow); font-size: 88px; --r: -10deg; animation-delay: -.4s; }
-    .letter.d { left: 45%; top: 16%; color: var(--cyan); font-size: 128px; --r: 7deg; animation-delay: -1.2s; }
-    .letter.g { right: 17%; top: 36%; color: var(--coral); font-size: 92px; --r: 13deg; animation-delay: -2s; }
-    .letter.t { left: 31%; bottom: 20%; color: var(--green); font-size: 70px; --r: -4deg; animation-delay: -2.6s; }
+    .letter.a { left: 11%; top: 28%; color: var(--yellow); font-size: clamp(40px, 8vw, 88px); --r: -10deg; animation-delay: -.4s; }
+    .letter.d { left: 45%; top: 16%; color: var(--cyan); font-size: clamp(48px, 11vw, 128px); --r: 7deg; animation-delay: -1.2s; }
+    .letter.g { right: 17%; top: 36%; color: var(--coral); font-size: clamp(42px, 8.5vw, 92px); --r: 13deg; animation-delay: -2s; }
+    .letter.t { left: 31%; bottom: 20%; color: var(--green); font-size: clamp(34px, 6.5vw, 70px); --r: -4deg; animation-delay: -2.6s; }
 
     @keyframes popfade {
       0%, 100% { opacity: .1; transform: scale(.85) rotate(var(--r)); }
@@ -331,6 +395,8 @@
       border-top: 1px solid rgba(255,255,255,.08);
     }
 
+    .slots.standalone { border-top: 0; }
+
     .slot {
       width: 36px;
       height: 36px;
@@ -376,6 +442,9 @@
       gap: 10px;
       align-items: stretch;
     }
+
+    .flow.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .flow.cols-3 { grid-template-columns: repeat(3, 1fr); }
 
     .step {
       min-height: 118px;
@@ -423,6 +492,8 @@
 
     .list li { margin-bottom: 6px; }
 
+    .table-scroll { overflow-x: auto; }
+
     .matrix {
       width: 100%;
       border-collapse: collapse;
@@ -463,10 +534,7 @@
       line-height: 1.7;
     }
 
-    .two-col {
-      columns: 2;
-      column-gap: 30px;
-    }
+    .callout p, .callout li, .callout .list { color: inherit; }
 
     .mini-wire {
       display: grid;
@@ -495,6 +563,36 @@
       border: 1px solid rgba(255,255,255,.1);
     }
 
+    .asset-slot {
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 2px dashed rgba(255,255,255,.28);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+
+    .asset-slot.done {
+      border-style: solid;
+      border-color: rgba(87,227,137,.45);
+      background: rgba(87,227,137,.06);
+    }
+
+    .asset-slot.done strong { color: var(--ok); }
+
+    .asset-slot strong { color: #fff; font-size: 14px; }
+    .asset-slot .path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: var(--cyan);
+    }
+
     footer {
       margin-top: 50px;
       padding-top: 22px;
@@ -506,66 +604,107 @@
 
     @media (max-width: 920px) {
       header { grid-template-columns: 1fr; }
-      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
-      .flow { grid-template-columns: 1fr; }
-      .two-col { columns: 1; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+      .flow, .flow.cols-2, .flow.cols-3 { grid-template-columns: 1fr; }
       .app-wireframe { min-height: 470px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .letter {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
     }
 
     @media print {
       body { background: #fff; color: #111; }
       nav { display: none; }
-      .card, .step, .header-note { box-shadow: none; }
+      h1, h2, h3, .step strong, .task-card strong { color: #111; }
+      p, .list, .list li, .step p, .task-card p { color: #222; }
+      .card, .step, .header-note, .task-card, .callout, .asset-slot {
+        box-shadow: none;
+        background: #fff;
+        border-color: #999;
+        color: #111;
+      }
+      .caption { background: #fff; color: #333; border-top-color: #ccc; }
+      .callout { color: #111; border-left-color: #b8860b; }
+      .subtitle { color: #222; }
+      .asset-slot strong, .asset-slot.done strong { color: #111; }
+      .topbar, .parent-lock { display: none; }
+      .tag, .tag.done, .tag.risk, .tag.no {
+        background: #eee;
+        border-color: #999;
+        color: #111;
+      }
+      .req-badge { background: #eee; border-color: #999; color: #111; }
+      .matrix th { background: #eee; color: #111; }
+      .matrix td { background: #fff; color: #111; }
+      a { color: #111; text-decoration: underline; }
+      .letter, .question, .success-object, .status-lights, .slot, .dog, .light {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main">跳到正文内容</a>
   <div class="page">
     <header>
       <div>
         <div class="eyebrow">
           <span class="pill">需求说明 v0.1</span>
-          <span class="pill">来源：当前 Codex 会话 transcript</span>
-          <span class="pill">状态：给 Ethan 评审</span>
+          <span class="pill">来源：需求卡 WTJ-20260703-001</span>
+          <span class="pill">状态：待 PM review</span>
+          <span class="pill">卡片 WTJ-20260703-002</span>
         </div>
         <h1>WorkTime Justin<br />小小工作台</h1>
         <p class="subtitle">一个给三岁孩子在旧 MacBook 上安全自由探索的全屏桌面应用：默认干净、按键有即时反馈、秘密词触发惊喜、问号进入短任务，所有奖励都尽量不把画面变脏。</p>
       </div>
       <div class="header-note">
-        本页不是实现方案，也不是任务拆解。它把当前会话中已经收敛的产品需求做成可视化 artifact，方便继续讨论、改动和后续拆卡。技术选型、素材清单、TTS 模型仍需要单独交给 TL / DESIGN 验证。
+        本页不是实现方案，也不是任务拆解。它将需求卡 WTJ-20260703-001 收敛的产品需求做成可视化 artifact，方便继续讨论、改动和后续拆卡。技术选型、素材清单、TTS 模型仍需要单独交给 TL / DESIGN 验证。
       </div>
     </header>
 
     <nav aria-label="页面导航">
       <a href="#overview">一屏概览</a>
+      <a href="#coverage">需求覆盖矩阵</a>
       <a href="#state-assets">状态图</a>
       <a href="#principles">设计原则</a>
       <a href="#keyboard">键盘探索</a>
       <a href="#secret">秘密词</a>
+      <a href="#slots">五个发现槽</a>
       <a href="#tasks">问号任务</a>
       <a href="#pointer">鼠标反馈</a>
       <a href="#rewards">奖励系统</a>
       <a href="#assets">素材与声音</a>
       <a href="#desktop">桌面与安全</a>
+      <a href="#exit">退出机制</a>
+      <a href="#params">参数与阈值</a>
       <a href="#open">待确认</a>
+      <a href="#changelog">变更记录</a>
     </nav>
 
-    <section id="overview">
-      <h2>一屏概览</h2>
+    <main id="main">
+
+    <section id="overview" data-domain="DEF" aria-labelledby="overview-heading">
+      <h2 id="overview-heading">一屏概览</h2>
       <div class="grid">
         <div class="card span-7">
-          <div class="app-wireframe" aria-label="核心界面线框">
-            <div class="topbar">
+          <div class="app-wireframe" role="img" aria-label="核心界面线框：默认画布、五个发现槽、右侧问号与角落任务状态灯示意">
+            <div class="topbar" aria-hidden="true">
               <span>Work Time, Justin! / 小小工作台</span>
               <span class="parent-lock">⌁</span>
             </div>
-            <div class="canvas">
+            <div class="canvas" aria-hidden="true">
               <div class="letter a">A</div>
               <div class="letter d">D</div>
               <div class="letter g">G</div>
               <div class="letter t">T</div>
               <div class="question">?</div>
-              <div class="status-lights" aria-label="任务状态灯">
+              <div class="status-lights">
                 <span class="light on"></span>
                 <span class="light on"></span>
                 <span class="light"></span>
@@ -579,7 +718,7 @@
                 <div class="sound">dog found · woof</div>
               </div>
             </div>
-            <div class="slots" aria-label="五个发现槽">
+            <div class="slots" aria-hidden="true">
               <span class="slot filled">★</span>
               <span class="slot filled">●</span>
               <span class="slot">+</span>
@@ -587,43 +726,82 @@
               <span class="slot">+</span>
             </div>
           </div>
-          <div class="caption">线框：默认只保留画布、底部五个发现槽、右侧一个问号、角落任务状态灯和很小的家长入口。</div>
+          <p class="caption" id="req-def-01" data-req-id="REQ-DEF-01"><span class="req-badge">REQ-DEF-01</span> 线框：默认只保留画布、底部五个发现槽、右侧一个问号、角落任务状态灯和很小的家长入口。</p>
         </div>
         <div class="card span-5">
-          <img class="mock-image" src="assets/accepted-mvp-mockup.png" alt="已认可的 MVP 界面方向图" />
-          <div class="caption">当前会话里已认可的方向图：深色干净画布、随机彩色字母、dog 命中后的奖励瞬间。</div>
+          <img class="mock-image" src="assets/accepted-mvp-mockup.png" alt="已认可的 MVP 界面方向图" width="1672" height="941" />
+          <div class="caption">已认可的 MVP 方向图（需求卡 WTJ-20260703-001）：深色干净画布、随机彩色字母、dog 命中后的奖励瞬间。</div>
         </div>
+      </div>
+
+      <div class="callout mt-16" id="req-def-02" data-req-id="REQ-DEF-02">
+        <p><strong><span class="req-badge">REQ-DEF-02</span> mock 与需求文本差异声明</strong></p>
+        <p>PM 已裁决（2026-07-04）：最终文字需求为规范源（normative），mock / 状态图仅作方向示意（directional）。默认单问号、五个发现槽、无回显条均为已定点。以下为差异明细：</p>
+        <ul class="list">
+          <li>① mock 右侧有 4 个图标竖排（星 / 火箭 / 心 / 彩带）；需求文本规定默认右侧只保留一个低调问号（见 <a href="#req-task-01">REQ-TASK-01</a>），以需求文本为准。</li>
+          <li>② mock 底部为约 9 节点进度轨道 + 末端宝箱；需求文本规定为五个发现槽（见 <a href="#req-slot-01">REQ-SLOT-01</a>），以需求文本为准。</li>
+          <li>③ mock 有终端式输入回显条「justin@worktime: dog」；需求文本规定不需要输入框、不显示字母流回显（见 <a href="#req-sec-01">REQ-SEC-01</a>），以需求文本为准。</li>
+          <li>④ 已验收的 005 状态图中（尤其 secret-word-dog.png）亦包含终端回显条、右侧图标竖排等与需求文本冲突的视觉细节，同样适用上述裁决；素材视觉修订由 DESIGN 按已裁决口径处理。</li>
+        </ul>
       </div>
     </section>
 
-    <section id="state-assets">
-      <h2>核心状态图</h2>
+    <section id="coverage" aria-labelledby="coverage-heading">
+      <h2 id="coverage-heading">需求覆盖矩阵</h2>
+      <p>10 个需求域固定域码，每条原子需求编号为 <code>REQ-域码-序号</code>。此表同时作为 QA 的断言清单：域内 REQ ID 范围与条数须与正文实际编号一致。</p>
+      <div class="table-scroll">
+        <table class="matrix">
+          <caption class="visually-hidden">需求覆盖矩阵：10 个需求域与 REQ ID 范围、条数对照</caption>
+          <thead>
+            <tr>
+              <th scope="col">域码</th>
+              <th scope="col">需求域名称</th>
+              <th scope="col">章节锚点</th>
+              <th scope="col">REQ ID 范围</th>
+              <th scope="col">条数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>DEF</td><td>默认界面</td><td><a href="#overview">#overview</a></td><td>REQ-DEF-01 ~ REQ-DEF-02</td><td>2</td></tr>
+            <tr><td>KB</td><td>键盘</td><td><a href="#keyboard">#keyboard</a></td><td>REQ-KB-01 ~ REQ-KB-09</td><td>9</td></tr>
+            <tr><td>SEC</td><td>秘密词</td><td><a href="#secret">#secret</a></td><td>REQ-SEC-01 ~ REQ-SEC-11</td><td>11</td></tr>
+            <tr><td>SLOT</td><td>五个发现槽</td><td><a href="#slots">#slots</a></td><td>REQ-SLOT-01 ~ REQ-SLOT-04</td><td>4</td></tr>
+            <tr><td>TASK</td><td>问号任务</td><td><a href="#tasks">#tasks</a></td><td>REQ-TASK-01 ~ REQ-TASK-10</td><td>10</td></tr>
+            <tr><td>EXIT</td><td>退出机制</td><td><a href="#exit">#exit</a></td><td>REQ-EXIT-01 ~ REQ-EXIT-04</td><td>4</td></tr>
+            <tr><td>PTR</td><td>鼠标反馈</td><td><a href="#pointer">#pointer</a></td><td>REQ-PTR-01 ~ REQ-PTR-03</td><td>3</td></tr>
+            <tr><td>RWD</td><td>奖励</td><td><a href="#rewards">#rewards</a></td><td>REQ-RWD-01 ~ REQ-RWD-06</td><td>6</td></tr>
+            <tr><td>AST</td><td>素材</td><td><a href="#assets">#assets</a></td><td>REQ-AST-01 ~ REQ-AST-12</td><td>12</td></tr>
+            <tr><td>DESK</td><td>桌面约束</td><td><a href="#desktop">#desktop</a></td><td>REQ-DESK-01 ~ REQ-DESK-05</td><td>5</td></tr>
+            <tr><td><strong>合计</strong></td><td colspan="2">10 个需求域</td><td>—</td><td><strong>66</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="state-assets" aria-labelledby="state-assets-heading">
+      <h2 id="state-assets-heading">核心状态图</h2>
       <div class="grid">
         <div class="card span-6">
-          <img class="mock-image" src="assets/state-default-canvas.png" alt="默认画布状态图" />
+          <img class="mock-image" src="assets/states/default-canvas.png" alt="默认画布状态图" width="1440" height="810" />
           <div class="caption">默认画布：保留标题、低调问号、五个发现槽和状态灯；普通输入只留下短暂高对比字母反馈。</div>
         </div>
         <div class="card span-6">
-          <img class="mock-image" src="assets/state-secret-word-hit.png" alt="秘密词命中状态图" />
-          <div class="caption">秘密词命中：对象、声音和槽位点亮同时出现；旧字母退到背景，避免画面变脏。</div>
+          <img class="mock-image" src="assets/states/secret-word-dog.png" alt="秘密词命中状态图" width="1440" height="810" />
+          <div class="caption">秘密词命中：对象、声音和槽位点亮同时出现；旧字母退到背景，避免画面变脏。（PM 已裁决：视觉细节以需求文本为准，见<a href="#req-def-02">差异声明</a>）</div>
         </div>
         <div class="card span-6">
-          <img class="mock-image" src="assets/state-question-task.png" alt="问号小任务状态图" />
+          <img class="mock-image" src="assets/states/question-task-drag.png" alt="问号小任务状态图" width="1440" height="810" />
           <div class="caption">问号任务：语音提示为主，不依赖中文说明；任务目标足够大，超时条保持轻量。</div>
         </div>
         <div class="card span-6">
-          <img class="mock-image" src="assets/state-reward-chest.png" alt="五槽满宝箱奖励状态图" />
+          <img class="mock-image" src="assets/states/treasure-reward.png" alt="五槽满宝箱奖励状态图" width="1440" height="810" />
           <div class="caption">五槽满：宝箱和短暂光效给一次性大奖励；底部槽位清楚解释奖励触发来源。</div>
-        </div>
-        <div class="card span-12">
-          <img class="mock-image" src="assets/state-input-decay.png" alt="重复输入衰减状态图" />
-          <div class="caption">输入衰减：连续重复同一个键的反馈逐步变弱，换键后恢复，保留即时感但不奖励乱按。</div>
         </div>
       </div>
     </section>
 
-    <section id="principles">
-      <h2>设计原则</h2>
+    <section id="principles" aria-labelledby="principles-heading">
+      <h2 id="principles-heading">设计原则</h2>
       <div class="grid">
         <div class="card card-pad span-4">
           <h3>主线是自由探索</h3>
@@ -643,225 +821,358 @@
       </div>
     </section>
 
-    <section id="keyboard">
-      <h2>键盘自由探索</h2>
+    <section id="keyboard" data-domain="KB" aria-labelledby="keyboard-heading">
+      <h2 id="keyboard-heading">键盘自由探索</h2>
       <div class="grid">
         <div class="card card-pad span-6">
           <h3>普通字母与数字</h3>
           <ul class="list">
-            <li>每按一个普通字母，屏幕随机位置弹出这个字母。</li>
-            <li>颜色、大小、旋转、位置都可以变化，但必须保证深色背景上高对比可读。</li>
-            <li>出现方式是“啪”一下弹出，然后约 0.8-1.5 秒逐渐淡出。</li>
-            <li>字母建议用 SVG / Canvas / HTML text 动态生成，不为每种颜色准备贴图。</li>
+            <li id="req-kb-01" data-req-id="REQ-KB-01"><span class="req-badge">REQ-KB-01</span> 每按一个普通字母，屏幕随机位置弹出这个字母。</li>
+            <li id="req-kb-02" data-req-id="REQ-KB-02"><span class="req-badge">REQ-KB-02</span> 颜色、大小、旋转、位置都可以变化，但必须保证深色背景上高对比可读。</li>
+            <li id="req-kb-03" data-req-id="REQ-KB-03"><span class="req-badge">REQ-KB-03</span> 出现方式是“啪”一下弹出，然后约 0.8-1.5 秒逐渐淡出。</li>
+            <li id="req-kb-04" data-req-id="REQ-KB-04"><span class="req-badge">REQ-KB-04</span> 字母建议用 SVG / Canvas / HTML text 动态生成，不为每种颜色准备贴图。</li>
           </ul>
         </div>
         <div class="card card-pad span-6">
           <h3>功能键与重复按键</h3>
           <ul class="list">
-            <li>空格、回车可以有轻微波纹或弹跳；Command / Option / Control / Shift 反馈很弱或不计奖励。</li>
-            <li>连续乱按功能键，反馈快速衰减到几乎没有。</li>
-            <li>长按一个键不持续计数。</li>
-            <li>连续重复同一个键超过 3 次后暂停计数；换键后再切回来可以重新计数。</li>
-            <li>正常双写不惩罚，例如 apple 里的 pp 可以成立。</li>
+            <li id="req-kb-05" data-req-id="REQ-KB-05"><span class="req-badge">REQ-KB-05</span> 空格、回车可以有轻微波纹或弹跳；Command / Option / Control / Shift 反馈很弱或不计奖励。</li>
+            <li id="req-kb-06" data-req-id="REQ-KB-06"><span class="req-badge">REQ-KB-06</span> 连续乱按功能键，反馈快速衰减到几乎没有。</li>
+            <li id="req-kb-07" data-req-id="REQ-KB-07"><span class="req-badge">REQ-KB-07</span> 长按一个键不持续计数。</li>
+            <li id="req-kb-08" data-req-id="REQ-KB-08"><span class="req-badge">REQ-KB-08</span> 连续重复同一个键超过 3 次后暂停计数；换键后再切回来可以重新计数。</li>
+            <li id="req-kb-09" data-req-id="REQ-KB-09"><span class="req-badge">REQ-KB-09</span> 正常双写不计入「连续重复同键」的暂停规则，例如连续输入 apple 中的 pp 不会被判定为过度重复（见 REQ-KB-08）。</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <section id="secret">
-      <h2>秘密词与五个发现槽</h2>
-      <div class="flow" aria-label="秘密词发现流程">
-        <div class="step">
-          <strong>1. 自由输入</strong>
+    <section id="secret" data-domain="SEC" aria-labelledby="secret-heading">
+      <h2 id="secret-heading">秘密词</h2>
+      <div class="flow cols-3" aria-label="秘密词发现流程">
+        <div class="step" id="req-sec-01" data-req-id="REQ-SEC-01">
+          <strong><span class="req-badge">REQ-SEC-01</span> 自由输入</strong>
           <p>系统监听最近的普通英文字母流，不要求输入框，也不要求回车。</p>
         </div>
-        <div class="step">
-          <strong>2. 命中暗语</strong>
-          <p>例如 xxdogxx 中间出现 dog，或 dogg 在第三个字母 g 时触发 dog。</p>
+        <div class="step" id="req-sec-02" data-req-id="REQ-SEC-02">
+          <strong><span class="req-badge">REQ-SEC-02</span> 命中判定</strong>
+          <p>输入字母流中出现完整暗语子串即视为命中；具体边界规则见下方「命中判定规则」。</p>
         </div>
-        <div class="step">
-          <strong>3. 出现对象</strong>
+        <div class="step" id="req-sec-03" data-req-id="REQ-SEC-03">
+          <strong><span class="req-badge">REQ-SEC-03</span> 出现对象</strong>
           <p>dog 出现小狗、apple 出现苹果，同时播放授权音效或预生成语音。</p>
-        </div>
-        <div class="step">
-          <strong>4. 点亮五槽</strong>
-          <p>当前五格内不重复。同一个词重复命中只给小反馈，不再占新格。</p>
-        </div>
-        <div class="step">
-          <strong>5. 开宝箱</strong>
-          <p>五格满后宝箱打开，触发一次性大奖励，随后进入下一轮。</p>
         </div>
       </div>
 
-      <div class="grid" style="margin-top:16px">
-        <div class="card card-pad span-7">
-          <h3>发现槽来源</h3>
-          <p>五槽不只服务秘密词。它也可以被自由探索里程碑点亮，例如累计 100 次有效按键、200 次有效按键。这样孩子即使没有拼出单词，也会因为持续探索获得小目标。</p>
-          <p>建议把秘密词命中显示为对应对象图标，把键盘里程碑显示为“键盘星星”这类抽象图标。当前一轮内同类发现不重复。</p>
-        </div>
-        <div class="card card-pad span-5">
-          <h3>词池规模</h3>
-          <p>第一阶段按 26 个字母，每个字母约 4 个儿童英语常见词组织，目标约 100 个词。X / Y / Z 这类难字母可减少数量或选择学习场景里常见词。</p>
-          <div>
-            <span class="tag">dog</span>
-            <span class="tag">cat</span>
-            <span class="tag">apple</span>
-            <span class="tag">ball</span>
-            <span class="tag">moon</span>
-            <span class="tag">star</span>
-            <span class="tag">car</span>
-            <span class="tag">zoo</span>
-          </div>
+      <div class="card card-pad mt-16">
+        <h3>命中判定规则</h3>
+        <ul class="list">
+          <li id="req-sec-04" data-req-id="REQ-SEC-04"><span class="req-badge">REQ-SEC-04</span> 子串命中：输入流中任意连续子串包含完整暗语即触发，如 xxdogxx 中间包含完整 dog 即命中。</li>
+          <li id="req-sec-05" data-req-id="REQ-SEC-05"><span class="req-badge">REQ-SEC-05</span> 重叠触发：如 dogg 在输入到第三个字母 g 时即触发 dog，无需等待独立分隔。</li>
+          <li id="req-sec-06" data-req-id="REQ-SEC-06"><span class="req-badge">REQ-SEC-06</span> 双写不惩罚：如 apple 中的 pp 不会打断或误判命中（词内重复字母不影响暗语子串匹配）。</li>
+          <li id="req-sec-07" data-req-id="REQ-SEC-07"><span class="req-badge">REQ-SEC-07</span> 同词重复命中：同一个词在同一轮内重复命中，只给小反馈，不再点亮新的发现槽（见 <a href="#req-slot-01">REQ-SLOT-01</a>）。同轮已收集词再次命中同样适用本条。</li>
+          <li id="req-sec-09" data-req-id="REQ-SEC-09"><span class="req-badge">REQ-SEC-09</span> 大小写等价：DOG、Dog、dog 均判定为命中同一暗语（PM 已裁决 2026-07-04）。</li>
+          <li id="req-sec-10" data-req-id="REQ-SEC-10"><span class="req-badge">REQ-SEC-10</span> 复合输入顺序命中：如输入 hotdog 过程中可先命中 hot、后命中 dog，两次各自独立触发（PM 已裁决 2026-07-04）。</li>
+          <li id="req-sec-11" data-req-id="REQ-SEC-11"><span class="req-badge">REQ-SEC-11</span> 最长词优先：同一时刻多个后缀同时构成命中时，取最长词优先触发（PM 已裁决 2026-07-04）。</li>
+        </ul>
+        <p>边界规则已由 PM 裁决（2026-07-04）并落文如上，不再列入待确认清单。</p>
+      </div>
+
+      <div class="card card-pad mt-16">
+        <h3>词池规模</h3>
+        <p id="req-sec-08" data-req-id="REQ-SEC-08"><span class="req-badge">REQ-SEC-08</span> 第一阶段按 26 个字母，每个字母约 4 个儿童英语常见词组织，目标约 100 个词。X / Y / Z 这类难字母可减少数量或选择学习场景里常见词。</p>
+        <div>
+          <span class="tag">dog</span>
+          <span class="tag">cat</span>
+          <span class="tag">apple</span>
+          <span class="tag">ball</span>
+          <span class="tag">moon</span>
+          <span class="tag">star</span>
+          <span class="tag">car</span>
+          <span class="tag">zoo</span>
         </div>
       </div>
     </section>
 
-    <section id="tasks">
-      <h2>问号小任务</h2>
+    <section id="slots" data-domain="SLOT" aria-labelledby="slots-heading">
+      <h2 id="slots-heading">五个发现槽</h2>
+      <p>本章负责发现槽机制本身（点亮规则与来源）；槽满后的宝箱奖励表现细节见 <a href="#rewards">#rewards</a>（<a href="#req-rwd-01">REQ-RWD-01</a>）。</p>
+      <div class="flow cols-2" aria-label="发现槽点亮流程">
+        <div class="step" id="req-slot-01" data-req-id="REQ-SLOT-01">
+          <strong><span class="req-badge">REQ-SLOT-01</span> 点亮五槽</strong>
+          <p>秘密词命中或键盘探索里程碑（见 REQ-SLOT-03）会点亮五个发现槽之一；当前五格内不重复；同一词重复命中只给小反馈，不再占新格（见 <a href="#req-sec-07">REQ-SEC-07</a>）。</p>
+        </div>
+        <div class="step" id="req-slot-02" data-req-id="REQ-SLOT-02">
+          <strong><span class="req-badge">REQ-SLOT-02</span> 开宝箱</strong>
+          <p>五格全部点亮后触发宝箱开启，进入一次性大奖励（表现细节见 <a href="#req-rwd-01">REQ-RWD-01</a>），随后清空五槽，进入下一轮。</p>
+        </div>
+      </div>
+
+      <div class="card card-pad mt-16">
+        <h3>发现槽来源</h3>
+        <ul class="list">
+          <li id="req-slot-03" data-req-id="REQ-SLOT-03"><span class="req-badge">REQ-SLOT-03</span> 五槽不只服务秘密词，也可被自由探索里程碑点亮，例如累计 100 次、200 次有效按键。这样孩子即使没有拼出单词，也会因为持续探索获得小目标。</li>
+          <li id="req-slot-04" data-req-id="REQ-SLOT-04"><span class="req-badge">REQ-SLOT-04</span> 建议把秘密词命中显示为对应对象图标，把键盘里程碑显示为「键盘星星」这类抽象图标。当前一轮内同类发现不重复。</li>
+        </ul>
+      </div>
+
+      <div class="card card-pad mt-16" role="img" aria-label="五个发现槽示意：两格已点亮，三格待点亮">
+        <div class="slots standalone" aria-hidden="true">
+          <span class="slot filled">★</span>
+          <span class="slot filled">●</span>
+          <span class="slot">+</span>
+          <span class="slot">+</span>
+          <span class="slot">+</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks" data-domain="TASK" aria-labelledby="tasks-heading">
+      <h2 id="tasks-heading">问号小任务</h2>
       <div class="grid">
         <div class="card card-pad span-5">
           <h3>入口和退出</h3>
           <ul class="list">
-            <li>默认右侧只保留一个低调的问号，不再放 3-4 个图标按钮。</li>
-            <li>点问号后播放语音任务，不显示中文任务文字。</li>
-            <li>15 秒未完成：轻提示一次。</li>
-            <li>30 秒未完成：目标变明显，比如闪一下或稍微放大。</li>
-            <li>45-60 秒仍未完成：任务自动收起，不算失败。</li>
-            <li>如果孩子明显转去玩键盘，例如连续 20 个有效键，任务也自动淡出。</li>
+            <li id="req-task-01" data-req-id="REQ-TASK-01"><span class="req-badge">REQ-TASK-01</span> 默认右侧只保留一个低调的问号，不再放 3-4 个图标按钮。</li>
+            <li id="req-task-02" data-req-id="REQ-TASK-02"><span class="req-badge">REQ-TASK-02</span> 点问号后播放语音任务，不显示中文任务文字。</li>
+            <li id="req-task-03" data-req-id="REQ-TASK-03"><span class="req-badge">REQ-TASK-03</span> 15 秒未完成：轻提示一次。</li>
+            <li id="req-task-04" data-req-id="REQ-TASK-04"><span class="req-badge">REQ-TASK-04</span> 30 秒未完成：目标变明显，比如闪一下或稍微放大。</li>
+            <li id="req-task-05" data-req-id="REQ-TASK-05"><span class="req-badge">REQ-TASK-05</span> 45-60 秒仍未完成：任务自动收起，不算失败（孩子侧退出说明见 <a href="#exit">#exit</a> / <a href="#req-exit-04">REQ-EXIT-04</a>）。</li>
+            <li id="req-task-06" data-req-id="REQ-TASK-06"><span class="req-badge">REQ-TASK-06</span> 如果孩子明显转去玩键盘，例如连续 20 个有效键，任务也自动淡出（见 <a href="#req-exit-04">REQ-EXIT-04</a>）。</li>
           </ul>
         </div>
         <div class="card card-pad span-7">
           <h3>四类任务</h3>
           <div class="mini-wire">
-            <div class="task-card">
-              <div class="task-icon">↔</div>
-              <div><strong>拖拽</strong><p>把苹果放进篮子；把狗狗带回家；把星星拖到天空。</p></div>
+            <div class="task-card" id="req-task-07" data-req-id="REQ-TASK-07">
+              <div class="task-icon" aria-hidden="true">↔</div>
+              <div><strong><span class="req-badge">REQ-TASK-07</span> 拖拽</strong><p>把苹果放进篮子；把狗狗带回家；把星星拖到天空。</p></div>
             </div>
-            <div class="task-card">
-              <div class="task-icon">•</div>
-              <div><strong>点击</strong><p>点一下开灯；关水龙头；按铃铛；打开门；让小马跑起来。</p></div>
+            <div class="task-card" id="req-task-08" data-req-id="REQ-TASK-08">
+              <div class="task-icon" aria-hidden="true">•</div>
+              <div><strong><span class="req-badge">REQ-TASK-08</span> 点击</strong><p>点一下开灯；关水龙头；按铃铛；打开门；让小马跑起来。</p></div>
             </div>
-            <div class="task-card">
-              <div class="task-icon">◎</div>
-              <div><strong>寻找</strong><p>语音说“找到小狗”。鼠标移到小狗上停 1 秒算完成；移上去点一下也算完成。</p></div>
+            <div class="task-card" id="req-task-09" data-req-id="REQ-TASK-09">
+              <div class="task-icon" aria-hidden="true">◎</div>
+              <div><strong><span class="req-badge">REQ-TASK-09</span> 寻找</strong><p>语音说“找到小狗”。鼠标移到小狗上停 1 秒算完成；移上去点一下也算完成。</p></div>
             </div>
-            <div class="task-card">
-              <div class="task-icon">A</div>
-              <div><strong>按键</strong><p>只要求一个键，例如 “Press A.”、“Press 3.”、“Press space.” 不做复杂组合键。</p></div>
+            <div class="task-card" id="req-task-10" data-req-id="REQ-TASK-10">
+              <div class="task-icon" aria-hidden="true">A</div>
+              <div><strong><span class="req-badge">REQ-TASK-10</span> 按键</strong><p>只要求一个键，且仅限字母 / 数字，例如 “Press A.”、“Press 3.”。不做复杂组合键。</p></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="pointer">
-      <h2>鼠标与触控板反馈</h2>
-      <table class="matrix">
-        <thead>
-          <tr>
-            <th>输入</th>
-            <th>正常反馈</th>
-            <th>衰减规则</th>
-            <th>大反馈条件</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>移动</td>
-            <td>很淡的光点尾迹，快速移动时稍明显。</td>
-            <td>连续乱晃约 3 秒后尾迹变弱；停一下再恢复。</td>
-            <td>经过有效对象可让对象轻微躲开、旋转或发光。</td>
-          </tr>
-          <tr>
-            <td>点击</td>
-            <td>第一下有小星点、短音效或小印章。</td>
-            <td>连续狂点反馈越来越弱，太快时不给声音。</td>
-            <td>点中任务目标、宝箱或有效对象时才有明显反应。</td>
-          </tr>
-          <tr>
-            <td>拖拽</td>
-            <td>只有可拖对象进入强反馈，对象弹性跟随。</td>
-            <td>拖错不惩罚，只轻轻弹回。</td>
-            <td>拖到正确目标后出现成功动画和任务计数。</td>
-          </tr>
-        </tbody>
-      </table>
+    <section id="pointer" data-domain="PTR" aria-labelledby="pointer-heading">
+      <h2 id="pointer-heading">鼠标与触控板反馈</h2>
+      <div class="table-scroll">
+        <table class="matrix">
+          <caption class="visually-hidden">鼠标与触控板反馈规则：输入类型、正常反馈、衰减规则与大反馈条件</caption>
+          <thead>
+            <tr>
+              <th scope="col">输入</th>
+              <th scope="col">正常反馈</th>
+              <th scope="col">衰减规则</th>
+              <th scope="col">大反馈条件</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="req-ptr-01" data-req-id="REQ-PTR-01">
+              <td><span class="req-badge">REQ-PTR-01</span> 移动</td>
+              <td>很淡的光点尾迹，快速移动时稍明显。</td>
+              <td>连续乱晃约 3 秒后尾迹变弱；停一下再恢复。</td>
+              <td>经过有效对象可让对象轻微躲开、旋转或发光。</td>
+            </tr>
+            <tr id="req-ptr-02" data-req-id="REQ-PTR-02">
+              <td><span class="req-badge">REQ-PTR-02</span> 点击</td>
+              <td>第一下有小星点、短音效或小印章。</td>
+              <td>连续狂点反馈越来越弱，太快时不给声音。</td>
+              <td>点中任务目标、宝箱或有效对象时才有明显反应。</td>
+            </tr>
+            <tr id="req-ptr-03" data-req-id="REQ-PTR-03">
+              <td><span class="req-badge">REQ-PTR-03</span> 拖拽</td>
+              <td>只有可拖对象进入强反馈，对象弹性跟随。</td>
+              <td>拖错不惩罚，只轻轻弹回。</td>
+              <td>拖到正确目标后出现成功动画和任务计数。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
-    <section id="rewards">
-      <h2>奖励系统</h2>
+    <section id="rewards" data-domain="RWD" aria-labelledby="rewards-heading">
+      <h2 id="rewards-heading">奖励系统</h2>
       <div class="grid">
         <div class="card card-pad span-6">
           <h3>五槽满：开宝箱</h3>
-          <p>宝箱奖励以一次性为主，不长期占屏幕空间。适合做烟花、大贴纸弹出后淡出、短动画、临时背景变化、新音效。开完后清空五槽，进入下一轮。</p>
-          <p>烟花建议用 Canvas / SVG 代码生成，预设“满天星、打铁花、圆形、星形”等类型；颜色从少量高质量色板出发做 HSL / HSV 微调，不做完全 RGB 随机。</p>
+          <ul class="list">
+            <li id="req-rwd-01" data-req-id="REQ-RWD-01"><span class="req-badge">REQ-RWD-01</span> 宝箱奖励以一次性表现为主，不长期占用屏幕空间；可用烟花、大贴纸弹出后淡出、短动画、临时背景变化、新音效等形式。</li>
+            <li id="req-rwd-02" data-req-id="REQ-RWD-02"><span class="req-badge">REQ-RWD-02</span> 宝箱开启后清空五槽，进入下一轮（见 <a href="#req-slot-02">REQ-SLOT-02</a>）。</li>
+            <li id="req-rwd-03" data-req-id="REQ-RWD-03"><span class="req-badge">REQ-RWD-03</span> 烟花建议用 Canvas / SVG 代码生成，预设「满天星、打铁花、圆形、星形」等类型；颜色从少量高质量色板出发做 HSL / HSV 微调，不做完全 RGB 随机。</li>
+          </ul>
         </div>
         <div class="card card-pad span-6">
           <h3>任务完成：工作状态灯</h3>
-          <p>小任务奖励不和底部五槽混用。角落放一排很小的工作状态灯，完成一个任务亮一个。连续完成 3 个任务，触发“今日工作完成”奖励。</p>
-          <p>奖励可以是三个灯一起闪、工作台盖章、小火箭发射、宝箱小开一次。表现要像爸爸工作界面的状态灯，但是儿童版。</p>
+          <ul class="list">
+            <li id="req-rwd-04" data-req-id="REQ-RWD-04"><span class="req-badge">REQ-RWD-04</span> 小任务奖励不与底部五槽混用；角落放一排很小的工作状态灯，完成一个任务点亮一个。</li>
+            <li id="req-rwd-05" data-req-id="REQ-RWD-05"><span class="req-badge">REQ-RWD-05</span> 连续完成 3 个任务，触发「今日工作完成」奖励。</li>
+            <li id="req-rwd-06" data-req-id="REQ-RWD-06"><span class="req-badge">REQ-RWD-06</span> 「今日工作完成」奖励表现可以是三个灯一起闪、工作台盖章、小火箭发射、宝箱小开一次；整体风格接近爸爸工作界面的状态灯，但是儿童版。</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <section id="assets">
-      <h2>素材与声音</h2>
+    <section id="assets" data-domain="AST" aria-labelledby="assets-heading">
+      <h2 id="assets-heading">素材与声音</h2>
+      <div class="card mb-16">
+        <img class="mock-image" src="assets/style/visual-style-tile.png" alt="WorkTime Justin 视觉风格基准图" width="1600" height="1000" />
+        <div class="caption">视觉基准：深色干净舞台、高对比动态字母、五槽、问号、状态灯、宝箱奖励，以及明确不做的复杂工具栏和永久贴纸堆积。</div>
+      </div>
+      <div class="card mb-16" id="sprite-contact-sheet">
+        <img class="mock-image" src="assets/sprites/production-sprite-contact-sheet.png" alt="秘密词 sprite 生产基准 v3 接触表" width="1280" height="640" />
+        <div class="caption">sprite 生产基准 v3（已验收，卡 WTJ-20260703-007）：dog、cat、apple、ball、star、car、basket、treasure chest 共 8 个透明 PNG（1024×1024 RGBA）；风格指南见 assets/sprites/sprite-style-guide.md。注：仅为首批样式基准，非完整词库素材。</div>
+      </div>
       <div class="grid">
         <div class="card card-pad span-4">
           <h3>代码生成</h3>
           <ul class="list">
-            <li>字母弹出、颜色、大小、旋转和淡出。</li>
-            <li>烟花粒子和部分 UI 动效。</li>
-            <li>鼠标尾迹、点击波纹、轻量过渡。</li>
+            <li id="req-ast-01" data-req-id="REQ-AST-01"><span class="req-badge">REQ-AST-01</span> 字母弹出、颜色、大小、旋转和淡出。</li>
+            <li id="req-ast-02" data-req-id="REQ-AST-02"><span class="req-badge">REQ-AST-02</span> 烟花粒子和部分 UI 动效。</li>
+            <li id="req-ast-03" data-req-id="REQ-AST-03"><span class="req-badge">REQ-AST-03</span> 鼠标尾迹、点击波纹、轻量过渡。</li>
           </ul>
           <span class="tag done">优先</span>
         </div>
         <div class="card card-pad span-4">
           <h3>图片 / Sprite</h3>
           <ul class="list">
-            <li>秘密词对应物体 PNG。</li>
-            <li>任务物件、动物、篮子、狗窝、灯、水龙头。</li>
-            <li>宝箱、贴纸、必要的短帧动画。</li>
+            <li id="req-ast-04" data-req-id="REQ-AST-04"><span class="req-badge">REQ-AST-04</span> 秘密词对应物体 PNG。</li>
+            <li id="req-ast-05" data-req-id="REQ-AST-05"><span class="req-badge">REQ-AST-05</span> 任务物件、动物、篮子、狗窝、灯、水龙头。</li>
+            <li id="req-ast-06" data-req-id="REQ-AST-06"><span class="req-badge">REQ-AST-06</span> 宝箱、贴纸、必要的短帧动画。</li>
           </ul>
           <span class="tag risk">DESIGN 生成</span>
         </div>
         <div class="card card-pad span-4">
           <h3>声音 / TTS</h3>
           <ul class="list">
-            <li>不使用 Chrome 自带发音作为产品声音。</li>
-            <li>固定短句预生成；组合任务运行时生成后缓存。</li>
-            <li>动物叫声、铃铛、水声、开箱声使用授权素材。</li>
+            <li id="req-ast-07" data-req-id="REQ-AST-07"><span class="req-badge">REQ-AST-07</span> 不使用 Chrome 自带发音作为产品声音。</li>
+            <li id="req-ast-08" data-req-id="REQ-AST-08"><span class="req-badge">REQ-AST-08</span> 固定短句预生成；组合任务运行时生成后缓存。</li>
+            <li id="req-ast-09" data-req-id="REQ-AST-09"><span class="req-badge">REQ-AST-09</span> 动物叫声、铃铛、水声、开箱声使用授权素材。</li>
           </ul>
           <span class="tag risk">待选型</span>
         </div>
       </div>
-      <div class="callout" style="margin-top:16px">
-        Hyperframes skills 已安装在项目本地的 .codex/skills/ 和 .claude/skills/。后续如果宝箱、贴纸或短动画需要 keyframe / GIF / sprite 辅助，可以作为 DESIGN 或 TL 卡继续验证。
+
+      <h3 class="mt-16">素材集成点</h3>
+      <p>本区块跟踪 DESIGN 素材卡的交付与集成状态；三个集成点（005 / 006 / 007）现均已验收，素材已直接集成于文档相应章节。后续新素材卡沿用同一机制：验收前不引用具体文件。</p>
+      <div class="grid">
+        <figure class="card span-4" data-asset-slot="core-states" id="req-ast-10" data-req-id="REQ-AST-10">
+          <div class="asset-slot done">
+            <strong>✓ DESIGN 素材已到位（卡 WTJ-20260703-005 已验收）</strong>
+            <span class="path">assets/states/</span>
+          </div>
+          <figcaption class="caption"><span class="req-badge">REQ-AST-10</span> core-states：核心状态图已验收，4 张状态图已集成于 <a href="#state-assets">#state-assets</a> 章。</figcaption>
+        </figure>
+        <figure class="card span-4" data-asset-slot="style-baseline" id="req-ast-11" data-req-id="REQ-AST-11">
+          <div class="asset-slot done">
+            <strong>✓ DESIGN 素材已到位（卡 WTJ-20260703-006 已验收）</strong>
+            <span class="path">assets/style/</span>
+          </div>
+          <figcaption class="caption"><span class="req-badge">REQ-AST-11</span> style-baseline：视觉风格基线已验收，风格基准图已集成于本章上方。</figcaption>
+        </figure>
+        <figure class="card span-4" data-asset-slot="sprites-batch1" id="req-ast-12" data-req-id="REQ-AST-12">
+          <div class="asset-slot done">
+            <strong>✓ DESIGN 素材已到位（卡 WTJ-20260703-007 已验收，v3 生产基准）</strong>
+            <span class="path">assets/sprites/</span>
+          </div>
+          <figcaption class="caption"><span class="req-badge">REQ-AST-12</span> sprites-batch1：sprite 生产基准 v3 已验收（commit 8cc540f），已集成于<a href="#sprite-contact-sheet">本章基准展示卡</a>。</figcaption>
+        </figure>
       </div>
     </section>
 
-    <section id="desktop">
-      <h2>桌面应用与安全边界</h2>
+    <section id="desktop" data-domain="DESK" aria-labelledby="desktop-heading">
+      <h2 id="desktop-heading">桌面应用与安全边界</h2>
       <div class="grid">
         <div class="card card-pad span-6">
           <h3>运行环境</h3>
-          <p>目标机器是 2014 款 MacBook Air。应用应以 macOS 桌面全屏方式运行，并能打包成可安装/启动的应用形式，例如 DMG 或等价分发方式。</p>
-          <p>Electron 是否可接受需要 TL 做性能验证；也可以评估更轻的原生方案。需求层只要求孩子能进入一个稳定全屏安全空间。</p>
+          <ul class="list">
+            <li id="req-desk-01" data-req-id="REQ-DESK-01"><span class="req-badge">REQ-DESK-01</span> 目标机器为 2014 款 MacBook Air，应用以 macOS 桌面全屏方式运行。</li>
+            <li id="req-desk-02" data-req-id="REQ-DESK-02"><span class="req-badge">REQ-DESK-02</span> 应用需能打包成可安装/启动形式，例如 DMG 或等价分发方式。</li>
+            <li id="req-desk-03" data-req-id="REQ-DESK-03"><span class="req-badge">REQ-DESK-03</span> Electron 是否可接受需要 TL 做性能验证；也可以评估更轻的原生方案。需求层只要求孩子能进入一个稳定全屏安全空间。</li>
+          </ul>
         </div>
         <div class="card card-pad span-6">
-          <h3>退出与快捷键</h3>
+          <h3>系统级快捷键限制</h3>
           <ul class="list">
-            <li>App 内部拦截 Command+H / Command+W / Command+Q 等常见快捷键。</li>
-            <li>Esc 不直接退出；家长退出可设计为长按 Esc 5 秒后输入口令。</li>
-            <li>Command+Space / Command+Tab 等 macOS 系统级快捷键，普通应用未必能 100% 禁掉。</li>
-            <li>如需更强控制，需要系统设置、辅助功能权限或家长控制配合，不能在产品需求里虚假承诺。</li>
+            <li id="req-desk-04" data-req-id="REQ-DESK-04"><span class="req-badge">REQ-DESK-04</span> Command+Space / Command+Tab 等 macOS 系统级快捷键，普通应用未必能 100% 禁掉。</li>
+            <li id="req-desk-05" data-req-id="REQ-DESK-05"><span class="req-badge">REQ-DESK-05</span> 如需更强控制，需要系统设置、辅助功能权限或家长控制配合，不能在产品需求里虚假承诺。</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <section id="open">
-      <h2>待确认与后续拆卡</h2>
+    <section id="exit" data-domain="EXIT" aria-labelledby="exit-heading">
+      <h2 id="exit-heading">退出机制</h2>
+      <p>退出机制分三层：误退拦截（阻断快捷键与 Esc 误触）、家长退出（长按 Esc ≥5 秒 + 口令）、孩子侧退出（不设主动退出入口，任务收起不算失败）。</p>
+      <div class="grid">
+        <div class="card card-pad span-4">
+          <h3>误退拦截</h3>
+          <ul class="list">
+            <li id="req-exit-01" data-req-id="REQ-EXIT-01"><span class="req-badge">REQ-EXIT-01</span> App 内部拦截 Command+H / Command+W / Command+Q 等常见快捷键，防止孩子误触退出。</li>
+            <li id="req-exit-02" data-req-id="REQ-EXIT-02"><span class="req-badge">REQ-EXIT-02</span> Esc 键不直接触发退出。</li>
+          </ul>
+        </div>
+        <div class="card card-pad span-4">
+          <h3>家长退出</h3>
+          <ul class="list">
+            <li id="req-exit-03" data-req-id="REQ-EXIT-03"><span class="req-badge">REQ-EXIT-03</span> 家长退出需长按 Esc ≥5 秒，触发口令输入；口令正确后才能退出全屏安全空间。</li>
+          </ul>
+        </div>
+        <div class="card card-pad span-4">
+          <h3>孩子侧退出</h3>
+          <ul class="list">
+            <li id="req-exit-04" data-req-id="REQ-EXIT-04"><span class="req-badge">REQ-EXIT-04</span> 孩子侧不存在主动退出入口；任务超时自动收起（见 <a href="#req-task-05">REQ-TASK-05</a>）与转移键盘触发的任务淡出（见 <a href="#req-task-06">REQ-TASK-06</a>）均不判定为失败，也不触发应用退出。</li>
+          </ul>
+        </div>
+      </div>
+      <p class="mt-16">系统级快捷键限制说明见 <a href="#desktop">#desktop</a>（<a href="#req-desk-04">REQ-DESK-04</a> / <a href="#req-desk-05">REQ-DESK-05</a>）。</p>
+    </section>
+
+    <section id="params" aria-labelledby="params-heading">
+      <h2 id="params-heading">参数与阈值总表</h2>
+      <p>集中全文出现的数值型参数，作为实现与 QA 验收的单一参照来源；每行标注所属 REQ ID。</p>
+      <div class="table-scroll">
+        <table class="matrix">
+          <caption class="visually-hidden">参数与阈值总表：全文数值参数与所属需求 ID 对照</caption>
+          <thead>
+            <tr>
+              <th scope="col">参数</th>
+              <th scope="col">值</th>
+              <th scope="col">所属需求</th>
+              <th scope="col">备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>字母弹出淡出时长</td><td>0.8–1.5 秒</td><td><a href="#req-kb-03">REQ-KB-03</a></td><td>弹出后逐渐淡出</td></tr>
+            <tr><td>重复同键暂停计数阈值</td><td>连续 &gt;3 次</td><td><a href="#req-kb-08">REQ-KB-08</a></td><td>换键后可重新计数</td></tr>
+            <tr><td>发现槽里程碑（按键数）</td><td>100 次 / 200 次有效按键</td><td><a href="#req-slot-03">REQ-SLOT-03</a></td><td>两级键盘探索里程碑</td></tr>
+            <tr><td>任务轻提示阈值</td><td>15 秒未完成</td><td><a href="#req-task-03">REQ-TASK-03</a></td><td>轻提示一次</td></tr>
+            <tr><td>任务目标强化阈值</td><td>30 秒未完成</td><td><a href="#req-task-04">REQ-TASK-04</a></td><td>目标闪烁 / 放大</td></tr>
+            <tr><td>任务自动收起时长</td><td>45–60 秒未完成</td><td><a href="#req-task-05">REQ-TASK-05</a></td><td>不算失败</td></tr>
+            <tr><td>键盘转移判定阈值</td><td>连续 20 个有效按键</td><td><a href="#req-task-06">REQ-TASK-06</a></td><td>触发任务自动淡出</td></tr>
+            <tr><td>寻找类任务悬停判定</td><td>1 秒</td><td><a href="#req-task-09">REQ-TASK-09</a></td><td>鼠标悬停目标满 1 秒即算完成</td></tr>
+            <tr><td>发现槽数量</td><td>5 个</td><td><a href="#req-slot-01">REQ-SLOT-01</a></td><td>满槽触发宝箱（<a href="#req-slot-02">REQ-SLOT-02</a>）</td></tr>
+            <tr><td>任务连续完成阈值</td><td>连续完成 3 个任务</td><td><a href="#req-rwd-05">REQ-RWD-05</a></td><td>触发「今日工作完成」奖励</td></tr>
+            <tr><td>家长退出长按时长</td><td>长按 Esc ≥5 秒</td><td><a href="#req-exit-03">REQ-EXIT-03</a></td><td>触发口令输入</td></tr>
+            <tr><td>词池规模</td><td>约 100 词（26 字母 × 约 4 词/字母）</td><td><a href="#req-sec-08">REQ-SEC-08</a></td><td>难字母可减量</td></tr>
+            <tr><td>鼠标乱晃衰减阈值</td><td>约 3 秒</td><td><a href="#req-ptr-01">REQ-PTR-01</a></td><td>停顿后尾迹恢复</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="open" aria-labelledby="open-heading">
+      <h2 id="open-heading">待确认与后续拆卡</h2>
       <div class="grid">
         <div class="card card-pad span-6">
           <h3>待确认</h3>
@@ -886,9 +1197,37 @@
       </div>
     </section>
 
+    <section id="changelog" aria-labelledby="changelog-heading">
+      <h2 id="changelog-heading">变更记录</h2>
+      <div class="card card-pad mb-16">
+        <h3>v0.1 · PM 评审修订 · 2026-07-04</h3>
+        <ul class="list">
+          <li>图片比例修复（P0）：.mock-image 改为 height:auto / max-width:100%，去除撑高已加载图片的 min-height，全部图片保持原始比例。</li>
+          <li>口径转为 PM 裁决（2026-07-04）：需求文本为规范源，mock / 状态图仅作方向示意；差异声明各条不再标注「待确认」。</li>
+          <li>按键任务示例收窄为字母 / 数字（REQ-TASK-10），移除空格键任务示例。</li>
+          <li>秘密词边界规则落文：大小写等价、复合输入顺序命中、最长词优先（新增 REQ-SEC-09 ~ REQ-SEC-11），对应两条待确认项已从 #open 移除。</li>
+          <li>接入 WTJ-20260703-007 v3 sprite 生产基准（commit 8cc540f），REQ-AST-12 集成点翻转为已到位。</li>
+        </ul>
+      </div>
+      <div class="card card-pad">
+        <h3>v0.1 · 2026-07-03 · 卡片 WTJ-20260703-002（QA 质控卡 WTJ-20260703-003）</h3>
+        <ul class="list">
+          <li>建立全文需求 ID 与可追溯体系：10 个需求域固定域码，共 63 条 REQ-XXX-NN 原子需求，新增「需求覆盖矩阵」#coverage 作为 QA 断言清单。</li>
+          <li>信息架构拆分：新增 #slots（五个发现槽）与 #exit（退出机制）两个独立 section，区分孩子侧退出与家长侧退出。</li>
+          <li>新增内容：mock 与需求文本差异声明 callout、参数与阈值总表 #params、秘密词「命中判定规则」子块及边界问题。</li>
+          <li>新增 DESIGN 素材集成点占位（core-states / style-baseline / sprites-batch1，对应在途卡 005 / 006 / 007）。</li>
+          <li>工程硬化：零 JS / 零外部请求自查、无障碍语义（skip-link、main、aria-labelledby、表格 caption/scope）、表格横向滚动容器、prefers-reduced-motion 冻结动画、字号 clamp() 化、图片真实尺寸与丢失兜底、修复打印样式、清理死 CSS。</li>
+          <li>元数据修正：header 状态与来源 pill、footer 交付声明、head meta description。</li>
+          <li>对抗式评审修复：移除未验收素材引用、素材集成点状态同步、打印可读性修正、来源表述正式化。</li>
+        </ul>
+      </div>
+    </section>
+
+    </main>
+
     <footer>
-      版本：v0.1 · 生成日期：2026-07-03 · 当前文件为 PM seed draft，正式 HTML artifact 由 TL 卡接管实现并由 QA 质控。<br />
-      整理依据：当前 Codex 线程 transcript 中关于界面 mock、秘密词池、问号小任务、五槽奖励、退出机制、素材策略和桌面运行约束的多轮讨论。
+      版本：v0.1 · 生成日期：2026-07-03 · 本文件为正式需求文档 artifact v0.1（卡片 WTJ-20260703-002），由 TL 交付、QA 质控（WTJ-20260703-003）。<br />
+      整理依据：需求卡 WTJ-20260703-001 整理的需求源材料，覆盖界面 mock、秘密词池、问号小任务、五槽奖励、退出机制、素材策略和桌面运行约束。
     </footer>
   </div>
 </body>
