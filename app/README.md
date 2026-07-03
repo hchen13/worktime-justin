@@ -79,16 +79,37 @@ dist/
    - 或者终端执行 `xattr -cr /Applications/WorkTimeJustin.app` 清除隔离属性后再正常双击打开。
 4. 正常双击图标 = **kiosk 全屏模式**启动，会接管整个屏幕。
 
-## Kiosk 模式行为与家长退出
+## Kiosk 模式行为、家长退出与安全边界
 
-- 全屏 borderless 窗口覆盖整个屏幕，隐藏 Dock/菜单栏，尽力禁用应用切换、强制退出、注销/关机、隐藏窗口等系统交互（`NSApp.presentationOptions`）。
-- Cmd+Q / Cmd+W / Cmd+H 被拦截吞掉；空主菜单去掉默认的退出/隐藏/关闭快捷键绑定。
-- **家长退出**：长按 `Esc` 键 **≥ 5 秒**（画面底部会出现细进度条占位提示），松开前不重置、不累加（键盘长按连发的 keyDown 会被去重），到时会弹出原生对话框要求输入退出口令。
-- 占位口令为 **`worktime`**（硬编码在 `shell/main.swift` 的 `kExitPasswordPlaceholder` 常量中，并有注释说明）。这只是本卡（最小可运行壳）的临时实现，正式的口令管理（可修改、加密存储等）留给后续卡片。
+完整的拦截清单、口令管理细节、"拦得住/拦不住什么"的诚实边界说明，见
+**[`SECURITY.md`](SECURITY.md)**（家长向 + 技术向）。这里只列摘要：
+
+- 全屏 borderless 窗口覆盖整个屏幕，隐藏 Dock/菜单栏，尽力禁用应用切换、强制退出、注销/关机、隐藏窗口等系统交互（`NSApp.presentationOptions`，best-effort）。
+- App 内拦截 Cmd+Q / Cmd+W / Cmd+H / Cmd+M / Cmd+\`（吞掉，不触发退出/关闭/隐藏/最小化/切窗口）；空主菜单去掉默认的快捷键绑定。窗口化调试模式下 Cmd+Q 特意放行（方便开发者关调试窗口），其余几个照样拦截，便于用 `WTJ_WINDOWED=1` 冒烟验证拦截效果而不必进真 kiosk。
+- **家长退出**：长按 `Esc` 键 **≥ 5 秒**（画面底部会出现细进度条提示，由原生壳通过 `window.wtjEscProgress` 驱动 web 层展示），松开前不重置、不累加（键盘长按连发的 keyDown 会被去重），到时会弹出原生对话框要求输入退出口令（`NSSecureTextField`，输入内容不显示明文）。
 - 口令正确 → 应用退出；口令错误或取消 → 对话框关闭，直接回到全屏内容，不做其他动作。注意：弹窗弹出时长按计时器已重置清零，关闭弹窗后需要**重新长按 Esc 满 5 秒**才会再次弹出口令框。
+- **孩子侧没有主动退出入口**：任务系统的任务超时自动收起 / 转移键盘触发的任务淡出都只是 web 层内部状态变化，与原生退出完全解耦，不会触发应用退出。
+
+### 设置家长退出口令（`--set-passcode`）
+
+默认口令是 `worktime`（`shell/main.swift` 的 `kExitPasswordPlaceholder` 常量），**强烈
+建议家长改成自己的专属口令**，避免使用众所周知的默认值：
+
+```bash
+# 方式一：启动参数（二选一）
+dist/WorkTimeJustin.app/Contents/MacOS/WorkTimeJustin --set-passcode <你的新口令>
+
+# 方式二：环境变量
+WTJ_SET_PASSCODE=<你的新口令> dist/WorkTimeJustin.app/Contents/MacOS/WorkTimeJustin
+```
+
+执行后口令会写入本机 `UserDefaults`（key `WTJExitPasscode`，明文存储，无网络/后端），
+打印确认信息后**直接退出进程，不会进入 kiosk 全屏**——这是一次性的设置动作。之后正常
+（不带参数）启动即可，长按 Esc 5 秒后输入的就是新口令。忘记口令、存储细节、以及
+"拦得住/拦不住什么"的完整边界说明见 [`SECURITY.md`](SECURITY.md)。
 
 ## 已知边界
 
-- `Cmd+Space`（Spotlight）、`Cmd+Tab`（应用切换）等系统级全局快捷键仅是 **best-effort** 屏蔽（依赖 `disableProcessSwitching` 等 presentation option），不保证 100% 拦截，属于 macOS 沙盒外应用的固有限制。
+- `Cmd+Space`（Spotlight）、`Cmd+Tab`（应用切换）、`Cmd+Option+Esc`（强制退出面板，仅 `.disableForceQuit` best-effort 抑制）等系统级全局快捷键**无法**在本 App（或任何普通、非辅助功能特权的 App）层面 100% 屏蔽——这些快捷键在到达 App 事件队列之前就已被系统全局热键机制处理掉，不是本实现的疏漏。完整说明与家长可选的系统层面补强方式见 [`SECURITY.md`](SECURITY.md)。
 - 本次交付在 Apple Silicon + macOS 26.1（仅 CommandLineTools，无完整 Xcode）的环境下交叉编译，**尚未在真实的 2014 MacBook Air / Big Sur 11 上做过实机冒烟**——SDK 26 交叉编译产物在 Big Sur 上的实际兼容性（尤其 WKWebView 行为、字体渲染、presentationOptions 细节）待后续卡片上机验证。
 - 若实机冒烟发现 AppKit/WebKit 交叉编译产物在 Big Sur 上无法正常运行，技术方案的备胎是切换到 **Electron 37**（三路评审时已讨论过的备选项）。
