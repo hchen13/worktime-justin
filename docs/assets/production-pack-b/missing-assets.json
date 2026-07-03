@@ -1,5 +1,5 @@
 {
-  "missing_count": 33,
+  "missing_count": 30,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
     {
@@ -37,33 +37,6 @@
       "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
       "planned_batch": "batch-03",
       "sound_key": "secret.word.quarter"
-    },
-    {
-      "word": "robot",
-      "first_letter": "R",
-      "display_name": "Robot",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/robot.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.robot"
-    },
-    {
-      "word": "rainbow",
-      "first_letter": "R",
-      "display_name": "Rainbow",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/rainbow.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.rainbow"
-    },
-    {
-      "word": "ring",
-      "first_letter": "R",
-      "display_name": "Ring",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/ring.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.ring"
     },
     {
       "word": "sun",
@@ -300,7 +273,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 06:40",
+  "updated_at_cst": "2026-07-04 07:05",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -481,6 +454,24 @@
       "word": "pizza",
       "asset_path": "docs/assets/production-pack-b/sprites/pizza.png",
       "resolved_at_cst": "2026-07-04 06:40"
+    },
+    {
+      "card_id": "WTJ-20260704-046",
+      "word": "robot",
+      "asset_path": "docs/assets/production-pack-b/sprites/robot.png",
+      "resolved_at_cst": "2026-07-04 07:05"
+    },
+    {
+      "card_id": "WTJ-20260704-046",
+      "word": "rainbow",
+      "asset_path": "docs/assets/production-pack-b/sprites/rainbow.png",
+      "resolved_at_cst": "2026-07-04 07:05"
+    },
+    {
+      "card_id": "WTJ-20260704-046",
+      "word": "ring",
+      "asset_path": "docs/assets/production-pack-b/sprites/ring.png",
+      "resolved_at_cst": "2026-07-04 07:05"
     }
   ]
 }

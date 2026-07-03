@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 67,
-  "stubbed_pending_count": 33,
+  "production_ready_count": 70,
+  "stubbed_pending_count": 30,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -87,7 +87,14 @@
     "pencil_alpha_raw": "docs/assets/production-pack-b/source/pencil-alpha-raw.png",
     "pizza_source_green": "docs/assets/production-pack-b/source/pizza-source-green.png",
     "pizza_alpha_raw": "docs/assets/production-pack-b/source/pizza-alpha-raw.png",
-    "letter_p_prompt_record": "docs/assets/production-pack-b/source/letter-p-prompt.md"
+    "letter_p_prompt_record": "docs/assets/production-pack-b/source/letter-p-prompt.md",
+    "robot_source_green": "docs/assets/production-pack-b/source/robot-source-green.png",
+    "robot_alpha_raw": "docs/assets/production-pack-b/source/robot-alpha-raw.png",
+    "rainbow_source_cyan": "docs/assets/production-pack-b/source/rainbow-source-cyan.png",
+    "rainbow_alpha_raw": "docs/assets/production-pack-b/source/rainbow-alpha-raw.png",
+    "ring_source_green": "docs/assets/production-pack-b/source/ring-source-green.png",
+    "ring_alpha_raw": "docs/assets/production-pack-b/source/ring-alpha-raw.png",
+    "letter_r_prompt_record": "docs/assets/production-pack-b/source/letter-r-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -794,9 +801,9 @@
       "word": "robot",
       "first_letter": "R",
       "display_name": "Robot",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/robot.png",
       "sound_key": "secret.word.robot",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/robot.png"
     },
@@ -804,9 +811,9 @@
       "word": "rainbow",
       "first_letter": "R",
       "display_name": "Rainbow",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/rainbow.png",
       "sound_key": "secret.word.rainbow",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/rainbow.png"
     },
@@ -814,9 +821,9 @@
       "word": "ring",
       "first_letter": "R",
       "display_name": "Ring",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/ring.png",
       "sound_key": "secret.word.ring",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/ring.png"
     },
@@ -1101,7 +1108,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 06:40",
+  "updated_at_cst": "2026-07-04 07:05",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1216,6 +1223,16 @@
         "pizza"
       ],
       "changes": "Generated production pear, pencil, and pizza sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-046",
+      "updated_at_cst": "2026-07-04 07:05",
+      "words": [
+        "robot",
+        "rainbow",
+        "ring"
+      ],
+      "changes": "Generated production robot, rainbow, and ring sprites, replaced placeholder asset_paths, and marked all three ready."
     }
   ]
 }
