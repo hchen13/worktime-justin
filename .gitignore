@@ -1,0 +1,19 @@
+# Secrets — role-specific Feishu app credentials live in .env, never commit
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Local Claude session state
+.claude/scheduled_tasks.lock
+
+# Node
+node_modules/
+
+# Test artifacts (reports are regenerated; keep dir structure via .gitkeep)
+tests/reports/*
+!tests/reports/.gitkeep

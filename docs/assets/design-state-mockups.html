@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorkTime Justin Design State Mockups</title>
+  <style>
+    :root {
+      --bg0: #050912;
+      --bg1: #07111f;
+      --panel: rgba(17, 28, 48, .72);
+      --line: rgba(142, 166, 205, .32);
+      --ink: #f5f8ff;
+      --muted: #9fb0cc;
+      --cyan: #3ce7ff;
+      --yellow: #ffd84c;
+      --coral: #ff675a;
+      --green: #9cff38;
+      --pink: #ff77b8;
+      --blue: #82a8ff;
+      --ok: #65f08d;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      background: #101318;
+      color: var(--ink);
+    }
+
+    .sheet {
+      display: grid;
+      gap: 32px;
+    }
+
+    .artboard {
+      position: relative;
+      width: 1440px;
+      height: 810px;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(36, 78, 140, .24), transparent 44%),
+        radial-gradient(circle at 14% 16%, rgba(62, 231, 255, .08), transparent 28%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 54%, #050913);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+      isolation: isolate;
+    }
+
+    .topbar {
+      height: 86px;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, .12);
+      color: white;
+      text-align: center;
+    }
+
+    .title {
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 18px;
+      color: rgba(255, 255, 255, .82);
+      font-weight: 520;
+    }
+
+    .lock {
+      position: absolute;
+      right: 38px;
+      top: 28px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, .68);
+      font-size: 22px;
+    }
+
+    .canvas {
+      position: absolute;
+      inset: 86px 0 100px;
+    }
+
+    .letter {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: var(--w);
+      height: var(--h);
+      border-radius: 32px;
+      color: var(--c);
+      font-size: var(--fs);
+      font-weight: 950;
+      line-height: 1;
+      transform: rotate(var(--r));
+      text-shadow:
+        0 0 12px currentColor,
+        0 0 36px currentColor,
+        0 0 70px color-mix(in srgb, currentColor 55%, transparent);
+      filter: drop-shadow(0 16px 20px rgba(0, 0, 0, .34));
+    }
+
+    .letter::after {
+      content: "";
+      position: absolute;
+      right: 58%;
+      top: 56%;
+      width: 210px;
+      height: 46px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, color-mix(in srgb, currentColor 32%, transparent), transparent);
+      filter: blur(8px);
+      opacity: .38;
+      transform: rotate(-14deg);
+      z-index: -1;
+    }
+
+    .letter.dim {
+      opacity: .18;
+      filter: none;
+    }
+
+    .letter.dim::after { opacity: .08; }
+
+    .a { --c: var(--yellow); --w: 150px; --h: 150px; --fs: 142px; --r: -10deg; left: 150px; top: 116px; }
+    .d { --c: var(--cyan); --w: 170px; --h: 170px; --fs: 150px; --r: 5deg; left: 350px; top: 320px; }
+    .g { --c: var(--coral); --w: 162px; --h: 162px; --fs: 144px; --r: 8deg; left: 845px; top: 100px; }
+    .t { --c: var(--green); --w: 150px; --h: 150px; --fs: 140px; --r: 4deg; right: 215px; top: 335px; }
+    .k { --c: var(--blue); --w: 120px; --h: 120px; --fs: 104px; --r: -5deg; left: 640px; top: 146px; }
+    .m { --c: var(--pink); --w: 112px; --h: 112px; --fs: 98px; --r: 9deg; right: 340px; top: 220px; }
+
+    .question {
+      position: absolute;
+      right: 60px;
+      top: 194px;
+      width: 88px;
+      height: 88px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 216, 76, .96);
+      color: #17223a;
+      font-size: 62px;
+      font-weight: 950;
+      box-shadow: 0 0 34px rgba(255, 216, 76, .48);
+    }
+
+    .question.low {
+      background: rgba(255, 216, 76, .38);
+      color: rgba(255, 255, 255, .8);
+      box-shadow: 0 0 24px rgba(255, 216, 76, .16);
+    }
+
+    .rail {
+      position: absolute;
+      right: 48px;
+      top: 176px;
+      width: 86px;
+      padding: 14px 0;
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      border: 1px solid rgba(160, 184, 222, .28);
+      border-radius: 48px;
+      background: rgba(21, 32, 53, .72);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+    }
+
+    .rail-dot {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .09);
+      border: 1px solid rgba(255, 255, 255, .1);
+      font-size: 32px;
+    }
+
+    .bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100px;
+      border-top: 1px solid rgba(255, 255, 255, .12);
+      background: linear-gradient(180deg, rgba(8, 15, 28, .58), rgba(6, 11, 21, .88));
+    }
+
+    .slots {
+      position: absolute;
+      left: 190px;
+      right: 190px;
+      top: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .slot {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px dashed rgba(153, 176, 215, .44);
+      color: rgba(255, 255, 255, .38);
+      font-size: 30px;
+      background: rgba(255, 255, 255, .025);
+    }
+
+    .slot.filled {
+      border: 2px solid rgba(255, 232, 130, .92);
+      background: rgba(255, 216, 76, .16);
+      color: white;
+      box-shadow: 0 0 22px rgba(255, 216, 76, .28);
+    }
+
+    .slot.next {
+      border-color: rgba(60, 231, 255, .72);
+      box-shadow: 0 0 22px rgba(60, 231, 255, .26);
+    }
+
+    .slot-line {
+      width: 112px;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(255, 232, 130, .82), rgba(132, 160, 200, .38));
+      border-radius: 999px;
+    }
+
+    .chest-small {
+      position: absolute;
+      right: 190px;
+      top: 24px;
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(153, 176, 215, .42);
+      color: rgba(255, 255, 255, .62);
+      background: rgba(255, 255, 255, .05);
+      font-size: 28px;
+    }
+
+    .work-lights {
+      position: absolute;
+      left: 42px;
+      bottom: 124px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .light {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .22);
+      background: #33405b;
+    }
+
+    .light.on {
+      background: var(--ok);
+      box-shadow: 0 0 18px rgba(101, 240, 141, .74);
+    }
+
+    .prompt {
+      position: absolute;
+      left: 315px;
+      right: 315px;
+      bottom: 126px;
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 26px;
+      border-radius: 22px;
+      border: 1px solid rgba(143, 167, 208, .42);
+      background: rgba(8, 14, 26, .78);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, .28);
+      color: rgba(255, 255, 255, .88);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 24px;
+    }
+
+    .prompt .green { color: #59ff65; font-weight: 800; }
+    .prompt .muted { color: rgba(255, 255, 255, .52); }
+
+    .dog-word {
+      position: absolute;
+      left: 620px;
+      top: 250px;
+      display: flex;
+      gap: 14px;
+      align-items: end;
+      font-size: 82px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .dog-word span:nth-child(1) { color: #ff7bad; }
+    .dog-word span:nth-child(2) { color: #ffd84c; }
+    .dog-word span:nth-child(3) { color: #43e7ff; }
+
+    .dog {
+      position: absolute;
+      left: 610px;
+      top: 326px;
+      width: 220px;
+      height: 172px;
+      border-radius: 48% 48% 38% 38%;
+      background: linear-gradient(180deg, #fff0ce, #ffd28c);
+      box-shadow: 0 0 50px rgba(255, 216, 76, .44);
+    }
+
+    .dog::before,
+    .dog::after {
+      content: "";
+      position: absolute;
+      top: 18px;
+      width: 58px;
+      height: 96px;
+      border-radius: 54px;
+      background: #a8662e;
+    }
+
+    .dog::before { left: -18px; transform: rotate(-20deg); }
+    .dog::after { right: -18px; transform: rotate(20deg); }
+
+    .eye {
+      position: absolute;
+      top: 68px;
+      width: 24px;
+      height: 30px;
+      border-radius: 50%;
+      background: #1d1c21;
+    }
+
+    .eye.left { left: 68px; }
+    .eye.right { right: 68px; }
+
+    .nose {
+      position: absolute;
+      left: 50%;
+      top: 103px;
+      width: 34px;
+      height: 22px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: #1d1c21;
+    }
+
+    .mouth {
+      position: absolute;
+      left: 50%;
+      top: 125px;
+      width: 54px;
+      height: 28px;
+      transform: translateX(-50%);
+      border-radius: 0 0 40px 40px;
+      background: #e34d53;
+    }
+
+    .sound {
+      position: absolute;
+      left: 845px;
+      top: 392px;
+      width: 120px;
+      height: 110px;
+    }
+
+    .sound span {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: var(--s);
+      height: var(--s);
+      border: 10px solid transparent;
+      border-right-color: var(--yellow);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      opacity: var(--o);
+    }
+
+    .sound span:nth-child(1) { --s: 52px; --o: .95; }
+    .sound span:nth-child(2) { --s: 82px; --o: .72; left: 18px; }
+    .sound span:nth-child(3) { --s: 112px; --o: .46; left: 38px; }
+
+    .confetti i {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 2px;
+      background: var(--c);
+      left: var(--x);
+      top: var(--y);
+      transform: rotate(var(--r));
+      box-shadow: 0 0 12px color-mix(in srgb, var(--c) 44%, transparent);
+    }
+
+    .task-panel {
+      position: absolute;
+      left: 210px;
+      right: 210px;
+      top: 145px;
+      height: 445px;
+      border-radius: 28px;
+      border: 1px solid rgba(143, 167, 208, .36);
+      background: rgba(10, 20, 36, .82);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .36), inset 0 0 0 1px rgba(255, 255, 255, .04);
+    }
+
+    .voice {
+      position: absolute;
+      left: 52px;
+      top: 42px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: white;
+      font-size: 31px;
+      font-weight: 820;
+    }
+
+    .voice-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 216, 76, .18);
+      color: var(--yellow);
+      border: 1px solid rgba(255, 216, 76, .32);
+    }
+
+    .target-row {
+      position: absolute;
+      left: 52px;
+      right: 52px;
+      bottom: 58px;
+      display: grid;
+      grid-template-columns: 210px 1fr 230px;
+      gap: 44px;
+      align-items: center;
+    }
+
+    .apple {
+      width: 178px;
+      height: 170px;
+      position: relative;
+      border-radius: 52% 48% 54% 46%;
+      background: radial-gradient(circle at 34% 28%, #ffbbb2 0 10%, transparent 11%), linear-gradient(145deg, #ff7066, #cf1f2d);
+      box-shadow: 0 0 38px rgba(255, 103, 90, .34);
+    }
+
+    .apple::before {
+      content: "";
+      position: absolute;
+      left: 88px;
+      top: -30px;
+      width: 16px;
+      height: 58px;
+      border-radius: 12px;
+      background: #8b5528;
+      transform: rotate(18deg);
+    }
+
+    .apple::after {
+      content: "";
+      position: absolute;
+      left: 100px;
+      top: -22px;
+      width: 58px;
+      height: 32px;
+      border-radius: 58px 4px;
+      background: #7cf270;
+      transform: rotate(-18deg);
+    }
+
+    .basket {
+      width: 220px;
+      height: 150px;
+      position: relative;
+      border-radius: 18px 18px 56px 56px;
+      background: repeating-linear-gradient(90deg, #b4713f 0 18px, #d79b58 18px 36px);
+      box-shadow: 0 0 40px rgba(255, 216, 76, .2);
+    }
+
+    .basket::before {
+      content: "";
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: -54px;
+      height: 96px;
+      border: 15px solid #d79b58;
+      border-bottom: 0;
+      border-radius: 120px 120px 0 0;
+    }
+
+    .arrow {
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(60, 231, 255, .28), rgba(60, 231, 255, .96));
+      position: relative;
+      box-shadow: 0 0 24px rgba(60, 231, 255, .36);
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      width: 34px;
+      height: 34px;
+      border-top: 12px solid rgba(60, 231, 255, .96);
+      border-right: 12px solid rgba(60, 231, 255, .96);
+      transform: translateY(-50%) rotate(45deg);
+      border-radius: 4px;
+    }
+
+    .timeout {
+      position: absolute;
+      right: 50px;
+      top: 50px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .timeout span {
+      width: 40px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .16);
+    }
+
+    .timeout span.on {
+      background: var(--yellow);
+      box-shadow: 0 0 14px rgba(255, 216, 76, .44);
+    }
+
+    .decay-strip {
+      position: absolute;
+      left: 170px;
+      right: 170px;
+      top: 188px;
+      height: 335px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      align-items: center;
+      gap: 18px;
+    }
+
+    .decay-card {
+      position: relative;
+      height: 260px;
+      border: 1px solid rgba(143, 167, 208, .16);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .035);
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      font-size: var(--fs);
+      font-weight: 950;
+      opacity: var(--o);
+      text-shadow: 0 0 var(--glow) currentColor;
+    }
+
+    .decay-card strong {
+      position: absolute;
+      bottom: 22px;
+      color: rgba(255, 255, 255, .78);
+      font-size: 18px;
+      font-weight: 650;
+      text-shadow: none;
+    }
+
+    .decay-note {
+      position: absolute;
+      left: 315px;
+      right: 315px;
+      bottom: 42px;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(143, 167, 208, .28);
+      color: rgba(255, 255, 255, .76);
+      background: rgba(8, 14, 26, .7);
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .chest-scene {
+      position: absolute;
+      left: 360px;
+      right: 360px;
+      top: 135px;
+      bottom: 152px;
+      display: grid;
+      place-items: center;
+    }
+
+    .big-chest {
+      position: relative;
+      width: 330px;
+      height: 218px;
+      transform: translateY(40px);
+    }
+
+    .lid {
+      position: absolute;
+      left: 25px;
+      top: -20px;
+      width: 280px;
+      height: 106px;
+      border-radius: 140px 140px 28px 28px;
+      background: linear-gradient(180deg, #ffd969, #c77a32);
+      transform: rotate(-12deg) translateY(-54px);
+      transform-origin: left bottom;
+      box-shadow: 0 0 44px rgba(255, 216, 76, .36);
+    }
+
+    .box {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 330px;
+      height: 158px;
+      border-radius: 28px 28px 44px 44px;
+      background: linear-gradient(180deg, #d8893d, #8c4c28);
+      border: 5px solid #ffd969;
+      overflow: hidden;
+    }
+
+    .box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg, transparent 0 52px, rgba(255, 255, 255, .12) 52px 62px);
+    }
+
+    .glow {
+      position: absolute;
+      left: 50%;
+      bottom: 80px;
+      width: 470px;
+      height: 260px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, rgba(255, 235, 128, .78), rgba(255, 216, 76, .22) 36%, transparent 68%);
+      filter: blur(12px);
+      z-index: -1;
+    }
+
+    .burst {
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      width: 6px;
+      height: 6px;
+      transform: translate(-50%, -50%);
+    }
+
+    .burst i {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 10px;
+      height: 120px;
+      border-radius: 999px;
+      transform: rotate(var(--r)) translateY(-178px);
+      transform-origin: center 184px;
+      background: linear-gradient(180deg, var(--c), transparent);
+      opacity: .84;
+      box-shadow: 0 0 18px var(--c);
+    }
+
+    .caption-band {
+      position: absolute;
+      left: 40px;
+      top: 112px;
+      padding: 8px 13px;
+      border: 1px solid rgba(143, 167, 208, .28);
+      border-radius: 999px;
+      color: rgba(255, 255, 255, .66);
+      background: rgba(255, 255, 255, .045);
+      font-size: 18px;
+      font-weight: 650;
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <section class="artboard" data-shot="state-default-canvas" aria-label="Default canvas state">
+      <div class="topbar"><div><div class="title">Work Time, Justin!</div><div class="subtitle">小小工作台</div></div></div>
+      <div class="lock">▣</div>
+      <div class="caption-band">默认画布：低噪音、可自由探索</div>
+      <div class="canvas">
+        <div class="letter a">A</div>
+        <div class="letter d">D</div>
+        <div class="letter g">G</div>
+        <div class="letter t">T</div>
+        <div class="question low">?</div>
+        <div class="work-lights"><span class="light"></span><span class="light"></span><span class="light"></span></div>
+      </div>
+      <div class="bottom">
+        <div class="slots">
+          <span class="slot">+</span><span class="slot">+</span><span class="slot next">+</span><span class="slot">+</span><span class="slot">+</span>
+        </div>
+        <div class="chest-small">▤</div>
+      </div>
+    </section>
+
+    <section class="artboard" data-shot="state-secret-word-hit" aria-label="Secret word hit state">
+      <div class="topbar"><div><div class="title">Work Time, Justin!</div><div class="subtitle">小小工作台</div></div></div>
+      <div class="lock">▣</div>
+      <div class="caption-band">秘密词命中：对象出现、声音短促、槽位点亮</div>
+      <div class="canvas">
+        <div class="letter a dim">A</div>
+        <div class="letter d dim">D</div>
+        <div class="letter g dim">G</div>
+        <div class="letter t dim">T</div>
+        <div class="rail"><div class="rail-dot">⭐</div><div class="rail-dot">🚀</div><div class="rail-dot">🎉</div></div>
+        <div class="dog-word"><span>d</span><span>o</span><span>g</span></div>
+        <div class="dog"><span class="eye left"></span><span class="eye right"></span><span class="nose"></span><span class="mouth"></span></div>
+        <div class="sound"><span></span><span></span><span></span></div>
+        <div class="confetti">
+          <i style="--x:520px;--y:430px;--r:28deg;--c:#ffd84c"></i>
+          <i style="--x:900px;--y:362px;--r:-18deg;--c:#3ce7ff"></i>
+          <i style="--x:580px;--y:318px;--r:12deg;--c:#ff77b8"></i>
+          <i style="--x:790px;--y:340px;--r:35deg;--c:#9cff38"></i>
+          <i style="--x:710px;--y:550px;--r:-30deg;--c:#ff675a"></i>
+          <i style="--x:950px;--y:510px;--r:14deg;--c:#82a8ff"></i>
+        </div>
+      </div>
+      <div class="prompt"><span class="green">&gt;_</span><span class="muted">justin@worktime:</span><span class="green">dog</span></div>
+      <div class="bottom">
+        <div class="slots">
+          <span class="slot filled">⭐</span><span class="slot-line"></span><span class="slot filled">🐶</span><span class="slot filled">🎈</span><span class="slot">+</span><span class="slot">+</span>
+        </div>
+        <div class="chest-small">▤</div>
+      </div>
+    </section>
+
+    <section class="artboard" data-shot="state-question-task" aria-label="Question task state">
+      <div class="topbar"><div><div class="title">Work Time, Justin!</div><div class="subtitle">小小工作台</div></div></div>
+      <div class="lock">▣</div>
+      <div class="caption-band">问号任务：语音提示，不依赖中文说明</div>
+      <div class="canvas">
+        <div class="letter a dim">A</div>
+        <div class="letter d dim">D</div>
+        <div class="letter g dim">G</div>
+        <div class="letter t dim">T</div>
+        <div class="question">?</div>
+        <div class="task-panel">
+          <div class="voice"><span class="voice-icon">)))</span><span>Put apple in basket.</span></div>
+          <div class="timeout"><span class="on"></span><span class="on"></span><span></span></div>
+          <div class="target-row">
+            <div class="apple"></div>
+            <div class="arrow"></div>
+            <div class="basket"></div>
+          </div>
+        </div>
+        <div class="work-lights"><span class="light on"></span><span class="light"></span><span class="light"></span></div>
+      </div>
+      <div class="bottom">
+        <div class="slots">
+          <span class="slot filled">⭐</span><span class="slot filled">🐶</span><span class="slot">+</span><span class="slot">+</span><span class="slot">+</span>
+        </div>
+        <div class="chest-small">▤</div>
+      </div>
+    </section>
+
+    <section class="artboard" data-shot="state-reward-chest" aria-label="Reward chest state">
+      <div class="topbar"><div><div class="title">Work Time, Justin!</div><div class="subtitle">小小工作台</div></div></div>
+      <div class="lock">▣</div>
+      <div class="caption-band">五槽满：一次性大奖励，随后回到干净画布</div>
+      <div class="canvas">
+        <div class="chest-scene">
+          <div class="glow"></div>
+          <div class="burst">
+            <i style="--r:0deg;--c:#ffd84c"></i>
+            <i style="--r:32deg;--c:#3ce7ff"></i>
+            <i style="--r:64deg;--c:#ff77b8"></i>
+            <i style="--r:104deg;--c:#9cff38"></i>
+            <i style="--r:146deg;--c:#ff675a"></i>
+            <i style="--r:202deg;--c:#82a8ff"></i>
+            <i style="--r:252deg;--c:#ffd84c"></i>
+            <i style="--r:304deg;--c:#3ce7ff"></i>
+          </div>
+          <div class="big-chest"><div class="lid"></div><div class="box"></div></div>
+        </div>
+        <div class="work-lights"><span class="light on"></span><span class="light on"></span><span class="light on"></span></div>
+        <div class="confetti">
+          <i style="--x:270px;--y:190px;--r:22deg;--c:#ffd84c"></i>
+          <i style="--x:1110px;--y:210px;--r:-20deg;--c:#3ce7ff"></i>
+          <i style="--x:420px;--y:520px;--r:38deg;--c:#ff77b8"></i>
+          <i style="--x:1020px;--y:500px;--r:-34deg;--c:#9cff38"></i>
+          <i style="--x:710px;--y:210px;--r:10deg;--c:#ff675a"></i>
+          <i style="--x:808px;--y:588px;--r:18deg;--c:#82a8ff"></i>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="slots">
+          <span class="slot filled">⭐</span><span class="slot filled">🐶</span><span class="slot filled">🎈</span><span class="slot filled">🧁</span><span class="slot filled">🚀</span>
+        </div>
+        <div class="chest-small">▤</div>
+      </div>
+    </section>
+
+    <section class="artboard" data-shot="state-input-decay" aria-label="Input decay state">
+      <div class="topbar"><div><div class="title">Work Time, Justin!</div><div class="subtitle">小小工作台</div></div></div>
+      <div class="lock">▣</div>
+      <div class="caption-band">重复输入衰减：保留即时感，不奖励乱按</div>
+      <div class="canvas">
+        <div class="decay-strip">
+          <div class="decay-card" style="--fs:104px;--o:1;--glow:38px">K<strong>1</strong></div>
+          <div class="decay-card" style="--fs:94px;--o:.72;--glow:28px">K<strong>2</strong></div>
+          <div class="decay-card" style="--fs:82px;--o:.48;--glow:18px">K<strong>3</strong></div>
+          <div class="decay-card" style="--fs:68px;--o:.28;--glow:8px">K<strong>hold</strong></div>
+          <div class="decay-card" style="--fs:60px;--o:.16;--glow:0">K<strong>skip</strong></div>
+          <div class="decay-card" style="--fs:84px;--o:.78;--glow:24px;color:var(--yellow)">A<strong>switch</strong></div>
+          <div class="decay-card" style="--fs:96px;--o:1;--glow:32px;color:var(--green)">M<strong>new</strong></div>
+        </div>
+        <div class="decay-note">连续重复同一个键超过 3 次后暂停计数；换键后恢复正常反馈。</div>
+        <div class="work-lights"><span class="light"></span><span class="light"></span><span class="light"></span></div>
+      </div>
+      <div class="bottom">
+        <div class="slots">
+          <span class="slot">+</span><span class="slot">+</span><span class="slot">+</span><span class="slot">+</span><span class="slot">+</span>
+        </div>
+        <div class="chest-small">▤</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
