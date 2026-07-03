@@ -1,0 +1,573 @@
+{
+  "missing_count": 63,
+  "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+  "items": [
+    {
+      "word": "alligator",
+      "first_letter": "A",
+      "display_name": "Alligator",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/alligator.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.alligator"
+    },
+    {
+      "word": "eye",
+      "first_letter": "E",
+      "display_name": "Eye",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/eye.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.eye"
+    },
+    {
+      "word": "envelope",
+      "first_letter": "E",
+      "display_name": "Envelope",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/envelope.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.envelope"
+    },
+    {
+      "word": "goat",
+      "first_letter": "G",
+      "display_name": "Goat",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/goat.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.goat"
+    },
+    {
+      "word": "gift",
+      "first_letter": "G",
+      "display_name": "Gift",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/gift.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.gift"
+    },
+    {
+      "word": "guitar",
+      "first_letter": "G",
+      "display_name": "Guitar",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/guitar.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.guitar"
+    },
+    {
+      "word": "house",
+      "first_letter": "H",
+      "display_name": "House",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/house.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.house"
+    },
+    {
+      "word": "igloo",
+      "first_letter": "I",
+      "display_name": "Igloo",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/igloo.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.igloo"
+    },
+    {
+      "word": "insect",
+      "first_letter": "I",
+      "display_name": "Insect",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/insect.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.insect"
+    },
+    {
+      "word": "island",
+      "first_letter": "I",
+      "display_name": "Island",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/island.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.island"
+    },
+    {
+      "word": "juice",
+      "first_letter": "J",
+      "display_name": "Juice",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/juice.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.juice"
+    },
+    {
+      "word": "jam",
+      "first_letter": "J",
+      "display_name": "Jam",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/jam.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.jam"
+    },
+    {
+      "word": "jar",
+      "first_letter": "J",
+      "display_name": "Jar",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/jar.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.jar"
+    },
+    {
+      "word": "jellyfish",
+      "first_letter": "J",
+      "display_name": "Jellyfish",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/jellyfish.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.jellyfish"
+    },
+    {
+      "word": "koala",
+      "first_letter": "K",
+      "display_name": "Koala",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/koala.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.koala"
+    },
+    {
+      "word": "kettle",
+      "first_letter": "K",
+      "display_name": "Kettle",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/kettle.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.kettle"
+    },
+    {
+      "word": "lion",
+      "first_letter": "L",
+      "display_name": "Lion",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/lion.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.lion"
+    },
+    {
+      "word": "lemon",
+      "first_letter": "L",
+      "display_name": "Lemon",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/lemon.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.lemon"
+    },
+    {
+      "word": "milk",
+      "first_letter": "M",
+      "display_name": "Milk",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/milk.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.milk"
+    },
+    {
+      "word": "monkey",
+      "first_letter": "M",
+      "display_name": "Monkey",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/monkey.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.monkey"
+    },
+    {
+      "word": "nest",
+      "first_letter": "N",
+      "display_name": "Nest",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/nest.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.nest"
+    },
+    {
+      "word": "nose",
+      "first_letter": "N",
+      "display_name": "Nose",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/nose.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.nose"
+    },
+    {
+      "word": "net",
+      "first_letter": "N",
+      "display_name": "Net",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/net.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.net"
+    },
+    {
+      "word": "noodle",
+      "first_letter": "N",
+      "display_name": "Noodle",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/noodle.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-02",
+      "sound_key": "secret.word.noodle"
+    },
+    {
+      "word": "owl",
+      "first_letter": "O",
+      "display_name": "Owl",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/owl.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.owl"
+    },
+    {
+      "word": "octopus",
+      "first_letter": "O",
+      "display_name": "Octopus",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/octopus.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.octopus"
+    },
+    {
+      "word": "oven",
+      "first_letter": "O",
+      "display_name": "Oven",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/oven.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.oven"
+    },
+    {
+      "word": "pear",
+      "first_letter": "P",
+      "display_name": "Pear",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/pear.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.pear"
+    },
+    {
+      "word": "pencil",
+      "first_letter": "P",
+      "display_name": "Pencil",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/pencil.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.pencil"
+    },
+    {
+      "word": "pizza",
+      "first_letter": "P",
+      "display_name": "Pizza",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/pizza.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.pizza"
+    },
+    {
+      "word": "queen",
+      "first_letter": "Q",
+      "display_name": "Queen",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/queen.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.queen"
+    },
+    {
+      "word": "quilt",
+      "first_letter": "Q",
+      "display_name": "Quilt",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/quilt.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.quilt"
+    },
+    {
+      "word": "quail",
+      "first_letter": "Q",
+      "display_name": "Quail",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/quail.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.quail"
+    },
+    {
+      "word": "quarter",
+      "first_letter": "Q",
+      "display_name": "Quarter",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/quarter.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.quarter"
+    },
+    {
+      "word": "robot",
+      "first_letter": "R",
+      "display_name": "Robot",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/robot.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.robot"
+    },
+    {
+      "word": "rainbow",
+      "first_letter": "R",
+      "display_name": "Rainbow",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/rainbow.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.rainbow"
+    },
+    {
+      "word": "ring",
+      "first_letter": "R",
+      "display_name": "Ring",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/ring.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.ring"
+    },
+    {
+      "word": "sun",
+      "first_letter": "S",
+      "display_name": "Sun",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/sun.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.sun"
+    },
+    {
+      "word": "shoe",
+      "first_letter": "S",
+      "display_name": "Shoe",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/shoe.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.shoe"
+    },
+    {
+      "word": "spoon",
+      "first_letter": "S",
+      "display_name": "Spoon",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/spoon.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.spoon"
+    },
+    {
+      "word": "tree",
+      "first_letter": "T",
+      "display_name": "Tree",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/tree.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.tree"
+    },
+    {
+      "word": "train",
+      "first_letter": "T",
+      "display_name": "Train",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/train.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.train"
+    },
+    {
+      "word": "turtle",
+      "first_letter": "T",
+      "display_name": "Turtle",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/turtle.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.turtle"
+    },
+    {
+      "word": "umbrella",
+      "first_letter": "U",
+      "display_name": "Umbrella",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/umbrella.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.umbrella"
+    },
+    {
+      "word": "unicorn",
+      "first_letter": "U",
+      "display_name": "Unicorn",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/unicorn.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.unicorn"
+    },
+    {
+      "word": "ukulele",
+      "first_letter": "U",
+      "display_name": "Ukulele",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/ukulele.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.ukulele"
+    },
+    {
+      "word": "uniform",
+      "first_letter": "U",
+      "display_name": "Uniform",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/uniform.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.uniform"
+    },
+    {
+      "word": "van",
+      "first_letter": "V",
+      "display_name": "Van",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/van.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.van"
+    },
+    {
+      "word": "vase",
+      "first_letter": "V",
+      "display_name": "Vase",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/vase.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.vase"
+    },
+    {
+      "word": "violin",
+      "first_letter": "V",
+      "display_name": "Violin",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/violin.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.violin"
+    },
+    {
+      "word": "volcano",
+      "first_letter": "V",
+      "display_name": "Volcano",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/volcano.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-03",
+      "sound_key": "secret.word.volcano"
+    },
+    {
+      "word": "whale",
+      "first_letter": "W",
+      "display_name": "Whale",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/whale.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.whale"
+    },
+    {
+      "word": "watch",
+      "first_letter": "W",
+      "display_name": "Watch",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/watch.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.watch"
+    },
+    {
+      "word": "window",
+      "first_letter": "W",
+      "display_name": "Window",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/window.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.window"
+    },
+    {
+      "word": "wagon",
+      "first_letter": "W",
+      "display_name": "Wagon",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/wagon.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.wagon"
+    },
+    {
+      "word": "xylophone",
+      "first_letter": "X",
+      "display_name": "Xylophone",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/xylophone.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.xylophone"
+    },
+    {
+      "word": "xray",
+      "first_letter": "X",
+      "display_name": "X-ray",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/xray.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.xray"
+    },
+    {
+      "word": "yoyo",
+      "first_letter": "Y",
+      "display_name": "Yo-yo",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/yoyo.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.yoyo"
+    },
+    {
+      "word": "yarn",
+      "first_letter": "Y",
+      "display_name": "Yarn",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/yarn.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.yarn"
+    },
+    {
+      "word": "yak",
+      "first_letter": "Y",
+      "display_name": "Yak",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/yak.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.yak"
+    },
+    {
+      "word": "zebra",
+      "first_letter": "Z",
+      "display_name": "Zebra",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/zebra.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.zebra"
+    },
+    {
+      "word": "zipper",
+      "first_letter": "Z",
+      "display_name": "Zipper",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/zipper.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.zipper"
+    },
+    {
+      "word": "zucchini",
+      "first_letter": "Z",
+      "display_name": "Zucchini",
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png",
+      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "planned_batch": "batch-04",
+      "sound_key": "secret.word.zucchini"
+    }
+  ]
+}
