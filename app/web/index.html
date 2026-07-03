@@ -1,0 +1,30 @@
+<!--
+  WTJ-20260704-002 极薄原生壳 — web 层容器
+  约束：Safari 14 兼容基线（ES2020 以内），Canvas2D，无外部依赖/网络请求，
+  纯本地相对路径资源，可被 file:// 直接加载（供 WKWebView loadFileURL 使用）。
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>WorkTime Justin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="stage"></canvas>
+
+  <div id="debug" class="debug-overlay" aria-hidden="true">
+    <div>key: <span id="dbg-key">-</span></div>
+    <div>mouse: <span id="dbg-mouse">-</span></div>
+    <div>fps: <span id="dbg-fps">-</span></div>
+    <div>audio: <span id="dbg-audio">locked</span></div>
+  </div>
+
+  <div id="esc-progress-wrap" class="esc-progress-wrap" aria-hidden="true">
+    <div id="esc-progress-bar" class="esc-progress-bar"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

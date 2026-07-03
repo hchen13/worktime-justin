@@ -17,6 +17,10 @@ __pycache__/
 # Node
 node_modules/
 
+# App shell build artifacts (rebuilt via app/build.sh)
+app/dist/
+app/.build-tmp/
+
 # Test artifacts (reports are regenerated; keep dir structure via .gitkeep)
 tests/reports/*
 !tests/reports/.gitkeep
