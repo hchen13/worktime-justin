@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 64,
-  "stubbed_pending_count": 36,
+  "production_ready_count": 67,
+  "stubbed_pending_count": 33,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -59,7 +59,35 @@
     "lion_alpha_raw": "docs/assets/production-pack-b/source/lion-alpha-raw.png",
     "lemon_source_green": "docs/assets/production-pack-b/source/lemon-source-green.png",
     "lemon_alpha_raw": "docs/assets/production-pack-b/source/lemon-alpha-raw.png",
-    "letter_l_prompt_record": "docs/assets/production-pack-b/source/letter-l-prompt.md"
+    "letter_l_prompt_record": "docs/assets/production-pack-b/source/letter-l-prompt.md",
+    "milk_source_green": "docs/assets/production-pack-b/source/milk-source-green.png",
+    "milk_alpha_raw": "docs/assets/production-pack-b/source/milk-alpha-raw.png",
+    "monkey_source_green": "docs/assets/production-pack-b/source/monkey-source-green.png",
+    "monkey_alpha_raw": "docs/assets/production-pack-b/source/monkey-alpha-raw.png",
+    "letter_m_prompt_record": "docs/assets/production-pack-b/source/letter-m-prompt.md",
+    "nest_source_green": "docs/assets/production-pack-b/source/nest-source-green.png",
+    "nest_alpha_raw": "docs/assets/production-pack-b/source/nest-alpha-raw.png",
+    "nose_source_green": "docs/assets/production-pack-b/source/nose-source-green.png",
+    "nose_alpha_raw": "docs/assets/production-pack-b/source/nose-alpha-raw.png",
+    "net_source_green": "docs/assets/production-pack-b/source/net-source-green.png",
+    "net_alpha_raw": "docs/assets/production-pack-b/source/net-alpha-raw.png",
+    "noodle_source_green": "docs/assets/production-pack-b/source/noodle-source-green.png",
+    "noodle_alpha_raw": "docs/assets/production-pack-b/source/noodle-alpha-raw.png",
+    "letter_n_prompt_record": "docs/assets/production-pack-b/source/letter-n-prompt.md",
+    "owl_source_green": "docs/assets/production-pack-b/source/owl-source-green.png",
+    "owl_alpha_raw": "docs/assets/production-pack-b/source/owl-alpha-raw.png",
+    "octopus_source_green": "docs/assets/production-pack-b/source/octopus-source-green.png",
+    "octopus_alpha_raw": "docs/assets/production-pack-b/source/octopus-alpha-raw.png",
+    "oven_source_green": "docs/assets/production-pack-b/source/oven-source-green.png",
+    "oven_alpha_raw": "docs/assets/production-pack-b/source/oven-alpha-raw.png",
+    "letter_o_prompt_record": "docs/assets/production-pack-b/source/letter-o-prompt.md",
+    "pear_source_magenta": "docs/assets/production-pack-b/source/pear-source-magenta.png",
+    "pear_alpha_raw": "docs/assets/production-pack-b/source/pear-alpha-raw.png",
+    "pencil_source_green": "docs/assets/production-pack-b/source/pencil-source-green.png",
+    "pencil_alpha_raw": "docs/assets/production-pack-b/source/pencil-alpha-raw.png",
+    "pizza_source_green": "docs/assets/production-pack-b/source/pizza-source-green.png",
+    "pizza_alpha_raw": "docs/assets/production-pack-b/source/pizza-alpha-raw.png",
+    "letter_p_prompt_record": "docs/assets/production-pack-b/source/letter-p-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -686,9 +714,9 @@
       "word": "pear",
       "first_letter": "P",
       "display_name": "Pear",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/pear.png",
       "sound_key": "secret.word.pear",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/pear.png"
     },
@@ -696,9 +724,9 @@
       "word": "pencil",
       "first_letter": "P",
       "display_name": "Pencil",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/pencil.png",
       "sound_key": "secret.word.pencil",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/pencil.png"
     },
@@ -706,9 +734,9 @@
       "word": "pizza",
       "first_letter": "P",
       "display_name": "Pizza",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/pizza.png",
       "sound_key": "secret.word.pizza",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/pizza.png"
     },
@@ -1073,7 +1101,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 05:28",
+  "updated_at_cst": "2026-07-04 06:40",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1148,6 +1176,46 @@
         "lemon"
       ],
       "changes": "Generated production lion and lemon sprites, replaced placeholder asset_paths, and marked both ready."
+    },
+    {
+      "card_id": "WTJ-20260704-041",
+      "updated_at_cst": "2026-07-04 05:42",
+      "words": [
+        "milk",
+        "monkey"
+      ],
+      "changes": "Generated production milk and monkey sprites, replaced placeholder asset_paths, and marked both ready."
+    },
+    {
+      "card_id": "WTJ-20260704-042",
+      "updated_at_cst": "2026-07-04 06:02",
+      "words": [
+        "nest",
+        "nose",
+        "net",
+        "noodle"
+      ],
+      "changes": "Generated production nest, nose, net, and noodle sprites, replaced placeholder asset_paths, and marked all four ready."
+    },
+    {
+      "card_id": "WTJ-20260704-043",
+      "updated_at_cst": "2026-07-04 06:26",
+      "words": [
+        "owl",
+        "octopus",
+        "oven"
+      ],
+      "changes": "Generated production owl, octopus, and oven sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-044",
+      "updated_at_cst": "2026-07-04 06:40",
+      "words": [
+        "pear",
+        "pencil",
+        "pizza"
+      ],
+      "changes": "Generated production pear, pencil, and pizza sprites, replaced placeholder asset_paths, and marked all three ready."
     }
   ]
 }

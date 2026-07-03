@@ -1,35 +1,7 @@
 {
-  "updated_at_cst": "2026-07-04 06:54",
+  "missing_count": 33,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-  "missing_count": 36,
   "items": [
-    {
-      "word": "pear",
-      "first_letter": "P",
-      "display_name": "Pear",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/pear.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.pear"
-    },
-    {
-      "word": "pencil",
-      "first_letter": "P",
-      "display_name": "Pencil",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/pencil.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.pencil"
-    },
-    {
-      "word": "pizza",
-      "first_letter": "P",
-      "display_name": "Pizza",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/pizza.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.pizza"
-    },
     {
       "word": "queen",
       "first_letter": "Q",
@@ -328,6 +300,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
+  "updated_at_cst": "2026-07-04 06:40",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -490,6 +463,24 @@
       "word": "oven",
       "asset_path": "docs/assets/production-pack-b/sprites/oven.png",
       "resolved_at_cst": "2026-07-04 06:26"
+    },
+    {
+      "card_id": "WTJ-20260704-044",
+      "word": "pear",
+      "asset_path": "docs/assets/production-pack-b/sprites/pear.png",
+      "resolved_at_cst": "2026-07-04 06:40"
+    },
+    {
+      "card_id": "WTJ-20260704-044",
+      "word": "pencil",
+      "asset_path": "docs/assets/production-pack-b/sprites/pencil.png",
+      "resolved_at_cst": "2026-07-04 06:40"
+    },
+    {
+      "card_id": "WTJ-20260704-044",
+      "word": "pizza",
+      "asset_path": "docs/assets/production-pack-b/sprites/pizza.png",
+      "resolved_at_cst": "2026-07-04 06:40"
     }
   ]
 }
