@@ -53,7 +53,7 @@ Required fields:
 - `阻塞负责人`: role expected to unblock, when relevant.
 - `阻塞问题`: exact question or missing decision, when blocked.
 - `依赖`: upstream card IDs or dependencies.
-- `分支`: working branch, if any.
+- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`.
 - `产物/证据`: PR, commit, screenshot, generated asset path, test report, or other proof.
 - `最新进展`: concise human-written status note.
 - `截止/检查点`: date for the next expected transition or review.
@@ -138,8 +138,11 @@ Every active card must have:
 Additional rules:
 
 - A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`.
+- Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
 - A card in `blocking` must have `阻塞负责人`, `阻塞问题`, and `下一步动作`.
+- An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
+- For implementation cards, branch hygiene is a handoff gate. When TL moves work to `review`, `分支` and `产物/证据` must include the final branch, final commit, verification evidence, known risks, and the recommended PM route.
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
 - A blocked card cannot be used as storage for vague uncertainty. If the next step is obvious, assign it and move the card back to `todo` or `in progress`.
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
@@ -158,6 +161,15 @@ Minimum handling rules:
 - `blocking`: the named `阻塞负责人` owns the next answer or decision.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
+
+Implementation handoff contract:
+
+- While a TL card is `in progress`, PM checks only whether the card has an owner, next action, and enough progress context. PM should not repeatedly interrupt TL for every local branch or worktree observation.
+- TL may use a shared worktree, `commit-tree`, or other local mechanics as long as `main` history is not changed outside PM control.
+- When TL judges the work ready, TL must move the card to `review`, set `负责人 = PM`, and record the final branch, final commit, build/run evidence, residual risks, and recommended next route.
+- PM performs branch/commit verification after review handoff.
+- If final branch, final commit, or evidence is missing or inconsistent, but PM has not found a real product/code defect, PM keeps the card in `review`, sets `负责人 = TL`, and writes a metadata-only correction. This is not a development rejection.
+- If PM finds a real code, behavior, security, packaging, or acceptance defect, PM routes the card back to `todo` or `in progress` with the required rework.
 
 Non-PM handoff rule:
 
@@ -217,6 +229,13 @@ PM acceptance requires:
 - Required QA has passed, or PM explicitly marks QA as not required.
 - Any follow-up work is represented by a new card before the current card is closed.
 
+PM branch discipline:
+
+- PM owns `main`, but should avoid turning in-progress implementation mechanics into blockers.
+- PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `main` history was changed outside PM control or a destructive operation is underway.
+- Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
+- In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.
+
 ## 10. TL Workflow
 
 TL responsibilities:
@@ -232,6 +251,16 @@ TL responsibilities:
 TL must not merge directly to `main`.
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
+
+TL handoff must include:
+
+- final branch name
+- final commit hash
+- build/run or smoke evidence
+- known risks and whether they require a follow-up card
+- whether TL recommends PM acceptance, QA testing, or further TL work
+
+If PM returns a review card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
 
 ## 11. DESIGN Workflow
 

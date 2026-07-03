@@ -74,6 +74,10 @@ Recommended PM cron responsibilities:
 
 PM automation must use PM Feishu credentials and must not impersonate TL, DESIGN, or QA.
 
+For implementation cards in `in progress`, PM automation should treat local branch and worktree observations as informational only. Do not move a card to `blocking` or repeatedly rewrite its next action just because a shared worktree is dirty, has untracked files, or the TL branch has advanced.
+
+For implementation cards in `review`, PM automation first checks the handoff metadata: final branch, final commit, evidence, risks, and recommended route. If only handoff metadata is missing or inconsistent, keep `状态 = review`, set `负责人 = TL`, and ask for a narrow metadata correction. Do not route it as technical rework unless PM found a real defect.
+
 Automation should be bounded:
 
 - do not run open-ended implementation work
@@ -96,6 +100,7 @@ TL loop:
 - owns non-main branches
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
+- may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and provide final branch/commit evidence at `review`
 - returns finished work to PM review
 
 DESIGN loop:
