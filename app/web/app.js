@@ -163,6 +163,23 @@
   }
 
   // ---------------------------------------------------------------------
+  // 键盘引擎订阅（WTJ-20260704-008）：字母/数字弹出渲染改由 window.WTJ_KEYBOARD
+  // （keyboard.js，index.html 中在 app.js 之前加载）的 onLetter 事件驱动——keyboard.js
+  // 是唯一权威的 keydown 逻辑监听方（判定普通字母/功能键/长按/连续同键暂停/里程碑），
+  // app.js 不再自行判定"是否弹字母"，只负责订阅后调用 spawnLetter 做 Canvas 渲染，
+  // 避免与 keyboard.js 的 keydown 监听重复触发弹字母。防御式：keyboard.js 未加载/加载
+  // 失败时 console.warn 并跳过订阅，不阻断鼠标尾迹/点击圆环等其余渲染。
+  // ---------------------------------------------------------------------
+  if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onLetter === 'function') {
+    window.WTJ_KEYBOARD.onLetter(function (ch) {
+      spawnLetter(ch);
+      poke();
+    });
+  } else {
+    console.warn('[WTJ] window.WTJ_KEYBOARD 未找到（keyboard.js 未加载或加载失败），字母弹出功能不可用。');
+  }
+
+  // ---------------------------------------------------------------------
   // 输入事件
   // ---------------------------------------------------------------------
 
@@ -174,15 +191,14 @@
   }
 
   window.addEventListener('keydown', function (e) {
+    // 本监听器只负责：节能唤醒（poke）、首次手势音频解锁、debug 叠层文本。
+    // 字母弹出逻辑已移交 window.WTJ_KEYBOARD（见上方订阅），此处不再直接调用 spawnLetter，
+    // 避免两个 keydown 监听器（本文件 + keyboard.js）重复弹字母。
     poke();
     if (!audioUnlockAttempted) unlockAudio();
 
     var key = e.key || '';
     dbgKey.textContent = key === ' ' ? 'Space' : key;
-
-    if (key.length === 1) {
-      spawnLetter(key.toUpperCase());
-    }
   }, false);
 
   window.addEventListener('mousemove', function (e) {
@@ -231,7 +247,10 @@
         continue;
       }
       var t = age / r.life;
-      var radius = 10 + t * 70;
+      // 陈旧 rAF 时间戳可能导致 age（进而 t）为负，radius 若为负会让 ctx.arc 抛
+      // IndexSizeError（Safari/Chrome 均如此）。Math.max(0, ...) 兜底，drawTrail 的
+      // `3 + t*3` 因公式不同（1 - age/life）天然不会出现同类负值，故不动。
+      var radius = Math.max(0, 10 + t * 70);
       ctx.beginPath();
       ctx.lineWidth = 2 + (1 - t) * 3;
       ctx.strokeStyle = 'rgba(255, 217, 90, ' + (1 - t) + ')';
