@@ -1,0 +1,35 @@
+{
+  "$schema_note": "WTJ-20260704-016 SFX 键值清单。这是文档/参照副本，供人工审阅、QA 核对、以及未来素材集成脚本使用；app/web/audio.js 出于「不用 JSON + fetch（file:// CORS 限制）」的同一工程约束（见 app/web/manifest.js 顶部注释与 app/web/MANIFEST.md），在运行时不会 fetch 本文件，而是把等价的 key -> path 映射内联为 audio.js 内部的 DEFAULT_SFX_MAP 常量。两处必须保持同步——修改本文件新增/调整 sfxKey 时，务必同步修改 audio.js 的 DEFAULT_SFX_MAP。",
+  "cardId": "WTJ-20260704-016",
+  "generatedAtCst": "2026-07-04",
+  "pathConvention": "audio/sfx/<sfxKey>.m4a（扁平目录，不分子文件夹，沿用 app/web/manifest.js 已经硬编码引用的 audio/sfx/task-success.m4a 惯例）",
+  "categories": {
+    "ui": "任务/发现槽/奖励相关的通用界面反馈音，代码可生成部分已在 REQ-AST-01~03 处理，这里是需要真实音效素材的部分。",
+    "animal": "REQ-AST-09 点名的「动物叫声」——与秘密词或任务里出现的动物物体搭配播放。",
+    "bell": "REQ-AST-09 点名的「铃铛」——对应 REQ-TASK-08 点击类任务示例「按铃铛」。",
+    "water": "REQ-AST-09 点名的「水声」——对应 REQ-TASK-08 点击类任务示例「关水龙头」。",
+    "chest": "REQ-AST-09 点名的「开箱声」——对应 REQ-SLOT-02 / REQ-RWD-01~03 宝箱开启奖励。"
+  },
+  "sfx": [
+    { "sfxKey": "task-success", "category": "ui", "path": "audio/sfx/task-success.m4a", "purpose": "任务成功通用反馈音；已被 app/web/manifest.js 全部任务模板示例的 successAudio 字段直接引用，路径必须保持一致。", "reqIds": ["REQ-TASK-07", "REQ-TASK-08", "REQ-TASK-09", "REQ-TASK-10"] },
+    { "sfxKey": "light-hint-chime", "category": "ui", "path": "audio/sfx/light-hint-chime.m4a", "purpose": "任务 15 秒未完成的轻提示音效。", "reqIds": ["REQ-TASK-03"] },
+    { "sfxKey": "slot-light-up", "category": "ui", "path": "audio/sfx/slot-light-up.m4a", "purpose": "发现槽点亮反馈。", "reqIds": ["REQ-SLOT-01", "REQ-SLOT-02"] },
+    { "sfxKey": "keyboard-milestone-chime", "category": "ui", "path": "audio/sfx/keyboard-milestone-chime.m4a", "purpose": "键盘探索里程碑（100/200 有效按键）达成反馈。", "reqIds": ["REQ-SLOT-03"] },
+    { "sfxKey": "streak-reward-fanfare", "category": "ui", "path": "audio/sfx/streak-reward-fanfare.m4a", "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈。", "reqIds": ["REQ-RWD-05", "REQ-RWD-06"] },
+    { "sfxKey": "dog-bark", "category": "animal", "path": "audio/sfx/dog-bark.m4a", "purpose": "小狗相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "cat-meow", "category": "animal", "path": "audio/sfx/cat-meow.m4a", "purpose": "小猫相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "duck-quack", "category": "animal", "path": "audio/sfx/duck-quack.m4a", "purpose": "小鸭子相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "horse-neigh", "category": "animal", "path": "audio/sfx/horse-neigh.m4a", "purpose": "「让小马跑起来」点击任务伴随叫声。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
+    { "sfxKey": "pig-oink", "category": "animal", "path": "audio/sfx/pig-oink.m4a", "purpose": "小猪相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "frog-croak", "category": "animal", "path": "audio/sfx/frog-croak.m4a", "purpose": "小青蛙相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "elephant-trumpet", "category": "animal", "path": "audio/sfx/elephant-trumpet.m4a", "purpose": "大象相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "mouse-squeak", "category": "animal", "path": "audio/sfx/mouse-squeak.m4a", "purpose": "小老鼠相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "bell-ring", "category": "bell", "path": "audio/sfx/bell-ring.m4a", "purpose": "点击类任务「按铃铛」主音效。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
+    { "sfxKey": "bell-jingle", "category": "bell", "path": "audio/sfx/bell-jingle.m4a", "purpose": "轻量装饰性铃铛反馈（可选，正反馈变体）。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "water-tap-flow", "category": "water", "path": "audio/sfx/water-tap-flow.m4a", "purpose": "点击类任务「关水龙头」前的水流声。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
+    { "sfxKey": "water-drop", "category": "water", "path": "audio/sfx/water-drop.m4a", "purpose": "滴水声，水龙头关闭后的收尾反馈。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "water-splash", "category": "water", "path": "audio/sfx/water-splash.m4a", "purpose": "水花声（可选，装饰性水相关任务）。", "reqIds": ["REQ-AST-09"] },
+    { "sfxKey": "chest-open", "category": "chest", "path": "audio/sfx/chest-open.m4a", "purpose": "宝箱开启主音效。", "reqIds": ["REQ-AST-09", "REQ-SLOT-02", "REQ-RWD-01", "REQ-RWD-02", "REQ-RWD-03"] },
+    { "sfxKey": "chest-lid-creak", "category": "chest", "path": "audio/sfx/chest-lid-creak.m4a", "purpose": "宝箱开启前的吱呀铺垫音（可选）。", "reqIds": ["REQ-AST-09"] }
+  ]
+}
