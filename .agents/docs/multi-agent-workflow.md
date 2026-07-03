@@ -199,8 +199,11 @@ DESIGN responsibilities:
 2. Use Codex image generation for visual exploration and project assets.
 3. Save selected deliverables in project paths when they are meant to be consumed by the app.
 4. Put prompt, selected output path, and design rationale in `产物/证据` or `最新进展`.
+5. Keep documentation mockups separate from production assets. Rough screenshots, emoji-like placeholders, and simplified diagrams may be acceptable for docs, but production sprites, secret-word objects, treasure chest art, stickers, and reward visuals must satisfy the production asset quality bar.
 
 Design cards move to `review` with `负责人 = PM`. DESIGN may recommend TL implementation or further design iteration, but PM decides the route.
+
+Detailed production asset standard: [production-asset-quality.md](production-asset-quality.md).
 
 ## 11. QA Workflow
 
