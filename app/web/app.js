@@ -6,6 +6,35 @@
   'use strict';
 
   // ---------------------------------------------------------------------
+  // Manifest 访问器：读取 window.WTJ_MANIFEST（由 manifest.js 在本文件之前加载提供，
+  // 见 index.html 的 <script> 顺序）。若缺失（例如单独打开旧版 index.html，或
+  // manifest.js 加载失败/被跳过），回退到下方内置的最小默认值，并 console.warn 提示，
+  // 不阻断渲染。manifest 完整域结构见 app/web/manifest.js，消费说明见 app/web/MANIFEST.md。
+  // ---------------------------------------------------------------------
+
+  // 注意：以下 3 个默认值（[800,1500] / 5 / 5）镜像 manifest.js 的对应字段
+  // （keyboard.letterFadeMsRange / performance.idleStopSec / exit.escHoldSec），
+  // 修改 manifest.js 中这些字段时需同步更新此处，避免回退路径与 manifest 口径漂移。
+  var DEFAULT_MANIFEST = {
+    keyboard: { letterFadeMsRange: [800, 1500] },
+    performance: { idleStopSec: 5 },
+    exit: { escHoldSec: 5 }
+  };
+
+  function getManifest() {
+    if (window.WTJ_MANIFEST) {
+      return window.WTJ_MANIFEST;
+    }
+    console.warn('[WTJ] window.WTJ_MANIFEST 未找到（manifest.js 未加载或加载失败），app.js 回退到内置最小默认值。');
+    return DEFAULT_MANIFEST;
+  }
+
+  var MANIFEST = getManifest();
+  var LETTER_FADE_MS_RANGE = (MANIFEST.keyboard && MANIFEST.keyboard.letterFadeMsRange) || DEFAULT_MANIFEST.keyboard.letterFadeMsRange;
+  var IDLE_STOP_SEC = (MANIFEST.performance && MANIFEST.performance.idleStopSec) || DEFAULT_MANIFEST.performance.idleStopSec;
+  var ESC_HOLD_SEC = (MANIFEST.exit && MANIFEST.exit.escHoldSec) || DEFAULT_MANIFEST.exit.escHoldSec;
+
+  // ---------------------------------------------------------------------
   // 画布与自适应
   // ---------------------------------------------------------------------
 
@@ -59,7 +88,7 @@
       rot: rand(-0.35, 0.35),
       color: pick(COLORS),
       born: performance.now(),
-      life: 1000
+      life: rand(LETTER_FADE_MS_RANGE[0], LETTER_FADE_MS_RANGE[1]) // manifest: keyboard.letterFadeMsRange（REQ-KB-03）
     });
     if (letters.length > 40) letters.shift();
   }
@@ -89,7 +118,7 @@
 
   var escWrap = document.getElementById('esc-progress-wrap');
   var escBar = document.getElementById('esc-progress-bar');
-  var ESC_HOLD_SECONDS = 5;
+  var ESC_HOLD_SECONDS = ESC_HOLD_SEC; // manifest: exit.escHoldSec（REQ-EXIT-03，与 shell/main.swift 镜像）
 
   window.wtjEscProgress = function (seconds) {
     var s = seconds || 0;
@@ -175,7 +204,7 @@
   var running = false;
   var lastFrameTime = performance.now();
   var fps = 0;
-  var IDLE_TIMEOUT_MS = 5000;
+  var IDLE_TIMEOUT_MS = IDLE_STOP_SEC * 1000; // manifest: performance.idleStopSec
 
   function drawTrail(now) {
     for (var i = trail.length - 1; i >= 0; i--) {
