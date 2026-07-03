@@ -33,6 +33,22 @@ Production assets must meet this bar:
 - enough padding for animation without cropping
 - source prompt, source file, and review notes recorded in the card evidence
 
+### Animated Sprite Assets
+
+Animated sprites are required when the product behavior implies visible motion, not just a static object. Examples include a faucet with running water and a closing handle, a horse running after click, a door opening, a bell ringing, a lamp switching on or off, and reward objects such as a treasure chest opening.
+
+Animated sprite deliverables must include:
+
+- frame sheets or numbered PNG frames with transparent background
+- a manifest that names each state, such as `idle`, `active_loop`, `success`, `closing`, or `open`
+- frame size, frame count, fps, loop behavior, anchor point, and collision/target bounds
+- a contact sheet or preview GIF/video on the dark app canvas
+- consistent style with the accepted static production pack
+- enough in-between motion to read as alive at the intended app size
+- clean first and last frames so TL can blend static and animated states without visual jumps
+
+Static sprites may be used as development placeholders, but they do not satisfy an animated sprite acceptance criterion unless PM explicitly narrows that card's scope.
+
 ## Hard Rejection Criteria
 
 A production asset must be rejected if it is:
@@ -44,6 +60,8 @@ A production asset must be rejected if it is:
 - hard to recognize for a young child
 - low contrast on the dark canvas
 - missing transparent background when transparency is required
+- a static-only asset submitted for behavior that requires visible sprite motion
+- an animation whose frames jump, crop, drift, or change style/material between frames
 
 ## Workflow
 
