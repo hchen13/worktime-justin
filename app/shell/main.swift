@@ -2,6 +2,8 @@
 //  main.swift
 //  WorkTimeJustin — 极薄原生壳
 //  基础壳：WTJ-20260704-002；家长退出/快捷键拦截/安全边界完整实现：WTJ-20260704-017
+//  wtjres:// 自定义 scheme 资源加载层（修复 file:// 下音频 fetch() 被 CORS 拦截的
+//  架构死穴）：WTJ-20260704-019
 //
 //  目标机：2014 MacBook Air（Intel x86_64，macOS Big Sur 11，4GB RAM，HD5000）
 //  硬约束：
@@ -32,6 +34,14 @@ private let kIsWindowedMode: Bool = {
     if ProcessInfo.processInfo.environment["WTJ_WINDOWED"] == "1" { return true }
     return false
 }()
+
+/// 自定义资源加载 scheme（WTJ-20260704-019）。页面与其全部相对路径子资源（css/js/img/
+/// audio/json）统一经 `<scheme>://<host>/...` 加载，令二者视为同源，从而让 `fetch()`/XHR
+/// 不再触发 file:// null origin 下的 CORS 拦截。详见 `WTJResourceSchemeHandler` 类注释与
+/// `app/web/audio/AUDIO-API.md` §6.3。窗口化调试模式与 kiosk 生产模式共用同一 scheme
+/// （不因模式不同而切换加载方式），避免两套加载路径分叉出不同的 bug 面。
+private let kResourceScheme = "wtjres"
+private let kResourceSchemeHost = "app"
 
 // MARK: - 家长退出口令管理（REQ-EXIT-03 / REQ-EXIT-04，WTJ-20260704-017）
 //
@@ -165,12 +175,156 @@ final class KioskWindow: NSWindow {
     override var canBecomeMain: Bool { return true }
 }
 
+// MARK: - wtjres:// 资源 scheme handler（WTJ-20260704-019）
+//
+// 背景（016 交接时列的架构死穴，019 卡明确要解决）：002 卡最初用
+// WKWebView.loadFileURL(_:allowingReadAccessTo:) 以 file:// 方案加载 web/ 目录。file://
+// 加载出的页面 origin 是 "null"，WebKit 对 file:// 资源的 fetch()/XHR 近乎必然按 CORS
+// 规则拦截失败——loadFileURL(allowingReadAccessTo:) 只放开标签式子资源（<img>/<audio>/
+// <script> 等）的读取，并不解除 fetch/XHR 的跨源限制。app/web/audio.js 的播放链路
+// （loadArrayBuffer -> window.fetch(path) -> decodeAudioData）走的正是 fetch()，因此在
+// file:// 运行时下即使真实 .m4a 素材到位也放不出声音（详见 app/web/audio/AUDIO-API.md
+// §6.3，该节现已随本次改动更新为"已解决"）。
+//
+// 解决方案：实现 WKURLSchemeHandler，让页面改用自定义 scheme（kResourceScheme，即
+// "wtjres"）加载。同一 scheme + 同一 host（kResourceSchemeHost，即 "app"）视为同源，
+// 页面内全部相对路径资源请求（css/js/img/audio/json）都会被浏览器解析成
+// "wtjres://app/..." 请求——与加载页面本身同源，fetch()/XHR 因此不再触发 CORS 拦截。
+//
+// API 可用性：WKURLSchemeHandler / WKURLSchemeTask 是 macOS 10.13+ API，目标机 Big Sur 11
+// 满足最低版本要求，本类全文无需 `if #available` 守卫。
+//
+// Swift Concurrency 硬约束：本类完全同步实现——webView(_:start:) 内直接用
+// Data(contentsOf:) 同步读取本地文件（web 资源体积小，同步读取足够快，不会造成明显可感知的
+// 卡顿），随即同步调用 urlSchemeTask.didReceive(response) / didReceive(data) / didFinish()，
+// 全程不使用 DispatchQueue.global 等异步派发，不使用 async/await/Task/actor/@MainActor——
+// 回调在 WebKit 调用 webView(_:start:) 的同一线程（主线程）同步完成并返回，函数返回之时该
+// 资源请求已经结束。
+final class WTJResourceSchemeHandler: NSObject, WKURLSchemeHandler {
+
+    /// 已解析符号链接、标准化过的 web 资源根目录（通常是 Bundle.main.resourceURL/web）。
+    /// 任何请求路径标准化 + 解析符号链接之后，必须仍落在这个目录之内（含目录本身），
+    /// 否则一律视为路径遍历尝试、拒绝服务——这是本 handler 唯一的安全边界，见
+    /// `webView(_:start:)` 与 `isPath(_:containedIn:)`。
+    private let rootURL: URL
+
+    init(rootURL: URL) {
+        // 根目录本身也做一次同样的标准化 + 符号链接解析，确保后续用同一套规则处理过的两个
+        // 路径做前缀比较——如果只标准化请求路径、不标准化根目录，根目录自身若含未展开的
+        // 符号链接（例如 /var 在 macOS 上是指向 /private/var 的符号链接），会让本来合法的
+        // 请求被误判为"越界"（假阳性拒绝服务），或者反过来放过真正越界的请求（假阴性）。
+        self.rootURL = rootURL.resolvingSymlinksInPath().standardizedFileURL
+        super.init()
+    }
+
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        guard let requestURL = urlSchemeTask.request.url else {
+            urlSchemeTask.didFailWithError(WTJResourceSchemeHandler.makeError(code: 400, message: "请求缺少 URL"))
+            return
+        }
+
+        // 空路径 / 根路径一律映射到 index.html。当前运行时里只有 setupWebView() 发起的
+        // 首次导航（"wtjres://app/index.html"）会显式带上 "/index.html"；这个兜底分支是
+        // 防御性的，覆盖"host 后面完全不带 path"这种理论上可能出现、但当前代码不会主动
+        // 构造的请求形态。
+        var requestPath = requestURL.path
+        if requestPath.isEmpty || requestPath == "/" {
+            requestPath = "/index.html"
+        }
+
+        // 防路径遍历（安全边界，P0）：分两步标准化再比较前缀。
+        //   1) standardizedFileURL 按字符串规则折叠 "." / ".." 路径段；
+        //   2) resolvingSymlinksInPath 展开符号链接（只在目标真实存在时生效）。
+        // 两步缺一都可能被绕过（例如只做第 1 步，攻击者可以用一个指向 bundle 外的符号链接
+        // 绕过；只做第 2 步，还没展开符号链接前的 ".." 段可能已经让路径在字符串层面就跳出了
+        // rootURL 前缀判断的比较对象）。
+        let relativePath = String(requestPath.dropFirst()) // 去掉开头的 "/"
+        let candidateURL = rootURL.appendingPathComponent(relativePath).standardizedFileURL
+        let resolvedCandidateURL = candidateURL.resolvingSymlinksInPath()
+
+        guard WTJResourceSchemeHandler.isPath(resolvedCandidateURL, containedIn: rootURL) else {
+            NSLog("WTJ: wtjres:// 请求被拒绝（越界路径遍历尝试）：%@", requestURL.absoluteString)
+            urlSchemeTask.didFailWithError(WTJResourceSchemeHandler.makeError(code: 403, message: "路径越界"))
+            return
+        }
+
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: resolvedCandidateURL.path, isDirectory: &isDirectory)
+        guard exists, !isDirectory.boolValue else {
+            // 文件不存在或是目录（本 handler 不做目录索引）：对应 HTTP 404 语义。
+            urlSchemeTask.didFailWithError(WTJResourceSchemeHandler.makeError(code: 404, message: "资源不存在: \(requestPath)"))
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: resolvedCandidateURL)
+            let mimeType = WTJResourceSchemeHandler.mimeType(forPathExtension: resolvedCandidateURL.pathExtension)
+            let headers = ["Content-Type": mimeType, "Content-Length": String(data.count)]
+            guard let response = HTTPURLResponse(url: requestURL, statusCode: 200,
+                                                  httpVersion: "HTTP/1.1", headerFields: headers) else {
+                urlSchemeTask.didFailWithError(WTJResourceSchemeHandler.makeError(code: 500, message: "无法构造响应"))
+                return
+            }
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didReceive(data)
+            urlSchemeTask.didFinish()
+        } catch {
+            urlSchemeTask.didFailWithError(error)
+        }
+    }
+
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+        // 本实现全同步：webView(_:start:) 在返回之前已经对该任务调用过
+        // didFinish()/didFailWithError() 完成了请求，不存在"仍在进行中、需要被取消"的异步
+        // 工作。此处留空即可（无状态可清理）。
+    }
+
+    /// 校验 `path` 是否仍在 `root` 目录之内（含 root 本身），防止 ".." 或符号链接跳出
+    /// web 资源根目录、读到 bundle 外的任意文件。
+    private static func isPath(_ path: URL, containedIn root: URL) -> Bool {
+        let pathString = path.path
+        let rootString = root.path
+        return pathString == rootString || pathString.hasPrefix(rootString + "/")
+    }
+
+    private static func makeError(code: Int, message: String) -> NSError {
+        return NSError(domain: "WTJResourceSchemeHandler", code: code,
+                        userInfo: [NSLocalizedDescriptionKey: message])
+    }
+
+    /// 按扩展名返回 MIME type；未覆盖到的扩展名一律回退 `application/octet-stream`。
+    private static func mimeType(forPathExtension pathExtension: String) -> String {
+        switch pathExtension.lowercased() {
+        case "html", "htm": return "text/html"
+        case "js": return "application/javascript"
+        case "css": return "text/css"
+        case "json": return "application/json"
+        case "png": return "image/png"
+        case "jpg", "jpeg": return "image/jpeg"
+        case "gif": return "image/gif"
+        case "svg": return "image/svg+xml"
+        case "m4a", "aac": return "audio/mp4"
+        case "mp3": return "audio/mpeg"
+        case "wav": return "audio/wav"
+        case "md", "txt": return "text/plain"
+        default: return "application/octet-stream"
+        }
+    }
+}
+
 // MARK: - AppDelegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler {
     private var window: NSWindow!
     private var webView: WKWebView!
     private var keyMonitor: Any?
+
+    /// wtjres:// scheme handler 的强引用（WTJ-20260704-019）。即使
+    /// WKWebViewConfiguration.setURLSchemeHandler(_:forURLScheme:) 本身是否强持有 handler
+    /// 这件事在文档里未被显式保证，这里显式再持有一份，确保 handler 不会在 AppDelegate 存活
+    /// 期间被提前释放（对照 WeakScriptMessageHandler 上方注释：那里是反过来、为了*避免*强引用
+    /// 造成循环；这里是单向持有 handler、handler 不持有 AppDelegate/webView，不构成循环）。
+    private var resourceSchemeHandler: WTJResourceSchemeHandler!
 
     // Esc 长按状态
     private var escTiming = false
@@ -432,11 +586,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     // MARK: WebView
 
     private func setupWebView() {
+        guard let resourceURL = Bundle.main.resourceURL else {
+            NSLog("WTJ: Bundle.main.resourceURL 为空，无法加载 web 内容")
+            return
+        }
+        let webDir = resourceURL.appendingPathComponent("web")
+
         let config = WKWebViewConfiguration()
         // 该设置只影响 HTMLMediaElement（<audio>/<video>）的自动播放策略，对 Web Audio API
         // 无效；Web Audio 的解锁靠 web 层在用户手势里 AudioContext.resume()（见 app.js）。
         // 保留此设置是为后续卡片的 <audio> 标签播放预留（P2-6 注释修正）。
         config.mediaTypesRequiringUserActionForPlayback = []
+
+        // wtjres:// 自定义 scheme handler（WTJ-20260704-019）：用它取代原先的
+        // loadFileURL(_:allowingReadAccessTo:) file:// 加载方式，解决 file:// 下
+        // fetch()/XHR 被 CORS 拦截、导致 audio.js 无法加载音频的架构死穴。详见
+        // WTJResourceSchemeHandler 类注释、app/web/audio/AUDIO-API.md §6.3。
+        // 强引用存到 AppDelegate 属性（而不只是交给 config）：见 resourceSchemeHandler
+        // 属性声明处的注释。
+        let schemeHandler = WTJResourceSchemeHandler(rootURL: webDir)
+        resourceSchemeHandler = schemeHandler
+        config.setURLSchemeHandler(schemeHandler, forURLScheme: kResourceScheme)
 
         let contentController = WKUserContentController()
         let proxy = WeakScriptMessageHandler(target: self)
@@ -449,13 +619,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window.contentView = view
         webView = view
 
-        guard let resourceURL = Bundle.main.resourceURL else {
-            NSLog("WTJ: Bundle.main.resourceURL 为空，无法加载 web 内容")
+        // 页面经 "wtjres://app/index.html" 加载（而非 file:// 方案）：页面内全部相对路径
+        // 子资源（css/js/img/audio/json）都会被浏览器解析为同一 scheme + 同一 host 下的
+        // 请求，因而与页面本身同源——audio.js 里的 fetch() 不再是"file:// null origin 下
+        // 的跨源请求"，不再被 CORS 拦截。kiosk 生产模式与 WTJ_WINDOWED 窗口化调试模式走的是
+        // 同一套加载路径，不因模式不同而分叉。
+        guard let indexURL = URL(string: "\(kResourceScheme)://\(kResourceSchemeHost)/index.html") else {
+            NSLog("WTJ: 无法构造 wtjres:// index URL")
             return
         }
-        let webDir = resourceURL.appendingPathComponent("web")
-        let indexURL = webDir.appendingPathComponent("index.html")
-        webView.loadFileURL(indexURL, allowingReadAccessTo: webDir)
+        webView.load(URLRequest(url: indexURL))
     }
 
     // MARK: kiosk 屏蔽（best-effort，REQ-DESK-04/05：不承诺 100% 生效）

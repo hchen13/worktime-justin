@@ -391,11 +391,11 @@
   // >>> 019 集成卡的唯一加载层替换点 <<<
   // 这是整个 manager 里唯一发起网络/文件读取的地方。当前实现用同源 fetch()。
   // 重要：在本项目既定的 WKWebView loadFileURL 运行时下（见 AUDIO-API.md §6.3），
-  // 对 file-scheme 资源的 fetch()/XHR 会被 WebKit 近乎必然地拦截失败——loadFileURL /
-  // allowingReadAccessTo 只放开标签式子资源（<img>/<audio>/<script>）的读取，并不解除
-  // fetch/XHR 对 file:// 的限制。因此在真实素材接入前，019 必须把本函数替换为一种
-  // 可用的加载方式（推荐：自定义 WKURLSchemeHandler，或把 .m4a 内联为 data: URI，
-  // 或在本机起一个 localhost 静态 server），decode 与缓存逻辑（本函数外层的 getBuffer）
+  // 【已解决】历史上 file:// 下 fetch()/XHR 会被 WebKit 近乎必然拦截失败（loadFileURL /
+  // allowingReadAccessTo 只放开标签式子资源 <img>/<audio>/<script>，不解除 fetch/XHR
+  // 对 file:// 的限制）。019 卡已用自定义 WKURLSchemeHandler（wtjres:// scheme）改壳：
+  // 页面经 wtjres:// 加载后，本函数的相对路径 fetch 自动变同源，不再被拦——本函数无需
+  // 替换。（浏览器直开 file:// 调试时仍会受限，属预期。）decode 与缓存逻辑（外层 getBuffer）
   // 无需改动。把加载层单独抽成这一个函数，就是为了让这个替换点一目了然。
   function loadArrayBuffer(path) {
     return window.fetch(path).then(function (resp) {
