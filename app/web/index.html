@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="secretword.css" />
   <link rel="stylesheet" href="task-templates.css" />
   <link rel="stylesheet" href="status-rewards.css" />
+  <link rel="stylesheet" href="reward-chest.css" />
 </head>
 <body>
   <canvas id="stage"></canvas>
@@ -55,5 +56,10 @@
        之后——订阅它暴露的 WTJ_TASK_TEMPLATES.onTaskComplete 事件累计连续完成计数。见
        app/web/status-rewards.js 顶部注释。 -->
   <script src="status-rewards.js"></script>
+  <!-- reward-chest.js（011 宝箱开启 + 烟花 + 一次性大奖励）需在 slots.js（010）之后——订阅它
+       暴露的 WTJ_SLOTS.onFull 事件，五槽满时播放宝箱奖励序列，播完调用 WTJ_SLOTS.reset()
+       清槽开新一轮。与 hud.js/audio.js 加载顺序无强依赖（调用均走防御式包装）。见
+       app/web/reward-chest.js 顶部注释。 -->
+  <script src="reward-chest.js"></script>
 </body>
 </html>

@@ -1,0 +1,139 @@
+/* WTJ-20260704-011 — 宝箱开启 + 烟花 + 一次性大奖励 叠层样式
+   延续 style.css / hud.css / secretword.css / task-templates.css / status-rewards.css 的
+   深色低调基调（#0e1117 系）。整个叠层 pointer-events:none，永不拦截鼠标；宝箱本体 + 背景
+   光晕一次性出现 → 弹出/闪烁 → 淡出，由 reward-chest.js 用可注入时钟定时移除，不永久堆积
+   （REQ-RWD-01「不长期占用屏幕空间」）。烟花本身画在同一叠层内的 <canvas>（Canvas2D 逐帧
+   由 reward-chest.js 驱动，本文件不控制其内容，只负责该 canvas 元素本身的定位/尺寸）。
+
+   Safari 14 兼容基线（延续既有 CSS 文件的约束）：不使用 inset 简写（拆四个物理属性）、不使用
+   aspect-ratio / flex gap / :focus-visible 等 Safari 14 不支持的特性、不用 clip-path。
+   prefers-reduced-motion 下关闭宝箱本体与背景光晕两个 CSS 驱动的动画/过渡，冻结为静态终态
+   （JS 侧对应 Canvas 烟花的静态定格帧逻辑见 reward-chest.js 的 spawnStaticFrame()/
+   prefersReducedMotion() 一节说明，展示时长与移除时机不受影响）。 */
+
+.wtj-rc-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* 与 status-rewards.css 同一层级（9）：高于 HUD（5）/ 任务叠层（6）/ 秘密词命中叠层（8），
+     低于 debug-overlay / esc-progress-wrap（10）。宝箱大奖励与「今日工作完成」奖励属同一
+     "最大一次性奖励"量级，实际触发时机彼此独立（五槽满 vs 连续 3 任务完成），偶发同时出现时
+     谁在上层不影响功能，故沿用同一层级，不额外争抢 z-index。 */
+  z-index: 9;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* 烟花 Canvas：铺满整个叠层，内容完全由 reward-chest.js 逐帧绘制。        */
+/* ------------------------------------------------------------------ */
+
+.wtj-rc-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* 宝箱本体（short-animation，REQ-AST-06 已验收贴图 treasure-chest.png）： */
+/* 一次性"弹出开启"：缩小态淡入 → 放大回弹 → 轻微摇晃 → 定住 → 随整段序列淡出。 */
+/* ------------------------------------------------------------------ */
+
+.wtj-rc-chest {
+  position: absolute;
+  left: 50%;
+  bottom: 16%;
+  width: clamp(150px, 20vw, 300px);
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+  transform: translate(-50%, 0) scale(0.3) rotate(-6deg);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.wtj-rc-chest.wtj-rc-anim {
+  -webkit-animation: wtj-rc-chest-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: wtj-rc-chest-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@-webkit-keyframes wtj-rc-chest-pop {
+  0%   { opacity: 0; -webkit-transform: translate(-50%, 0) scale(0.3) rotate(-6deg); transform: translate(-50%, 0) scale(0.3) rotate(-6deg); }
+  12%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1.15) rotate(4deg); transform: translate(-50%, 0) scale(1.15) rotate(4deg); }
+  20%  { -webkit-transform: translate(-50%, 0) scale(0.94) rotate(-3deg); transform: translate(-50%, 0) scale(0.94) rotate(-3deg); }
+  28%  { -webkit-transform: translate(-50%, 0) scale(1.04) rotate(2deg); transform: translate(-50%, 0) scale(1.04) rotate(2deg); }
+  38%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1) rotate(0deg); transform: translate(-50%, 0) scale(1) rotate(0deg); }
+  85%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1) rotate(0deg); transform: translate(-50%, 0) scale(1) rotate(0deg); }
+  100% { opacity: 0; -webkit-transform: translate(-50%, 0) scale(0.9) rotate(0deg); transform: translate(-50%, 0) scale(0.9) rotate(0deg); }
+}
+
+@keyframes wtj-rc-chest-pop {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.3) rotate(-6deg); }
+  12%  { opacity: 1; transform: translate(-50%, 0) scale(1.15) rotate(4deg); }
+  20%  { transform: translate(-50%, 0) scale(0.94) rotate(-3deg); }
+  28%  { transform: translate(-50%, 0) scale(1.04) rotate(2deg); }
+  38%  { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0deg); }
+  85%  { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, 0) scale(0.9) rotate(0deg); }
+}
+
+/* ------------------------------------------------------------------ */
+/* 背景光晕闪烁（temporary-background-change）：暖金色径向光晕，短暂闪现后淡出，  */
+/* 与烟花/宝箱同时发起，不遮挡内容（低不透明度）。                              */
+/* ------------------------------------------------------------------ */
+
+.wtj-rc-flash {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: radial-gradient(circle at 50% 62%, rgba(255, 196, 102, 0.55) 0%, rgba(255, 196, 102, 0.18) 35%, rgba(255, 196, 102, 0) 70%);
+  opacity: 0;
+  will-change: opacity;
+}
+
+.wtj-rc-flash.wtj-rc-anim {
+  -webkit-animation: wtj-rc-flash-pulse 1.4s ease-out forwards;
+  animation: wtj-rc-flash-pulse 1.4s ease-out forwards;
+}
+
+@-webkit-keyframes wtj-rc-flash-pulse {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  55%  { opacity: 0.35; }
+  100% { opacity: 0; }
+}
+
+@keyframes wtj-rc-flash-pulse {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  55%  { opacity: 0.35; }
+  100% { opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 无障碍偏好：宝箱本体与背景光晕两个 CSS 驱动的表现冻结为静态终态（不动）。      */
+/* Canvas 烟花的静态定格由 reward-chest.js 的 JS 分支负责（CSS 管不到 canvas    */
+/* 内部逐帧绘制内容），展示/移除时机不受影响。                                  */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-rc-chest,
+  .wtj-rc-flash {
+    -webkit-animation: none !important;
+    animation: none !important;
+  }
+
+  .wtj-rc-chest {
+    opacity: 1 !important;
+    transform: translate(-50%, 0) scale(1) rotate(0deg) !important;
+  }
+
+  .wtj-rc-flash {
+    opacity: 0.3 !important;
+  }
+}
