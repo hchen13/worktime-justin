@@ -1,36 +1,8 @@
 {
-  "missing_count": 3,
+  "missing_count": 0,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-  "items": [
-    {
-      "word": "zebra",
-      "first_letter": "Z",
-      "display_name": "Zebra",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/zebra.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.zebra"
-    },
-    {
-      "word": "zipper",
-      "first_letter": "Z",
-      "display_name": "Zipper",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/zipper.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.zipper"
-    },
-    {
-      "word": "zucchini",
-      "first_letter": "Z",
-      "display_name": "Zucchini",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.zucchini"
-    }
-  ],
-  "updated_at_cst": "2026-07-04 10:38",
+  "items": [],
+  "updated_at_cst": "2026-07-04 10:58",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -391,6 +363,24 @@
       "word": "yak",
       "asset_path": "docs/assets/production-pack-b/sprites/yak.png",
       "resolved_at_cst": "2026-07-04 10:38"
+    },
+    {
+      "card_id": "WTJ-20260704-054",
+      "word": "zebra",
+      "asset_path": "docs/assets/production-pack-b/sprites/zebra.png",
+      "resolved_at_cst": "2026-07-04 10:58"
+    },
+    {
+      "card_id": "WTJ-20260704-054",
+      "word": "zipper",
+      "asset_path": "docs/assets/production-pack-b/sprites/zipper.png",
+      "resolved_at_cst": "2026-07-04 10:58"
+    },
+    {
+      "card_id": "WTJ-20260704-054",
+      "word": "zucchini",
+      "asset_path": "docs/assets/production-pack-b/sprites/zucchini.png",
+      "resolved_at_cst": "2026-07-04 10:58"
     }
   ]
 }

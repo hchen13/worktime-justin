@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 97,
-  "stubbed_pending_count": 3,
+  "production_ready_count": 100,
+  "stubbed_pending_count": 0,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -156,7 +156,14 @@
     "yarn_alpha_raw": "docs/assets/production-pack-b/source/yarn-alpha-raw.png",
     "yak_source_green": "docs/assets/production-pack-b/source/yak-source-green.png",
     "yak_alpha_raw": "docs/assets/production-pack-b/source/yak-alpha-raw.png",
-    "letter_y_prompt_record": "docs/assets/production-pack-b/source/letter-y-prompt.md"
+    "letter_y_prompt_record": "docs/assets/production-pack-b/source/letter-y-prompt.md",
+    "zebra_source_green": "docs/assets/production-pack-b/source/zebra-source-green.png",
+    "zebra_alpha_raw": "docs/assets/production-pack-b/source/zebra-alpha-raw.png",
+    "zipper_source_green": "docs/assets/production-pack-b/source/zipper-source-green.png",
+    "zipper_alpha_raw": "docs/assets/production-pack-b/source/zipper-alpha-raw.png",
+    "zucchini_source_magenta": "docs/assets/production-pack-b/source/zucchini-source-magenta.png",
+    "zucchini_alpha_raw": "docs/assets/production-pack-b/source/zucchini-alpha-raw.png",
+    "letter_z_prompt_record": "docs/assets/production-pack-b/source/letter-z-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -1143,9 +1150,9 @@
       "word": "zebra",
       "first_letter": "Z",
       "display_name": "Zebra",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/zebra.png",
       "sound_key": "secret.word.zebra",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zebra.png"
     },
@@ -1153,9 +1160,9 @@
       "word": "zipper",
       "first_letter": "Z",
       "display_name": "Zipper",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/zipper.png",
       "sound_key": "secret.word.zipper",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zipper.png"
     },
@@ -1163,14 +1170,14 @@
       "word": "zucchini",
       "first_letter": "Z",
       "display_name": "Zucchini",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/zucchini.png",
       "sound_key": "secret.word.zucchini",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 10:38",
+  "updated_at_cst": "2026-07-04 10:58",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1378,6 +1385,16 @@
         "yak"
       ],
       "changes": "Generated production yoyo, yarn, and yak sprites, replaced placeholder asset_paths, updated contact sheet, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-054",
+      "updated_at_cst": "2026-07-04 10:58",
+      "words": [
+        "zebra",
+        "zipper",
+        "zucchini"
+      ],
+      "changes": "Generated production zebra, zipper, and zucchini sprites, replaced final placeholder asset_paths, updated contact sheet, and marked Pack B fully ready."
     }
   ]
 }
