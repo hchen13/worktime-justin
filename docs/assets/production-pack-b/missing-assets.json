@@ -1,43 +1,7 @@
 {
-  "missing_count": 16,
+  "missing_count": 12,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "van",
-      "first_letter": "V",
-      "display_name": "Van",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/van.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.van"
-    },
-    {
-      "word": "vase",
-      "first_letter": "V",
-      "display_name": "Vase",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/vase.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.vase"
-    },
-    {
-      "word": "violin",
-      "first_letter": "V",
-      "display_name": "Violin",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/violin.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.violin"
-    },
-    {
-      "word": "volcano",
-      "first_letter": "V",
-      "display_name": "Volcano",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/volcano.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.volcano"
-    },
     {
       "word": "whale",
       "first_letter": "W",
@@ -147,7 +111,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 09:06",
+  "updated_at_cst": "2026-07-04 09:29",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -430,6 +394,30 @@
       "word": "uniform",
       "asset_path": "docs/assets/production-pack-b/sprites/uniform.png",
       "resolved_at_cst": "2026-07-04 09:06"
+    },
+    {
+      "card_id": "WTJ-20260704-050",
+      "word": "van",
+      "asset_path": "docs/assets/production-pack-b/sprites/van.png",
+      "resolved_at_cst": "2026-07-04 09:29"
+    },
+    {
+      "card_id": "WTJ-20260704-050",
+      "word": "vase",
+      "asset_path": "docs/assets/production-pack-b/sprites/vase.png",
+      "resolved_at_cst": "2026-07-04 09:29"
+    },
+    {
+      "card_id": "WTJ-20260704-050",
+      "word": "violin",
+      "asset_path": "docs/assets/production-pack-b/sprites/violin.png",
+      "resolved_at_cst": "2026-07-04 09:29"
+    },
+    {
+      "card_id": "WTJ-20260704-050",
+      "word": "volcano",
+      "asset_path": "docs/assets/production-pack-b/sprites/volcano.png",
+      "resolved_at_cst": "2026-07-04 09:29"
     }
   ]
 }

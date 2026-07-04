@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 84,
-  "stubbed_pending_count": 16,
+  "production_ready_count": 88,
+  "stubbed_pending_count": 12,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -126,7 +126,16 @@
     "ukulele_alpha_raw": "docs/assets/production-pack-b/source/ukulele-alpha-raw.png",
     "uniform_source_green": "docs/assets/production-pack-b/source/uniform-source-green.png",
     "uniform_alpha_raw": "docs/assets/production-pack-b/source/uniform-alpha-raw.png",
-    "letter_u_prompt_record": "docs/assets/production-pack-b/source/letter-u-prompt.md"
+    "letter_u_prompt_record": "docs/assets/production-pack-b/source/letter-u-prompt.md",
+    "van_source_green": "docs/assets/production-pack-b/source/van-source-green.png",
+    "van_alpha_raw": "docs/assets/production-pack-b/source/van-alpha-raw.png",
+    "vase_source_green": "docs/assets/production-pack-b/source/vase-source-green.png",
+    "vase_alpha_raw": "docs/assets/production-pack-b/source/vase-alpha-raw.png",
+    "violin_source_green": "docs/assets/production-pack-b/source/violin-source-green.png",
+    "violin_alpha_raw": "docs/assets/production-pack-b/source/violin-alpha-raw.png",
+    "volcano_source_green": "docs/assets/production-pack-b/source/volcano-source-green.png",
+    "volcano_alpha_raw": "docs/assets/production-pack-b/source/volcano-alpha-raw.png",
+    "letter_v_prompt_record": "docs/assets/production-pack-b/source/letter-v-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -983,9 +992,9 @@
       "word": "van",
       "first_letter": "V",
       "display_name": "Van",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/van.png",
       "sound_key": "secret.word.van",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/van.png"
     },
@@ -993,9 +1002,9 @@
       "word": "vase",
       "first_letter": "V",
       "display_name": "Vase",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/vase.png",
       "sound_key": "secret.word.vase",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/vase.png"
     },
@@ -1003,9 +1012,9 @@
       "word": "violin",
       "first_letter": "V",
       "display_name": "Violin",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/violin.png",
       "sound_key": "secret.word.violin",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/violin.png"
     },
@@ -1013,9 +1022,9 @@
       "word": "volcano",
       "first_letter": "V",
       "display_name": "Volcano",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/volcano.png",
       "sound_key": "secret.word.volcano",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/volcano.png"
     },
@@ -1140,7 +1149,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 09:06",
+  "updated_at_cst": "2026-07-04 09:29",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1307,6 +1316,17 @@
         "uniform"
       ],
       "changes": "Generated production umbrella, unicorn, ukulele, and uniform sprites, replaced placeholder asset_paths, and marked all four ready."
+    },
+    {
+      "card_id": "WTJ-20260704-050",
+      "updated_at_cst": "2026-07-04 09:29",
+      "words": [
+        "van",
+        "vase",
+        "violin",
+        "volcano"
+      ],
+      "changes": "Generated production van, vase, violin, and volcano sprites, replaced placeholder asset_paths, and marked all four ready."
     }
   ]
 }
