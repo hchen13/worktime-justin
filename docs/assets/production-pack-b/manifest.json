@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 73,
-  "stubbed_pending_count": 27,
+  "production_ready_count": 76,
+  "stubbed_pending_count": 24,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -101,7 +101,14 @@
     "shoe_alpha_raw": "docs/assets/production-pack-b/source/shoe-alpha-raw.png",
     "spoon_source_green": "docs/assets/production-pack-b/source/spoon-source-green.png",
     "spoon_alpha_raw": "docs/assets/production-pack-b/source/spoon-alpha-raw.png",
-    "letter_s_prompt_record": "docs/assets/production-pack-b/source/letter-s-prompt.md"
+    "letter_s_prompt_record": "docs/assets/production-pack-b/source/letter-s-prompt.md",
+    "tree_source_magenta": "docs/assets/production-pack-b/source/tree-source-magenta.png",
+    "tree_alpha_raw": "docs/assets/production-pack-b/source/tree-alpha-raw.png",
+    "train_source_green": "docs/assets/production-pack-b/source/train-source-green.png",
+    "train_alpha_raw": "docs/assets/production-pack-b/source/train-alpha-raw.png",
+    "turtle_source_magenta": "docs/assets/production-pack-b/source/turtle-source-magenta.png",
+    "turtle_alpha_raw": "docs/assets/production-pack-b/source/turtle-alpha-raw.png",
+    "letter_t_prompt_record": "docs/assets/production-pack-b/source/letter-t-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -888,9 +895,9 @@
       "word": "tree",
       "first_letter": "T",
       "display_name": "Tree",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/tree.png",
       "sound_key": "secret.word.tree",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/tree.png"
     },
@@ -898,9 +905,9 @@
       "word": "train",
       "first_letter": "T",
       "display_name": "Train",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/train.png",
       "sound_key": "secret.word.train",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/train.png"
     },
@@ -908,9 +915,9 @@
       "word": "turtle",
       "first_letter": "T",
       "display_name": "Turtle",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/turtle.png",
       "sound_key": "secret.word.turtle",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/turtle.png"
     },
@@ -1115,7 +1122,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 07:46",
+  "updated_at_cst": "2026-07-04 08:04",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1250,6 +1257,16 @@
         "spoon"
       ],
       "changes": "Generated production sun, shoe, and spoon sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-048",
+      "updated_at_cst": "2026-07-04 08:04",
+      "words": [
+        "tree",
+        "train",
+        "turtle"
+      ],
+      "changes": "Generated production tree, train, and turtle sprites, replaced placeholder asset_paths, and marked all three ready."
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "missing_count": 27,
+  "missing_count": 24,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
     {
@@ -37,33 +37,6 @@
       "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
       "planned_batch": "batch-03",
       "sound_key": "secret.word.quarter"
-    },
-    {
-      "word": "tree",
-      "first_letter": "T",
-      "display_name": "Tree",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/tree.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.tree"
-    },
-    {
-      "word": "train",
-      "first_letter": "T",
-      "display_name": "Train",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/train.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.train"
-    },
-    {
-      "word": "turtle",
-      "first_letter": "T",
-      "display_name": "Turtle",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/turtle.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.turtle"
     },
     {
       "word": "umbrella",
@@ -246,7 +219,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 07:46",
+  "updated_at_cst": "2026-07-04 08:04",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -463,6 +436,24 @@
       "word": "spoon",
       "asset_path": "docs/assets/production-pack-b/sprites/spoon.png",
       "resolved_at_cst": "2026-07-04 07:46"
+    },
+    {
+      "card_id": "WTJ-20260704-048",
+      "word": "tree",
+      "asset_path": "docs/assets/production-pack-b/sprites/tree.png",
+      "resolved_at_cst": "2026-07-04 08:04"
+    },
+    {
+      "card_id": "WTJ-20260704-048",
+      "word": "train",
+      "asset_path": "docs/assets/production-pack-b/sprites/train.png",
+      "resolved_at_cst": "2026-07-04 08:04"
+    },
+    {
+      "card_id": "WTJ-20260704-048",
+      "word": "turtle",
+      "asset_path": "docs/assets/production-pack-b/sprites/turtle.png",
+      "resolved_at_cst": "2026-07-04 08:04"
     }
   ]
 }
