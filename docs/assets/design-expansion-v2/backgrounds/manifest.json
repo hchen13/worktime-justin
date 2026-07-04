@@ -1,0 +1,367 @@
+{
+  "card": "WTJ-20260704-062",
+  "asset_pack": "backgrounds-v2-rework",
+  "created_by": "Designer 2 / Automation:worktime-justin-designer-2-loop",
+  "format": {
+    "canvas_size": [
+      1440,
+      900
+    ],
+    "background_mode": "RGB PNG",
+    "mock_overlay": "requirements-correct overlay: high-contrast letters + one question mark + five discovery slots + status lights"
+  },
+  "rework_reason": "PM rejected prior generic glow/orb/bokeh direction at 2026-07-04 15:31 CST; this version is workbench-grounded and restrained.",
+  "backgrounds": [
+    {
+      "id": "default-workbench",
+      "mode": "normal",
+      "background": "backgrounds/default-workbench.png",
+      "desktop_mock": "mocks/default-workbench-desktop-mock.png",
+      "recommended_use": "Default canvas, broadest safe option.",
+      "why_it_keeps_canvas_clean": "Desk/wall planes stay at edges; center remains empty for letters.",
+      "min_sampled_letter_contrast": 6.43,
+      "contrast_samples": {
+        "yellow": {
+          "min": 11.87,
+          "samples": [
+            14.05,
+            13.54,
+            13.73,
+            13.5,
+            11.87
+          ]
+        },
+        "cyan": {
+          "min": 11.12,
+          "samples": [
+            13.15,
+            12.68,
+            12.86,
+            12.64,
+            11.12
+          ]
+        },
+        "coral": {
+          "min": 6.43,
+          "samples": [
+            7.61,
+            7.33,
+            7.44,
+            7.31,
+            6.43
+          ]
+        },
+        "green": {
+          "min": 11.72,
+          "samples": [
+            13.86,
+            13.36,
+            13.55,
+            13.32,
+            11.72
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    },
+    {
+      "id": "keyboard-exploration-desk",
+      "mode": "normal",
+      "background": "backgrounds/keyboard-exploration-desk.png",
+      "desktop_mock": "mocks/keyboard-exploration-desk-desktop-mock.png",
+      "recommended_use": "Keyboard exploration with subtle key shapes near the desk.",
+      "why_it_keeps_canvas_clean": "Small keycaps are low on the desk, not a second UI.",
+      "min_sampled_letter_contrast": 6.03,
+      "contrast_samples": {
+        "yellow": {
+          "min": 11.13,
+          "samples": [
+            13.7,
+            13.07,
+            13.28,
+            12.85,
+            11.13
+          ]
+        },
+        "cyan": {
+          "min": 10.42,
+          "samples": [
+            12.83,
+            12.24,
+            12.44,
+            12.03,
+            10.42
+          ]
+        },
+        "coral": {
+          "min": 6.03,
+          "samples": [
+            7.42,
+            7.08,
+            7.19,
+            6.96,
+            6.03
+          ]
+        },
+        "green": {
+          "min": 10.98,
+          "samples": [
+            13.52,
+            12.9,
+            13.11,
+            12.68,
+            10.98
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    },
+    {
+      "id": "task-focus-workbench",
+      "mode": "task",
+      "background": "backgrounds/task-focus-workbench.png",
+      "desktop_mock": "mocks/task-focus-workbench-desktop-mock.png",
+      "recommended_use": "Question-mark task mode, with one quiet task card at the right edge.",
+      "why_it_keeps_canvas_clean": "Task card is peripheral and does not mimic a clickable default icon stack.",
+      "min_sampled_letter_contrast": 6.55,
+      "contrast_samples": {
+        "yellow": {
+          "min": 12.08,
+          "samples": [
+            14.05,
+            13.71,
+            13.74,
+            13.51,
+            12.08
+          ]
+        },
+        "cyan": {
+          "min": 11.32,
+          "samples": [
+            13.16,
+            12.83,
+            12.86,
+            12.65,
+            11.32
+          ]
+        },
+        "coral": {
+          "min": 6.55,
+          "samples": [
+            7.61,
+            7.42,
+            7.44,
+            7.32,
+            6.55
+          ]
+        },
+        "green": {
+          "min": 11.93,
+          "samples": [
+            13.87,
+            13.53,
+            13.56,
+            13.33,
+            11.93
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    },
+    {
+      "id": "reward-warm-shelf",
+      "mode": "reward",
+      "background": "backgrounds/reward-warm-shelf.png",
+      "desktop_mock": "mocks/reward-warm-shelf-desktop-mock.png",
+      "recommended_use": "Short reward tint after a meaningful event.",
+      "why_it_keeps_canvas_clean": "Warm shelf/chest hint is small and temporary, not a permanent sticker wall.",
+      "min_sampled_letter_contrast": 6.02,
+      "contrast_samples": {
+        "yellow": {
+          "min": 11.1,
+          "samples": [
+            13.72,
+            13.08,
+            13.34,
+            12.92,
+            11.1
+          ]
+        },
+        "cyan": {
+          "min": 10.4,
+          "samples": [
+            12.85,
+            12.25,
+            12.49,
+            12.1,
+            10.4
+          ]
+        },
+        "coral": {
+          "min": 6.02,
+          "samples": [
+            7.43,
+            7.09,
+            7.23,
+            7.0,
+            6.02
+          ]
+        },
+        "green": {
+          "min": 10.96,
+          "samples": [
+            13.54,
+            12.91,
+            13.17,
+            12.75,
+            10.96
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    },
+    {
+      "id": "quiet-rest-bench",
+      "mode": "rest",
+      "background": "backgrounds/quiet-rest-bench.png",
+      "desktop_mock": "mocks/quiet-rest-bench-desktop-mock.png",
+      "recommended_use": "Rest/reset state after a larger reward or busy task.",
+      "why_it_keeps_canvas_clean": "Bench shapes are horizontal and quiet, helping the canvas settle back down.",
+      "min_sampled_letter_contrast": 6.19,
+      "contrast_samples": {
+        "yellow": {
+          "min": 11.43,
+          "samples": [
+            13.85,
+            13.34,
+            13.44,
+            13.13,
+            11.43
+          ]
+        },
+        "cyan": {
+          "min": 10.7,
+          "samples": [
+            12.97,
+            12.49,
+            12.59,
+            12.3,
+            10.7
+          ]
+        },
+        "coral": {
+          "min": 6.19,
+          "samples": [
+            7.5,
+            7.23,
+            7.28,
+            7.11,
+            6.19
+          ]
+        },
+        "green": {
+          "min": 11.28,
+          "samples": [
+            13.67,
+            13.17,
+            13.27,
+            12.96,
+            11.28
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    },
+    {
+      "id": "night-clean-stage",
+      "mode": "normal",
+      "background": "backgrounds/night-clean-stage.png",
+      "desktop_mock": "mocks/night-clean-stage-desktop-mock.png",
+      "recommended_use": "Very quiet night/default alternate for lower stimulation.",
+      "why_it_keeps_canvas_clean": "Only tiny rectangular wall marks; no star field or decorative dots.",
+      "min_sampled_letter_contrast": 6.56,
+      "contrast_samples": {
+        "yellow": {
+          "min": 12.11,
+          "samples": [
+            14.29,
+            13.99,
+            14.08,
+            13.8,
+            12.11
+          ]
+        },
+        "cyan": {
+          "min": 11.34,
+          "samples": [
+            13.38,
+            13.1,
+            13.19,
+            12.92,
+            11.34
+          ]
+        },
+        "coral": {
+          "min": 6.56,
+          "samples": [
+            7.74,
+            7.58,
+            7.63,
+            7.47,
+            6.56
+          ]
+        },
+        "green": {
+          "min": 11.95,
+          "samples": [
+            14.1,
+            13.8,
+            13.9,
+            13.62,
+            11.95
+          ]
+        }
+      },
+      "scene_elements": [
+        "wall plane",
+        "desktop plane",
+        "subtle shelf/rail",
+        "peripheral workbench detail"
+      ]
+    }
+  ],
+  "contact_sheet": "contact-sheets/backgrounds-contact-sheet.png",
+  "quality_checks": [
+    "Six 1440x900 dark-friendly background candidates were regenerated.",
+    "Every desktop mock keeps one question mark, five discovery slots, tiny status lights, and no input echo.",
+    "Raw backgrounds avoid circular light blobs, decorative orbs, bokeh dots, wallpaper patterns, right-side icon stacks, and text.",
+    "Workbench semantics are explicit: dark stage, wall/desk planes, shelf/rail/task/rest details.",
+    "Letter contrast was sampled at five representative canvas points for yellow/cyan/coral/green letters.",
+    "This is a design candidate pack only; runtime integration requires PM routing."
+  ]
+}

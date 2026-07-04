@@ -306,14 +306,17 @@ function run() {
     });
   });
 
-  section('12. getSfxKeys() mirrors the 20-key DEFAULT_SFX_MAP (ui/animal/bell/water/chest)');
+  section('12. getSfxKeys() mirrors the 25-key DEFAULT_SFX_MAP (ui/animal/bell/water/chest/keySound)');
   pending = pending.then(function () {
+    // WTJ-20260704-084 追加了 5 个 keySound 类键位（key-letter/key-space/key-enter/
+    // key-punct/key-modifier，逐键机械键盘反馈音），20 -> 25，见 audio/sfx-manifest.json
+    // 'keySound' 分类与 audio/SOURCE-LICENSES.md「WTJ-20260704-084 追加」一节。
     var keys = WTJ_AUDIO.getSfxKeys();
-    assert.strictEqual(keys.length, 20);
-    ['task-success', 'chest-open', 'dog-bark', 'bell-ring', 'water-tap-flow'].forEach(function (k) {
+    assert.strictEqual(keys.length, 25);
+    ['task-success', 'chest-open', 'dog-bark', 'bell-ring', 'water-tap-flow', 'key-letter', 'key-space', 'key-enter', 'key-punct', 'key-modifier'].forEach(function (k) {
       assert.ok(keys.indexOf(k) !== -1, 'expected sfx key ' + k);
     });
-    console.log('PASS: getSfxKeys() has 20 entries covering all five categories.');
+    console.log('PASS: getSfxKeys() has 25 entries covering all six categories.');
   });
 
   return pending;

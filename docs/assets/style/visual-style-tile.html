@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorkTime Justin Visual Style Tile</title>
+  <style>
+    :root {
+      --page: #0b0f17;
+      --canvas-a: #050912;
+      --canvas-b: #071526;
+      --panel: rgba(16, 25, 42, .86);
+      --panel-2: rgba(26, 38, 61, .72);
+      --line: rgba(142, 166, 205, .28);
+      --ink: #f5f8ff;
+      --muted: #a8b6cc;
+      --yellow: #ffd84c;
+      --cyan: #3ce7ff;
+      --coral: #ff675a;
+      --green: #9cff38;
+      --pink: #ff77b8;
+      --blue: #82a8ff;
+      --ok: #65f08d;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 28px;
+      background: #11151d;
+      color: var(--ink);
+    }
+
+    .tile {
+      width: 1600px;
+      height: 1000px;
+      padding: 30px;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, #0d1320 0%, #07101d 52%, #050912 100%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+    }
+
+    .header {
+      height: 78px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .deck-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .stamp {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 216, 76, .35);
+      color: #fff0bc;
+      background: rgba(255, 216, 76, .09);
+      font-size: 15px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.18fr .82fr;
+      gap: 22px;
+      height: calc(100% - 78px);
+    }
+
+    .frame,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .26);
+      overflow: hidden;
+    }
+
+    .app-frame {
+      position: relative;
+      height: 100%;
+      min-height: 0;
+      background:
+        radial-gradient(circle at 51% 42%, rgba(48, 92, 158, .22), transparent 45%),
+        linear-gradient(180deg, var(--canvas-a), var(--canvas-b) 58%, #050913);
+    }
+
+    .app-top {
+      height: 72px;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, .12);
+      text-align: center;
+    }
+
+    .app-title {
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .app-sub {
+      margin-top: 6px;
+      color: rgba(255, 255, 255, .76);
+      font-size: 15px;
+      font-weight: 620;
+    }
+
+    .parent-lock {
+      position: absolute;
+      right: 24px;
+      top: 22px;
+      color: rgba(255, 255, 255, .66);
+      font-size: 18px;
+    }
+
+    .letter {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: var(--size);
+      height: var(--size);
+      color: var(--c);
+      font-size: calc(var(--size) * .82);
+      font-weight: 950;
+      transform: rotate(var(--r));
+      line-height: 1;
+      text-shadow:
+        0 0 14px currentColor,
+        0 0 42px color-mix(in srgb, currentColor 66%, transparent);
+      filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .35));
+    }
+
+    .letter::after {
+      content: "";
+      position: absolute;
+      right: 56%;
+      top: 58%;
+      width: calc(var(--size) * 1.55);
+      height: calc(var(--size) * .28);
+      border-radius: 999px;
+      background: linear-gradient(90deg, color-mix(in srgb, currentColor 34%, transparent), transparent);
+      filter: blur(7px);
+      opacity: .42;
+      z-index: -1;
+    }
+
+    .l-a { --size: 128px; --c: var(--yellow); --r: -10deg; left: 95px; top: 122px; }
+    .l-d { --size: 145px; --c: var(--cyan); --r: 5deg; left: 260px; top: 335px; }
+    .l-g { --size: 134px; --c: var(--coral); --r: 8deg; left: 540px; top: 130px; }
+    .l-t { --size: 126px; --c: var(--green); --r: 5deg; right: 94px; top: 330px; }
+    .l-m { --size: 88px; --c: var(--pink); --r: -6deg; right: 230px; top: 220px; }
+
+    .question {
+      position: absolute;
+      right: 40px;
+      top: 196px;
+      width: 70px;
+      height: 70px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--yellow);
+      color: #17223a;
+      font-size: 48px;
+      font-weight: 950;
+      box-shadow: 0 0 28px rgba(255, 216, 76, .4);
+    }
+
+    .lights {
+      position: absolute;
+      left: 34px;
+      bottom: 102px;
+      display: flex;
+      gap: 9px;
+    }
+
+    .light {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: #34415c;
+    }
+
+    .light.on {
+      background: var(--ok);
+      box-shadow: 0 0 17px rgba(101, 240, 141, .74);
+    }
+
+    .bottom-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 82px;
+      border-top: 1px solid rgba(255, 255, 255, .12);
+      background: linear-gradient(180deg, rgba(8, 15, 28, .48), rgba(5, 10, 19, .82));
+    }
+
+    .slots {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .slot {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px dashed rgba(153, 176, 215, .44);
+      color: rgba(255, 255, 255, .44);
+      background: rgba(255, 255, 255, .025);
+      font-size: 26px;
+    }
+
+    .slot.filled {
+      border: 2px solid rgba(255, 232, 130, .92);
+      background: rgba(255, 216, 76, .16);
+      color: white;
+      box-shadow: 0 0 18px rgba(255, 216, 76, .28);
+    }
+
+    .mini-chest {
+      position: absolute;
+      right: 34px;
+      bottom: 18px;
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(153, 176, 215, .42);
+      color: rgba(255, 255, 255, .62);
+      background: rgba(255, 255, 255, .05);
+      font-size: 25px;
+    }
+
+    .right {
+      display: grid;
+      grid-template-rows: 244px 340px 1fr;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .swatch {
+      height: 72px;
+      border-radius: 13px;
+      background: var(--c);
+      box-shadow: 0 0 22px color-mix(in srgb, var(--c) 36%, transparent);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swatch span {
+      position: absolute;
+      left: 9px;
+      right: 9px;
+      bottom: 8px;
+      color: #06101f;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .components {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .component {
+      min-height: 84px;
+      border: 1px solid rgba(142, 166, 205, .22);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .04);
+      padding: 12px;
+      position: relative;
+    }
+
+    .component strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .component p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .slot-row,
+    .light-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .chest-demo {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .chest {
+      position: relative;
+      width: 106px;
+      height: 82px;
+    }
+
+    .chest .lid {
+      position: absolute;
+      left: 12px;
+      top: -7px;
+      width: 84px;
+      height: 40px;
+      border-radius: 42px 42px 11px 11px;
+      background: linear-gradient(180deg, #ffd969, #c77a32);
+      transform: rotate(-13deg) translateY(-13px);
+      transform-origin: left bottom;
+      box-shadow: 0 0 26px rgba(255, 216, 76, .4);
+    }
+
+    .chest .box {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 106px;
+      height: 54px;
+      border-radius: 13px 13px 18px 18px;
+      background: linear-gradient(180deg, #d8893d, #8c4c28);
+      border: 3px solid #ffd969;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .rule {
+      border: 1px solid rgba(142, 166, 205, .2);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .04);
+      padding: 12px;
+      min-height: 74px;
+    }
+
+    .rule.good {
+      border-color: rgba(101, 240, 141, .26);
+      background: rgba(101, 240, 141, .07);
+    }
+
+    .rule.no {
+      border-color: rgba(255, 103, 90, .28);
+      background: rgba(255, 103, 90, .07);
+    }
+
+    .rule strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .rule span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.38;
+    }
+  </style>
+</head>
+<body>
+  <section class="tile" data-shot="visual-style-tile">
+    <div class="header">
+      <div>
+        <h1>WorkTime Justin 视觉风格基准</h1>
+        <div class="deck-note">深色干净舞台，高对比即时反馈，少量儿童化奖励。产品 UI 内保持极简，说明文字只放在设计板外层。</div>
+      </div>
+      <div class="stamp">DESIGN baseline · 2026-07-03</div>
+    </div>
+
+    <div class="layout">
+      <div class="frame">
+        <div class="app-frame">
+          <div class="app-top">
+            <div><div class="app-title">Work Time, Justin!</div><div class="app-sub">小小工作台</div></div>
+          </div>
+          <div class="parent-lock">▣</div>
+          <div class="letter l-a">A</div>
+          <div class="letter l-d">D</div>
+          <div class="letter l-g">G</div>
+          <div class="letter l-t">T</div>
+          <div class="letter l-m">m</div>
+          <div class="question">?</div>
+          <div class="lights"><span class="light on"></span><span class="light on"></span><span class="light"></span></div>
+          <div class="bottom-bar">
+            <div class="slots">
+              <span class="slot filled">★</span>
+              <span class="slot filled">🐶</span>
+              <span class="slot filled">⌁</span>
+              <span class="slot">+</span>
+              <span class="slot">+</span>
+            </div>
+            <div class="mini-chest">▤</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="panel">
+          <h2>色板与字母反馈</h2>
+          <div class="swatches">
+            <div class="swatch" style="--c:var(--yellow)"><span>#FFD84C</span></div>
+            <div class="swatch" style="--c:var(--cyan)"><span>#3CE7FF</span></div>
+            <div class="swatch" style="--c:var(--coral)"><span>#FF675A</span></div>
+            <div class="swatch" style="--c:var(--green)"><span>#9CFF38</span></div>
+            <div class="swatch" style="--c:var(--pink)"><span>#FF77B8</span></div>
+            <div class="swatch" style="--c:var(--blue)"><span>#82A8FF</span></div>
+          </div>
+          <div class="components">
+            <div class="component">
+              <strong>动态字母</strong>
+              <p>大字号、轻旋转、短尾迹。弹出后快速淡出，避免永久堆积。</p>
+            </div>
+            <div class="component">
+              <strong>画布</strong>
+              <p>深海军蓝背景，中心轻微提亮。留大量负空间给探索反馈。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>核心 UI 组件</h2>
+          <div class="components">
+            <div class="component">
+              <strong>五个发现槽</strong>
+              <div class="slot-row"><span class="slot filled">★</span><span class="slot filled">🐶</span><span class="slot filled">⌁</span><span class="slot">+</span></div>
+              <p>可混合秘密词对象和探索里程碑。</p>
+            </div>
+            <div class="component">
+              <strong>问号入口</strong>
+              <div class="slot-row"><span class="question" style="position:static;width:48px;height:48px;font-size:32px">?</span></div>
+              <p>单一入口，低常驻噪声，触发语音任务。</p>
+            </div>
+            <div class="component">
+              <strong>工作状态灯</strong>
+              <div class="light-row"><span class="light on"></span><span class="light on"></span><span class="light"></span><span class="light on"></span></div>
+              <p>任务完成反馈，不和五槽混用。</p>
+            </div>
+            <div class="component">
+              <strong>宝箱奖励</strong>
+              <div class="chest-demo"><div class="chest"><div class="lid"></div><div class="box"></div></div><p>一次性光效，结束后回到干净画布。</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>视觉边界</h2>
+          <div class="rules">
+            <div class="rule good"><strong>做</strong><span>少量大反馈，清晰主目标，奖励出现后淡出。</span></div>
+            <div class="rule good"><strong>做</strong><span>按钮少、槽位少、状态灯小，孩子不需要读说明。</span></div>
+            <div class="rule no"><strong>不做</strong><span>复杂工具栏、密集面板、默认页面像仪表盘。</span></div>
+            <div class="rule no"><strong>不做</strong><span>永久堆贴纸、满屏装饰、低对比渐变字母。</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

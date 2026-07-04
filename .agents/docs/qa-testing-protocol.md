@@ -2,6 +2,8 @@
 
 QA is a coordinator role, not only a final checker. Its output is both a test result and a durable test asset that can be reused in future full regression runs.
 
+Multiple QA sessions may run at the same time. They share the role owner `QA`, but each concrete session must use both a stable executor label and stable runtime identity in `最新进展`, for example `执行者：QA-Visual；身份ID：ClaudeSession:<session-id>`.
+
 ## 1. Test Asset Principle
 
 If a behavior is worth testing once and can be reproduced, it should become a reusable project asset under `tests/`.
@@ -60,6 +62,14 @@ Required flow:
 4. QA spawns an adversarial reviewer subagent that assumes the test is wrong and tries to prove coverage drift, false positives, false negatives, or implementation coupling.
 5. QA fixes or rejects the test until the adversarial review is satisfied.
 6. QA runs the test and records result, command, evidence, and residual risk.
+
+When multiple QA sessions are active:
+
+- Each session claims one card or one explicit test scope before editing files, using both executor label and runtime identity.
+- Distinct QA sessions may split by `测试类型`, feature area, or asset path.
+- Do not concurrently edit the same test script, visual prompt, fixture, or report path unless PM has named a merge owner.
+- A session that discovers overlap stops and returns the card to PM review for splitting rather than racing another QA session.
+- `对抗评审` or `产物/证据` must name the test creator executor label/identity and adversarial reviewer label/identity when a reusable test asset is added or changed.
 
 ## 5. Agentic Visual Test Flow
 
@@ -127,6 +137,6 @@ After any QA execution or QA asset work, QA must hand the card back to PM:
 - set `评审负责人 = PM`
 - set `QA结果` to the observed result
 - update `测试资产路径`, `测试覆盖范围`, and `对抗评审` when applicable
-- summarize failures, evidence, suspected owner, and recommended next action in `最新进展` / `下一步动作`
+- summarize executor label/identity, failures, evidence, suspected owner, and recommended next action in `最新进展` / `下一步动作`
 
 QA must not directly reassign failed work to TL, DESIGN, or Ethan. PM decides whether to route rework, open or approve a follow-up card, mark the issue blocked, close the card, or deprecate it.

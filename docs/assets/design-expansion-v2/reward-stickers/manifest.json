@@ -1,0 +1,317 @@
+{
+  "pack_id": "design-expansion-v2-reward-stickers-v3",
+  "card_id": "WTJ-20260704-063",
+  "created_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "created_at_cst": "2026-07-04 15:25:30 CST",
+  "asset_class": "design_expansion_candidate_pack_rework",
+  "style_baseline": "WorkTime Justin accepted production sprite/style guide: polished 2.5D soft-plastic / soft-clay, rounded forms, top-left soft light, dark-canvas readability.",
+  "contact_sheet": "docs/assets/design-expansion-v2/reward-stickers/contact-sheets/reward-stickers-v3-contact-sheet.png",
+  "asset_spec": {
+    "canvas_px": [
+      512,
+      512
+    ],
+    "format": "transparent PNG",
+    "contact_sheet_previews_px": [
+      128,
+      64
+    ],
+    "intended_behavior": "transient one-shot reward, not permanent UI furniture"
+  },
+  "assets": [
+    {
+      "id": "star_gold_pop",
+      "category": "star",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/star_gold_pop.png",
+      "sources": [
+        "docs/assets/production-pack-a/rewards/star-sticker.png"
+      ],
+      "recommended_use": "brief gold star reward pop",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "star_teal_orbit",
+      "category": "star",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/star_teal_orbit.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/star.png"
+      ],
+      "recommended_use": "cooler repeated-discovery star",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "sparkle_gold_burst",
+      "category": "sparkle",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/sparkle_gold_burst.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/star.png",
+        "docs/assets/production-pack-b/sprites/ball.png",
+        "docs/assets/production-pack-a/rewards/sparkle-burst.png"
+      ],
+      "recommended_use": "one-shot sparkle burst with 2.5D star center",
+      "rework_status": "redone_from_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "sparkle_teal_burst",
+      "category": "sparkle",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/sparkle_teal_burst.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/star.png",
+        "docs/assets/production-pack-b/sprites/bell.png",
+        "docs/assets/production-pack-a/rewards/sparkle-burst.png"
+      ],
+      "recommended_use": "cool sparkle burst behind target/reward",
+      "rework_status": "redone_from_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "confetti_task_burst",
+      "category": "sparkle",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/confetti_task_burst.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/gift.png",
+        "docs/assets/production-pack-b/sprites/star.png",
+        "docs/assets/production-pack-a/rewards/sparkle-burst.png"
+      ],
+      "recommended_use": "work-complete burst using sprite pieces instead of flat confetti",
+      "rework_status": "redone_from_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "stamp_check_green",
+      "category": "stamp/check",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/stamp_check_green.png",
+      "sources": [
+        "docs/assets/production-pack-a/rewards/happy-reward-sticker.png"
+      ],
+      "recommended_use": "one-shot completed stamp with accepted happy/check source",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "stamp_check_gold",
+      "category": "stamp/check",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/stamp_check_gold.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/star.png"
+      ],
+      "recommended_use": "warmer completed stamp with star center",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "ribbon_star_prize",
+      "category": "ribbon",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/ribbon_star_prize.png",
+      "sources": [
+        "docs/assets/production-pack-a/rewards/star-sticker.png"
+      ],
+      "recommended_use": "ribbon prize with star center",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "ribbon_rocket_prize",
+      "category": "ribbon",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/ribbon_rocket_prize.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/rocket.png"
+      ],
+      "recommended_use": "higher-energy finish ribbon",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "ribbon_gift_prize",
+      "category": "ribbon",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/ribbon_gift_prize.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/gift.png"
+      ],
+      "recommended_use": "new richer ribbon direction replacing plain gold ribbon",
+      "rework_status": "new_replacement_for_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "ribbon_rainbow_prize",
+      "category": "ribbon",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/ribbon_rainbow_prize.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/rainbow.png"
+      ],
+      "recommended_use": "new richer ribbon direction replacing plain teal ribbon",
+      "rework_status": "new_replacement_for_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "tiny_prize_gift",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/tiny_prize_gift.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/gift.png"
+      ],
+      "recommended_use": "small prize reveal after all tasks complete",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "tiny_prize_rocket",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/tiny_prize_rocket.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/rocket.png"
+      ],
+      "recommended_use": "playful work-complete prize",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "tiny_prize_star_token",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/tiny_prize_star_token.png",
+      "sources": [
+        "docs/assets/production-pack-a/rewards/star-sticker.png"
+      ],
+      "recommended_use": "collectible star token, rebuilt with production sprite",
+      "rework_status": "redone_from_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "tiny_prize_teal_token",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/tiny_prize_teal_token.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/star.png"
+      ],
+      "recommended_use": "cool collectible token, rebuilt with production sprite",
+      "rework_status": "redone_from_flat",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "heart_cheer_badge",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/heart_cheer_badge.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/heart.png"
+      ],
+      "recommended_use": "gentle low-noise success cheer",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "rainbow_finish_badge",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/rainbow_finish_badge.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/rainbow.png"
+      ],
+      "recommended_use": "larger celebratory finish sticker",
+      "rework_status": "kept_refined",
+      "canvas_px": [
+        512,
+        512
+      ]
+    },
+    {
+      "id": "ball_bonus_token",
+      "category": "tiny_prize",
+      "file": "docs/assets/design-expansion-v2/reward-stickers/stickers/ball_bonus_token.png",
+      "sources": [
+        "docs/assets/production-pack-b/sprites/ball.png"
+      ],
+      "recommended_use": "extra tiny-prize fallback if PM drops one asset",
+      "rework_status": "new",
+      "canvas_px": [
+        512,
+        512
+      ]
+    }
+  ],
+  "rework_summary": {
+    "kept_refined": [
+      "star_gold_pop",
+      "star_teal_orbit",
+      "stamp_check_green",
+      "stamp_check_gold",
+      "ribbon_star_prize",
+      "ribbon_rocket_prize",
+      "tiny_prize_gift",
+      "tiny_prize_rocket",
+      "heart_cheer_badge",
+      "rainbow_finish_badge"
+    ],
+    "redone_from_flat": [
+      "sparkle_gold_burst",
+      "sparkle_teal_burst",
+      "confetti_task_burst",
+      "tiny_prize_star_token",
+      "tiny_prize_teal_token"
+    ],
+    "removed_or_replaced": [
+      "ribbon_gold_badge -> ribbon_gift_prize",
+      "ribbon_teal_badge -> ribbon_rainbow_prize"
+    ],
+    "new_buffer": [
+      "ball_bonus_token"
+    ]
+  },
+  "review_notes": [
+    "18 candidates delivered; PM can drop two and still preserve the required 16 minimum.",
+    "Every candidate uses accepted production sprites or accepted Pack A reward art as the visual center; flat vector-only burst/token assets were replaced.",
+    "Contact sheet includes both 128px and 64px previews on the dark app canvas.",
+    "No old rejected low-quality basket/dog/treasure direction is used.",
+    "2026-07-04: removed stale v2 flat ribbon files and regenerated v3 contact sheet with untruncated 128px/64px previews.",
+    "2026-07-04: recolored 93 pure-green chroma-like pixels to soft production green and regenerated contact sheet."
+  ]
+}

@@ -31,12 +31,39 @@
   </div>
 
   <script src="manifest.js"></script>
+  <!-- letter-motion.js（086 主界面视觉 polish：字母字形/motion 的 token + 纯函数模块，
+       window.WTJ_LETTER_MOTION）——不依赖 document/canvas，只需 manifest.js 先加载（本文件
+       自带一份不依赖 manifest 的 081 token 镜像，与 manifest.js 无强依赖，放在这里只是遵循
+       "基础 token 类模块尽早加载"的既有顺序习惯）。需在 app.js 之前——app.js 的
+       spawnLetter()/drawLetters() 消费本文件暴露的字体串/尺寸/缓动/逐帧状态纯函数。见
+       app/web/letter-motion.js 顶部注释。 -->
+  <script src="letter-motion.js"></script>
+  <!-- audio.js（016 音频/TTS/SFX manager，window.WTJ_AUDIO）——承接 077，消除 QA076 发现的
+       缺口："index.html 从未加载 audio.js"，导致 secretword.js/task.js/task-templates.js/
+       reward-chest.js/status-rewards.js 里早已写好的防御式调用
+       （window.WTJ_AUDIO.playWord/playTaskVoice/playSfx）因 WTJ_AUDIO undefined 而全部
+       静默 no-op、app 内 0 播放。audio.js 是自足 manager（无 import/export，不读取其它引擎
+       暴露的 window.WTJ_*），对加载顺序没有硬依赖，这里放在 manifest.js 之后、其余引擎之前
+       尽早加载，保证所有消费方运行时读到 window.WTJ_AUDIO 时它已就绪。见 app/web/audio.js
+       顶部注释与 app/web/audio/AUDIO-API.md。 -->
+  <script src="audio.js"></script>
   <!-- slots.js（010 五槽统一状态机）需在 keyboard.js 与 secretword.js 之前——这样两者首次
        点槽时 window.WTJ_SLOTS 已存在，走委托路径而非各自 fallback。只需 manifest.js 先加载；
        与 hud.js 加载顺序无强依赖（本文件对 WTJ_HUD 的调用发生在运行时，见 app/web/slots.js
        顶部注释）。见 app/web/slots/SLOTS-API.md。 -->
   <script src="slots.js"></script>
   <script src="keyboard.js"></script>
+  <!-- keysound.js（084 逐键机械键盘反馈音，window.WTJ_KEYSOUND）需在 keyboard.js 与
+       audio.js 之后——加载时立即订阅 window.WTJ_KEYBOARD.onLetter/onFunctionKey，播放走
+       window.WTJ_AUDIO.playSfx()。只做"事件 → 播音效"接线，不做任何 DOM/Canvas 渲染
+       （非字母键的视觉反馈归 086，见该文件顶部注释）。 -->
+  <script src="keysound.js"></script>
+  <!-- keyvisual.js（086 非字母键 subtle 视觉反馈，window.WTJ_KEYVISUAL）需在 keyboard.js 之后
+       ——加载时立即订阅 window.WTJ_KEYBOARD.onFunctionKey（与 keysound.js 的同一事件订阅并存，
+       互不干扰，见该文件顶部注释）；需在 app.js 之前——app.js 的 draw() 循环每帧调用本文件
+       暴露的 draw()/getStageLightBoost() 把反馈画到同一张 #stage canvas 上，不新开
+       canvas/rAF。只做非字母键的**视觉**反馈，不做任何音频。 -->
+  <script src="keyvisual.js"></script>
   <!-- pointer.js 需在 keyboard.js 之后、app.js 之前——app.js 初始化时要读
        window.WTJ_POINTER.onMove/onClickFeedback 完成订阅。见 app/web/pointer.js 顶部注释。 -->
   <script src="pointer.js"></script>
@@ -48,8 +75,17 @@
   <!-- task.js（013 任务生命周期框架，此前未 wire，接入留 014/019）需在 hud.js/keyboard.js
        之后（订阅 WTJ_HUD.onQuestionClick、WTJ_KEYBOARD.onEffectiveKey）。见 app/web/task/TASK-API.md。 -->
   <script src="task.js"></script>
-  <!-- task-templates.js（014 四类任务模板）需在 task.js/pointer.js/keyboard.js 之后——
-       订阅 WTJ_TASK.onQuestionClicked、用 WTJ_POINTER.registerTarget、WTJ_KEYBOARD.onLetter。
+  <!-- anim-manifest.js（056 降采样构建产物，window.WTJ_ANIM_MANIFEST）+ frame-anim.js
+       （056 生产动效帧序列播放引擎，window.WTJ_FRAME_ANIM）：anim-manifest.js 需在
+       frame-anim.js 之前（后者读取前者暴露的数据）；frame-anim.js 需在 manifest.js 之后
+       （读取 performance.idleStopSec）、task-templates.js（014）与 reward-chest.js（011）
+       之前——两者都调用本引擎的 play()/stop()/getDuration()。见
+       app/web/anim/FRAME-ANIM-API.md。 -->
+  <script src="anim-manifest.js"></script>
+  <script src="frame-anim.js"></script>
+  <!-- task-templates.js（014 四类任务模板）需在 task.js/pointer.js/keyboard.js/frame-anim.js
+       之后——订阅 WTJ_TASK.onQuestionClicked、用 WTJ_POINTER.registerTarget、
+       WTJ_KEYBOARD.onLetter、WTJ_FRAME_ANIM.play（faucet/horse/lamp 道具动效，056 接入）。
        见 app/web/task-templates.js 顶部注释。 -->
   <script src="task-templates.js"></script>
   <!-- status-rewards.js（015 工作状态灯「今日工作完成」连续奖励）需在 task-templates.js
@@ -58,8 +94,9 @@
   <script src="status-rewards.js"></script>
   <!-- reward-chest.js（011 宝箱开启 + 烟花 + 一次性大奖励）需在 slots.js（010）之后——订阅它
        暴露的 WTJ_SLOTS.onFull 事件，五槽满时播放宝箱奖励序列，播完调用 WTJ_SLOTS.reset()
-       清槽开新一轮。与 hud.js/audio.js 加载顺序无强依赖（调用均走防御式包装）。见
-       app/web/reward-chest.js 顶部注释。 -->
+       清槽开新一轮；也需在 frame-anim.js（056）之后——宝箱本体的 opening 分帧动效改由
+       WTJ_FRAME_ANIM.play() 驱动（056 接入）。与 hud.js/audio.js 加载顺序无强依赖（调用均走
+       防御式包装）。见 app/web/reward-chest.js 顶部注释。 -->
   <script src="reward-chest.js"></script>
 </body>
 </html>

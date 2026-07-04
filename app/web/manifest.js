@@ -307,9 +307,13 @@
     // slots —— 对应 docs/index.html #slots（域码 SLOT，REQ-SLOT-01 ~ 04）
     // =====================================================================
     slots: {
-      // REQ-SLOT-01：五个发现槽；秘密词命中或键盘探索里程碑之一会点亮其中一格。
-      count: 5,
-      // REQ-SLOT-01 / REQ-SEC-07：当前五格内不重复；同一来源（同词或同一里程碑级别）
+      // REQ-SLOT-01：发现槽数量可配置；秘密词命中或键盘探索里程碑之一会点亮其中一格。
+      // WTJ-20260704-083（开发机验收反馈①）：文档原文与 004/010 首次落地时的默认值均为 5，
+      // 但对 3 岁目标用户实测偏多（5 次发现才触发一次宝箱奖励，正反馈间隔过长）。PM 裁定
+      // 默认改为 3——数量本身此前就已经是可配置项（slots.js 的 SLOT_COUNT 从这里读，
+      // 防御默认值也同步跟随，见该文件），本次只改这个数值，不改任何读取/渲染逻辑本身。
+      count: 3,
+      // REQ-SLOT-01 / REQ-SEC-07：当前几格内不重复；同一来源（同词或同一里程碑级别）
       // 在同一轮内重复命中只给小反馈，不再占用新格。
       noDuplicateSourceWithinRound: true,
       // REQ-SLOT-03 / REQ-SLOT-04：发现槽来源枚举。
@@ -410,11 +414,34 @@
           examples: [
             {
               id: 'click-lamp-on',
-              targetSprite: 'sprites/lamp-off.png', // stub，灯具素材未到位（REQ-AST-05），待素材卡供给
-              targetSpriteActive: 'sprites/lamp-on.png', // stub
-              voicePrompt: 'audio/tasks/click-lamp-on.m4a', // stub
+              // 分态灯具素材（灭/亮两张分离贴图）仍未到位（REQ-AST-05，待素材卡供给），
+              // 这里指向唯一真实存在的 lamp.png；idle→active 的视觉变化由 056 帧动画
+              // （PROP_ANIM_STATE_MAP: off→turning-on）驱动，不依赖 targetSprite 切图。
+              targetSprite: 'sprites/lamp.png',
+              targetSpriteActive: 'sprites/lamp.png',
+              voicePrompt: 'audio/tasks/click-lamp-on.m4a', // stub，语音素材未到位
               successAudio: 'audio/sfx/task-success.m4a', // stub
               successAnimation: 'glow-pulse'
+            },
+            {
+              id: 'click-faucet-on',
+              // 056 PROP_ANIM_STATE_MAP: faucet idle='off'（关，静止）→active='running'（水流）；
+              // 两态都指向同一张真实 faucet.png，态变化完全由帧动画驱动，不依赖静态切图。
+              targetSprite: 'sprites/faucet.png',
+              targetSpriteActive: 'sprites/faucet.png',
+              // voicePrompt 走 audio/tasks/<id>.m4a 约定，文件暂缺（audio/tasks/ 目录为空，
+              // 057 音频决策未决）——静默兜底是既定常态，非本卡回归。
+              voicePrompt: 'audio/tasks/click-faucet-on.m4a',
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'click-horse-run',
+              // 056 PROP_ANIM_STATE_MAP: horse idle='idle'（原地待命）→active='stop_success'
+              // （一次性"成功"收尾动作）；两态都指向同一张真实 horse.png。
+              targetSprite: 'sprites/horse.png',
+              targetSpriteActive: 'sprites/horse.png',
+              voicePrompt: 'audio/tasks/click-horse-run.m4a', // 暂缺，同上静默兜底
+              successAudio: 'audio/sfx/task-success.m4a'
             }
           ]
         },
@@ -484,17 +511,50 @@
         // REQ-RWD-02：宝箱开启后清空五槽，进入下一轮（见 slots.onFull）。
         resetsSlotsAfter: true,
         // REQ-RWD-03 / REQ-AST-02：烟花建议用 Canvas / SVG 代码生成（烟花粒子和部分 UI 动效
-        // 属于「代码生成」类素材，不为每种效果准备贴图），预设「满天星、打铁花、圆形、星形」等类型；
-        // 颜色从少量高质量色板出发做 HSL / HSV 微调，不做完全 RGB 随机。
+        // 属于「代码生成」类素材，不为每种效果准备贴图），预设「满天星、打铁花、圆形、星形」等类型
+        // （原文"等类型"为开放列举，非封闭清单）；颜色从少量高质量色板出发做 HSL / HSV 微调，
+        // 不做完全 RGB 随机。
+        // WTJ-20260704-083（开发机验收反馈⑤）：新增 'heart'（心形）预设——开发机验收发现孩子
+        // 对心形烟花反馈更好，docs 原文"等类型"本就留了开放口子，这里在文档给出的星形之外扩展一种，
+        // 不替换/不移除既有 'star'。
         fireworks: {
           reqIds: ['REQ-RWD-03', 'REQ-AST-02'],
           generationMethod: 'canvas-or-svg-code',
-          presetTypes: ['starfield', 'sparkler', 'circle', 'star'], // 满天星 / 打铁花 / 圆形 / 星形
+          presetTypes: ['starfield', 'sparkler', 'circle', 'star', 'heart'], // 满天星 / 打铁花 / 圆形 / 星形 / 心形
           colorStrategy: 'small-curated-palette-hsl-hsv-jitter', // 少量高质量色板 + HSL/HSV 微调
           // 以下两项为性能红线，来自技术评审结论（目标机 4GB 内存 / HD5000 核显预算，
           // 详见 app/README.md「技术栈」），docs/index.html 未给出具体数值，不对应 REQ ID。
           maxParticles: 300,
           disallowShadowBlur: true
+        },
+        // WTJ-20260704-083 返工（PM 打回①②，接入 DESIGN 082 已验收资产）：footer 右侧
+        // **常驻**宝箱三态指示器（Disabled/Active/Open）消费的运行时资产路径，由 hud.js 读取、
+        // 渲染在 `.wtj-hud-chest`（见 app/web/hud.js「footer 常驻宝箱指示器」一节 /
+        // app/web/hud.css `.wtj-hud-chest-lane`）。与上面 `sprite`（一次性开箱大奖励用的
+        // treasure-chest.png，本文件 rewards.chest.sprite，独立于本字段）是两个不同的视觉：
+        // 后者是 011（reward-chest.js）满槽时播放的一次性 Canvas 开箱序列本体；本字段是
+        // footer 里全程可见、随发现槽填充进度变化的小指示器。
+        //
+        // 源文件：docs/assets/style/wtj-082/chest/chest-disabled.png / chest-active.png
+        // （1024x1024 RGBA，卡 WTJ-20260704-082，asset_class: style_baseline_sample_not_full_
+        // runtime_replacement——已验收基线样本，可作可交付 interim 接入；全量最终生产另开卡）。
+        // 运行时副本用 sips 降采到 192x192（保留 alpha）复制到 app/web/assets/ui/，不直接在
+        // runtime 里加载 1024² 原图（体积），见 app/web/assets/PROVENANCE.md。
+        //
+        // 只有 Disabled/Active 两态资产——082 明确"打开(Open)态不是第三张静态图"：Open 态直接
+        // 复用本文件已有的 011 一次性开箱 Canvas 分帧序列（showChest()/WTJ_FRAME_ANIM
+        // 'opening'），hud.js 的常驻指示器只在该序列播放期间切换到 is-open 视觉（复用 active
+        // 图 + CSS 脉冲呼吸动画区分观感），序列播完/reset 后回落 Disabled。两个文件名为
+        // ASSET_BASE（'assets/ui/'）之下的裸文件名，与 five-slot-tray.png 等既有资产同一约定。
+        footerIndicator: {
+          card: 'WTJ-20260704-082',
+          assetClass: 'style_baseline_sample_not_full_runtime_replacement',
+          states: {
+            disabled: 'chest-disabled.png',
+            active: 'chest-active.png'
+          },
+          sizePxRange: [72, 96], // 082 slot_rules：运行时显示建议 72px 到 96px
+          minGapFromSlotsPx: 20 // 082：与槽位组保持至少 20px 视觉间距
         }
       },
       statusLights: {

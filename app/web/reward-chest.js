@@ -4,8 +4,39 @@
 // const / 模板字符串 / 可选链 ?. / 空值合并 ??；零外部请求（不 fetch 任何东西，不访问任何
 // 外部 URL）、非 module（无 import/export），以普通 <script src="reward-chest.js"> 标签加载，
 // 需排在 010（slots.js）之后——本文件订阅它暴露的 WTJ_SLOTS.onFull 事件。也需要 manifest.js
-// （读 rewards.chest / performance 配置）之后加载；与 hud.js / audio.js 的加载顺序无强依赖
-// （调用均走下方防御式包装，缺失时优雅降级为 console.warn/console.error，不阻断）。
+// （读 rewards.chest / performance 配置）之后加载；也需要 056（frame-anim.js/
+// anim-manifest.js）之后——宝箱本体的 opening 分帧动效改由 WTJ_FRAME_ANIM.play() 驱动
+// （见下方「宝箱开箱动效接入」一节），调用同样走防御式包装，缺失时回退静态 <img>，不阻断。
+// 与 hud.js / audio.js 的加载顺序无强依赖（调用均走下方防御式包装，缺失时优雅降级为
+// console.warn/console.error，不阻断）。
+//
+// -----------------------------------------------------------------------
+// 宝箱开箱动效接入（WTJ-20260704-056，三路技术评审定案：Canvas 逐帧 + 可注入时钟 + 构建期
+// 降采样，引擎实现见 app/web/frame-anim.js，完整 API 见 app/web/anim/FRAME-ANIM-API.md）
+// -----------------------------------------------------------------------
+// treasure-chest 是 v1 已验收道具（不在源 manifest 的 v1_boundary.deferred_to_v2 里），本卡
+// 把 showChest() 从"创建一张静态 <img> + CSS 弹出动画"改为"创建一个 <canvas> + CSS 弹出动画
+// （入场编排不变）+ WTJ_FRAME_ANIM.play(canvas, 'treasure-chest', 'opening', {...})（内容
+// 改为真正的开箱分帧动画）"，两层职责正交：CSS 负责元素怎么弹出到屏幕上，Canvas 内容负责画的
+// 是什么，与 014（task-templates.css 的 hint/emphasize + WTJ_FRAME_ANIM 内容）同一分层方式，
+// 详见 showChest()/playChestOpeningAnimDefensive() 的实现与内联注释。
+//
+// **复用本文件已有的 clockRef**：WTJ_FRAME_ANIM 引擎有自己独立的可注入时钟（通过它自己的
+// _setClock()），不是本文件 clockRef 的一部分——两者是两个独立的定时器系统，各自可以被各自
+// 的单测用 _setClock() 分别注入假时钟。本卡测试策略：reward-chest.test.mjs 用一个手写的
+// WTJ_FRAME_ANIM stub（只记录 play()/stop() 调用参数，不加载 frame-anim.js 真实源码），与
+// 本文件对 WTJ_SLOTS/WTJ_AUDIO 一贯的"消费方只测自己这一层逻辑，不重新验证被消费模块内部
+// 判定"的既有测试策略保持一致；frame-anim.js 自身的帧号/loop/reduced-motion/onComplete
+// 等判定逻辑由 tests/unit/frame-anim.test.mjs 独立覆盖。
+//
+// **烟花/reset/一次性/reduced-motion 逻辑全部保留不变**：BURST_SCHEDULE 错峰时间线、
+// finishSequence() 的一次性清空节奏、reset() 的外部中止入口、reduced-motion 下的静态定格帧
+// 分支——全部原样保留，本卡只换了 showChest() 内部"画什么"这一件事。烟花的触发时机**没有**
+// 改成"等 opening 播完才开始"（尽管卡片原文字面描述是这个方向），据实记录的偏离理由与详细
+// 时间线推导见 playChestOpeningAnimDefensive() 的 onComplete 回调内联注释——核心原因是现有
+// tests/unit/reward-chest.test.mjs 已经用逐时间点的粒子数量断言把 BURST_SCHEDULE 相对**序列
+// 起点**（不是相对宝箱动画播完）的精确时间线锁定为验收标准的一部分，本卡不在未与 PM/DESIGN
+// 重新确认产品意图、也不同步重写那份单测的前提下改变这条时间线。
 //
 // -----------------------------------------------------------------------
 // 职责边界（本卡 011，是最后一张核心功能卡：五槽满 → 宝箱 → 烟花 → 一次性大奖励 → 清屏 → 下一轮）
@@ -35,8 +66,9 @@
 // 不要求每次全部实现；本文件实际落地的子集见 IMPLEMENTED_FORMS）
 // -----------------------------------------------------------------------
 //   'fireworks'                  烟花粒子系统（见下方「烟花粒子系统」一节），验收 3/4 的落地位置。
-//   'short-animation'            宝箱本体的一次性"弹出开启"CSS 短动画（showChest()，
-//                                reward-chest.css 的 wtj-rc-chest-pop）。
+//   'short-animation'            宝箱本体的一次性"弹出开启"（showChest()：CSS 入场编排
+//                                reward-chest.css 的 wtj-rc-chest-pop + 056 起改为 Canvas
+//                                逐帧驱动的真实开箱内容，见「宝箱开箱动效接入」一节）。
 //   'temporary-background-change' 宝箱开启瞬间的暖金色全屏光晕闪烁，短暂后淡出
 //                                （showBackgroundFlash()，reward-chest.css 的 wtj-rc-flash-pulse）。
 //   'new-sfx'                    防御式播放 audio.js 已登记的 'chest-open' 音效
@@ -50,13 +82,16 @@
 // -----------------------------------------------------------------------
 // 烟花粒子系统（REQ-RWD-03 / REQ-AST-02，验收 3/4）
 // -----------------------------------------------------------------------
-// 单一粒子引擎（update + render 通用），四种 manifest.rewards.chest.fireworks.presetTypes 全部
+// 单一粒子引擎（update + render 通用），manifest.rewards.chest.fireworks.presetTypes 全部
 // 落地（超过验收 3 要求的"至少 2 种"）：
 //   'circle'    圆形——从宝箱位置向 360° 均匀爆发，经典烟花环。
 //   'starfield' 满天星——散布在画面上半部，缓慢上浮 + 明暗闪烁（twinkle），不来自单一爆发点。
 //   'sparkler'  打铁花——从宝箱位置向上方锥形高速迸发，重力大、衰减快，模拟"铁花四溅"的急促感。
 //   'star'      星形——沿五角星的 5 个主方向成束迸发，形成星形轮廓。
-// 四种预设按 BURST_SCHEDULE 错峰触发（见该常量），共用同一套物理（重力 + 阻力 + 生命衰减）与
+//   'heart'     心形（WTJ-20260704-083 新增，开发机验收反馈⑤）——沿参数化心形曲线取样方向
+//               成束迸发，形成心形轮廓，物理与渲染复用同一套粒子引擎（spawnHeartBurst() +
+//               drawHeart()），不新建独立引擎。
+// 五种预设按 BURST_SCHEDULE 错峰触发（见该常量），共用同一套物理（重力 + 阻力 + 生命衰减）与
 // 同一套配色策略，只在初始位置/速度分布/形状/衰减系数上区分「类型」。
 //
 // 颜色策略（REQ-RWD-03「少量高质量色板出发做 HSL/HSV 微调，不做完全 RGB 随机」，验收 4）：
@@ -108,7 +143,7 @@
 //               temporary-background-change/new-sfx）。
 //   REQ-RWD-02（宝箱开启后清五槽进入下一轮）：finishSequence() → callSlotsResetDefensive()
 //               防御式调用 window.WTJ_SLOTS.reset()。
-//   REQ-RWD-03（烟花 Canvas 生成，预设类型，颜色 HSL/HSV 微调）：BURST_SCHEDULE 四种预设全部
+//   REQ-RWD-03（烟花 Canvas 生成，预设类型，颜色 HSL/HSV 微调）：BURST_SCHEDULE 五种预设全部
 //               实现；COLOR_PALETTE + jitterColor() 落地颜色策略。
 //   REQ-AST-02（烟花粒子属于代码生成类素材，不预置贴图）：全部由 Canvas2D 路径/圆弧代码生成，
 //               不引用任何烟花贴图文件。
@@ -144,7 +179,7 @@
 
   var DEFAULT_SPRITE = 'sprites/treasure-chest.png';
   var DEFAULT_FORMS_ALLOWED = ['fireworks', 'sticker-popup-fade', 'short-animation', 'temporary-background-change', 'new-sfx'];
-  var DEFAULT_PRESET_TYPES = ['starfield', 'sparkler', 'circle', 'star'];
+  var DEFAULT_PRESET_TYPES = ['starfield', 'sparkler', 'circle', 'star', 'heart'];
   var DEFAULT_MAX_PARTICLES = 300;
   var DEFAULT_COLOR_STRATEGY = 'small-curated-palette-hsl-hsv-jitter';
 
@@ -188,7 +223,7 @@
 
   // 本文件实际落地的表现形式 / 预设类型子集（见文件头「表现形式选用」「烟花粒子系统」两节）。
   var IMPLEMENTED_FORMS = ['fireworks', 'short-animation', 'temporary-background-change', 'new-sfx'];
-  var IMPLEMENTED_PRESET_TYPES = ['circle', 'starfield', 'sparkler', 'star'];
+  var IMPLEMENTED_PRESET_TYPES = ['circle', 'starfield', 'sparkler', 'star', 'heart'];
 
   // ---------------------------------------------------------------------
   // 素材路径解析：与 secretword.js 的 resolveSpritePath() 同一模式（见
@@ -232,7 +267,7 @@
   // ---------------------------------------------------------------------
   // 可注入时钟（默认真实 setTimeout/clearTimeout/Date.now；测试用 _setClock 整体或部分替换，
   // 与 task.js/pointer.js/task-templates.js/status-rewards.js 同款模式）。整段奖励序列的调度
-  // （宝箱弹出、四种烟花错峰迸发、逐帧粒子模拟、收尾清空）全部经由本时钟驱动。
+  // （宝箱弹出、五种烟花错峰迸发、逐帧粒子模拟、收尾清空）全部经由本时钟驱动。
   // ---------------------------------------------------------------------
   var clockRef = {
     setTimeout: function (fn, ms) { return setTimeout(fn, ms); },
@@ -268,6 +303,24 @@
       }
     } catch (err) {
       console.error('[WTJ_REWARD_CHEST] 调用 window.WTJ_SLOTS.reset 失败，已捕获：', err);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // WTJ-20260704-083 返工（PM 打回①，footer 常驻宝箱三态指示器接线）：hud.js 新增了一个
+  // footer 右侧 lane 里全程可见的宝箱指示器（`.wtj-hud-chest`，与本文件下面的一次性开箱
+  // Canvas 序列是两个独立视觉），随发现槽填充进度在 Disabled/Active 间切换，并通过
+  // `WTJ_HUD.setChestOpen(isOpen)` 由本文件在序列开始/结束时显式接管切到 Open——082 明确
+  // "打开态不是第三张静态图"，就是本文件这段序列本身在播放的意思。防御式调用（与本文件对
+  // WTJ_SLOTS/WTJ_AUDIO 一贯的包装同款）：hud.js 未加载/无该方法时静默跳过，不阻断奖励序列。
+  // -----------------------------------------------------------------------
+  function callHudSetChestOpenDefensive(isOpen) {
+    try {
+      if (window.WTJ_HUD && typeof window.WTJ_HUD.setChestOpen === 'function') {
+        window.WTJ_HUD.setChestOpen(isOpen);
+      }
+    } catch (err) {
+      console.error('[WTJ_REWARD_CHEST] 调用 window.WTJ_HUD.setChestOpen 失败，已捕获：', err);
     }
   }
 
@@ -332,8 +385,29 @@
     }
   }
 
+  // 056（Fable 对抗评审 P1-1，内存泄漏修复）：宝箱本体现在是一个交给 WTJ_FRAME_ANIM 播放
+  // 'opening' 的 <canvas>（见 showChest()）。引擎侧的 non-loop playback 播完后**只停 tick、
+  // 不会自动把自己从内部 playbacks 注册表移除**（frame-anim.js 的 tick() 到末帧后直接 return，
+  // 只有显式 stop() 才 splice 出注册表）——所以每一轮宝箱都新建一个 canvas，若移除 DOM 时不
+  // 调 stop()，旧的 playback 项会永久留在引擎注册表里，连带一张 detached 的 256×256 canvas
+  // (~262KB) + 2D context 无法回收，getState().activePlaybacks 逐轮无界增长。在 4GB 目标机
+  // 的"儿童长时段连续使用"场景下这是实打实的泄漏。这里仿 014 的 stopPropAnimDefensive()：
+  // 移除任何叠层元素前都防御式调一次 WTJ_FRAME_ANIM.stop(el)。对非引擎管理的元素（烟花
+  // canvas、静态 img 回退、背景光晕 div）调 stop() 是安全 no-op（引擎在注册表里找不到匹配的
+  // 播放态直接返回），因此可以无条件对每个 overlay 子元素调用，不需要先判断它是不是宝箱 canvas。
+  function stopFrameAnimDefensive(el) {
+    try {
+      if (el && window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.stop === 'function') {
+        window.WTJ_FRAME_ANIM.stop(el);
+      }
+    } catch (err) {
+      console.error('[WTJ_REWARD_CHEST] window.WTJ_FRAME_ANIM.stop 调用失败，已捕获：', err);
+    }
+  }
+
   function removeElementDefensive(el) {
     if (!el) return;
+    stopFrameAnimDefensive(el); // P1-1：摘 DOM 前先停引擎播放，避免 playbacks 注册表泄漏（见上）。
     try {
       if (typeof el.remove === 'function') {
         el.remove();
@@ -401,10 +475,14 @@
     return canvasEl;
   }
 
+  // WTJ-20260704-083：宝箱本体的 CSS 位置从 bottom:16% 收进了 footer 固定区域（bottom:2vh +
+  // max-height:20vh，见 reward-chest.css 顶部「验收反馈③」说明），这里的烟花发射原点同步下移
+  // 保持视觉一致（烟花从宝箱所在的位置炸开，不是从画面中段炸开）。0.58 → 0.86：新的宝箱视觉
+  // 中心大约落在画布高度的 82%~90% 之间（bottom 2%~22% 区间的中点附近），取 0.86 作为发射原点。
   function chestOrigin() {
     var w = canvasEl ? canvasEl.width : 800;
     var h = canvasEl ? canvasEl.height : 600;
-    return { x: w / 2, y: h * 0.58 };
+    return { x: w / 2, y: h * 0.86 };
   }
 
   // ---------------------------------------------------------------------
@@ -456,7 +534,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // 粒子系统：单一物理引擎（重力 + 阻力 + 生命衰减），四种 presetType 只在初始分布/形状/衰减
+  // 粒子系统：单一物理引擎（重力 + 阻力 + 生命衰减），五种 presetType 只在初始分布/形状/衰减
   // 系数上区分。particles 数组任意时刻长度 <= getMaxParticles()（性能红线，spawnBurst 内裁剪）。
   // ---------------------------------------------------------------------
   var particles = [];
@@ -566,13 +644,42 @@
     });
   }
 
-  // 错峰触发四种预设烟花（延迟单位 ms，相对序列起点）。总请求数刻意设计为略超过默认
-  // maxParticles(300)（80+100+80+70=330），验证 spawnBurst() 的裁剪逻辑在多批叠加存活时确实生效。
+  // WTJ-20260704-083（开发机验收反馈⑤）：心形预设。沿经典心形参数方程
+  // x = 16*sin(t)^3, y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t) 在 [0, 2π) 上按
+  // total 个采样点取方向向量（归一化后乘以随机速度），让粒子的初始飞溅方向沿心形轮廓分布，
+  // 复用同一套重力 + 阻力 + 生命衰减物理与同一套调色板（与 spawnStarBurst() 沿五角星方向
+  // 取样同一手法，只是采样曲线换成心形）。参数方程的 y 轴在数学上"向上为正"，画布坐标系
+  // "向下为正"，取 vy 时需整体取负号，才能让心形顶部两个圆润凸起朝上、底部尖角朝下（符合
+  // "心形"的直觉朝向），而不是上下颠倒的心形。
+  function spawnHeartBurst(count, origin) {
+    spawnBurst(count, function (i, total) {
+      var t = (Math.PI * 2 * i) / total;
+      var hx = 16 * Math.pow(Math.sin(t), 3);
+      var hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      var len = Math.sqrt(hx * hx + hy * hy) || 1;
+      var speed = 120 + Math.random() * 90;
+      return {
+        x: origin.x, y: origin.y,
+        vx: (hx / len) * speed,
+        vy: -(hy / len) * speed, // 取负号：心形参数方程 y 向上为正，画布坐标 y 向下为正，见上方说明
+        life: 900 + Math.random() * 500,
+        size: 1.8 + Math.random() * 1.4,
+        gravityScale: 0.9,
+        shape: 'heart',
+        preset: 'heart'
+      };
+    });
+  }
+
+  // 错峰触发五种预设烟花（延迟单位 ms，相对序列起点）。总请求数刻意设计为超过默认
+  // maxParticles(300)（80+100+80+70+40=370），验证 spawnBurst() 的裁剪逻辑在多批叠加存活时
+  // 确实生效（见 tests/unit/reward-chest.test.mjs「粒子上限（确定性推导）」用例的逐时间点推导）。
   var BURST_SCHEDULE = [
     { delayMs: 0, preset: 'circle', count: 80 },
     { delayMs: 320, preset: 'starfield', count: 100 },
     { delayMs: 680, preset: 'sparkler', count: 80 },
-    { delayMs: 1040, preset: 'star', count: 70 }
+    { delayMs: 1040, preset: 'star', count: 70 },
+    { delayMs: 1360, preset: 'heart', count: 40 }
   ];
 
   function fireBurst(entry) {
@@ -587,6 +694,8 @@
       spawnSparklerBurst(entry.count, origin);
     } else if (entry.preset === 'star') {
       spawnStarBurst(entry.count, origin);
+    } else if (entry.preset === 'heart') {
+      spawnHeartBurst(entry.count, origin);
     }
     presetTypesFiredThisRound.push(entry.preset);
   }
@@ -678,6 +787,22 @@
     c.fill();
   }
 
+  // WTJ-20260704-083：心形单粒渲染。只用已经在本文件其余绘制函数里出现过的 Canvas2D API
+  // （beginPath/arc/lineTo/closePath/fill，与 drawStar() 同一能力子集，不引入
+  // bezierCurveTo/quadraticCurveTo 等新 API 面），用两个圆弧拼出心形的左右两叶，再用一条
+  // lineTo 收到底部尖点，闭合出心形轮廓。
+  function drawHeart(c, p, alpha) {
+    var s = p.size * 1.6;
+    var cx = p.x, cy = p.y;
+    c.globalAlpha = alpha;
+    c.beginPath();
+    c.arc(cx - s * 0.5, cy - s * 0.35, s * 0.5, Math.PI, 0, false);
+    c.arc(cx + s * 0.5, cy - s * 0.35, s * 0.5, Math.PI, 0, false);
+    c.lineTo(cx, cy + s * 0.9);
+    c.closePath();
+    c.fill();
+  }
+
   function renderFrame() {
     if (!ctx || !canvasEl) return;
     try {
@@ -693,6 +818,8 @@
         ctx.fillStyle = p.color.css;
         if (p.shape === 'star') {
           drawStar(ctx, p, alpha);
+        } else if (p.shape === 'heart') {
+          drawHeart(ctx, p, alpha);
         } else {
           drawDot(ctx, p, alpha);
         }
@@ -747,14 +874,85 @@
   // 宝箱本体（short-animation）+ 背景光晕闪烁（temporary-background-change）：与
   // status-rewards.js 的 showRewardOverlay() 同一手法——始终添加 "-anim" 动画类，
   // prefers-reduced-motion 由 reward-chest.css 统一覆盖为静态终态，JS 不需要按 reducedMotion
-  // 分支切换类名。
+  // 分支切换类名。这个 "-anim" CSS 类驱动的是宝箱本体的**入场编排**（缩小态弹出/回弹/轻微
+  // 摇晃，wtj-rc-chest-pop 关键帧，纯 position/scale/opacity/rotate）——056 卡起，宝箱内容
+  // 本身（是否在"开合"）改由下面的 WTJ_FRAME_ANIM 引擎逐帧驱动，两者是正交的两层：CSS 负责
+  // "这个元素怎么出现在屏幕上"，Canvas 帧内容负责"这个元素画的是什么"，与 014
+  // （task-templates.css 的 hint/emphasize 类 + WTJ_FRAME_ANIM 内容）同一分层方式。
   // ---------------------------------------------------------------------
+
+  // 056：从 overlayChildren 里移除一个元素，同时保持数组一致（createOverlayChild() 已经把
+  // 它 push 进 overlayChildren；这里用于"元素已创建但决定不用它"的极少数防御式回退场景，见
+  // showChest()），避免 clearOverlayChildren() 之后残留一个已经不在 DOM 里的悬空引用。
+  function removeOverlayChild(el) {
+    var idx = overlayChildren.indexOf(el);
+    if (idx !== -1) {
+      overlayChildren.splice(idx, 1);
+    }
+    removeElementDefensive(el);
+  }
+
+  // 056：宝箱本体是否能用 WTJ_FRAME_ANIM 播放 'opening' 分帧动效，只取决于引擎是否加载——
+  // treasure-chest 是 v1 已验收道具（不在 v1_boundary.deferred_to_v2 里），理论上这里应该
+  // 恒为 true；仍然做防御式检查，覆盖"frame-anim.js 加载失败/被移除"这类极端场景。
+  function canUseFrameAnimForChest() {
+    try {
+      return !!(window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.play === 'function');
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // 056：把 WTJ_FRAME_ANIM.play() 的调用与 onComplete 回调集中在这一个函数里，方便对照
+  // FRAME-ANIM-API.md 第 9 节的分工说明阅读。
+  function playChestOpeningAnimDefensive(canvasEl) {
+    try {
+      return !!window.WTJ_FRAME_ANIM.play(canvasEl, 'treasure-chest', 'opening', {
+        loop: false,
+        onComplete: function () {
+          // 据实记录的一处刻意偏离（卡片原文字面描述是"onComplete 触发现有烟花/reward-pop"）：
+          // 本文件的 BURST_SCHEDULE 五种烟花预设按相对**序列起点**（不是相对宝箱开箱动画播完）
+          // 0/320/680/1040ms 错峰触发，这条精确时间线已经被 tests/unit/reward-chest.test.mjs
+          // 的逐时间点粒子数量断言精确锁定（例如 t=50ms 时必须已有 80 个 circle 粒子存活，即
+          // circle 那批必须在 t<50ms 就已生成）。如果把 scheduleFireworkBursts() 改到"opening
+          // 播完"（约 500ms，5 帧 @10fps）之后才触发，会把全部烟花整体后移，直接打破那份逐
+          // 时间点断言，还会把尾批（star，序列相对延迟 1040ms）推到只剩约 1000ms 存活窗口
+          // 就被 TOTAL_SEQUENCE_MS=2600 的收尾截断，比现状更容易被提前打断。因此这里保留
+          // "烟花与宝箱开箱动画并行、各自独立按序列起点计时"的现状（与此前纯 CSS 占位版本
+          // 完全一致的时间线），onComplete 暂时是 no-op。若 PM/DESIGN 认定"烟花必须等宝箱
+          // 可见地打开之后才炸"是强制产品要求，需要重新设计 BURST_SCHEDULE 的相对时间点并
+          // 同步更新那份逐时间点单测，不是本卡能在不回归既有验收断言的前提下顺手做的小改动，
+          // 留作交接注记。
+        }
+      });
+    } catch (err) {
+      console.error('[WTJ_REWARD_CHEST] window.WTJ_FRAME_ANIM.play 调用失败，已捕获：', err);
+      return false;
+    }
+  }
+
+  // 返回值仅供内部/单测使用：true 表示宝箱本体已经交给引擎播放分帧动效（canvas），false
+  // 表示回退到了原静态 <img> 占位（door/bell 在 014 里的等价回退在这里体现为"engine 缺失/
+  // play() 失败"这一支，treasure-chest 本身不属于 v1_boundary.deferred_to_v2）。
   function showChest() {
+    if (canUseFrameAnimForChest()) {
+      var canvasEl = createOverlayChild('canvas', 'wtj-rc-chest wtj-rc-anim');
+      if (canvasEl) {
+        if (playChestOpeningAnimDefensive(canvasEl)) {
+          return true;
+        }
+        // 引擎"看起来可用"但 play() 仍返回 false（例如 anim-manifest.js 未接入
+        // treasure-chest 条目）：已创建的空 canvas 不会画出任何内容，比完全没有宝箱视觉更
+        // 糟——显式移除它，改走下面的静态 img 回退路径，保证"最终只留一个宝箱本体元素"。
+        removeOverlayChild(canvasEl);
+      }
+    }
     var img = createOverlayChild('img', 'wtj-rc-chest wtj-rc-anim');
     if (img) {
       if (CHEST_SPRITE_PATH) img.src = CHEST_SPRITE_PATH;
       img.alt = '';
     }
+    return false;
   }
 
   function showBackgroundFlash() {
@@ -817,6 +1015,10 @@
     clearCanvasAndParticles();
     clearOverlayChildren();
     playing = false;
+    // WTJ-20260704-083 返工：序列自然播完，footer 常驻宝箱指示器退出 Open——回落到 Active 或
+    // Disabled（按当前实际填槽情况，见 hud.js setChestOpen() 实现），随后 callSlotsResetDefensive()
+    // 触发的 WTJ_SLOTS.reset() 会级联调用 hud.js 的 clearSlots()，把它再强制回落 Disabled。
+    callHudSetChestOpenDefensive(false);
 
     var payload = {
       ts: clockRef.now(),
@@ -842,6 +1044,10 @@
   function runSequence() {
     presetTypesFiredThisRound = [];
     lastReducedMotion = prefersReducedMotion();
+    // WTJ-20260704-083 返工：footer 常驻宝箱指示器切到 Open——本序列本身就是"打开"这个动作的
+    // 可见表现，见上方 callHudSetChestOpenDefensive() 说明。放在 try 之外/之前也安全，该函数
+    // 内部已自行 try/catch，不会让本次调用成为 P2-1 兜底逻辑要处理的抛错源。
+    callHudSetChestOpenDefensive(true);
 
     try {
       ensureCanvas();
@@ -910,6 +1116,11 @@
     clearCanvasAndParticles();
     clearOverlayChildren();
     playing = false;
+    // WTJ-20260704-083 返工：外部中止（家长退出等）同样应该让 footer 常驻宝箱指示器退出
+    // Open——不这样做的话，指示器会永久卡在"看起来在打开"，而实际 Canvas 序列已经被中止、
+    // 五槽也可能仍是满的（reset() 不级联 WTJ_SLOTS.reset()，见本函数文件头说明），没有其它
+    // 路径能把它带回正确的 Active/Disabled 视觉。
+    callHudSetChestOpenDefensive(false);
   }
 
   function getState() {

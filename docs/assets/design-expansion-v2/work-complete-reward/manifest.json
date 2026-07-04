@@ -1,0 +1,106 @@
+{
+  "card": "WTJ-20260704-060",
+  "asset_pack": "work-complete-reward",
+  "created_by": "Designer 2 / Automation:worktime-justin-designer-2-loop",
+  "canvas": {
+    "frame_size": [
+      1024,
+      1024
+    ],
+    "background": "transparent",
+    "preview_background": "dark navy"
+  },
+  "source_assets": {
+    "working_status_light": "source/working-status-light.png",
+    "happy_reward_sticker": "source/happy-reward-sticker.png",
+    "star_sticker": "source/star-sticker.png",
+    "sparkle_burst": "source/sparkle-burst.png",
+    "rocket": "source/rocket.png"
+  },
+  "candidates": [
+    {
+      "id": "status_lights_flash",
+      "title": "Candidate A - three work lights flash together",
+      "summary": "Three accepted working-status lights pulse, then a small star and sparkle burst appear; reads as completed work without occupying the canvas permanently.",
+      "fps": 12,
+      "loop": false,
+      "recommended_use": "今日工作完成 after three task lights are filled.",
+      "frames": [
+        "status-lights/frames/status_lights_000.png",
+        "status-lights/frames/status_lights_001.png",
+        "status-lights/frames/status_lights_002.png",
+        "status-lights/frames/status_lights_003.png",
+        "status-lights/frames/status_lights_004.png",
+        "status-lights/frames/status_lights_005.png",
+        "status-lights/frames/status_lights_006.png",
+        "status-lights/frames/status_lights_007.png"
+      ],
+      "sheet": "status-lights/status-lights-sheet.png",
+      "preview": "previews/status-lights-preview.gif",
+      "anchor": [
+        512,
+        512
+      ],
+      "bounds": "visible alpha contained inside 1024x1024; no canvas-edge contact"
+    },
+    {
+      "id": "workbench_stamp",
+      "title": "Candidate B - soft workbench stamp",
+      "summary": "A happy/check reward sticker drops like a soft stamp, compresses, and releases star stickers; no text and no permanent sticker pile.",
+      "fps": 12,
+      "loop": false,
+      "recommended_use": "Sticker/stamp interpretation of 今日工作完成.",
+      "frames": [
+        "workbench-stamp/frames/workbench_stamp_000.png",
+        "workbench-stamp/frames/workbench_stamp_001.png",
+        "workbench-stamp/frames/workbench_stamp_002.png",
+        "workbench-stamp/frames/workbench_stamp_003.png",
+        "workbench-stamp/frames/workbench_stamp_004.png",
+        "workbench-stamp/frames/workbench_stamp_005.png",
+        "workbench-stamp/frames/workbench_stamp_006.png",
+        "workbench-stamp/frames/workbench_stamp_007.png"
+      ],
+      "sheet": "workbench-stamp/workbench-stamp-sheet.png",
+      "preview": "previews/workbench-stamp-preview.gif",
+      "anchor": [
+        512,
+        512
+      ],
+      "bounds": "visible alpha contained inside 1024x1024; no canvas-edge contact"
+    },
+    {
+      "id": "rocket_launch",
+      "title": "Candidate C - small rocket launch",
+      "summary": "The accepted rocket sprite lifts off with a warm flame trail and restrained sparkles; most expressive option, still a short one-shot.",
+      "fps": 12,
+      "loop": false,
+      "recommended_use": "High-delight version when PM/Ethan want a larger celebration.",
+      "frames": [
+        "rocket-launch/frames/rocket_launch_000.png",
+        "rocket-launch/frames/rocket_launch_001.png",
+        "rocket-launch/frames/rocket_launch_002.png",
+        "rocket-launch/frames/rocket_launch_003.png",
+        "rocket-launch/frames/rocket_launch_004.png",
+        "rocket-launch/frames/rocket_launch_005.png",
+        "rocket-launch/frames/rocket_launch_006.png",
+        "rocket-launch/frames/rocket_launch_007.png",
+        "rocket-launch/frames/rocket_launch_008.png"
+      ],
+      "sheet": "rocket-launch/rocket-launch-sheet.png",
+      "preview": "previews/rocket-launch-preview.gif",
+      "anchor": [
+        512,
+        512
+      ],
+      "bounds": "visible alpha contained inside 1024x1024; no canvas-edge contact"
+    }
+  ],
+  "contact_sheet": "contact-sheets/work-complete-reward-contact-sheet.png",
+  "quality_checks": [
+    "All generated numbered frames are 1024x1024 RGBA transparent PNG.",
+    "Frame sheets preserve transparent background.",
+    "Preview GIFs composite frames on dark navy canvas for visual review only.",
+    "No text, watermark, external brand, or copyrighted character style is introduced.",
+    "The pack reuses accepted WorkTime Justin production assets to avoid style drift."
+  ]
+}

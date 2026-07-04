@@ -1,15 +1,18 @@
 {
   "pack_id": "production-animations-v1-faucet",
   "card_id": "WTJ-20260704-026",
+  "rework_card_id": "WTJ-20260705-005",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 02:28",
-  "source": "docs/assets/production-animations-v1/source/faucet-base.png",
-  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
+  "updated_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "updated_at_cst": "2026-07-05 02:25",
+  "source": "docs/assets/production-animations-v1/faucet/off/faucet_off_000.png",
+  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/production-animations-v1/faucet/off/faucet_off_000.png",
   "asset_spec": {
     "format": "PNG frames",
     "color_mode": "RGBA",
     "canvas": "1024x1024",
-    "background": "transparent"
+    "background": "transparent",
+    "rework_note": "WTJ-20260705-005 pass: fixed faucet body layer preserved; water layer rebuilt as an outlet-scale falling translucent column with safe bottom padding. Open/running/closing/closed states, sheets, dark-canvas GIFs, and contact sheet rebuilt."
   },
   "contact_sheet": "docs/assets/production-animations-v1/faucet/faucet-contact-sheet.png",
   "previews": {
@@ -24,6 +27,12 @@
         0.5,
         0.78
       ],
+      "target_bounds": [
+        286,
+        762,
+        362,
+        828
+      ],
       "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/off-sheet.png",
       "bounds": [
         178,
@@ -33,7 +42,44 @@
       ],
       "frames": [
         "docs/assets/production-animations-v1/faucet/off/faucet_off_000.png"
-      ]
+      ],
+      "body_stability": "fixed body layer"
+    },
+    "open": {
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "target_bounds": [
+        286,
+        762,
+        362,
+        828
+      ],
+      "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/open-sheet.png",
+      "bounds": [
+        178,
+        211,
+        845,
+        987
+      ],
+      "outlet_anchor_px": [
+        318,
+        760
+      ],
+      "water_stream_width_px": 136,
+      "water_visible_bounds_px": [
+        250,
+        791,
+        386,
+        982
+      ],
+      "frames": [
+        "docs/assets/production-animations-v1/faucet/open/faucet_open_000.png"
+      ],
+      "body_stability": "same fixed body layer as off/running/closing/closed"
     },
     "running": {
       "fps": 10,
@@ -42,12 +88,38 @@
         0.5,
         0.78
       ],
+      "target_bounds": [
+        286,
+        762,
+        362,
+        828
+      ],
       "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/running-sheet.png",
       "bounds": [
         178,
         211,
         845,
-        1011
+        1004
+      ],
+      "outlet_anchor_px": [
+        318,
+        760
+      ],
+      "water_width_sequence_px": [
+        136,
+        132,
+        140,
+        134,
+        138,
+        130
+      ],
+      "water_bottom_sequence_px": [
+        948,
+        960,
+        940,
+        966,
+        952,
+        958
       ],
       "frames": [
         "docs/assets/production-animations-v1/faucet/running/faucet_running_000.png",
@@ -56,29 +128,58 @@
         "docs/assets/production-animations-v1/faucet/running/faucet_running_003.png",
         "docs/assets/production-animations-v1/faucet/running/faucet_running_004.png",
         "docs/assets/production-animations-v1/faucet/running/faucet_running_005.png"
-      ]
+      ],
+      "body_stability": "same fixed off-frame body layer; only water shimmer/droplets change"
     },
     "closing": {
-      "fps": 8,
+      "fps": 9,
       "loop": false,
       "anchor": [
         0.5,
         0.78
       ],
+      "target_bounds": [
+        286,
+        762,
+        362,
+        828
+      ],
       "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/closing-sheet.png",
       "bounds": [
         178,
-        178,
+        211,
         845,
-        1003
+        987
+      ],
+      "outlet_anchor_px": [
+        318,
+        760
+      ],
+      "water_width_sequence_px": [
+        136,
+        114,
+        88,
+        62,
+        36,
+        0
+      ],
+      "water_bottom_sequence_px": [
+        948,
+        922,
+        892,
+        860,
+        826,
+        0
       ],
       "frames": [
         "docs/assets/production-animations-v1/faucet/closing/faucet_closing_000.png",
         "docs/assets/production-animations-v1/faucet/closing/faucet_closing_001.png",
         "docs/assets/production-animations-v1/faucet/closing/faucet_closing_002.png",
         "docs/assets/production-animations-v1/faucet/closing/faucet_closing_003.png",
-        "docs/assets/production-animations-v1/faucet/closing/faucet_closing_004.png"
-      ]
+        "docs/assets/production-animations-v1/faucet/closing/faucet_closing_004.png",
+        "docs/assets/production-animations-v1/faucet/closing/faucet_closing_005.png"
+      ],
+      "body_stability": "same fixed off-frame body layer; closing_000 matches open full stream and tapers continuously to closed"
     },
     "closed": {
       "fps": 1,
@@ -87,17 +188,25 @@
         0.5,
         0.78
       ],
+      "target_bounds": [
+        286,
+        762,
+        362,
+        828
+      ],
       "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/closed-sheet.png",
       "bounds": [
         178,
-        178,
+        211,
         845,
         813
       ],
       "frames": [
         "docs/assets/production-animations-v1/faucet/closed/faucet_closed_000.png"
-      ]
+      ],
+      "body_stability": "fixed body layer"
     }
   },
-  "scope_note": "This card intentionally covers faucet only. Horse assets already present under docs/assets/production-animations-v1/horse are preserved for WTJ-20260704-028 and are not part of this acceptance evidence."
+  "scope_note": "WTJ-20260705-005 addresses Ethan/PM feedback that faucet water must match outlet scale and have visible volume. The water is now a 130-140px falling column with cylindrical shading and clean alpha; the metal body is unchanged.",
+  "preview_note": "Contact sheet and GIFs use fixed full-frame scaling on dark canvas so water changes cannot visually resize the faucet body."
 }

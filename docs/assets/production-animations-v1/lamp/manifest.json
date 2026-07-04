@@ -1,19 +1,25 @@
 {
   "pack_id": "production-animations-v1-lamp",
   "card_id": "WTJ-20260704-032",
+  "rework_card_id": "WTJ-20260704-069",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 03:40",
+  "updated_at_cst": "2026-07-04 17:43",
   "source": "docs/assets/production-animations-v1/source/lamp-base.png",
   "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
   "asset_spec": {
     "format": "PNG frames",
     "color_mode": "RGBA",
     "canvas": "1024x1024",
-    "background": "transparent"
+    "background": "transparent",
+    "rework_note": "Second rework after Ethan screenshot: rebuilt from the accepted opaque lamp-base body and replaced the shade-opening warm and white bulb pixels with a matte liner clipped to the original opening. The blue shade shell remains solid; no full bulb outline remains readable through or inside the shade."
   },
   "contact_sheet": "docs/assets/production-animations-v1/lamp/lamp-contact-sheet.png",
   "previews": {
     "toggle": "docs/assets/production-animations-v1/previews/lamp-toggle-preview.gif"
+  },
+  "documentation": {
+    "readme": "docs/assets/production-animations-v1/lamp/README.md",
+    "prompt_and_rationale": "docs/assets/production-animations-v1/lamp/prompt-and-rationale.md"
   },
   "animations": {
     "off": {
@@ -25,14 +31,16 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/off-sheet.png",
       "bounds": [
-        244,
+        243,
         141,
         780,
         882
       ],
       "frames": [
         "docs/assets/production-animations-v1/lamp/off/lamp_off_000.png"
-      ]
+      ],
+      "fixed_body_source": "docs/assets/production-animations-v1/source/lamp-base.png",
+      "shade_policy": "opaque blue shade shell preserved; full bulb silhouette and white bulb circle painted out; only matte warm liner clipped to the shade opening plus emitted light/cone/button glow remains"
     },
     "turning-on": {
       "fps": 12,
@@ -43,10 +51,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/turning-on-sheet.png",
       "bounds": [
-        14,
+        243,
         141,
         780,
-        960
+        882
       ],
       "frames": [
         "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_000.png",
@@ -55,7 +63,9 @@
         "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_003.png",
         "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_004.png",
         "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_005.png"
-      ]
+      ],
+      "fixed_body_source": "docs/assets/production-animations-v1/source/lamp-base.png",
+      "shade_policy": "opaque blue shade shell preserved; full bulb silhouette and white bulb circle painted out; only matte warm liner clipped to the shade opening plus emitted light/cone/button glow remains"
     },
     "on": {
       "fps": 1,
@@ -66,14 +76,16 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/on-sheet.png",
       "bounds": [
-        26,
+        2,
         141,
         780,
-        947
+        882
       ],
       "frames": [
         "docs/assets/production-animations-v1/lamp/on/lamp_on_000.png"
-      ]
+      ],
+      "fixed_body_source": "docs/assets/production-animations-v1/source/lamp-base.png",
+      "shade_policy": "opaque blue shade shell preserved; full bulb silhouette and white bulb circle painted out; only matte warm liner clipped to the shade opening plus emitted light/cone/button glow remains"
     },
     "turning-off": {
       "fps": 10,
@@ -84,10 +96,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/turning-off-sheet.png",
       "bounds": [
-        24,
+        2,
         141,
         780,
-        948
+        882
       ],
       "frames": [
         "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_000.png",
@@ -95,13 +107,23 @@
         "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_002.png",
         "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_003.png",
         "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_004.png"
-      ]
+      ],
+      "fixed_body_source": "docs/assets/production-animations-v1/source/lamp-base.png",
+      "shade_policy": "opaque blue shade shell preserved; full bulb silhouette and white bulb circle painted out; only matte warm liner clipped to the shade opening plus emitted light/cone/button glow remains"
     }
   },
-  "scope_note": "This card intentionally covers lamp only. The v1 animation preserves the Pack A lamp body and varies only shade/bulb light, button glow, and transparent warm light cone effects.",
+  "scope_note": "WTJ-20260704-069 Designer 2 pass: addresses Ethan screenshot that the bulb was visible through the shade / shade transparency got worse by rebuilding actual source frames so no bulb outline remains readable through the shade.",
   "generation_method": {
     "mode": "deterministic derived bitmap frames from accepted production sprite",
-    "reason": "Regenerating the lamp body would risk material drift; the accepted static sprite is retained and only lighting/effect layers are generated.",
-    "prompt_reference": "WorkTime Justin v3 production sprite style: polished 2.5D soft-plastic / soft-clay children's app illustration, rounded geometry, refined matte shading, crisp silhouette, subtle bevels, medium-thick soft outline, top-left soft light, warm child-friendly saturation. Preserve the existing lamp material exactly; only add transparent lamp on/off lighting, bulb glow, button glow, and warm light cone. Keep every frame on a 1024x1024 transparent canvas, with stable anchor, no text, no watermark, no background, no emoji-like stickers, no magenta residue."
-  }
+    "reason": "Regenerating the lamp body would risk material drift; the accepted static sprite is retained while all white bulb pixels inside the shade opening are replaced with a matte opaque liner and emitted light layers.",
+    "prompt_reference": "WorkTime Justin v3 production sprite style: polished 2.5D soft-plastic / soft-clay children app illustration. Preserve the blue lamp body and gold arm exactly. Make the shade an opaque blue solid shell; do not show a bulb silhouette through the shade or as a visible circle in the opening. Replace bulb pixels with a matte warm inner liner clipped to the original shade opening; show lamp-on through warm liner glow, emitted cone, and button glow; no transparent shell, no strange perspective, no watermark, no background, no magenta residue.",
+    "review_media_viewport": [
+      64,
+      112,
+      820,
+      900
+    ],
+    "ethan_rejection_addressed": "bulb visible through shade / shade transparency got worse"
+  },
+  "validation_summary": "All 13 production frames are 1024x1024 RGBA with transparent corners. Turning-on endpoints match off/on and turning-off endpoints match on/off. Manifest paths, sheets, contact sheet, docs, and GIF preview are present. Actual frames remove the previous yellow translucent side cue and cover the white bulb circle with a matte warm liner clipped to the original shade opening."
 }

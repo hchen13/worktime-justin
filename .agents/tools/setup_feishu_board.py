@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime
@@ -20,8 +21,9 @@ FIELD_TEXT = 1
 FIELD_SINGLE_SELECT = 3
 FIELD_DATE = 5
 
-STATUS_VIEW_NAME = "按状态看板"
-STATUS_VIEW_TYPE = "kanban"
+BOARD_VIEW_NAME = "看板"
+LEGACY_BOARD_VIEW_NAMES = ["按状态看板"]
+BOARD_VIEW_TYPE = "kanban"
 CARD_ID_PREFIX = "WTJ"
 
 
@@ -37,6 +39,24 @@ STATUSES = [
 ]
 
 ROLES = ["PM", "TL", "DESIGN", "QA", "Ethan"]
+ROLE_BOARD_VIEWS = {
+    "PM": "PM 看板",
+    "TL": "TL 看板",
+    "DESIGN": "DESIGN 看板",
+    "QA": "QA 看板",
+}
+BOARD_VISIBLE_FIELDS = [
+    "标题",
+    "负责人",
+    "优先级",
+    "评审负责人",
+    "概要",
+    "下一步动作",
+    "阻塞问题",
+    "依赖",
+    "分支",
+    "编号",
+]
 
 
 SELECT_FIELDS = {
@@ -63,6 +83,25 @@ SELECT_FIELDS = {
     "测试方式": ["N/A", "Scripted", "Agentic", "Hybrid"],
     "测试类型": ["N/A", "Unit", "Frontend E2E", "Visual", "API E2E", "Integration"],
     "阻塞负责人": ROLES,
+}
+
+SELECT_FIELD_OPTION_COLORS = {
+    "状态": {
+        "backlog": {"hue": "Wathet", "lightness": "Lighter"},
+        "todo": {"hue": "Blue", "lightness": "Lighter"},
+        "in progress": {"hue": "Orange", "lightness": "Lighter"},
+        "review": {"hue": "Purple", "lightness": "Lighter"},
+        "testing": {"hue": "Turquoise", "lightness": "Lighter"},
+        "blocking": {"hue": "Red", "lightness": "Light"},
+        "done": {"hue": "Green", "lightness": "Light"},
+        "_deprecated": {"hue": "Gray", "lightness": "Light"},
+    },
+    "优先级": {
+        "P0": {"hue": "Red", "lightness": "Light"},
+        "P1": {"hue": "Orange", "lightness": "Light"},
+        "P2": {"hue": "Yellow", "lightness": "Light"},
+        "P3": {"hue": "Green", "lightness": "Light"},
+    },
 }
 
 TEXT_FIELDS = [
@@ -209,6 +248,10 @@ def update_field(token: str, app_token: str, field_id: str, payload: dict) -> No
     request("PUT", f"/bitable/v1/apps/{app_token}/tables/{TABLE_ID}/fields/{field_id}", token=token, payload=payload)
 
 
+def update_field_v3(token: str, app_token: str, field_id: str, payload: dict) -> dict:
+    return request("PUT", f"/base/v3/bases/{app_token}/tables/{TABLE_ID}/fields/{field_id}", token=token, payload=payload)
+
+
 def create_field(token: str, app_token: str, payload: dict) -> None:
     request("POST", f"/bitable/v1/apps/{app_token}/tables/{TABLE_ID}/fields", token=token, payload=payload)
 
@@ -219,6 +262,87 @@ def create_view(token: str, app_token: str, payload: dict) -> None:
 
 def update_view(token: str, app_token: str, view_id: str, payload: dict) -> None:
     request("PATCH", f"/bitable/v1/apps/{app_token}/tables/{TABLE_ID}/views/{view_id}", token=token, payload=payload)
+
+
+def list_views_v3(token: str, app_token: str) -> list[dict]:
+    views: list[dict] = []
+    page_token = ""
+    while True:
+        params = {"page_size": 200}
+        if page_token:
+            params["page_token"] = page_token
+        query = urllib.parse.urlencode(params)
+        body = request("GET", f"/base/v3/bases/{app_token}/tables/{TABLE_ID}/views?{query}", token=token)
+        data = body.get("data", {})
+        views.extend(data.get("views") or data.get("items") or [])
+        if not data.get("has_more"):
+            break
+        page_token = data["page_token"]
+    return views
+
+
+def create_view_v3(token: str, app_token: str, name: str, view_type: str) -> dict:
+    body = request(
+        "POST",
+        f"/base/v3/bases/{app_token}/tables/{TABLE_ID}/views",
+        token=token,
+        payload={"name": name, "type": view_type},
+    )
+    return (body.get("data") or {}).get("view") or body.get("data") or {}
+
+
+def rename_view_v3(token: str, app_token: str, view_id: str, name: str) -> None:
+    request(
+        "PATCH",
+        f"/base/v3/bases/{app_token}/tables/{TABLE_ID}/views/{view_id}",
+        token=token,
+        payload={"name": name},
+    )
+
+
+def set_view_group_v3(token: str, app_token: str, view_id: str, field: str) -> None:
+    request_view_config_v3(
+        token,
+        app_token,
+        view_id,
+        "group",
+        {"group_config": [{"field": field, "desc": False}]},
+    )
+
+
+def set_view_filter_v3(token: str, app_token: str, view_id: str, conditions: list[list]) -> None:
+    request_view_config_v3(
+        token,
+        app_token,
+        view_id,
+        "filter",
+        {"logic": "and", "conditions": conditions},
+    )
+
+
+def set_view_visible_fields_v3(token: str, app_token: str, view_id: str, fields: list[str]) -> None:
+    request_view_config_v3(
+        token,
+        app_token,
+        view_id,
+        "visible_fields",
+        {"visible_fields": fields},
+    )
+
+
+def request_view_config_v3(token: str, app_token: str, view_id: str, resource: str, payload: dict) -> None:
+    path = f"/base/v3/bases/{app_token}/tables/{TABLE_ID}/views/{view_id}/{resource}"
+    for attempt in range(3):
+        try:
+            request("PUT", path, token=token, payload=payload)
+            return
+        except RuntimeError as exc:
+            if "800070003" in str(exc):
+                print(f"skipped {resource} for {view_id}: no operation produced")
+                return
+            if "800030501" not in str(exc) or attempt == 2:
+                raise
+            time.sleep(1)
 
 
 def delete_records(token: str, app_token: str, record_ids: list[str]) -> None:
@@ -234,6 +358,11 @@ def delete_records(token: str, app_token: str, record_ids: list[str]) -> None:
 
 def select_property(options: list[str]) -> dict:
     return {"options": [{"name": name} for name in options]}
+
+
+def select_options_v3(field_name: str, options: list[str]) -> list[dict]:
+    colors = SELECT_FIELD_OPTION_COLORS.get(field_name, {})
+    return [{"name": name, **colors.get(name, {})} for name in options]
 
 
 def option_names(field: dict) -> list[str]:
@@ -303,28 +432,77 @@ def ensure_fields(token: str, app_token: str) -> None:
             create_field(token, app_token, payload)
             print(f"created date field {name}")
 
+    ensure_select_option_colors(token, app_token)
+
+
+def ensure_select_option_colors(token: str, app_token: str) -> None:
+    fields = list_fields(token, app_token)
+    by_name = {field["field_name"]: field for field in fields}
+    for name in SELECT_FIELD_OPTION_COLORS:
+        existing = find_field(by_name, name)
+        if not existing:
+            continue
+        payload = {
+            "name": name,
+            "type": "select",
+            "multiple": False,
+            "options": select_options_v3(name, SELECT_FIELDS[name]),
+        }
+        body = update_field_v3(token, app_token, existing["field_id"], payload)
+        if body.get("code") == 1254606:
+            print(f"select field colors already current {name}")
+        else:
+            print(f"updated select field colors {name}")
+
 
 def ensure_views(token: str, app_token: str) -> None:
-    views = list_views(token, app_token)
-    view = next((item for item in views if item.get("view_name") == STATUS_VIEW_NAME), None)
-    if view:
-        print(f"view already exists: {STATUS_VIEW_NAME}")
-    else:
-        create_view(token, app_token, {"view_name": STATUS_VIEW_NAME, "view_type": STATUS_VIEW_TYPE})
-        view = next((item for item in list_views(token, app_token) if item.get("view_name") == STATUS_VIEW_NAME), None)
-        print(f"created view {STATUS_VIEW_NAME}")
-
     fields = list_fields(token, app_token)
     status_field = next((field for field in fields if field.get("field_name") == "状态"), None)
-    if view and status_field:
-        update_view(
-            token,
-            app_token,
-            view["view_id"],
-            {"property": {"group_config": [{"field_id": status_field["field_id"]}]}},
-        )
-        # Feishu currently rejects hidden_fields on kanban/gallery views.
-        print(f"grouped {STATUS_VIEW_NAME} by 状态")
+    owner_field = next((field for field in fields if field.get("field_name") == "负责人"), None)
+    if not status_field or not owner_field:
+        print("skipped board views: missing 状态 or 负责人 field")
+        return
+
+    views = list_views_v3(token, app_token)
+    by_name = {view.get("name"): view for view in views}
+    board_view = by_name.get(BOARD_VIEW_NAME)
+    if not board_view:
+        for legacy_name in LEGACY_BOARD_VIEW_NAMES:
+            legacy_view = by_name.get(legacy_name)
+            if legacy_view:
+                rename_view_v3(token, app_token, legacy_view["id"], BOARD_VIEW_NAME)
+                board_view = {**legacy_view, "name": BOARD_VIEW_NAME}
+                print(f"renamed view {legacy_name} -> {BOARD_VIEW_NAME}")
+                break
+    if not board_view:
+        board_view = create_view_v3(token, app_token, BOARD_VIEW_NAME, BOARD_VIEW_TYPE)
+        if not board_view.get("id"):
+            board_view = next((item for item in list_views_v3(token, app_token) if item.get("name") == BOARD_VIEW_NAME), {})
+        print(f"created view {BOARD_VIEW_NAME}")
+    else:
+        print(f"view already exists: {BOARD_VIEW_NAME}")
+
+    set_view_group_v3(token, app_token, board_view["id"], status_field["field_id"])
+    set_view_filter_v3(token, app_token, board_view["id"], [])
+    set_view_visible_fields_v3(token, app_token, board_view["id"], BOARD_VISIBLE_FIELDS)
+    print(f"grouped {BOARD_VIEW_NAME} by 状态")
+
+    views = list_views_v3(token, app_token)
+    by_name = {view.get("name"): view for view in views}
+    for role, view_name in ROLE_BOARD_VIEWS.items():
+        role_view = by_name.get(view_name)
+        if not role_view:
+            role_view = create_view_v3(token, app_token, view_name, BOARD_VIEW_TYPE)
+            if not role_view.get("id"):
+                role_view = next((item for item in list_views_v3(token, app_token) if item.get("name") == view_name), {})
+            print(f"created view {view_name}")
+        else:
+            print(f"view already exists: {view_name}")
+
+        set_view_group_v3(token, app_token, role_view["id"], status_field["field_id"])
+        set_view_filter_v3(token, app_token, role_view["id"], [[owner_field["field_id"], "intersects", [role]]])
+        set_view_visible_fields_v3(token, app_token, role_view["id"], BOARD_VISIBLE_FIELDS)
+        print(f"filtered {view_name} by 负责人={role}")
 
 
 def is_blank_value(value: object) -> bool:

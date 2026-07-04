@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="820" viewBox="0 0 1600 820" role="img" aria-label="WTJ 081 rounded luminous letter glyph samples">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#090d15"/>
+      <stop offset="0.55" stop-color="#06101d"/>
+      <stop offset="1" stop-color="#050812"/>
+    </linearGradient>
+    <radialGradient id="stageLight" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#4a80d6" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#4a80d6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glowYellow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#ffd84c" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#3ce7ff" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glowCoral" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#ff675a" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glowGreen" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#9cff38" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <linearGradient id="trailYellow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd84c" stop-opacity="0"/>
+      <stop offset="1" stop-color="#ffd84c" stop-opacity="0.36"/>
+    </linearGradient>
+    <linearGradient id="trailCyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3ce7ff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3ce7ff" stop-opacity="0.33"/>
+    </linearGradient>
+    <linearGradient id="trailCoral" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff675a" stop-opacity="0"/>
+      <stop offset="1" stop-color="#ff675a" stop-opacity="0.31"/>
+    </linearGradient>
+    <style>
+      .label { fill: #a8b6cc; font: 600 24px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+      .note { fill: #f5f8ff; font: 800 34px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+      .letter {
+        font-family: "Arial Rounded MT Bold", "Arial Rounded Bold", "SF Pro Rounded", "SF Compact Rounded", "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 900;
+        font-size: 188px;
+        dominant-baseline: central;
+        text-anchor: middle;
+      }
+      .stroke { fill: none; stroke: rgba(8, 12, 20, .58); stroke-width: 10px; stroke-linejoin: round; paint-order: stroke; }
+      .highlight { fill: rgba(255,255,255,.22); }
+    </style>
+  </defs>
+  <rect width="1600" height="820" rx="24" fill="url(#bg)"/>
+  <rect width="1600" height="820" rx="24" fill="url(#stageLight)"/>
+  <text x="58" y="72" class="note">WTJ-081 letter glyph sample: rounded, layered, luminous, runtime-colored</text>
+  <text x="58" y="114" class="label">Three text layers: dark stroke, soft highlight, saturated fill. These are SVG samples; runtime can draw the same stack in Canvas2D.</text>
+
+  <g transform="translate(260 390) rotate(-9)">
+    <rect x="-166" y="52" width="188" height="34" rx="17" fill="url(#trailYellow)" filter="url(#glowYellow)" opacity=".86"/>
+    <text class="letter stroke" x="0" y="0">A</text>
+    <text class="letter highlight" x="-5" y="-7">A</text>
+    <text class="letter" x="0" y="0" fill="#ffd84c" filter="url(#glowYellow)">A</text>
+  </g>
+
+  <g transform="translate(600 455) rotate(5)">
+    <rect x="-184" y="54" width="210" height="35" rx="17.5" fill="url(#trailCyan)" filter="url(#glowCyan)" opacity=".8"/>
+    <text class="letter stroke" x="0" y="0">D</text>
+    <text class="letter highlight" x="-5" y="-7">D</text>
+    <text class="letter" x="0" y="0" fill="#3ce7ff" filter="url(#glowCyan)">D</text>
+  </g>
+
+  <g transform="translate(940 325) rotate(7)">
+    <rect x="-162" y="54" width="186" height="34" rx="17" fill="url(#trailCoral)" filter="url(#glowCoral)" opacity=".76"/>
+    <text class="letter stroke" x="0" y="0">G</text>
+    <text class="letter highlight" x="-5" y="-7">G</text>
+    <text class="letter" x="0" y="0" fill="#ff675a" filter="url(#glowCoral)">G</text>
+  </g>
+
+  <g transform="translate(1265 470) rotate(10)">
+    <rect x="-155" y="54" width="178" height="34" rx="17" fill="#9cff38" opacity=".18" filter="url(#glowGreen)"/>
+    <text class="letter stroke" x="0" y="0">T</text>
+    <text class="letter highlight" x="-5" y="-7">T</text>
+    <text class="letter" x="0" y="0" fill="#9cff38" filter="url(#glowGreen)">T</text>
+  </g>
+
+  <g transform="translate(125 700)">
+    <circle cx="0" cy="0" r="11" fill="#65f08d"/>
+    <circle cx="32" cy="0" r="11" fill="#65f08d"/>
+    <circle cx="64" cy="0" r="11" fill="#34415c" stroke="rgba(255,255,255,.22)"/>
+    <text x="96" y="7" class="label">status lights stay small and readable</text>
+  </g>
+</svg>
+

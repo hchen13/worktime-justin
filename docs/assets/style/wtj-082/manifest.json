@@ -1,0 +1,60 @@
+{
+  "card": "WTJ-20260704-082",
+  "executor": "Designer 1",
+  "runtime_identity": "Automation:worktime-justin-design-loop",
+  "asset_class": "style_baseline_sample_not_full_runtime_replacement",
+  "updated_at_cst": "2026-07-04",
+  "source_sprites": [
+    "app/web/assets/sprites/dog.png",
+    "app/web/assets/sprites/cat.png",
+    "app/web/assets/sprites/apple.png",
+    "app/web/assets/sprites/ball.png",
+    "app/web/assets/sprites/star.png",
+    "app/web/assets/sprites/key.png",
+    "app/web/assets/sprites/zebra.png",
+    "app/web/assets/sprites/queen.png",
+    "app/web/assets/sprites/treasure-chest.png"
+  ],
+  "outputs": {
+    "documentation": [
+      "docs/design/wtj-082-discovery-footer-sticker-system.md",
+      "docs/assets/style/wtj-082/prompt-and-rationale.md"
+    ],
+    "sticker_samples": [
+      "docs/assets/style/wtj-082/stickers/dog-sticker.png",
+      "docs/assets/style/wtj-082/stickers/cat-sticker.png",
+      "docs/assets/style/wtj-082/stickers/apple-sticker.png",
+      "docs/assets/style/wtj-082/stickers/ball-sticker.png",
+      "docs/assets/style/wtj-082/stickers/star-sticker.png",
+      "docs/assets/style/wtj-082/stickers/key-sticker.png",
+      "docs/assets/style/wtj-082/stickers/zebra-sticker.png",
+      "docs/assets/style/wtj-082/stickers/queen-sticker.png"
+    ],
+    "chest_states": [
+      "docs/assets/style/wtj-082/chest/chest-disabled.png",
+      "docs/assets/style/wtj-082/chest/chest-active.png"
+    ],
+    "previews": [
+      "docs/assets/style/wtj-082/previews/discovery-footer-contact-sheet.png",
+      "docs/assets/style/wtj-082/previews/slot-and-chest-state-preview.png"
+    ]
+  },
+  "slot_rules": {
+    "default_slots": 3,
+    "configurable_range": [
+      3,
+      5
+    ],
+    "layout": "centered_footer_slots_with_right_chest_lane",
+    "filled_state": "die_cut_sticker_thumbnail_inside_gold_ring",
+    "empty_state": "dark_core_with_thin_blue_gray_ring",
+    "optional_state": "low_opacity_plus_slot_ghost"
+  },
+  "quality_notes": [
+    "all sample PNGs are 1024x1024 RGBA with transparent corners",
+    "single sticker and chest PNGs contain no embedded text or labels",
+    "contact sheet previews are on dark canvas",
+    "sample uses accepted source sprites plus generated die-cut sticker treatment; PM should approve before full dictionary production",
+    "no runtime code or full word pool replacement in this card"
+  ]
+}

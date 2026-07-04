@@ -1,0 +1,25 @@
+{
+  "_note": "WTJ-20260704-074 — spoken text for task/phrase TTS (child-friendly en-US, TL-authored). Words are NOT here: each secret word's spoken text is the word itself, read from app/web/audio/missing-audio.json secretWords[].word. Output paths align exactly with missing-audio.json voicePromptPath / compositePhrases[].path. Phrases are sentence fragments meant to concatenate with a word via audio.js playComposite() (e.g. 'Find the' + 'dog' = 'Find the dog').",
+  "tasks": {
+    "drag-apple-to-basket": {"text": "Put the apple in the basket!", "out": "audio/tasks/drag-apple-to-basket.m4a"},
+    "drag-dog-home": {"text": "Take the dog home!", "out": "audio/tasks/drag-dog-home.m4a"},
+    "click-lamp-on": {"text": "Turn on the lamp!", "out": "audio/tasks/click-lamp-on.m4a"},
+    "click-faucet-on": {"text": "Turn on the water!", "out": "audio/tasks/click-faucet-on.m4a"},
+    "click-horse-run": {"text": "Make the horse run!", "out": "audio/tasks/click-horse-run.m4a"},
+    "find-the-dog": {"text": "Find the dog!", "out": "audio/tasks/find-the-dog.m4a"},
+    "press-letter-a": {"text": "Press the letter A!", "out": "audio/tasks/press-a.m4a"},
+    "press-digit-3": {"text": "Press the number three!", "out": "audio/tasks/press-3.m4a"}
+  },
+  "phrases": {
+    "find": {"text": "Find the", "out": "audio/phrases/find.m4a"},
+    "pick-up": {"text": "Pick up the", "out": "audio/phrases/pick-up.m4a"},
+    "put-into": {"text": "Put it into the", "out": "audio/phrases/put-into.m4a"},
+    "take-to": {"text": "Take it to the", "out": "audio/phrases/take-to.m4a"},
+    "press": {"text": "Press the", "out": "audio/phrases/press.m4a"},
+    "click": {"text": "Click the", "out": "audio/phrases/click.m4a"},
+    "turn-on": {"text": "Turn on the", "out": "audio/phrases/turn-on.m4a"},
+    "turn-off": {"text": "Turn off the", "out": "audio/phrases/turn-off.m4a"},
+    "good-job": {"text": "Good job!", "out": "audio/phrases/good-job.m4a"},
+    "lets-go": {"text": "Let's go!", "out": "audio/phrases/lets-go.m4a"}
+  }
+}

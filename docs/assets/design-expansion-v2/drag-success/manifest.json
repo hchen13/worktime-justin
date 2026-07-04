@@ -1,0 +1,340 @@
+{
+  "pack_id": "design-expansion-v2-drag-success",
+  "card_id": "WTJ-20260704-058",
+  "created_by": "DESIGN",
+  "created_at_cst": "2026-07-04 13:05",
+  "style_baseline": [
+    "docs/assets/production-pack-a/manifest.json",
+    "docs/assets/production-pack-b/manifest.json",
+    "docs/assets/production-animations-v1/manifest.json"
+  ],
+  "asset_spec": {
+    "format": "transparent PNG frames plus flattened GIF previews",
+    "color_mode": "RGBA frames",
+    "frame_size": [
+      1024,
+      1024
+    ],
+    "background": "transparent for production frames; dark canvas only for review contact sheets and GIF previews",
+    "style": "polished 2.5D soft-plastic children app illustration inherited from accepted production packs"
+  },
+  "contact_sheet": "docs/assets/design-expansion-v2/drag-success/contact-sheets/drag-success-v2-contact-sheet.png",
+  "animations": {
+    "apple-to-basket": {
+      "display_name": "apple to basket",
+      "source_assets": [
+        "docs/assets/design-expansion-v2/drag-success/source/apple.png",
+        "docs/assets/design-expansion-v2/drag-success/source/basket.png"
+      ],
+      "frame_size": [
+        1024,
+        1024
+      ],
+      "frame_count": 13,
+      "states": {
+        "idle": {
+          "fps": 1,
+          "loop": true,
+          "anchor": [
+            0.58,
+            0.82
+          ],
+          "target_bounds": [
+            450,
+            340,
+            300,
+            360
+          ],
+          "hit_area": [
+            448,
+            363,
+            340,
+            330
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/idle/apple_to_basket_idle_000.png"
+          ]
+        },
+        "dragging": {
+          "fps": 10,
+          "loop": false,
+          "anchor": [
+            0.58,
+            0.82
+          ],
+          "target_bounds": [
+            450,
+            340,
+            300,
+            360
+          ],
+          "hit_area": [
+            448,
+            363,
+            340,
+            330
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_000.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_001.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_002.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_003.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_004.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/dragging/apple_to_basket_dragging_005.png"
+          ]
+        },
+        "success": {
+          "fps": 12,
+          "loop": false,
+          "anchor": [
+            0.58,
+            0.82
+          ],
+          "target_bounds": [
+            450,
+            340,
+            300,
+            360
+          ],
+          "hit_area": [
+            448,
+            363,
+            340,
+            330
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_000.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_001.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_002.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_003.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_004.png",
+            "docs/assets/design-expansion-v2/drag-success/apple-to-basket/success/apple_to_basket_success_005.png"
+          ]
+        }
+      },
+      "frame_sheet": "docs/assets/design-expansion-v2/drag-success/sheets/apple-to-basket-sheet.png",
+      "preview_gif": "docs/assets/design-expansion-v2/drag-success/previews/apple-to-basket-preview.gif",
+      "bounds_all_frames": [
+        187,
+        239,
+        934,
+        934
+      ],
+      "notes": "Transparent 1024 PNG frames composed from accepted production assets; preview GIF is flattened on dark canvas for review only."
+    },
+    "dog-to-doghouse": {
+      "display_name": "dog to doghouse",
+      "source_assets": [
+        "docs/assets/design-expansion-v2/drag-success/source/doghouse.png",
+        "docs/assets/design-expansion-v2/drag-success/source/dog.png"
+      ],
+      "frame_size": [
+        1024,
+        1024
+      ],
+      "frame_count": 14,
+      "states": {
+        "idle": {
+          "fps": 1,
+          "loop": true,
+          "anchor": [
+            0.58,
+            0.84
+          ],
+          "target_bounds": [
+            424,
+            290,
+            360,
+            445
+          ],
+          "hit_area": [
+            448,
+            383,
+            265,
+            270
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/idle/dog_to_doghouse_idle_000.png"
+          ]
+        },
+        "dragging": {
+          "fps": 10,
+          "loop": false,
+          "anchor": [
+            0.58,
+            0.84
+          ],
+          "target_bounds": [
+            424,
+            290,
+            360,
+            445
+          ],
+          "hit_area": [
+            448,
+            383,
+            265,
+            270
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_000.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_001.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_002.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_003.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_004.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_005.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/dragging/dog_to_doghouse_dragging_006.png"
+          ]
+        },
+        "success": {
+          "fps": 12,
+          "loop": false,
+          "anchor": [
+            0.58,
+            0.84
+          ],
+          "target_bounds": [
+            424,
+            290,
+            360,
+            445
+          ],
+          "hit_area": [
+            448,
+            383,
+            265,
+            270
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_000.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_001.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_002.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_003.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_004.png",
+            "docs/assets/design-expansion-v2/drag-success/dog-to-doghouse/success/dog_to_doghouse_success_005.png"
+          ]
+        }
+      },
+      "frame_sheet": "docs/assets/design-expansion-v2/drag-success/sheets/dog-to-doghouse-sheet.png",
+      "preview_gif": "docs/assets/design-expansion-v2/drag-success/previews/dog-to-doghouse-preview.gif",
+      "bounds_all_frames": [
+        139,
+        257,
+        914,
+        913
+      ],
+      "notes": "Transparent 1024 PNG frames composed from accepted production assets; preview GIF is flattened on dark canvas for review only."
+    },
+    "star-to-sky": {
+      "display_name": "star to sky",
+      "source_assets": [
+        "docs/assets/design-expansion-v2/drag-success/source/star.png",
+        "docs/assets/design-expansion-v2/drag-success/source/sparkle_burst.png",
+        "docs/assets/design-expansion-v2/drag-success/source/star_sticker.png"
+      ],
+      "frame_size": [
+        1024,
+        1024
+      ],
+      "frame_count": 15,
+      "states": {
+        "idle": {
+          "fps": 1,
+          "loop": true,
+          "anchor": [
+            0.6,
+            0.34
+          ],
+          "target_bounds": [
+            474,
+            176,
+            281,
+            176
+          ],
+          "hit_area": [
+            478,
+            180,
+            275,
+            185
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/idle/star_to_sky_idle_000.png"
+          ]
+        },
+        "dragging": {
+          "fps": 12,
+          "loop": false,
+          "anchor": [
+            0.6,
+            0.34
+          ],
+          "target_bounds": [
+            474,
+            176,
+            281,
+            176
+          ],
+          "hit_area": [
+            478,
+            180,
+            275,
+            185
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_000.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_001.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_002.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_003.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_004.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_005.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/dragging/star_to_sky_dragging_006.png"
+          ]
+        },
+        "success": {
+          "fps": 12,
+          "loop": false,
+          "anchor": [
+            0.6,
+            0.34
+          ],
+          "target_bounds": [
+            474,
+            176,
+            281,
+            176
+          ],
+          "hit_area": [
+            478,
+            180,
+            275,
+            185
+          ],
+          "frames": [
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_000.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_001.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_002.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_003.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_004.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_005.png",
+            "docs/assets/design-expansion-v2/drag-success/star-to-sky/success/star_to_sky_success_006.png"
+          ]
+        }
+      },
+      "frame_sheet": "docs/assets/design-expansion-v2/drag-success/sheets/star-to-sky-sheet.png",
+      "preview_gif": "docs/assets/design-expansion-v2/drag-success/previews/star-to-sky-preview.gif",
+      "bounds_all_frames": [
+        173,
+        0,
+        954,
+        920
+      ],
+      "notes": "Transparent 1024 PNG frames composed from accepted production assets; preview GIF is flattened on dark canvas for review only."
+    }
+  },
+  "review_notes": [
+    "Chose composition-from-accepted-assets over regenerating characters so basket, doghouse, dog, apple, and star retain the accepted production style.",
+    "Each group includes idle, dragging, and success states with numbered transparent frames and a combined frame sheet.",
+    "Success effects use lightweight rings, sparkles, and bounce so they are visible on dark canvas but do not become permanent full-screen rewards.",
+    "GIF previews are review artifacts only; implementation should consume the transparent PNG frames or frame sheets."
+  ]
+}

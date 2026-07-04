@@ -8,28 +8,289 @@
     "animal": "REQ-AST-09 点名的「动物叫声」——与秘密词或任务里出现的动物物体搭配播放。",
     "bell": "REQ-AST-09 点名的「铃铛」——对应 REQ-TASK-08 点击类任务示例「按铃铛」。",
     "water": "REQ-AST-09 点名的「水声」——对应 REQ-TASK-08 点击类任务示例「关水龙头」。",
-    "chest": "REQ-AST-09 点名的「开箱声」——对应 REQ-SLOT-02 / REQ-RWD-01~03 宝箱开启奖励。"
+    "chest": "REQ-AST-09 点名的「开箱声」——对应 REQ-SLOT-02 / REQ-RWD-01~03 宝箱开启奖励。",
+    "keySound": "WTJ-20260704-084 新增：逐键机械键盘反馈音，由 app/web/keysound.js 订阅 window.WTJ_KEYBOARD.onLetter/onFunctionKey 触发（REQ-KB-01/02/05/06 的音频侧落地）。"
   },
   "sfx": [
-    { "sfxKey": "task-success", "category": "ui", "path": "audio/sfx/task-success.m4a", "purpose": "任务成功通用反馈音；已被 app/web/manifest.js 全部任务模板示例的 successAudio 字段直接引用，路径必须保持一致。", "reqIds": ["REQ-TASK-07", "REQ-TASK-08", "REQ-TASK-09", "REQ-TASK-10"] },
-    { "sfxKey": "light-hint-chime", "category": "ui", "path": "audio/sfx/light-hint-chime.m4a", "purpose": "任务 15 秒未完成的轻提示音效。", "reqIds": ["REQ-TASK-03"] },
-    { "sfxKey": "slot-light-up", "category": "ui", "path": "audio/sfx/slot-light-up.m4a", "purpose": "发现槽点亮反馈。", "reqIds": ["REQ-SLOT-01", "REQ-SLOT-02"] },
-    { "sfxKey": "keyboard-milestone-chime", "category": "ui", "path": "audio/sfx/keyboard-milestone-chime.m4a", "purpose": "键盘探索里程碑（100/200 有效按键）达成反馈。", "reqIds": ["REQ-SLOT-03"] },
-    { "sfxKey": "streak-reward-fanfare", "category": "ui", "path": "audio/sfx/streak-reward-fanfare.m4a", "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈。", "reqIds": ["REQ-RWD-05", "REQ-RWD-06"] },
-    { "sfxKey": "dog-bark", "category": "animal", "path": "audio/sfx/dog-bark.m4a", "purpose": "小狗相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "cat-meow", "category": "animal", "path": "audio/sfx/cat-meow.m4a", "purpose": "小猫相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "duck-quack", "category": "animal", "path": "audio/sfx/duck-quack.m4a", "purpose": "小鸭子相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "horse-neigh", "category": "animal", "path": "audio/sfx/horse-neigh.m4a", "purpose": "「让小马跑起来」点击任务伴随叫声。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
-    { "sfxKey": "pig-oink", "category": "animal", "path": "audio/sfx/pig-oink.m4a", "purpose": "小猪相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "frog-croak", "category": "animal", "path": "audio/sfx/frog-croak.m4a", "purpose": "小青蛙相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "elephant-trumpet", "category": "animal", "path": "audio/sfx/elephant-trumpet.m4a", "purpose": "大象相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "mouse-squeak", "category": "animal", "path": "audio/sfx/mouse-squeak.m4a", "purpose": "小老鼠相关任务/秘密词伴随叫声。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "bell-ring", "category": "bell", "path": "audio/sfx/bell-ring.m4a", "purpose": "点击类任务「按铃铛」主音效。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
-    { "sfxKey": "bell-jingle", "category": "bell", "path": "audio/sfx/bell-jingle.m4a", "purpose": "轻量装饰性铃铛反馈（可选，正反馈变体）。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "water-tap-flow", "category": "water", "path": "audio/sfx/water-tap-flow.m4a", "purpose": "点击类任务「关水龙头」前的水流声。", "reqIds": ["REQ-AST-09", "REQ-TASK-08"] },
-    { "sfxKey": "water-drop", "category": "water", "path": "audio/sfx/water-drop.m4a", "purpose": "滴水声，水龙头关闭后的收尾反馈。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "water-splash", "category": "water", "path": "audio/sfx/water-splash.m4a", "purpose": "水花声（可选，装饰性水相关任务）。", "reqIds": ["REQ-AST-09"] },
-    { "sfxKey": "chest-open", "category": "chest", "path": "audio/sfx/chest-open.m4a", "purpose": "宝箱开启主音效。", "reqIds": ["REQ-AST-09", "REQ-SLOT-02", "REQ-RWD-01", "REQ-RWD-02", "REQ-RWD-03"] },
-    { "sfxKey": "chest-lid-creak", "category": "chest", "path": "audio/sfx/chest-lid-creak.m4a", "purpose": "宝箱开启前的吱呀铺垫音（可选）。", "reqIds": ["REQ-AST-09"] }
+    {
+      "sfxKey": "task-success",
+      "category": "ui",
+      "path": "audio/sfx/task-success.m4a",
+      "purpose": "任务成功通用反馈音；已被 app/web/manifest.js 全部任务模板示例的 successAudio 字段直接引用，路径必须保持一致。",
+      "reqIds": [
+        "REQ-TASK-07",
+        "REQ-TASK-08",
+        "REQ-TASK-09",
+        "REQ-TASK-10"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "light-hint-chime",
+      "category": "ui",
+      "path": "audio/sfx/light-hint-chime.m4a",
+      "purpose": "任务 15 秒未完成的轻提示音效。",
+      "reqIds": [
+        "REQ-TASK-03"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "slot-light-up",
+      "category": "ui",
+      "path": "audio/sfx/slot-light-up.m4a",
+      "purpose": "发现槽点亮反馈。",
+      "reqIds": [
+        "REQ-SLOT-01",
+        "REQ-SLOT-02"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "keyboard-milestone-chime",
+      "category": "ui",
+      "path": "audio/sfx/keyboard-milestone-chime.m4a",
+      "purpose": "键盘探索里程碑（100/200 有效按键）达成反馈。",
+      "reqIds": [
+        "REQ-SLOT-03"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "streak-reward-fanfare",
+      "category": "ui",
+      "path": "audio/sfx/streak-reward-fanfare.m4a",
+      "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈。",
+      "reqIds": [
+        "REQ-RWD-05",
+        "REQ-RWD-06"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "dog-bark",
+      "category": "animal",
+      "path": "audio/sfx/dog-bark.m4a",
+      "purpose": "小狗相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/741/741-preview.mp3"
+    },
+    {
+      "sfxKey": "cat-meow",
+      "category": "animal",
+      "path": "audio/sfx/cat-meow.m4a",
+      "purpose": "小猫相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/93/93-preview.mp3"
+    },
+    {
+      "sfxKey": "duck-quack",
+      "category": "animal",
+      "path": "audio/sfx/duck-quack.m4a",
+      "purpose": "小鸭子相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "Wikimedia Commons File:Anas_platyrhynchos_-_Mallard_XC62258.mp3 (CC BY-SA 3.0, 署名 Jonathon Jongsma)",
+      "note": "Mixkit 免费库查无真实鸭子叫声素材，见 missing-audio.json 对应条目。"
+    },
+    {
+      "sfxKey": "horse-neigh",
+      "category": "animal",
+      "path": "audio/sfx/horse-neigh.m4a",
+      "purpose": "「让小马跑起来」点击任务伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09",
+        "REQ-TASK-08"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1762/1762-preview.mp3"
+    },
+    {
+      "sfxKey": "pig-oink",
+      "category": "animal",
+      "path": "audio/sfx/pig-oink.m4a",
+      "purpose": "小猪相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/3/3-preview.mp3"
+    },
+    {
+      "sfxKey": "frog-croak",
+      "category": "animal",
+      "path": "audio/sfx/frog-croak.m4a",
+      "purpose": "小青蛙相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "Wikimedia Commons File:Single_Frog_Croak.oga (CC BY-SA 4.0, 需署名)",
+      "note": "Mixkit 免费库查无真实青蛙叫声素材，见 missing-audio.json 对应条目。"
+    },
+    {
+      "sfxKey": "elephant-trumpet",
+      "category": "animal",
+      "path": "audio/sfx/elephant-trumpet.m4a",
+      "purpose": "大象相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "Wikimedia Commons File:Elephant_voice_-_trumpeting.ogg (CC0)",
+      "note": "Mixkit 免费库查无大象叫声素材，见 missing-audio.json 对应条目。"
+    },
+    {
+      "sfxKey": "mouse-squeak",
+      "category": "animal",
+      "path": "audio/sfx/mouse-squeak.m4a",
+      "purpose": "小老鼠相关任务/秘密词伴随叫声。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1019/1019-preview.mp3"
+    },
+    {
+      "sfxKey": "bell-ring",
+      "category": "bell",
+      "path": "audio/sfx/bell-ring.m4a",
+      "purpose": "点击类任务「按铃铛」主音效。",
+      "reqIds": [
+        "REQ-AST-09",
+        "REQ-TASK-08"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/931/931-preview.mp3"
+    },
+    {
+      "sfxKey": "bell-jingle",
+      "category": "bell",
+      "path": "audio/sfx/bell-jingle.m4a",
+      "purpose": "轻量装饰性铃铛反馈（可选，正反馈变体）。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/937/937-preview.mp3"
+    },
+    {
+      "sfxKey": "water-tap-flow",
+      "category": "water",
+      "path": "audio/sfx/water-tap-flow.m4a",
+      "purpose": "点击类任务「关水龙头」前的水流声。",
+      "reqIds": [
+        "REQ-AST-09",
+        "REQ-TASK-08"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1819/1819-preview.mp3"
+    },
+    {
+      "sfxKey": "water-drop",
+      "category": "water",
+      "path": "audio/sfx/water-drop.m4a",
+      "purpose": "滴水声，水龙头关闭后的收尾反馈。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1879/1879-preview.mp3"
+    },
+    {
+      "sfxKey": "water-splash",
+      "category": "water",
+      "path": "audio/sfx/water-splash.m4a",
+      "purpose": "水花声（可选，装饰性水相关任务）。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1311/1311-preview.mp3"
+    },
+    {
+      "sfxKey": "chest-open",
+      "category": "chest",
+      "path": "audio/sfx/chest-open.m4a",
+      "purpose": "宝箱开启主音效。",
+      "reqIds": [
+        "REQ-AST-09",
+        "REQ-SLOT-02",
+        "REQ-RWD-01",
+        "REQ-RWD-02",
+        "REQ-RWD-03"
+      ],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "chest-lid-creak",
+      "category": "chest",
+      "path": "audio/sfx/chest-lid-creak.m4a",
+      "purpose": "宝箱开启前的吱呀铺垫音（可选）。",
+      "reqIds": [
+        "REQ-AST-09"
+      ],
+      "status": "delivered",
+      "source": "https://assets.mixkit.co/active_storage/sfx/1163/1163-preview.mp3"
+    },
+    {
+      "sfxKey": "key-letter",
+      "category": "keySound",
+      "path": "audio/sfx/key-letter.m4a",
+      "purpose": "普通字母/数字键机械键盘反馈音（清脆 click，鼓励有效输入）。keysound.js 订阅 WTJ_KEYBOARD.onLetter 触发。",
+      "reqIds": ["REQ-KB-01", "REQ-KB-02"],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "key-space",
+      "category": "keySound",
+      "path": "audio/sfx/key-space.m4a",
+      "purpose": "Space 键机械键盘反馈音（低沉 thock）。keysound.js 订阅 WTJ_KEYBOARD.onFunctionKey，category='light' 且 key='Space' 时播放。",
+      "reqIds": ["REQ-KB-05", "REQ-KB-06"],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "key-enter",
+      "category": "keySound",
+      "path": "audio/sfx/key-enter.m4a",
+      "purpose": "Enter 键机械键盘反馈音（更明确的确认感 click）。keysound.js 订阅 WTJ_KEYBOARD.onFunctionKey，category='light' 且 key='Enter' 时播放。",
+      "reqIds": ["REQ-KB-05", "REQ-KB-06"],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "key-punct",
+      "category": "keySound",
+      "path": "audio/sfx/key-punct.m4a",
+      "purpose": "未分类功能键（标点等，category='other'）中性轻 click。keysound.js 订阅 WTJ_KEYBOARD.onFunctionKey，category='other' 时播放，intensity 随连打衰减。",
+      "reqIds": ["REQ-KB-06"],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    },
+    {
+      "sfxKey": "key-modifier",
+      "category": "keySound",
+      "path": "audio/sfx/key-modifier.m4a",
+      "purpose": "Meta/Alt/Control/Shift 等修饰键（category='weak'）最轻/最钝反馈音。keysound.js 订阅 WTJ_KEYBOARD.onFunctionKey，category='weak' 时播放，intensity 随连打衰减。",
+      "reqIds": ["REQ-KB-06"],
+      "status": "delivered",
+      "source": "synthesized-ffmpeg"
+    }
   ]
 }

@@ -24,12 +24,19 @@
 /* 顶栏：极简标题 + 家长入口锁形 glyph（低调、极细）                    */
 /* ------------------------------------------------------------------ */
 
+/* WTJ-20260704-086（DESIGN 081 已验收规范落地）：高度/标题字号字重按
+   docs/assets/style/wtj-081/motion-token-sheet.json 的 header 域取值——
+   heightPx:44 / titleFontPx:15 / titleWeight:800（此前 007 首版是 34px/12px/常规字重的
+   占位值）。背景渐变 rgba(9,12,17,0.34)->透明 与 081 Layout Spec「Header」一节的
+   rgba(8,12,20,0.38)->transparent 数值上非常接近（同为深色顶部渐隐蒙层），07 首版取值
+   予以保留，不做无意义的小数点级别改动。矮屏（2014 MacBook Air 全屏但视口有效高度较小时）
+   降级到 minHeightPx:38，见下方 @media (max-height) 规则。 */
 .wtj-hud-topbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 34px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,7 +46,8 @@
 }
 
 .wtj-hud-title {
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 800;
   line-height: 1;
   letter-spacing: 0.01em;
   color: rgba(244, 247, 251, 0.48);
@@ -49,8 +57,9 @@
 }
 
 .wtj-hud-lock {
-  font-size: 13px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
   opacity: 0.36;
   cursor: default;
   transition: opacity 0.2s ease;
@@ -60,6 +69,16 @@
    实际长按 Esc 退出判定与是否开放 pointer-events 由 017 卡接管，此规则先行保留。 */
 .wtj-hud-lock:hover {
   opacity: 0.6;
+}
+
+/* QA 023 / WTJ-20260704-071：替换此前 raw lock emoji（U+1F512）的内联 SVG 挂锁图标
+   （锁梁 + 锁体，hud.js buildLockIcon() 生成）。尺寸约等于原 emoji 字形（13px 见方），
+   描边用 currentColor 跟随 .wtj-hud-root 的文字色（#f4f7fb），透明度由父级 .wtj-hud-lock
+   的 opacity 控制，不在此单独设置颜色/透明度，避免双重管理。 */
+.wtj-hud-lock-icon {
+  display: block;
+  width: 13px;
+  height: 13px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -150,27 +169,70 @@
   opacity: 0.96;
 }
 
+/* WTJ-20260704-083 返工（PM 打回②，DESIGN 082 验收资产接入）：五槽底图（five-slot-tray.png）
+   按 5 槽构图，只在 SLOT_COUNT===5 时使用（见 hud.js resolveTrayBgFile()，.wtj-hud-tray-wrap
+   会额外挂 --imaged 修饰类）。其余槽数（如默认 3）没有对应的已验收托盘底图美术，改用这条
+   DESIGN 082 规则的 footer 背景条——不再是上一版纯色胶囊占位（旧 .wtj-hud-tray-bg-fallback，
+   PM 判定"粗糙占位"不可接受）：深蓝黑半透明背景 + 顶部低对比蓝灰分界线，数值取自 082 doc
+   「发现槽规则」布局一节（background 建议 rgba(5,10,18,0.78)，分界线建议
+   rgba(156,180,220,0.16)）。top/height 数值让背景条的垂直中心落在约 48.8%（与 .wtj-hud-slot
+   的 top 一致），槽位指示点视觉上居中落在条内。 */
+.wtj-hud-footer-bar {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 28%;
+  height: 40%;
+  border-radius: 18px;
+  background: rgba(5, 10, 18, 0.78);
+  border-top: 1px solid rgba(156, 180, 220, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  opacity: 0.98;
+}
+
 .wtj-hud-slot {
   position: absolute;
   top: 48.8%; /* 槽位在 five-slot-tray.png 中的垂直中心百分比，采样方法见 PROVENANCE.md */
-  width: 12%;
-  height: 12%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* WTJ-20260704-083 返工：槽位直径按托盘背景路径分两套数值，互不影响——
+   --imaged（count===5，已验收 five-slot-tray.png）保留 007 原始的 12%（不倒退，那张底图的
+   凹槽位置是按这个尺寸校准出来的）；--generic（其余槽数，DESIGN 082 新规则）放大到约
+   82px~92px 桌面目标（容器 clamp(260px,30vw,380px) 下 24% ≈ 62px~91px，随视口宽度落在
+   082 建议区间附近，精确像素复核见 QA085）。 */
+.wtj-hud-tray-wrap--imaged .wtj-hud-slot {
+  width: 12%;
+  height: 12%;
+}
+
+.wtj-hud-tray-wrap--generic .wtj-hud-slot {
+  width: 24%;
+  height: 24%;
+}
+
+/* Empty（082 slot_rules.empty_state：深色内芯 + 细蓝灰外圈，避免白色空洞感）。 */
 .wtj-hud-slot.is-empty::after {
   content: "";
   display: block;
-  width: 46%;
-  height: 46%;
+  width: 58%;
+  height: 58%;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: rgba(10, 14, 22, 0.82);
+  box-shadow: inset 0 0 0 1.5px rgba(156, 180, 220, 0.32);
+}
+
+/* Filled/Milestone（082 slot_rules.filled_state：金色外圈 + 轻微暖色发光）共用同一圈发光样式；
+   milestone 星形与 secret-word 命中的 sprite 缩略图都算"已发现"，视觉上同等对待。 */
+.wtj-hud-slot.is-filled,
+.wtj-hud-slot.is-milestone {
+  background: rgba(24, 18, 8, 0.32);
+  box-shadow: 0 0 0 2px rgba(255, 205, 107, 0.92), 0 0 14px 3px rgba(255, 196, 102, 0.5);
 }
 
 .wtj-hud-slot-star {
@@ -183,10 +245,126 @@
 
 .wtj-hud-slot-sprite {
   display: block;
-  width: 78%;
-  height: 78%;
+  /* 082 filled_state：sticker 缩略图占槽位直径的 68%~76%。 */
+  width: 72%;
+  height: 72%;
   object-fit: contain;
   filter: drop-shadow(0 0 6px rgba(255, 217, 90, 0.4));
+}
+
+/* Ghost（082 slot_rules.optional_state：低透明深色槽 + 低透明加号，只表达"可扩展"，不参与
+   真实 Empty/Filled 判定，见 hud.js MAIN_SLOT_VISUAL_LIMIT / renderSlot()）。 */
+.wtj-hud-slot.is-ghost {
+  opacity: 0.42;
+}
+
+.wtj-hud-slot.is-ghost::after {
+  content: "";
+  display: block;
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background: rgba(10, 14, 22, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(156, 180, 220, 0.18);
+}
+
+.wtj-hud-slot-ghost-plus {
+  /* 独立 position:absolute 叠在 ::after 圆圈之上并居中——.wtj-hud-slot 自身已是
+     position:absolute，天然构成定位上下文；不用 flex 布局叠加（::after 与这个 <span> 会被
+     当成两个 flex item 并排，而不是重叠），见文件头「083」返工说明。 */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(13px, 1.4vw, 18px);
+  line-height: 1;
+  color: rgba(200, 210, 226, 0.45);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* footer 右侧：常驻宝箱三态指示器（Disabled/Active/Open，WTJ-20260704-083 返工，PM 打回①）  */
+/* 与底部槽位组共用同一条 footer 视觉带，固定在右侧 lane，二者水平间距按 082 规则 >= 20px；    */
+/* 固定 bottom 定位，不与屏幕正中心的 .wtj-secret-sprite（secretword.css，top:50%）重叠。      */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-chest-lane {
+  position: fixed;
+  right: clamp(16px, 4vw, 32px);
+  bottom: 14px;
+  width: clamp(72px, 8vw, 96px); /* 082 宝箱规则：运行时显示 72px~96px */
+  height: clamp(72px, 8vw, 96px);
+  pointer-events: none;
+}
+
+.wtj-hud-chest {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: filter 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Disabled（082 宝箱规则：低饱和灰蓝、低亮度、无金色光圈，只表达暂不可领取）。 */
+.wtj-hud-chest.is-disabled {
+  opacity: 0.6;
+  filter: grayscale(0.3) brightness(0.82);
+}
+
+/* Active（082 宝箱规则：暖金边缘、轻微发光、体积高光更明确，但不做全屏奖励效果）。 */
+.wtj-hud-chest.is-active {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 196, 102, 0.55)) brightness(1.05);
+}
+
+/* Open：不是第三张静态图（082 明确交代）——复用 Active 的 chest-active.png，用一个持续的
+   呼吸式脉冲把它和静止的 Active 区分开，呼应"011 的开箱 Canvas 序列正在播放"这个事实。
+   由 hud.js 的 setChestOpen(true) 在序列开始时挂上，序列结束/reset() 后移除（见该文件
+   「footer 常驻宝箱指示器」一节）。 */
+.wtj-hud-chest.is-open {
+  opacity: 1;
+  filter: drop-shadow(0 0 16px rgba(255, 196, 102, 0.85)) brightness(1.15);
+  -webkit-animation: wtj-hud-chest-open-pulse 0.9s ease-in-out infinite;
+  animation: wtj-hud-chest-open-pulse 0.9s ease-in-out infinite;
+}
+
+@-webkit-keyframes wtj-hud-chest-open-pulse {
+  0%   { -webkit-transform: scale(1); transform: scale(1); }
+  50%  { -webkit-transform: scale(1.08); transform: scale(1.08); }
+  100% { -webkit-transform: scale(1); transform: scale(1); }
+}
+
+@keyframes wtj-hud-chest-open-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* WTJ-20260704-086（DESIGN 081 已验收规范）：矮屏（视口有效高度较小）下顶栏高度降级到
+   minHeightPx:38（081 token），标题/锁形 glyph 尺寸不变——只压缩顶栏本身的留白，避免矮窗口下
+   顶栏过高侵占字母安全区（letter-motion.js 的 computeSafeArea() 用 header.heightPx 计算
+   字母生成的纵向安全区，这里只改 CSS 视觉高度，不影响该纯函数里写死的 44px 常量——矮屏下
+   安全区会略微保守（按 44px 计算但实际顶栏只有 38px），是有意的防御式偏保守，不会让字母
+   生成到顶栏视觉区域内）。 */
+@media (max-height: 700px) {
+  .wtj-hud-topbar {
+    height: 38px;
+  }
+}
+
+/* 移动端安全区压缩（082：footer 高度 76px~88px，宝箱可缩小但不能压到槽位）。 */
+@media (max-width: 640px) {
+  .wtj-hud-tray-wrap--generic .wtj-hud-slot {
+    width: 20%;
+    height: 20%;
+  }
+
+  .wtj-hud-chest-lane {
+    right: clamp(10px, 3vw, 20px);
+    bottom: 10px;
+    width: clamp(56px, 14vw, 76px);
+    height: clamp(56px, 14vw, 76px);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -213,7 +391,7 @@
   width: clamp(22px, 2.2vw, 28px);
   height: clamp(22px, 2.2vw, 28px);
   object-fit: contain;
-  transition: filter 0.25s ease, opacity 0.25s ease;
+  transition: filter 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
 }
 
 .wtj-hud-light.is-off {
@@ -222,22 +400,60 @@
      在保持"熄灭"观感的同时确保角落状态灯轮廓仍可见。 */
   filter: grayscale(1) brightness(0.7);
   opacity: 0.65;
+  transform: scale(1);
 }
 
+/* WTJ-20260704-083（开发机验收反馈④）：完成一个问号任务后，task-templates.js 会调用
+   WTJ_HUD.setStatusLight(index, true) 点亮一个灯——原先 is-off→is-on 只是 opacity/filter 的
+   250ms 渐变，在 22~28px 的小尺寸角落元素上不够醒目，验收反馈"完成问号任务后状态灯无明显
+   变化"。这里保留原有的最终静止态（更亮的 drop-shadow + 常驻 1.15 倍放大，让"已点亮"这个
+   状态本身比之前更突出），并叠加一个一次性的 wtj-hud-light-pop 关键帧动画——每次从 is-off
+   变为 is-on（classList 先 remove 再 add，浏览器视为新样式，动画会重新播放一次），灯会先
+   放大到 1.5 倍再回落到常驻的 1.15 倍，给孩子一个短促但清晰可见的"点亮"反馈。 */
 .wtj-hud-light.is-on {
   opacity: 1;
-  filter: drop-shadow(0 0 6px rgba(141, 242, 124, 0.55));
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 10px rgba(141, 242, 124, 0.85)) brightness(1.2);
+  -webkit-animation: wtj-hud-light-pop 0.55s ease-out;
+  animation: wtj-hud-light-pop 0.55s ease-out;
+}
+
+@-webkit-keyframes wtj-hud-light-pop {
+  0%   { -webkit-transform: scale(1); transform: scale(1); filter: drop-shadow(0 0 6px rgba(141, 242, 124, 0.55)) brightness(1); }
+  40%  { -webkit-transform: scale(1.5); transform: scale(1.5); filter: drop-shadow(0 0 18px rgba(141, 242, 124, 1)) brightness(1.6); }
+  100% { -webkit-transform: scale(1.15); transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(141, 242, 124, 0.85)) brightness(1.2); }
+}
+
+@keyframes wtj-hud-light-pop {
+  0%   { transform: scale(1); filter: drop-shadow(0 0 6px rgba(141, 242, 124, 0.55)) brightness(1); }
+  40%  { transform: scale(1.5); filter: drop-shadow(0 0 18px rgba(141, 242, 124, 1)) brightness(1.6); }
+  100% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(141, 242, 124, 0.85)) brightness(1.2); }
 }
 
 /* ------------------------------------------------------------------ */
-/* 无障碍偏好：关闭一切过渡，无循环动画（本文件本就不含 @keyframes）    */
+/* 无障碍偏好：关闭一切过渡/动画（is-on 的一次性 pop 关键帧同样关闭，直接呈现静止终态）。 */
 /* ------------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
   .wtj-hud-lock,
   .wtj-hud-question,
   .wtj-hud-slot,
-  .wtj-hud-light {
+  .wtj-hud-light,
+  .wtj-hud-chest {
     transition: none !important;
+  }
+
+  .wtj-hud-light.is-on {
+    -webkit-animation: none !important;
+    animation: none !important;
+    transform: scale(1.15) !important;
+  }
+
+  /* WTJ-20260704-083 返工：Open 态的呼吸脉冲关键帧同样关闭，直接呈现静止的放大发光终态，
+     不因为 reduced-motion 而丢失"当前正在开箱"这个状态区分（仍然是可见的静态高亮）。 */
+  .wtj-hud-chest.is-open {
+    -webkit-animation: none !important;
+    animation: none !important;
+    transform: scale(1.05) !important;
   }
 }

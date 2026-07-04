@@ -1,46 +1,48 @@
-# Treasure Chest Animation v1
+# Treasure Chest Animation v2
 
-对应飞书卡：`WTJ-20260704-029`。
+对应飞书卡：原始交付 `WTJ-20260704-029`，本次返工 `WTJ-20260704-070`。
 
 本目录是 treasure-chest 单卡验收范围。faucet、horse、door、bell、lamp 均由各自卡片单独验收，本卡证据只引用宝箱开启动效。
 
 ## 状态
 
 - `closed/`: 1 帧，关闭宝箱。
-- `opening/`: 5 帧，箱盖打开并露出金色内光。
+- `opening/`: 5 帧，真实关键姿态开盖并露出金色内光。
 - `open/`: 1 帧，打开保持态。
-- `reward-pop/`: 7 帧，奖励贴纸、闪光和金币粒子从箱口弹出。
+- `reward-pop/`: 7 帧，奖励星星、闪光、礼物盒、金币和宝石光点从箱口弹出。
 - `sheets/`: 每个状态的 frame sheet。
 - `treasure-chest-contact-sheet.png`: 暗底验收接触表。
 - `manifest.json`: fps、loop、anchor、bounds、frames、sheet、preview 路径。
+- `prompt-and-rationale.md`: 本次返工提示词、取舍与自检证据。
 
 ## 生成方法
 
-主宝箱图来自 `docs/assets/production-pack-a/rewards/treasure-chest.png`，不重新生成主体，避免和 Pack A / Pack B 的 soft-clay 材质发生漂移。
+本次返工不再沿用旧宝箱主体。`closed`、`quarter-open`、`half-open`、`mostly-open`、`open` 五个关键姿态使用内置 image generation 生成高质 2.5D key art，统一去除 #00ff00 chroma-key 背景后规范化到 `1024x1024 RGBA` 透明画布。
 
-动效帧采用确定性处理：
+动效帧采用关键姿态加确定性合成：
 
-- `closed` 使用原始生产宝箱。
-- `opening` 将宝箱盖区域分层、上移并压缩成打开角度，同时保留下半箱体。
-- `open` 保持打开姿态，加柔和金色箱内光。
-- `reward-pop` 复用 Pack A 的 star sticker、sparkle burst，并追加无表情礼物盒、金币粒子和宝石高光。
+- `closed` 使用新生成闭合宝箱源图。
+- `opening` 使用五个真实关键姿态：closed、quarter-open、half-open、mostly-open、open；不再使用半透明交叉淡化双影。
+- `open` 使用新生成完全打开源图。
+- `reward-pop` 从 `open` 精确起步，复用 Pack A 的 star sticker / sparkle burst，并追加无表情礼物盒、金币和宝石光点。
 
 可复用的视觉方向提示词：
 
 ```text
-Use the WorkTime Justin v3 production sprite style: polished 2.5D soft-plastic / soft-clay children's app illustration, rounded geometry, refined matte shading, crisp silhouette, subtle bevels, medium-thick soft outline, top-left soft light, warm child-friendly saturation. Preserve the existing treasure chest material exactly; only add transparent animation effects, lid opening movement, golden interior light, stickers, sparkles, and coin particles. Keep every frame on a 1024x1024 transparent canvas, with stable anchor, no text, no watermark, no background, no magenta residue.
+Premium polished 2.5D soft-clay treasure chest sprite, warm wood grain, rounded gold metal bands, blue diamond lock, consistent 3/4 perspective, clean #00ff00 chroma-key background; closed, quarter-open, half-open, mostly-open, and open states generated as key art, then normalized to 1024 transparent production frames. Keep every frame on a 1024x1024 transparent canvas, with stable anchor, no text, no watermark, no background, no magenta residue.
 ```
 
 ## 取舍
 
-这是 v1 的 flattened PNG 分层动效，不是完整 3D 结构动画。箱盖采用安全的上移/压缩开盖表现，避免强行重绘木纹和金属边导致材质漂移。若后续需要更真实的铰链旋转，v2 应重新生成分层 chest source，至少拆为 lid、front body、interior glow、hardware 四层。
+本次不再用旧版 flattened PNG 拉伸开盖，因为旧方案会出现盖子漂浮、尾帧错位、结构割裂。新方案牺牲逐帧完全同源的像素连续性，换取五个真实绘制关键姿态的结构可信度；首尾帧仍与 `closed` / `open` 精确一致，便于 TL 接入。
 
-2026-07-04 rework：PM review 指出旧版 `reward-pop` 使用了笑脸表情贴纸，不符合 production-asset-quality 对 emoji-like final material 的硬拒标准。本版已移除该贴纸，改为星星、闪光、金币、宝石高光和无表情礼物盒；`closed`、`opening`、`open` 结构保持不变。
+`reward-pop` 保持短促、清楚、无表情贴纸：星星、sparkle、礼物盒、金币和宝石光点都从箱口弹出，不出现不明三尖形异物或生成伪影。
 
 ## 自检
 
 - 14 张编号帧均为 `1024x1024 RGBA`。
 - 四角 alpha 均为 0。
-- 可见像素无 #ff00ff / 洋红残留。
-- `manifest.json` 中所有 frame、sheet、preview、contact sheet、source 路径均存在。
-- 暗底接触表已检查：closed/opening/open/reward-pop 状态可读，无明显裁切，主体材质稳定。
+- 可见像素无 #ff00ff / 洋红残留，且无明显 #00ff00 绿边残留。
+- `manifest.json` 中所有 frame、sheet、preview、contact sheet、source、README、prompt/rationale 路径均存在。
+- `opening` 首尾分别与 `closed` / `open` 匹配；`reward-pop` 首帧与 `open` 匹配。
+- 暗底接触表已检查：closed/opening/open/reward-pop 状态可读，无明显裁切，结构完整，reward-pop 元素可识别。

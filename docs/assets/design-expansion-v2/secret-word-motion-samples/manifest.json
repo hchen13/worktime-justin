@@ -1,0 +1,216 @@
+{
+  "card": "WTJ-20260704-065",
+  "asset_pack": "secret-word-motion-samples-v2",
+  "created_by": "Designer 2 / Automation:worktime-justin-designer-2-loop",
+  "source_style": "docs/assets/sprites/sprite-style-guide.md; docs/assets/production-pack-b/sprites/",
+  "frame_size": [
+    1024,
+    1024
+  ],
+  "fps": 10,
+  "loop": false,
+  "anchor": [
+    0.5,
+    0.78
+  ],
+  "contact_sheet": "contact-sheets/secret-word-motion-samples-contact-sheet.png",
+  "validation": {
+    "min_alpha_margin": 72
+  },
+  "sequences": [
+    {
+      "id": "dog",
+      "word": "dog",
+      "sequence": "hop-tail-swish",
+      "source_sprite": "docs/assets/production-pack-b/sprites/dog.png",
+      "local_source_copy": "source/dog.png",
+      "frames": [
+        "frames/dog/dog_hop_tail_swish_000.png",
+        "frames/dog/dog_hop_tail_swish_001.png",
+        "frames/dog/dog_hop_tail_swish_002.png",
+        "frames/dog/dog_hop_tail_swish_003.png",
+        "frames/dog/dog_hop_tail_swish_004.png"
+      ],
+      "sheet": "sheets/dog-hop-tail-swish-sheet.png",
+      "preview_gif": "previews/dog-hop-tail-swish-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 216,
+        "y": 112,
+        "width": 615,
+        "height": 696
+      },
+      "action_note": "小狗向上跳一下，末段带尾巴摆动弧线与落地软尘。",
+      "not_only_scale_or_opacity": true
+    },
+    {
+      "id": "cat",
+      "word": "cat",
+      "sequence": "lean-paw-wave",
+      "source_sprite": "docs/assets/production-pack-b/sprites/cat.png",
+      "local_source_copy": "source/cat.png",
+      "frames": [
+        "frames/cat/cat_lean_paw_wave_000.png",
+        "frames/cat/cat_lean_paw_wave_001.png",
+        "frames/cat/cat_lean_paw_wave_002.png",
+        "frames/cat/cat_lean_paw_wave_003.png",
+        "frames/cat/cat_lean_paw_wave_004.png"
+      ],
+      "sheet": "sheets/cat-lean-paw-wave-sheet.png",
+      "preview_gif": "previews/cat-lean-paw-wave-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 245,
+        "y": 129,
+        "width": 572,
+        "height": 718
+      },
+      "action_note": "小猫身体左右倾斜，右上方有 paw-wave 弧线，命中瞬间像招手。",
+      "not_only_scale_or_opacity": true
+    },
+    {
+      "id": "apple",
+      "word": "apple",
+      "sequence": "leaf-nod-pop",
+      "source_sprite": "docs/assets/production-pack-b/sprites/apple.png",
+      "local_source_copy": "source/apple.png",
+      "frames": [
+        "frames/apple/apple_leaf_nod_pop_000.png",
+        "frames/apple/apple_leaf_nod_pop_001.png",
+        "frames/apple/apple_leaf_nod_pop_002.png",
+        "frames/apple/apple_leaf_nod_pop_003.png",
+        "frames/apple/apple_leaf_nod_pop_004.png"
+      ],
+      "sheet": "sheets/apple-leaf-nod-pop-sheet.png",
+      "preview_gif": "previews/apple-leaf-nod-pop-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 209,
+        "y": 122,
+        "width": 633,
+        "height": 718
+      },
+      "action_note": "苹果轻轻点头，顶部叶子方向用弧线强调，带小高光星点。",
+      "not_only_scale_or_opacity": true
+    },
+    {
+      "id": "ball",
+      "word": "ball",
+      "sequence": "bounce-roll",
+      "source_sprite": "docs/assets/production-pack-b/sprites/ball.png",
+      "local_source_copy": "source/ball.png",
+      "frames": [
+        "frames/ball/ball_bounce_roll_000.png",
+        "frames/ball/ball_bounce_roll_001.png",
+        "frames/ball/ball_bounce_roll_002.png",
+        "frames/ball/ball_bounce_roll_003.png",
+        "frames/ball/ball_bounce_roll_004.png"
+      ],
+      "sheet": "sheets/ball-bounce-roll-sheet.png",
+      "preview_gif": "previews/ball-bounce-roll-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 178,
+        "y": 92,
+        "width": 707,
+        "height": 704
+      },
+      "action_note": "球体沿弧线弹跳并旋转，落地帧有压缩和软尘，适合短暂命中弹出。",
+      "not_only_scale_or_opacity": true
+    },
+    {
+      "id": "star",
+      "word": "star",
+      "sequence": "spin-spark",
+      "source_sprite": "docs/assets/production-pack-b/sprites/star.png",
+      "local_source_copy": "source/star.png",
+      "frames": [
+        "frames/star/star_spin_spark_000.png",
+        "frames/star/star_spin_spark_001.png",
+        "frames/star/star_spin_spark_002.png",
+        "frames/star/star_spin_spark_003.png",
+        "frames/star/star_spin_spark_004.png"
+      ],
+      "sheet": "sheets/star-spin-spark-sheet.png",
+      "preview_gif": "previews/star-spin-spark-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 198,
+        "y": 159,
+        "width": 715,
+        "height": 723
+      },
+      "action_note": "星星做一圈轻旋转，周围出现少量十字高光，不是静态透明度闪烁。",
+      "not_only_scale_or_opacity": true
+    },
+    {
+      "id": "car",
+      "word": "car",
+      "sequence": "zip-stop",
+      "source_sprite": "docs/assets/production-pack-b/sprites/car.png",
+      "local_source_copy": "source/car.png",
+      "frames": [
+        "frames/car/car_zip_stop_000.png",
+        "frames/car/car_zip_stop_001.png",
+        "frames/car/car_zip_stop_002.png",
+        "frames/car/car_zip_stop_003.png",
+        "frames/car/car_zip_stop_004.png"
+      ],
+      "sheet": "sheets/car-zip-stop-sheet.png",
+      "preview_gif": "previews/car-zip-stop-preview.gif",
+      "frame_count": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.78
+      ],
+      "bounds": {
+        "x": 165,
+        "y": 220,
+        "width": 735,
+        "height": 565
+      },
+      "action_note": "小车横向滑入并轻点头刹停，后方有短速度条，动作差异明确。",
+      "not_only_scale_or_opacity": true
+    }
+  ],
+  "quality_checks": [
+    "Six representative secret-word objects: dog, cat, apple, ball, star, car.",
+    "Each sequence has 5 transparent RGBA PNG frames, a sprite sheet, and a dark-canvas GIF preview.",
+    "Contact sheet includes 72px and 128px dark-canvas readability previews.",
+    "Motion is not opacity-only and not micro-scale-only; frames use position, rotation, squash/stretch, and semantic motion marks.",
+    "All PNG frame corners are transparent and alpha bounds keep safe padding.",
+    "This design pack does not replace the existing static word pool and requires PM routing before runtime integration."
+  ]
+}

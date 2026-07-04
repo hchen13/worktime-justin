@@ -1,0 +1,714 @@
+{
+  "pack_id": "design-expansion-v2-task-props-v2",
+  "card_id": "WTJ-20260704-064",
+  "created_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "status": "PM review candidate",
+  "style_baseline": [
+    "docs/assets/sprites/sprite-style-guide.md",
+    "docs/assets/production-pack-a/manifest.json",
+    "docs/assets/production-pack-b/manifest.json",
+    "docs/assets/production-animations-v1/manifest.json"
+  ],
+  "contact_sheet": "docs/assets/design-expansion-v2/task-props-v2/contact-sheets/task-props-v2-contact-sheet.png",
+  "excluded_due_to_recent_feedback": [
+    "basket",
+    "dog",
+    "treasure"
+  ],
+  "props": [
+    {
+      "id": "prop_apple_drag",
+      "name": "apple",
+      "source": "docs/assets/production-pack-b/sprites/apple.png",
+      "interaction_type": "drag",
+      "task_sentence": "Put the apple in the glowing spot.",
+      "recommended_use": "Draggable food object for collect, sort, or place-on-target tasks.",
+      "hit_area": {
+        "x": 72,
+        "y": 62,
+        "width": 368,
+        "height": 388
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_apple_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 86,
+        "top": 65,
+        "right": 86,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_ball_drag",
+      "name": "ball",
+      "source": "docs/assets/production-pack-b/sprites/ball.png",
+      "interaction_type": "drag",
+      "task_sentence": "Move the ball to the play spot.",
+      "recommended_use": "Round draggable object with strong 72 px readability.",
+      "hit_area": {
+        "x": 70,
+        "y": 70,
+        "width": 372,
+        "height": 372
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_ball_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 69,
+        "top": 65,
+        "right": 70,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_gift_drag",
+      "name": "gift",
+      "source": "docs/assets/production-pack-b/sprites/gift.png",
+      "interaction_type": "drag",
+      "task_sentence": "Carry the gift to the finish light.",
+      "recommended_use": "Reward-adjacent draggable object for task completion moments.",
+      "hit_area": {
+        "x": 78,
+        "y": 86,
+        "width": 356,
+        "height": 340
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_gift_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 80,
+        "top": 65,
+        "right": 80,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_flower_drag",
+      "name": "flower",
+      "source": "docs/assets/production-pack-b/sprites/flower.png",
+      "interaction_type": "drag",
+      "task_sentence": "Place the flower on the desk.",
+      "recommended_use": "Gentle draggable prop for calmer desk/workbench tasks.",
+      "hit_area": {
+        "x": 92,
+        "y": 58,
+        "width": 328,
+        "height": 392
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_flower_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 122,
+        "top": 65,
+        "right": 122,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_key_drag",
+      "name": "key",
+      "source": "docs/assets/production-pack-b/sprites/key.png",
+      "interaction_type": "drag",
+      "task_sentence": "Drag the key to the door.",
+      "recommended_use": "Thin object with generous hit area for toddler-friendly dragging.",
+      "hit_area": {
+        "x": 68,
+        "y": 96,
+        "width": 376,
+        "height": 314
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_key_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 108,
+        "top": 65,
+        "right": 108,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_star_drag",
+      "name": "star",
+      "source": "docs/assets/production-pack-b/sprites/star.png",
+      "interaction_type": "drag",
+      "task_sentence": "Move the star into the tray.",
+      "recommended_use": "Simple high-contrast draggable token.",
+      "hit_area": {
+        "x": 72,
+        "y": 72,
+        "width": 368,
+        "height": 368
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_star_drag.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 66,
+        "right": 65,
+        "bottom": 66
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_bell_click",
+      "name": "bell",
+      "source": "docs/assets/production-pack-b/sprites/bell.png",
+      "interaction_type": "click",
+      "task_sentence": "Tap the bell.",
+      "recommended_use": "Click/tap prompt with a later ring animation hook.",
+      "hit_area": {
+        "x": 72,
+        "y": 66,
+        "width": 368,
+        "height": 378
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_bell_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 133,
+        "top": 65,
+        "right": 134,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_lamp_click",
+      "name": "lamp",
+      "source": "docs/assets/production-pack-b/sprites/lamp.png",
+      "interaction_type": "click",
+      "task_sentence": "Turn on the lamp.",
+      "recommended_use": "Click/tap object that can connect to the accepted lamp animation.",
+      "hit_area": {
+        "x": 90,
+        "y": 52,
+        "width": 334,
+        "height": 402
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_lamp_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 118,
+        "top": 65,
+        "right": 118,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_faucet_click",
+      "name": "faucet",
+      "source": "docs/assets/production-pack-b/sprites/faucet.png",
+      "interaction_type": "click",
+      "task_sentence": "Turn off the faucet.",
+      "recommended_use": "Click/tap object that can connect to the accepted faucet animation.",
+      "hit_area": {
+        "x": 54,
+        "y": 116,
+        "width": 404,
+        "height": 280
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_faucet_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 83,
+        "right": 65,
+        "bottom": 84
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_door_click",
+      "name": "door",
+      "source": "docs/assets/production-pack-b/sprites/door.png",
+      "interaction_type": "click",
+      "task_sentence": "Open the door.",
+      "recommended_use": "Click/tap object that can connect to the accepted door animation.",
+      "hit_area": {
+        "x": 92,
+        "y": 50,
+        "width": 330,
+        "height": 406
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_door_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 106,
+        "top": 65,
+        "right": 106,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_drum_click",
+      "name": "drum",
+      "source": "docs/assets/production-pack-b/sprites/drum.png",
+      "interaction_type": "click",
+      "task_sentence": "Tap the drum.",
+      "recommended_use": "Click/tap object with clear cause-effect sound/motion potential.",
+      "hit_area": {
+        "x": 70,
+        "y": 76,
+        "width": 372,
+        "height": 360
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_drum_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 78,
+        "right": 65,
+        "bottom": 79
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_rocket_click",
+      "name": "rocket",
+      "source": "docs/assets/production-pack-b/sprites/rocket.png",
+      "interaction_type": "click",
+      "task_sentence": "Launch the rocket.",
+      "recommended_use": "Click/tap object for celebratory task transitions.",
+      "hit_area": {
+        "x": 94,
+        "y": 52,
+        "width": 326,
+        "height": 408
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_rocket_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 94,
+        "top": 65,
+        "right": 95,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_train_click",
+      "name": "train",
+      "source": "docs/assets/production-pack-b/sprites/train.png",
+      "interaction_type": "click",
+      "task_sentence": "Start the train.",
+      "recommended_use": "Click/tap object for short movement or sound feedback.",
+      "hit_area": {
+        "x": 40,
+        "y": 98,
+        "width": 432,
+        "height": 314
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_train_click.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 124,
+        "right": 65,
+        "bottom": 124
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_duck_find",
+      "name": "duck",
+      "source": "docs/assets/production-pack-b/sprites/duck.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the duck.",
+      "recommended_use": "Search target with a strong silhouette and warm color.",
+      "hit_area": {
+        "x": 72,
+        "y": 84,
+        "width": 368,
+        "height": 344
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_duck_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 82,
+        "top": 65,
+        "right": 82,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_cup_find",
+      "name": "cup",
+      "source": "docs/assets/production-pack-b/sprites/cup.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the cup.",
+      "recommended_use": "Search target with a broad, readable shape.",
+      "hit_area": {
+        "x": 62,
+        "y": 92,
+        "width": 388,
+        "height": 324
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_cup_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 114,
+        "right": 65,
+        "bottom": 115
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_cake_find",
+      "name": "cake",
+      "source": "docs/assets/production-pack-b/sprites/cake.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the cake.",
+      "recommended_use": "Search target with layered detail that still reads at small size.",
+      "hit_area": {
+        "x": 64,
+        "y": 92,
+        "width": 384,
+        "height": 332
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_cake_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 71,
+        "top": 65,
+        "right": 72,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_hat_find",
+      "name": "hat",
+      "source": "docs/assets/production-pack-b/sprites/hat.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the hat.",
+      "recommended_use": "Search target with a distinct color cap and bow silhouette.",
+      "hit_area": {
+        "x": 62,
+        "y": 104,
+        "width": 388,
+        "height": 300
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_hat_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 117,
+        "right": 65,
+        "bottom": 118
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_heart_find",
+      "name": "heart",
+      "source": "docs/assets/production-pack-b/sprites/heart.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the heart.",
+      "recommended_use": "Search target for reward or care-themed tasks.",
+      "hit_area": {
+        "x": 64,
+        "y": 74,
+        "width": 384,
+        "height": 364
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_heart_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 89,
+        "right": 65,
+        "bottom": 90
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_rainbow_find",
+      "name": "rainbow",
+      "source": "docs/assets/production-pack-b/sprites/rainbow.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the rainbow.",
+      "recommended_use": "Search target with high color contrast and recognizable arch shape.",
+      "hit_area": {
+        "x": 36,
+        "y": 126,
+        "width": 440,
+        "height": 254
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_rainbow_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 65,
+        "top": 137,
+        "right": 65,
+        "bottom": 138
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    },
+    {
+      "id": "prop_pencil_find",
+      "name": "pencil",
+      "source": "docs/assets/production-pack-b/sprites/pencil.png",
+      "interaction_type": "find",
+      "task_sentence": "Find the pencil.",
+      "recommended_use": "Search target that supports desk/workbench semantics.",
+      "hit_area": {
+        "x": 100,
+        "y": 54,
+        "width": 312,
+        "height": 404
+      },
+      "file": "docs/assets/design-expansion-v2/task-props-v2/props/prop_pencil_find.png",
+      "size_px": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "frame_count": 1,
+      "fps": null,
+      "loop": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "bounds": {
+        "left": 114,
+        "top": 65,
+        "right": 115,
+        "bottom": 65
+      },
+      "source_reuse": "accepted production-pack-b sprite normalized to 512 px transparent prop"
+    }
+  ],
+  "validation": {
+    "active_count": 20,
+    "all_rgba_512": true,
+    "transparent_corners": true,
+    "minimum_margin_px": 65,
+    "pure_chroma_pixels": 0,
+    "missing_paths": [],
+    "source_exact_chroma_pixels_recolored": 353,
+    "small_preview_sizes_shown_px": [
+      128,
+      72
+    ]
+  },
+  "handoff_note": "Design review only. PM should route a separate TL integration card if selected."
+}

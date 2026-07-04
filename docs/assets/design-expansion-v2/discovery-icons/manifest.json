@@ -1,0 +1,118 @@
+{
+  "card": "WTJ-20260704-061",
+  "asset_pack": "discovery-icons",
+  "created_by": "Designer 2 / Automation:worktime-justin-designer-2-loop",
+  "source_assets": {
+    "star": "source/star-sticker.png",
+    "sparkle": "source/sparkle-burst.png",
+    "working_status_light": "source/working-status-light.png",
+    "task_target_badge": "source/task-target-badge.png",
+    "dog": "source/dog.png",
+    "apple": "source/apple.png",
+    "rocket": "source/rocket.png",
+    "treasure": "source/treasure.png",
+    "bell": "source/bell.png"
+  },
+  "canvas": {
+    "source_size": [
+      1024,
+      1024
+    ],
+    "background": "transparent",
+    "target_slot_preview_px": 72
+  },
+  "icons": [
+    {
+      "id": "keyboard-star",
+      "category": "keyboard_exploration",
+      "filled": "filled/keyboard-star.png",
+      "muted": "muted/keyboard-star.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "keyboard-spark",
+      "category": "keyboard_exploration",
+      "filled": "filled/keyboard-spark.png",
+      "muted": "muted/keyboard-spark.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "milestone-three",
+      "category": "keyboard_exploration",
+      "filled": "filled/milestone-three.png",
+      "muted": "muted/milestone-three.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "milestone-five",
+      "category": "keyboard_exploration",
+      "filled": "filled/milestone-five.png",
+      "muted": "muted/milestone-five.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "word-dog",
+      "category": "secret_word_discovery",
+      "filled": "filled/word-dog.png",
+      "muted": "muted/word-dog.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "word-apple",
+      "category": "secret_word_discovery",
+      "filled": "filled/word-apple.png",
+      "muted": "muted/word-apple.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "word-star",
+      "category": "secret_word_discovery",
+      "filled": "filled/word-star.png",
+      "muted": "muted/word-star.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "word-treasure",
+      "category": "secret_word_discovery",
+      "filled": "filled/word-treasure.png",
+      "muted": "muted/word-treasure.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "task-check",
+      "category": "task_success",
+      "filled": "filled/task-check.png",
+      "muted": "muted/task-check.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "task-target",
+      "category": "task_success",
+      "filled": "filled/task-target.png",
+      "muted": "muted/task-target.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "task-light",
+      "category": "task_success",
+      "filled": "filled/task-light.png",
+      "muted": "muted/task-light.png",
+      "recommended_slot_size": 72
+    },
+    {
+      "id": "task-bell",
+      "category": "task_success",
+      "filled": "filled/task-bell.png",
+      "muted": "muted/task-bell.png",
+      "recommended_slot_size": 72
+    }
+  ],
+  "contact_sheet": "contact-sheets/discovery-icons-contact-sheet.png",
+  "quality_checks": [
+    "12 icon candidates across keyboard exploration, secret-word discovery, and task-success semantics.",
+    "Each icon has filled and muted transparent PNG states.",
+    "Contact sheet shows both 150px review scale and 72px five-slot scale.",
+    "All source icon PNGs are 1024x1024 RGBA with zero alpha at all corners.",
+    "Existing accepted production sprites are reused where possible to avoid style drift."
+  ]
+}

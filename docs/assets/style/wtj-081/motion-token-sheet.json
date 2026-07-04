@@ -1,0 +1,101 @@
+{
+  "card": "WTJ-20260704-081",
+  "owner": "Designer 1",
+  "runtimeIdentity": "Automation:worktime-justin-design-loop",
+  "updatedAtCst": "2026-07-04",
+  "canvas": {
+    "top": "#090d15",
+    "mid": "#06101d",
+    "bottom": "#050812",
+    "radialLight": "rgba(74, 128, 214, 0.18)",
+    "emptyStageRatio": 0.7
+  },
+  "header": {
+    "heightPx": 44,
+    "minHeightPx": 38,
+    "titleFontPx": 15,
+    "titleWeight": 800,
+    "lockSvgSizePx": 13,
+    "lockOpacity": 0.36
+  },
+  "footer": {
+    "heightPx": 92,
+    "minHeightPx": 78,
+    "divider": "rgba(156, 180, 220, 0.16)",
+    "background": "rgba(5, 10, 18, 0.72)",
+    "topGlow": "rgba(94, 231, 255, 0.06)"
+  },
+  "letters": {
+    "fontStack": "\"Arial Rounded MT Bold\", \"Arial Rounded Bold\", \"SF Pro Rounded\", \"SF Compact Rounded\", \"Avenir Next\", -apple-system, BlinkMacSystemFont, sans-serif",
+    "weight": 900,
+    "desktopSizeRangePx": [56, 148],
+    "targetMacCapPx": 132,
+    "rotationDegRange": [-12, 12],
+    "safeAreaPx": {
+      "topBottom": 72,
+      "sides": 48
+    },
+    "palette": ["#ffd84c", "#3ce7ff", "#ff675a", "#9cff38", "#ff77b8", "#82a8ff"],
+    "darkStrokeAlpha": 0.58,
+    "darkStrokeWidthRatio": 0.055,
+    "highlightAlpha": 0.2,
+    "highlightOffsetRatio": [-0.025, -0.035],
+    "closeGlowBlurRatio": 0.1,
+    "farGlowBlurRatio": 0.24,
+    "farGlowAlpha": 0.38
+  },
+  "letterMotion": {
+    "birthPopMs": 90,
+    "settleMs": 100,
+    "lifeMsRange": [800, 1500],
+    "scale": {
+      "start": 0.78,
+      "overshoot": 1.08,
+      "settled": 1
+    },
+    "driftPxRange": [18, 42],
+    "trailLengthPxRange": [58, 120],
+    "trailMaxOpacity": 0.42,
+    "easing": {
+      "pop": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "settle": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "fade": "ease-out"
+    },
+    "reducedMotion": {
+      "overshoot": false,
+      "drift": false,
+      "fadeMsRange": [600, 900]
+    }
+  },
+  "functionKeyFeedback": {
+    "spaceEnter": {
+      "category": "light",
+      "durationMs": 360,
+      "ringRadiusPx": [18, 96],
+      "ringStroke": "rgba(94,231,255,0.42)",
+      "stageLightBoost": 0.04
+    },
+    "modifiers": {
+      "category": "weak",
+      "durationMs": 220,
+      "maxOpacity": 0.22,
+      "reward": false
+    },
+    "digits": {
+      "category": "effective",
+      "maxSizePx": 118,
+      "trailMultiplier": 0.75
+    },
+    "punctuationArrowsOther": {
+      "category": "other",
+      "durationMs": 260,
+      "maxOpacity": 0.25,
+      "maxGlowPx": 40,
+      "reward": false
+    },
+    "sameFunctionKeyDecay": {
+      "nearZeroByPress": 4
+    }
+  }
+}
+

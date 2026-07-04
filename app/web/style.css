@@ -32,9 +32,10 @@ html, body {
 
 .debug-overlay {
   position: fixed;
-  /* top 从 10px 下移到 44px：WTJ-20260704-007 新增了顶部极简标题栏（.wtj-hud-topbar，
-     高度 34px），下移量确保 debug 叠层与顶栏/家长入口锁形 glyph 不重叠。 */
-  top: 44px;
+  /* top 从 44px 下移到 50px：WTJ-20260704-086 把 .wtj-hud-topbar 高度从 34px（007 占位值）
+     升到 081 已验收规范的 44px（motion-token-sheet.json header.heightPx），下移量确保 debug
+     叠层与顶栏/家长入口锁形 glyph 之间仍保留原先的留白间距（44px 顶栏 + 6px 间距）。 */
+  top: 50px;
   right: 12px;
   padding: 8px 10px;
   background: rgba(23, 29, 39, 0.55);

@@ -1,0 +1,322 @@
+{
+  "pack_id": "design-expansion-v2-find-targets",
+  "card_id": "WTJ-20260704-059",
+  "created_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "created_at_cst": "2026-07-04 14:57:35 CST",
+  "asset_class": "design_expansion_candidate_pack",
+  "style_baseline": "Normalized from production-pack-b sprites to keep the accepted 2.5D child-friendly look; excludes old low-quality basket/dog/treasure directions from this candidate set. Pure-magenta chroma flecks were removed during cleanup.",
+  "contact_sheet": "docs/assets/design-expansion-v2/find-targets/find-targets-contact-sheet.png",
+  "objects": [
+    {
+      "id": "apple",
+      "label_zh": "苹果",
+      "source": "docs/assets/production-pack-b/sprites/apple.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-apple.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          62,
+          41,
+          387,
+          430
+        ],
+        "normalized": [
+          0.1211,
+          0.0801,
+          0.7559,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "round fruit, strong red silhouette"
+    },
+    {
+      "id": "ball",
+      "label_zh": "彩球",
+      "source": "docs/assets/production-pack-b/sprites/ball.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-ball.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          46,
+          41,
+          419,
+          430
+        ],
+        "normalized": [
+          0.0898,
+          0.0801,
+          0.8184,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "large simple sphere and color bands"
+    },
+    {
+      "id": "bell",
+      "label_zh": "铃铛",
+      "source": "docs/assets/production-pack-b/sprites/bell.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-bell.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          110,
+          41,
+          292,
+          430
+        ],
+        "normalized": [
+          0.2148,
+          0.0801,
+          0.5703,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "clear task object with strong metal silhouette"
+    },
+    {
+      "id": "car",
+      "label_zh": "小汽车",
+      "source": "docs/assets/production-pack-b/sprites/car.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-car.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          41,
+          86,
+          430,
+          340
+        ],
+        "normalized": [
+          0.0801,
+          0.168,
+          0.8398,
+          0.6641
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "toy-like horizontal target, easy to spot"
+    },
+    {
+      "id": "duck",
+      "label_zh": "小鸭",
+      "source": "docs/assets/production-pack-b/sprites/duck.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-duck.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          58,
+          41,
+          396,
+          430
+        ],
+        "normalized": [
+          0.1133,
+          0.0801,
+          0.7734,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "yellow simple animal toy form, not the rejected dog direction"
+    },
+    {
+      "id": "flower",
+      "label_zh": "花朵",
+      "source": "docs/assets/production-pack-b/sprites/flower.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-flower.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          98,
+          41,
+          315,
+          430
+        ],
+        "normalized": [
+          0.1914,
+          0.0801,
+          0.6152,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "upright organic object, strong center"
+    },
+    {
+      "id": "key",
+      "label_zh": "钥匙",
+      "source": "docs/assets/production-pack-b/sprites/key.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-key.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          84,
+          41,
+          343,
+          430
+        ],
+        "normalized": [
+          0.1641,
+          0.0801,
+          0.6699,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "thin but recognizable, useful for hit-area padding test"
+    },
+    {
+      "id": "lamp",
+      "label_zh": "台灯",
+      "source": "docs/assets/production-pack-b/sprites/lamp.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-lamp.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          94,
+          41,
+          323,
+          430
+        ],
+        "normalized": [
+          0.1836,
+          0.0801,
+          0.6309,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "existing interaction object, distinctive cone shape"
+    },
+    {
+      "id": "rocket",
+      "label_zh": "火箭",
+      "source": "docs/assets/production-pack-b/sprites/rocket.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-rocket.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          71,
+          41,
+          370,
+          430
+        ],
+        "normalized": [
+          0.1387,
+          0.0801,
+          0.7227,
+          0.8398
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "high-delight target, distinct diagonal silhouette"
+    },
+    {
+      "id": "star",
+      "label_zh": "星星",
+      "source": "docs/assets/production-pack-b/sprites/star.png",
+      "file": "docs/assets/design-expansion-v2/find-targets/objects/find-target-star.png",
+      "hit_area": {
+        "shape": "rounded_rect",
+        "frame_px": [
+          41,
+          42,
+          430,
+          428
+        ],
+        "normalized": [
+          0.0801,
+          0.082,
+          0.8398,
+          0.8359
+        ],
+        "padding_px": 22,
+        "recommended_min_display_px": 96,
+        "recommended_default_display_px": 128
+      },
+      "small_size_note": "simple reward-like target with very strong small-size read"
+    }
+  ],
+  "feedback_sets": {
+    "ring_pulse": {
+      "type": "loopable_hover_ring",
+      "fps": 12,
+      "loop": true,
+      "frame_size_px": [
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "frames": [
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_000.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_001.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_002.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_003.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_004.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_005.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_006.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/ring-pulse/ring_pulse_007.png"
+      ],
+      "sheet": "docs/assets/design-expansion-v2/find-targets/sheets/ring-pulse-sheet.png",
+      "preview": "docs/assets/design-expansion-v2/find-targets/previews/ring-pulse-preview.gif",
+      "recommended_use": "while pointer/hover remains over the target or for a short confirm pulse"
+    },
+    "check_spark": {
+      "type": "one_shot_success_confirm",
+      "fps": 12,
+      "loop": false,
+      "frame_size_px": [
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "frames": [
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_000.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_001.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_002.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_003.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_004.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_005.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_006.png",
+        "docs/assets/design-expansion-v2/find-targets/feedback/check-spark/check_spark_007.png"
+      ],
+      "sheet": "docs/assets/design-expansion-v2/find-targets/sheets/check-spark-sheet.png",
+      "preview": "docs/assets/design-expansion-v2/find-targets/previews/check-spark-preview.gif",
+      "recommended_use": "one-shot when the child lands on the correct target; do not loop permanently"
+    }
+  },
+  "review_notes": [
+    "At least 8 objects required; this pack provides 10.",
+    "Every object has a rounded-rect hit area in 512px coordinates and normalized coordinates.",
+    "Contact sheet includes 72px previews on the dark app canvas to check small-size readability.",
+    "Hover feedback assets are generated as transparent PNG overlays and can be composited above any target.",
+    "No old basket/dog/treasure candidate is included in this review pack."
+  ]
+}

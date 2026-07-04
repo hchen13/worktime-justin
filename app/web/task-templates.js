@@ -90,6 +90,59 @@
 // 改动本文件的任务判定逻辑。详见 app/web/assets/task-props/PROVENANCE.md「animation state
 // 接口预留」一节。
 //
+// 上面这段是 014 首次交付时的记录，**056 卡起，faucet/horse/lamp 三个道具的"真正的动效实现"
+// 已经接上**（door/bell 因 DESIGN v1_boundary.deferred_to_v2 素材未验收，继续走本节描述的
+// 静态占位，见下方「五、动效引擎接入」一节），data-anim-state 属性本身的读写时机完全不变
+// （创建时 idle，onClick 命中后切 active），只是 idle→active 现在真的驱动了一段
+// WTJ_FRAME_ANIM 播放的分帧动画，而不再只是一段 CSS transition。
+//
+// -----------------------------------------------------------------------
+// 五、动效引擎接入（WTJ-20260704-056，三路技术评审定案：Canvas 逐帧 + 可注入时钟 + 构建期
+// 降采样，方案与实现细节见 app/web/frame-anim.js 与 app/web/anim/FRAME-ANIM-API.md）
+// -----------------------------------------------------------------------
+// 本卡改动范围只有 createPropEl()（把动效道具的承载元素从 <img> 换成 <canvas>，非动效道具
+// 与引擎缺失时的回退路径仍然是 <img>）与 renderClickTask()（onClick 命中时从"切换
+// targetSpriteActive 静态贴图"改为"WTJ_FRAME_ANIM.play() 播放 activeState"）+
+// handleTemplateComplete()/scheduleElementsRemoval() 的 COMPLETE_VISUAL_HOLD 耦合修正。
+// 拖拽/寻找两类任务的道具渲染路径不变（它们目前的 manifest 示例都不引用 faucet/horse/lamp
+// 三个已接入引擎的 prop，仍然全程走静态 img；若未来某个 drag/find 示例的 sprite 文件名恰好
+// 命中这三者，createPropEl() 会通用地按 idle 态播放循环动效，设计上是通用的，不是只服务
+// click 任务类型）。
+//
+// **per-prop idle/active 映射表**（PROP_ANIM_STATE_MAP，二值 idle/active → anim-manifest.js
+// 里的具体 state 名）：
+//
+//   | prop   | idle（常驻/静息） | active（onClick 命中后播放）        | 选择理由 |
+//   |--------|-------------------|--------------------------------------|----------|
+//   | faucet | 'off'（水龙头关，单帧静止）      | 'running'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，见下） | 计入 v1_boundary，off 天然是"没人碰"的静息态；running 是唯一有"水在流"视觉意图的 state |
+//   | horse  | 'idle'（源数据 loop:true，马原地小动作）  | 'run'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，与 faucet 的 running 完全同构，见下） | REQ-TASK-08"点一下小马跑起来"要求 onClick 命中后**实际播放奔跑动效**；'run' 正是 anim-manifest.js 里 idle/run/stop_success 三态之一，资源可解析。faucet 已是先例：faucet.active='running' 同为 loop:true 源数据，靠 renderClickTask 传入的 {loop:false} 覆盖成"播一轮定格"，horse 'run' 走的是同一条通用路径，不是新逻辑。**不实现 run→stop_success 链**：068 的 run-sheet 正在返工、资产仍在流动中，run-only 已满足 072 验收 criterion 3（断言 click 后首先播放 run）且与 faucet 保持一致；链式收尾留作 068 定稿后的未来增强评估项，非本卡范围（PM 打回 072：旧版 active=stop_success 会让"点一下跑起来"不成立、也让 068 run-sheet 在运行态看不到，故本卡改回 run，替换掉上一轮"run 无自然终帧"的论证） |
+//   | lamp   | 'off'（灯灭，单帧静止）          | 'turning-on'（源数据 loop:false，一次性点亮过程）                    | 与卡片原文"lamp active→turning-on"完全一致 |
+//
+// door/bell **有意不在这张表里**：PROP_ANIM_STATE_MAP 没有它们的 key，
+// resolvePropAnimInfo() 对它们恒返回 null，createPropEl() 因此恒回退静态 <img>——这不是
+// 遗漏，是 v1_boundary.deferred_to_v2（DESIGN 素材质量未验收）在本文件的落地方式，上游依赖
+// DESIGN 补齐 v2 版本，见 FRAME-ANIM-API.md 第 7 节。
+//
+// **onClick 播放 activeState 时统一传 { loop:false, onComplete }**：即使某个 state 的源数据
+// 本身 loop:true（如 faucet 的 running），onClick 场景下也要求它"播完一轮后 clamp 定住"而
+// 不是无限循环——这正是 WTJ_FRAME_ANIM.play() 的 opts.loop 覆盖能力存在的原因（同一份 state
+// 数据在 idle 场景下可能被复用为持续循环，在 active/完成场景下被复用为"播一轮定格"）。
+// onComplete 目前是预留 no-op（详见 renderClickTask() 内联注释）：字面 API 形状要求传它，
+// 但本卡定案的映射表都是"单一 activeState 播完即定格"这一最简单方案，没有实现"完成后再接一段
+// 收尾动画"（例如 faucet 的 running→closing 链）这类更复杂的编排——卡片原文允许这个更简单的
+// 变体（"running（或 running→closing 链）"），本卡选择前者，理由：更少状态、更少可能出错的
+// 编排代码，且 running 本身停在最后一帧（水柱清晰可见）已经足够传达"任务完成"的视觉反馈，不
+// 需要额外用 closing 收尾。若 PM/DESIGN 认为链式收尾是必须的产品体验，属于后续卡的评估项。
+//
+// **COMPLETE_VISUAL_HOLD 与 getDuration() 的耦合修正**（P0 红线，卡片原文明确指出"现在
+// 800ms 恰≥success 时长是巧合非契约"）：computeVisualHoldMs() 在完成瞬间用
+// WTJ_FRAME_ANIM.getDuration(prop, activeState) 读出这个 state 播完一轮实际需要多少毫秒，
+// hold = Math.max(COMPLETE_VISUAL_HOLD_MS（800，既有占位下限）, duration + 缓冲)——非动效
+// 道具（door/bell/drag/find 等）没有 prop/activeState，直接沿用 800ms 不变。三个已接入道具
+// 里 horse.run（8 帧 @12fps ≈ 667ms + 150ms 缓冲 = 817ms；072 返工后 horse.active 由
+// stop_success 改为 run，二者巧合同为 ≈667ms，本地板分支的数值论证不变）已经在本次实现里
+// 真实触发了"实际时长超过 800ms 地板"的分支，不是纯假设场景。
+//
 // -----------------------------------------------------------------------
 // 对外 API（window.WTJ_TASK_TEMPLATES，Object.freeze 冻结 + 绑定加固）
 // -----------------------------------------------------------------------
@@ -147,7 +200,9 @@
       { id: 'drag-apple-to-basket', objectSprite: 'sprites/apple.png', targetSprite: 'sprites/basket.png', voicePrompt: 'audio/tasks/drag-apple-to-basket.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     click: [
-      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     find: [
       { id: 'find-the-dog', targetSprite: 'sprites/dog.png', distractorSprites: ['sprites/cat.png', 'sprites/ball.png'], voicePrompt: 'audio/tasks/find-the-dog.m4a', successAudio: 'audio/sfx/task-success.m4a' }
@@ -194,12 +249,15 @@
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
 
-  // 已知的 stub 文件名别名：manifest.js 的 click.examples[0] 把 targetSprite/targetSpriteActive
-  // 写成 'sprites/lamp-off.png' / 'sprites/lamp-on.png'（manifest 行内注释明确标注为 stub，
-  // 灯具未点亮/点亮两态分离素材尚未到位），但 Pack A（WTJ-20260704-005）只交付了一张
-  // `lamp.png`。这里把这两个 stub 文件名都别名到唯一真实存在的 lamp.png——idle/active 两态
-  // 渲染同一张图，视觉差异完全靠 CSS（[data-anim-state] 规则，见 task-templates.css），不是
-  // 最终产品分态贴图。见 app/web/assets/task-props/PROVENANCE.md「灯具 idle/active 分态说明」。
+  // 已知的 stub 文件名别名：早期 manifest.js 的 click.examples[0] 曾把 targetSprite/
+  // targetSpriteActive 写成 'sprites/lamp-off.png' / 'sprites/lamp-on.png'（分态灯具素材
+  // 未到位时的占位写法），但 Pack A（WTJ-20260704-005）只交付了一张 `lamp.png`，这里把这两个
+  // stub 文件名都别名到唯一真实存在的 lamp.png。**072 起 manifest.js 已直接改用 'lamp.png'
+  // 字面值**（见 manifest.js click.examples[0] 行内注释），本别名表不再是解析路径上的必经
+  // 分支，只作防御式向后兼容保留（万一未来又出现引用 lamp-off/lamp-on 字面值的 example 或
+  // 外部调用，不会 404）。idle/active 两态渲染同一张图，视觉差异完全靠 CSS（[data-anim-state]
+  // 规则，见 task-templates.css）与 056 起接入的帧动画，不是最终产品分态贴图。见
+  // app/web/assets/task-props/PROVENANCE.md「灯具 idle/active 分态说明」。
   var SPRITE_FILENAME_ALIASES = {
     'lamp-off.png': 'lamp.png',
     'lamp-on.png': 'lamp.png'
@@ -250,6 +308,39 @@
 
   function wantsAnimState(spriteFile) {
     return inList(ANIM_STATE_FILENAMES, resolvedBaseName(spriteFile));
+  }
+
+  // ---------------------------------------------------------------------
+  // 056 动效引擎接入：per-prop idle/active 映射表（见文件头「五、动效引擎接入」一节的表格与
+  // 逐条理由）。door/bell 有意不在这张表里——resolvePropAnimInfo() 对它们恒返回 null，
+  // createPropEl() 因此恒回退静态 <img>，这是 v1_boundary.deferred_to_v2 在本文件的落地
+  // 方式，不是遗漏。
+  // ---------------------------------------------------------------------
+  var PROP_ANIM_STATE_MAP = {
+    faucet: { idle: 'off', active: 'running' },
+    horse: { idle: 'idle', active: 'run' },
+    lamp: { idle: 'off', active: 'turning-on' }
+  };
+
+  // 把一个 spriteFile（如 'sprites/lamp-off.png'）解析成"这个道具在 WTJ_FRAME_ANIM 引擎里
+  // 对应的 prop key + idle/active state 名"，五个 animation-state 预留道具之外的 spriteFile
+  // （apple/basket/dog/cat/ball/doghouse 等）与 door/bell 两个未接入引擎的道具都返回 null。
+  // 复用 resolvedBaseName()（而不是 baseName()）是刻意的：'lamp-off.png'/'lamp-on.png' 这两个
+  // stub 文件名要先经过 SPRITE_FILENAME_ALIASES 别名解析成 'lamp.png'，再去掉扩展名得到
+  // prop key 'lamp'，与 wantsAnimState() 判断"是否该有 data-anim-state 属性"用的是同一份
+  // 名称解析逻辑，两者保持一致不会出现"有 data-anim-state 但引擎映射查不到"的错配。
+  function resolvePropAnimInfo(spriteFile) {
+    if (!wantsAnimState(spriteFile)) {
+      return null;
+    }
+    var name = resolvedBaseName(spriteFile);
+    var dotIdx = name.lastIndexOf('.');
+    var prop = dotIdx === -1 ? name : name.slice(0, dotIdx);
+    var states = PROP_ANIM_STATE_MAP[prop];
+    if (!states) {
+      return null; // door/bell（或未来任何尚未接入引擎的预留道具）在此回退，见上方注释。
+    }
+    return { prop: prop, idleState: states.idle, activeState: states.active };
   }
 
   // ---------------------------------------------------------------------
@@ -330,15 +421,69 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // WTJ_FRAME_ANIM 防御式调用包装（056 引擎，可能整体缺失/未加载——与 WTJ_POINTER/WTJ_HUD/
+  // WTJ_AUDIO 同一降级契约）。
+  // ---------------------------------------------------------------------
+  function playPropAnimDefensive(canvasEl, prop, state, opts) {
+    try {
+      if (window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.play === 'function') {
+        return !!window.WTJ_FRAME_ANIM.play(canvasEl, prop, state, opts);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] window.WTJ_FRAME_ANIM.play 调用失败，已捕获：', err);
+    }
+    return false;
+  }
+
+  function stopPropAnimDefensive(canvasEl) {
+    try {
+      if (window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.stop === 'function') {
+        window.WTJ_FRAME_ANIM.stop(canvasEl);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] window.WTJ_FRAME_ANIM.stop 调用失败，已捕获：', err);
+    }
+  }
+
+  function frameAnimAvailable() {
+    try {
+      return !!(window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.play === 'function');
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // 056：动效道具（faucet/horse/lamp）挂载 <canvas> + 用引擎播放 idleState（loop:true）；
+  // 非动效道具与 door/bell（resolvePropAnimInfo() 返回 null）、以及引擎缺失/play() 失败时
+  // 一律回退原有的静态 <img> 占位——这是本函数唯一的分支点，调用方（renderDragTask()/
+  // renderClickTask()/renderFindTask()）完全不需要关心某个具体元素最终是 canvas 还是 img。
   function createPropEl(spriteFile, pos, extraClass) {
     var root = ensureOverlayRoot();
     if (!root) {
       return null;
     }
     try {
-      var el = document.createElement('img');
+      var animInfo = resolvePropAnimInfo(spriteFile);
+      var el = null;
+
+      if (animInfo && frameAnimAvailable()) {
+        var canvasCandidate = document.createElement('canvas');
+        if (playPropAnimDefensive(canvasCandidate, animInfo.prop, animInfo.idleState, { loop: true })) {
+          el = canvasCandidate;
+          if (typeof el.setAttribute === 'function') {
+            el.setAttribute('data-wtj-anim-prop', animInfo.prop);
+          }
+        }
+        // play() 失败（理论上罕见：anim-manifest 缺这个 prop/state 的条目）时 canvasCandidate
+        // 直接丢弃——还没 appendChild 到任何父节点，不需要额外清理，下面统一走静态 img 回退。
+      }
+      if (!el) {
+        el = document.createElement('img');
+        el.src = resolveSpritePath(spriteFile);
+      }
+
       el.className = extraClass ? 'wtj-tt-prop ' + extraClass : 'wtj-tt-prop';
-      el.src = resolveSpritePath(spriteFile);
       el.alt = '';
       if (pos && el.style) {
         el.style.left = pos.left;
@@ -349,6 +494,13 @@
         if (wantsAnimState(spriteFile)) {
           el.setAttribute('data-anim-state', 'idle');
         }
+        // WTJ-080 根因修复：<img> 默认 draggable=true，会让浏览器/WKWebView 在 mousedown 时启动
+        // 原生 HTML5 拖拽（半透明 ghost 跟指针、原物留原位），原生拖拽期间 mousemove/mouseup 被
+        // drag 系事件取代不再派发，导致 pointer.js 的 onMouseUp 永不触发、拖拽状态机卡死、任务
+        // 永不完成。这里统一禁用（canvas 分支本无此默认行为，但一并设置无害，防止未来引擎改用
+        // 别的可拖拽元素类型时悄悄引入同一个坑）。CSS 侧另有 -webkit-user-drag:none 作为
+        // Safari/WKWebView 专属兜底（draggable=false 在 Safari 对 img 有时不够彻底）。
+        el.setAttribute('draggable', 'false');
       }
       root.appendChild(el);
       return el;
@@ -387,6 +539,12 @@
     if (!el) {
       return;
     }
+    // 056：若该元素是引擎播放中的 <canvas>，先停掉它的 tick 定时器再摘 DOM——不这样做的话，
+    // 引擎的 setTimeout 链会继续对着一个已经从文档树摘除的 canvas 空转（尤其是常驻的循环
+    // idle 播放，见 app/web/anim/FRAME-ANIM-API.md「idle-stop」一节"stop() 时清 tick"这条
+    // 无条件下限）。对非 canvas / 从未注册过的元素调用 WTJ_FRAME_ANIM.stop() 是安全的
+    // no-op（找不到匹配的播放态直接返回），因此这里可以无条件调用，不需要先判断 tagName。
+    stopPropAnimDefensive(el);
     try {
       if (typeof el.remove === 'function') {
         el.remove();
@@ -438,6 +596,31 @@
   var pendingRemovalTimerId = null;
   var pendingRemovalElements = null;
 
+  // 056：COMPLETE_VISUAL_HOLD_MS（800）曾经是"恰好 >= 唯一一种完成态视觉时长"的巧合，不是
+  // 契约——现在动效道具的 activeState 真的有一个由 WTJ_FRAME_ANIM.getDuration() 给出的确切
+  // 播放时长，hold 窗口必须不短于这个时长，否则素材以后加长会被腰斩（DOM 在动画播完前就被
+  // 摘掉）。computeVisualHoldMs()：非动效道具（animProp/animActiveState 为 null，即 door/
+  // bell/drag/find 等）直接沿用 800ms 既有下限；动效道具取
+  // Math.max(800, getDuration(prop, activeState) + 缓冲)。
+  var COMPLETE_VISUAL_HOLD_BUFFER_MS = 150; // 缓冲：给最后一帧真正被 paint 出来留一点余量。
+
+  function computeVisualHoldMs(animProp, animActiveState) {
+    if (!animProp || !animActiveState) {
+      return COMPLETE_VISUAL_HOLD_MS;
+    }
+    try {
+      if (window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.getDuration === 'function') {
+        var dur = window.WTJ_FRAME_ANIM.getDuration(animProp, animActiveState);
+        if (typeof dur === 'number' && dur > 0) {
+          return Math.max(COMPLETE_VISUAL_HOLD_MS, dur + COMPLETE_VISUAL_HOLD_BUFFER_MS);
+        }
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 window.WTJ_FRAME_ANIM.getDuration 失败，已捕获，沿用默认完成态可见窗口：', err);
+    }
+    return COMPLETE_VISUAL_HOLD_MS;
+  }
+
   // 立即执行一次尚未到期的延迟移除（不等定时器自然触发）：供下一次问号点击/dismiss 兜底清理，
   // 防止上一轮完成态的叠层元素残留跨越任务边界继续堆积在 DOM 里。
   function flushPendingRemoval() {
@@ -454,11 +637,12 @@
     }
   }
 
-  function scheduleElementsRemoval(elements) {
+  function scheduleElementsRemoval(elements, holdMs) {
     flushPendingRemoval(); // 保险：正常不应该有上一轮残留，避免两次完成的延迟移除互相覆盖。
     if (!elements || !elements.length) {
       return;
     }
+    var delay = (typeof holdMs === 'number' && holdMs > 0) ? holdMs : COMPLETE_VISUAL_HOLD_MS;
     pendingRemovalElements = elements;
     pendingRemovalTimerId = clockRef.setTimeout(function () {
       pendingRemovalTimerId = null;
@@ -469,7 +653,7 @@
           removeElementDefensive(els[i]);
         }
       }
-    }, COMPLETE_VISUAL_HOLD_MS);
+    }, delay);
   }
 
   // ---------------------------------------------------------------------
@@ -570,7 +754,9 @@
     activeRuntime = null; // 立即清空"进行中任务"：guard 生效，迟到的重复完成回调不会二次触发。
 
     unregisterRuntimeTargets(completedRuntime);
-    scheduleElementsRemoval(completedRuntime.elements);
+    // 056：hold 窗口不再是硬编码的 800ms——见 computeVisualHoldMs() 一节，非动效道具
+    // （animProp/animActiveState 均为 null）沿用 800ms 原值，动效道具按 getDuration() 校正。
+    scheduleElementsRemoval(completedRuntime.elements, computeVisualHoldMs(completedRuntime.animProp, completedRuntime.animActiveState));
 
     setStatusLightDefensive(lightIndex, true);
     playSuccessAudioDefensive(example);
@@ -708,11 +894,29 @@
 
     var targetId = 'wtj-tt-click-target-' + example.id;
 
+    // 056：只有当 createPropEl() 真的用上了引擎（拿到一个 <canvas>）时才走 WTJ_FRAME_ANIM
+    // 播放 activeState 这条路径；animInfo 非空只代表"这个 spriteFile 理论上在三个已接入引擎
+    // 的道具清单里"（PROP_ANIM_STATE_MAP），createPropEl() 仍可能因为引擎缺失/play() 失败而
+    // 退回静态 <img>（door/bell 或引擎完全未加载时的最终兜底）——用 targetEl.tagName 是否为
+    // CANVAS 二次确认，避免"以为用了引擎但其实拿到的是 img"这种错配。
+    var animInfo = resolvePropAnimInfo(example.targetSprite);
+    var usingEngine = !!(animInfo && targetEl.tagName && String(targetEl.tagName).toUpperCase() === 'CANVAS');
+
     registerPointerTargetDefensive(targetId, {
       el: targetEl,
       accepts: ['click'],
       onClick: function () {
-        if (example.targetSpriteActive) {
+        if (usingEngine) {
+          // 统一 { loop:false }：即使 activeState 源数据本身 loop:true（如 faucet 的
+          // running），点击命中后也要求"播完一轮后 clamp 定住"而不是无限循环，见文件头
+          // 「五、动效引擎接入」一节。onComplete 目前是预留 no-op（同节说明为什么本卡选择
+          // "单一 activeState 播完即定格"而不是 running→closing 这类链式收尾）。
+          playPropAnimDefensive(targetEl, animInfo.prop, animInfo.activeState, {
+            loop: false,
+            onComplete: function () {}
+          });
+        } else if (example.targetSpriteActive) {
+          // 非动效道具、或引擎缺失/播放失败时的静态 img 回退：沿用 014 首次交付的静态切图。
           setPropSpriteSrc(targetEl, example.targetSpriteActive);
         }
         // P2-1（Fable 对抗评审）：与创建时机对称——createPropEl() 只在 wantsAnimState() 为真时
@@ -726,7 +930,14 @@
       }
     });
 
-    return { elements: [targetEl], pointerIds: [targetId] };
+    return {
+      elements: [targetEl],
+      pointerIds: [targetId],
+      // 056：供 handleTemplateComplete() 的 computeVisualHoldMs() 读取；非引擎路径为 null，
+      // 沿用既有 800ms 默认 hold（见该函数与文件头「COMPLETE_VISUAL_HOLD 耦合修正」一节）。
+      animProp: usingEngine ? animInfo.prop : null,
+      animActiveState: usingEngine ? animInfo.activeState : null
+    };
   }
 
   // ---------------------------------------------------------------------
@@ -904,7 +1115,11 @@
       emphasizeElements: (runtime && runtime.emphasizeElements) || (runtime && runtime.elements) || [],
       dragObjectId: (runtime && runtime.dragObjectId) || null,
       dragObjectEl: (runtime && runtime.dragObjectEl) || null,
-      dragObjectInitialPos: (runtime && runtime.dragObjectInitialPos) || null
+      dragObjectInitialPos: (runtime && runtime.dragObjectInitialPos) || null,
+      // 056：仅 renderClickTask() 在真正用上引擎时会填充这两项，其余类型/回退路径均为 null，
+      // 见 computeVisualHoldMs() 的消费方式。
+      animProp: (runtime && runtime.animProp) || null,
+      animActiveState: (runtime && runtime.animActiveState) || null
     };
 
     questionClickCounter += 1;

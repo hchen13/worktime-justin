@@ -24,8 +24,10 @@
 //                              category: 'light' | 'weak' | 'other'；intensity: 0~1，
 //                              随同键连打快速衰减（REQ-KB-06）。功能键永不计入有效键/里程碑。
 //   getEffectiveKeyCount()     返回当前累计有效键计数。
-//   resetEffectiveKeyCount()   重置有效键计数与已触发里程碑记录（供五槽轮次重置等场景调用；
-//                              不重置"连续同键"节奏状态，那是另一套与轮次无关的判定）。
+//   resetEffectiveKeyCount()   重置有效键计数、已触发里程碑记录，**以及"连续同键"节奏状态
+//                              （lastKeyId/sameKeyStreak）**（供五槽轮次重置等场景调用；
+//                              WTJ-20260704-066 修复前这套节奏状态不随轮次重置，见下方
+//                              「轮次边界」一节）。
 //
 // -----------------------------------------------------------------------
 // 判定规则设计说明（对应 docs/index.html #keyboard REQ-KB-01~09 / #params / #slots REQ-SLOT-03）
@@ -69,6 +71,32 @@
 //    来源、避免槽位冲突/重复分配的统一状态机属于 010 槽位引擎卡（sources: ['secret-word',
 //    'keyboard-milestone']，见 manifest.js slots 域），008 卡不越权实现该分配逻辑，只保证
 //    "触发即防御式点亮一槽"这一最小契约成立，供 010 卡日后接管/改造。
+//
+// -----------------------------------------------------------------------
+// 轮次边界（WTJ-20260704-066 缺陷修复：QA 020 对抗评审发现的"首键被上轮 streak 吞"）
+// -----------------------------------------------------------------------
+// 缺陷复现：五槽满 → 010 WTJ_SLOTS.reset() 开新一轮 → 调用本文件 resetEffectiveKeyCount()。
+// 修复前该函数只清 effectiveKeyCount + firedMilestones，**没有清 lastKeyId / sameKeyStreak**
+// ——这套"连续同键"节奏状态是跨轮持续存在的模块级闭包变量。若上一轮结束前恰好某键连打触发了
+// "> 3 次暂停"（sameKeyStreak 已 > PAUSE_AFTER_COUNT），且新一轮开局第一次按键恰好是同一个键，
+// handleAlnumKey() 会在 `normalized === lastKeyId` 分支继续累加 streak（而不是判定为"换键"
+// 重新从 1 计数），导致新一轮首键直接被暂停规则吞掉——不计入 effectiveKeyCount、不触发
+// onLetter，且用户完全无感知（无报错、无视觉差异）。
+//
+// 修复：resetEffectiveKeyCount() 增加清空 lastKeyId（置 null）与 sameKeyStreak（置 0），
+// 而非新增一个独立的 resetInputGate() 方法——理由与 009 的 buffer 清空同款：语义上"新一轮"
+// 就该让这套输入门控从一张白纸开始，010 已经调用 resetEffectiveKeyCount()，一并清理不需要
+// App/010 侧新增调用点。已确认此改动不破坏 008 现有单测（现有 "resetEffectiveKeyCount：清零
+// 计数与已触发里程碑" 用例前后两段均以交替按键 a/s 驱动，streak 始终为 1，不依赖 reset 前后
+// streak 是否保留）。
+//
+// 与 009（秘密词 rolling buffer）的关系：两者是**两个独立机制**——sameKeyStreak 是"连续同键
+// 防刷"计数（本轮内可衰减：连续按同键第 4 次起暂停触发，衰减/暂停行为在本轮内持续生效，防止
+// 无脑连打刷屏；见设计说明第 3 条），009 的 buffer 是"字母流 → 秘密词匹配"的滚动窗口——互不
+// 读写对方状态。但两者都属于"轮次内的瞬时输入流状态"：探索计数在本轮内可衰减（同键 > 3 暂停
+// 是本轮内的防刷机制，不因这次修复而改变），reset 后 streak 清零、新一轮首键重新从 1 计数
+// （"恢复"）——防刷与"reset 后恢复"两个目标不冲突，防刷只作用于"同一轮内的连续行为"，reset
+// 代表新一轮的输入历史归零，理应重新给用户一次"从头计数"的机会。
 //
 // -----------------------------------------------------------------------
 // REQ-KB-01~09 逐条落地位置索引（供 PM/QA 对照）：
@@ -199,6 +227,11 @@
   function resetEffectiveKeyCount() {
     effectiveKeyCount = 0;
     firedMilestones = {};
+    // WTJ-20260704-066 修复：连续同键节奏状态也在轮次边界清空，新一轮首键不被上一轮遗留的
+    // "同键 > 3 暂停"状态误吞。防刷计数本身仍是"本轮内可衰减"（同键连打第 4 次起暂停，行为
+    // 不变），reset 后清零即为"新一轮恢复"——见文件顶部「轮次边界」一节的详细说明。
+    lastKeyId = null;
+    sameKeyStreak = 0;
   }
 
   function milestoneSlotIndex(milestoneValue) {

@@ -2,14 +2,15 @@
   "pack_id": "production-animations-v1-horse",
   "card_id": "WTJ-20260704-028",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 02:40",
+  "updated_at_cst": "2026-07-04 18:00",
   "source": "docs/assets/production-animations-v1/source/horse-base.png",
   "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
   "asset_spec": {
     "format": "PNG frames",
     "color_mode": "RGBA",
     "canvas": "1024x1024",
-    "background": "transparent"
+    "background": "transparent",
+    "rework_note": "P0 PM-return cleanup WTJ-20260704-068: run frames were reprocessed against actual production PNGs. Every run frame now drops ultra-faint alpha residue, chroma-green matte pixels, and isolated low-alpha blue/cyan edge pixels, then keeps only the largest alpha>0 horse component."
   },
   "contact_sheet": "docs/assets/production-animations-v1/horse/horse-contact-sheet.png",
   "previews": {
@@ -48,10 +49,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/run-sheet.png",
       "bounds": [
-        63,
-        125,
-        887,
-        889
+        152,
+        205,
+        892,
+        882
       ],
       "frames": [
         "docs/assets/production-animations-v1/horse/run/horse_run_000.png",
@@ -62,7 +63,8 @@
         "docs/assets/production-animations-v1/horse/run/horse_run_005.png",
         "docs/assets/production-animations-v1/horse/run/horse_run_006.png",
         "docs/assets/production-animations-v1/horse/run/horse_run_007.png"
-      ]
+      ],
+      "run_cycle_note": "8-frame trot/run loop with clear alternating leg poses. PM-return pass cleans actual PNGs by removing low-alpha chroma/blue residue and all non-main alpha>0 islands; no body-bob-only substitute, no speed lines, no dust, no black blocks, no vertical leg glitches, and no left-side floating fragment in horse_run_003."
     },
     "stop_success": {
       "fps": 9,
@@ -73,10 +75,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/stop-success-sheet.png",
       "bounds": [
-        81,
-        133,
-        901,
-        883
+        152,
+        150,
+        872,
+        882
       ],
       "frames": [
         "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_000.png",
@@ -88,5 +90,27 @@
       ]
     }
   },
-  "scope_note": "This card intentionally covers horse only. Faucet assets are accepted through WTJ-20260704-026 and are not part of this acceptance evidence."
+  "scope_note": "This rework card covers horse run quality only. Idle and stop_success are preserved; contact sheet and manifest are updated for continuity review.",
+  "rework_card_id": "WTJ-20260704-068",
+  "generated_sources": {
+    "run_cycle_chroma_sheet": "docs/assets/production-animations-v1/horse/source-run-cycle-generated-chroma.png"
+  },
+  "documentation": {
+    "readme": "docs/assets/production-animations-v1/horse/README.md",
+    "prompt_and_rationale": "docs/assets/production-animations-v1/horse/prompt-and-rationale.md",
+    "run_cleanliness_inspection": "docs/assets/production-animations-v1/horse/horse-run-cleanliness-inspection.png",
+    "run_cleanup_report": "docs/assets/production-animations-v1/horse/run-cleanup-report.json",
+    "run_cleanliness_inspection_designer1": "docs/assets/production-animations-v1/horse/horse-run-cleanliness-inspection-designer1.png"
+  },
+  "generation_method": {
+    "mode": "built-in image generation for run-cycle key sheet, chroma-key extraction, deterministic normalization and stop-success cleanup",
+    "prompt_reference": "Use the accepted toy horse as style reference; create an 8-frame horizontal sprite sheet of the same horse doing a readable trot/run cycle with alternating leg poses; no body-bob-only substitute, no speed lines, no dust, no black artifacts, no vertical lines under legs, solid #00ff00 chroma-key background.",
+    "review_media_viewport": [
+      80,
+      100,
+      950,
+      930
+    ]
+  },
+  "validation_summary": "All horse production frames are 1024x1024 RGBA with transparent corners. Run frames have exactly one alpha>0 component each; no #ff00ff, no exact #00ff00, no low-alpha green or blue matte residue, no PM-cited horse_run_003 left floating fragment, no black blocks/vertical glitches/dirty hoof dots, and refreshed run sheet/contact sheet/preview GIF/inspection sheet."
 }

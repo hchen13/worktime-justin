@@ -42,6 +42,11 @@
   will-change: transform, filter;
   -webkit-user-select: none;
   user-select: none;
+  /* WTJ-080：Safari/WKWebView 专属兜底，彻底禁止 img 被原生拖拽——draggable=false（见
+     task-templates.js createPropEl()）在 Safari 对 <img> 有时不够，需要这条私有属性双保险，
+     否则原生 drag-and-drop 会抢占 pointer.js 的自定义拖拽状态机，导致 mouseup 不触发/任务不完成。 */
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .wtj-tt-drag-object {

@@ -15,6 +15,25 @@
 `docs/assets/production-pack-a/manifest.json` / `README.md`）：PNG / RGBA / 1024x1024 /
 透明背景 / 2.5D soft-plastic 儿童插画风格，四角 alpha 为 0，无 #ff00ff chroma-key 残留。
 
+## `ui/chest-disabled.png` / `ui/chest-active.png`（WTJ-20260704-083 返工，PM 打回①②，接入 DESIGN 082）
+
+| 运行时路径 | 源路径 | 素材卡号 | 处理方式 | 复制日期 |
+|---|---|---|---|---|
+| `app/web/assets/ui/chest-disabled.png` | `docs/assets/style/wtj-082/chest/chest-disabled.png` | WTJ-20260704-082 | `sips -Z 192`（1024x1024 → 192x192，保留 RGBA alpha） | 2026-07-04 |
+| `app/web/assets/ui/chest-active.png` | `docs/assets/style/wtj-082/chest/chest-active.png` | WTJ-20260704-082 | `sips -Z 192`（1024x1024 → 192x192，保留 RGBA alpha） | 2026-07-04 |
+
+与上面三个文件（直接 `cp` 不改分辨率）**不同**：这两个文件源图是 1024x1024，而 footer 常驻
+宝箱指示器运行时只显示 72px~96px（见 082 doc 宝箱规则 / `app/web/hud.css`
+`.wtj-hud-chest-lane`），直接用 1024² 原图会带来不必要的体积（约 528KB/789KB），因此用
+`sips -Z 192 --setProperty format png ... --out ...` 降采到 192x192（覆盖常见 2x retina
+显示，72px~96px 显示尺寸下留有余量），降采后 38KB/55KB，`sips -g hasAlpha` 核实降采后仍保留
+透明通道。082 交付的这两张图 `asset_class` 为 `style_baseline_sample_not_full_runtime_
+replacement`（已验收基线样本，可作可交付 interim 接入；全量最终生产另开卡）。运行时路径登记
+在 `app/web/manifest.js` 的 `rewards.chest.footerIndicator.states`，由 `app/web/hud.js`
+读取渲染为 footer 右侧常驻宝箱三态指示器（`.wtj-hud-chest`）。只有 Disabled/Active 两态
+资产——"打开(Open)"态不是第三张静态图，直接复用既有 011（`reward-chest.js`）的一次性开箱
+Canvas 分帧序列，见该文件与 `app/web/hud.js`「footer 常驻宝箱指示器」相关注释。
+
 ## 集成范围
 
 本卡（WTJ-20260704-007，默认画布与主 HUD）只消费上述 3 个文件，分别用于：

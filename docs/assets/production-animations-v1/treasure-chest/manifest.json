@@ -1,20 +1,40 @@
 {
   "pack_id": "production-animations-v1-treasure-chest",
   "card_id": "WTJ-20260704-029",
+  "rework_card_id": "WTJ-20260704-070",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 03:04",
+  "updated_at_cst": "2026-07-04 14:08",
   "source": "docs/assets/production-animations-v1/source/treasure-chest-base.png",
+  "generated_sources": {
+    "closed_chroma": "docs/assets/production-animations-v1/treasure-chest/source-closed-generated-chroma.png",
+    "half_open_chroma": "docs/assets/production-animations-v1/treasure-chest/source-half-open-generated-chroma.png",
+    "open_chroma": "docs/assets/production-animations-v1/treasure-chest/source-open-generated-chroma.png",
+    "closed_alpha": "docs/assets/production-animations-v1/source/treasure-chest-base.png",
+    "half_open_alpha": "docs/assets/production-animations-v1/source/treasure-chest-half-open-base.png",
+    "open_alpha": "docs/assets/production-animations-v1/source/treasure-chest-open-base.png",
+    "reward_star": "docs/assets/production-animations-v1/treasure-chest/source-star-sticker.png",
+    "reward_sparkle": "docs/assets/production-animations-v1/treasure-chest/source-sparkle-burst.png",
+    "quarter_open_chroma": "docs/assets/production-animations-v1/treasure-chest/source-quarter-open-generated-chroma.png",
+    "mostly_open_chroma": "docs/assets/production-animations-v1/treasure-chest/source-mostly-open-generated-chroma.png",
+    "quarter_open_alpha": "docs/assets/production-animations-v1/source/treasure-chest-quarter-open-base.png",
+    "mostly_open_alpha": "docs/assets/production-animations-v1/source/treasure-chest-mostly-open-base.png"
+  },
   "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
   "asset_spec": {
     "format": "PNG frames",
     "color_mode": "RGBA",
     "canvas": "1024x1024",
-    "background": "transparent"
+    "background": "transparent",
+    "rework_note": "WTJ-20260704-070 replaces the old flattened treasure chest sequence with regenerated closed/quarter/half/mostly/open key art, clean alpha, fixed anchor, and identifiable reward-pop elements."
   },
   "contact_sheet": "docs/assets/production-animations-v1/treasure-chest/treasure-chest-contact-sheet.png",
   "previews": {
     "opening": "docs/assets/production-animations-v1/previews/treasure-chest-opening-preview.gif",
     "reward_pop": "docs/assets/production-animations-v1/previews/treasure-chest-reward-pop-preview.gif"
+  },
+  "documentation": {
+    "readme": "docs/assets/production-animations-v1/treasure-chest/README.md",
+    "prompt_and_rationale": "docs/assets/production-animations-v1/treasure-chest/prompt-and-rationale.md"
   },
   "animations": {
     "closed": {
@@ -27,9 +47,9 @@
       "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/closed-sheet.png",
       "bounds": [
         122,
-        156,
+        158,
         902,
-        867
+        875
       ],
       "frames": [
         "docs/assets/production-animations-v1/treasure-chest/closed/chest_closed_000.png"
@@ -44,10 +64,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/opening-sheet.png",
       "bounds": [
-        118,
-        97,
+        122,
+        75,
         902,
-        867
+        875
       ],
       "frames": [
         "docs/assets/production-animations-v1/treasure-chest/opening/chest_opening_000.png",
@@ -66,16 +86,16 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/open-sheet.png",
       "bounds": [
-        122,
-        97,
-        902,
-        867
+        123,
+        75,
+        900,
+        875
       ],
       "frames": [
         "docs/assets/production-animations-v1/treasure-chest/open/chest_open_000.png"
       ]
     },
-    "reward_pop": {
+    "reward-pop": {
       "fps": 12,
       "loop": false,
       "anchor": [
@@ -84,10 +104,10 @@
       ],
       "frame_sheet": "docs/assets/production-animations-v1/treasure-chest/sheets/reward-pop-sheet.png",
       "bounds": [
-        122,
-        38,
-        902,
-        867
+        123,
+        75,
+        900,
+        875
       ],
       "frames": [
         "docs/assets/production-animations-v1/treasure-chest/reward-pop/chest_reward_pop_000.png",
@@ -100,6 +120,16 @@
       ]
     }
   },
-  "scope_note": "This card intentionally covers treasure-chest only. Faucet and horse assets are handled by their own cards.",
-  "rework_note": "2026-07-04 DESIGN rework: replaced emoji-like smiley sticker in reward_pop with non-face gift box, star, sparkle, coins, and gem glints; closed/opening/open structure preserved."
+  "scope_note": "This rework covers treasure chest only. It supersedes the previous treasure-chest sequence for final visual review.",
+  "generation_method": {
+    "mode": "built-in image generation for closed/quarter/half/mostly/open key art, chroma-key alpha extraction, deterministic reward-pop compositing",
+    "prompt_reference": "Premium polished 2.5D soft-clay treasure chest sprite, warm wood grain, rounded gold metal bands, blue diamond lock, consistent 3/4 perspective, clean #00ff00 chroma-key background; closed, quarter-open, half-open, mostly-open, and open states generated as key art, then normalized to 1024 transparent production frames.",
+    "review_media_viewport": [
+      92,
+      62,
+      960,
+      925
+    ]
+  },
+  "validation_summary": "All frames are 1024x1024 RGBA with transparent corners, no #ff00ff residue, no green corner residue, no missing manifest paths. Opening endpoints match closed/open exactly and intermediate frames are real generated key poses, not cross-faded double images; reward-pop starts from open exactly."
 }

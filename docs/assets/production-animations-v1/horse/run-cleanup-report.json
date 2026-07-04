@@ -1,0 +1,187 @@
+{
+  "card_id": "WTJ-20260704-068",
+  "executor": "Designer 2",
+  "identity": "Automation:worktime-justin-designer-2-loop",
+  "cleanup": "alpha < 16 -> transparent; transparent RGB zeroed; largest/main alpha component retained for every run frame",
+  "pm_issue_addressed": "horse_run_003 left detached fragment removed; final bbox [220,205,892,882]",
+  "designer2_removed_pixels_from_previous_pass": {
+    "horse_run_000.png": 322,
+    "horse_run_001.png": 426,
+    "horse_run_002.png": 309,
+    "horse_run_003.png": 358,
+    "horse_run_004.png": 316,
+    "horse_run_005.png": 350,
+    "horse_run_006.png": 291,
+    "horse_run_007.png": 341
+  },
+  "frames": [
+    {
+      "file": "horse_run_000.png",
+      "bbox": [
+        181,
+        229,
+        842,
+        882
+      ],
+      "nonzero_alpha": 245650,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_001.png",
+      "bbox": [
+        215,
+        221,
+        892,
+        882
+      ],
+      "nonzero_alpha": 252805,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_002.png",
+      "bbox": [
+        223,
+        215,
+        892,
+        882
+      ],
+      "nonzero_alpha": 239548,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_003.png",
+      "bbox": [
+        220,
+        205,
+        892,
+        882
+      ],
+      "nonzero_alpha": 257520,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_004.png",
+      "bbox": [
+        171,
+        218,
+        852,
+        882
+      ],
+      "nonzero_alpha": 242946,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_005.png",
+      "bbox": [
+        152,
+        218,
+        872,
+        882
+      ],
+      "nonzero_alpha": 240456,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_006.png",
+      "bbox": [
+        174,
+        210,
+        850,
+        882
+      ],
+      "nonzero_alpha": 247929,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    },
+    {
+      "file": "horse_run_007.png",
+      "bbox": [
+        163,
+        207,
+        861,
+        882
+      ],
+      "nonzero_alpha": 253821,
+      "low_alpha_1_to_15": 0,
+      "transparent_rgb_residue": 0,
+      "magenta_visible_pixels": 0,
+      "green_visible_pixels": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_component_count": 1
+    }
+  ]
+}

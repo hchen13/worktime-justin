@@ -512,6 +512,28 @@ test('拖拽：mousedown 未命中任何 draggable target 时不进入 dragging 
   assert.equal(sb.POINTER.getPointerState().dragging, false);
 });
 
+test('WTJ-080：onMouseDown 命中 draggable target、确认开始拖拽时应 preventDefault（阻止浏览器/WKWebView 由这次 mousedown 启动原生 HTML5 拖拽，原生拖拽一旦启动 mousemove/mouseup 不再派发，会让本状态机的 dragging 卡死出不来——根因诊断核心一环）', function () {
+  var sb = createSandbox();
+  setupDragScenario(sb);
+  var preventDefaultCalls = 0;
+
+  sb.fireDown(15, 15, { preventDefault: function () { preventDefaultCalls++; } }); // 命中 apple
+
+  assert.equal(sb.POINTER.getPointerState().dragging, true, '前提：这次 mousedown 确实命中并开始了拖拽');
+  assert.equal(preventDefaultCalls, 1, '命中 draggable target 开始拖拽时应调用恰一次 preventDefault');
+});
+
+test('WTJ-080：onMouseDown 未命中任何 draggable target 时不应 preventDefault（只在真的开始拖拽时才拦截，避免无条件 preventDefault 误伤 focus 等原生默认行为）', function () {
+  var sb = createSandbox();
+  setupDragScenario(sb);
+  var preventDefaultCalls = 0;
+
+  sb.fireDown(500, 500, { preventDefault: function () { preventDefaultCalls++; } }); // 空白处，未命中
+
+  assert.equal(sb.POINTER.getPointerState().dragging, false, '前提：这次 mousedown 确实未命中、未开始拖拽');
+  assert.equal(preventDefaultCalls, 0, '未命中 draggable target 不应调用 preventDefault');
+});
+
 test('拖拽：dragging 期间 mousemove 触发 dragMove，followX/followY 弹性跟随（有延迟，不瞬间贴合）', function () {
   var sb = createSandbox();
   var s = setupDragScenario(sb);

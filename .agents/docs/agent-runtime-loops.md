@@ -20,19 +20,25 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main.
 ```
 
 Example QA start prompt:
 
 ```text
-You are QA for WorkTime Justin. Read AGENTS.md, multi-agent workflow, and QA testing protocol. Use the QA Feishu app identity from .env. Start your QA loop: scan cards assigned to QA, maintain reusable tests under tests/, run or design tests as needed, perform adversarial review for new test assets, and return results to PM review.
+You are QA for WorkTime Justin. Your session label is QA-Visual and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md, multi-agent workflow, and QA testing protocol. Use the QA Feishu app identity from .env. Start your QA loop: scan cards assigned to QA, claim only one card or explicit test scope at a time by writing `执行者：QA-Visual；身份ID：ClaudeSession:<session-id>` in 最新进展, maintain reusable tests under tests/, run or design tests as needed, perform adversarial review for new test assets, and return results to PM review.
+```
+
+Example DESIGN start prompt:
+
+```text
+You are DESIGN for WorkTime Justin. Your session label is DESIGN-A and your stable session identity is CodexThread:<thread-id>. Read AGENTS.md, multi-agent workflow, and production asset quality protocol. Use the DESIGN Feishu app identity from .env. Start your DESIGN loop: scan cards assigned to DESIGN, claim only one card or explicit asset scope at a time by writing `执行者：DESIGN-A；身份ID：CodexThread:<thread-id>` in 最新进展, generate or refine assets, save outputs under the card's target paths, record prompts/evidence, and return finished work to PM review.
 ```
 
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, run the whole-board completion notification check, and own main branch decisions.
+You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, run the whole-board completion notification check, and own main branch decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -53,13 +59,41 @@ Do not process multiple cards in parallel inside one role session unless the rol
 
 Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
 
+If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
+
+### 3.1 Tool Call Hygiene
+
+Role loops often make many board, shell, subagent, and wakeup calls. The model must keep tool calls separate from ordinary assistant text.
+
+Rules:
+
+- Invoke tools only through the real Codex or Claude Code tool interface. Never type tool-call markup such as `<invoke name="Bash">`, `<tool_use>`, raw JSON call envelopes, or similar pseudo-tool syntax in a normal message.
+- Do not use stray marker words before tool calls, including `课`, `course`, `call`, or any private sentinel. These tokens can leak into user-visible text and make the session look like it attempted a malformed tool call.
+- Do not carry leaked marker words into wakeup prompts as self-reminders. If a session needs a reminder, phrase it generically, for example `Keep ordinary text separate from tool calls`.
+- If ordinary assistant text contains tool-call-looking markup, treat the intended action as not executed unless there is a real `tool_use` record and a corresponding `tool_result`.
+- If ordinary assistant text contains stray marker words near a tool boundary, treat it as an output-contamination incident even when later tool calls are valid.
+- After any suspected hygiene incident, the role must immediately verify the actual state by reading the board, checking the file, or inspecting the command result. If the intended action did not run, rerun it through the real tool interface. If it did run, report that the visible text was noise and include the evidence.
+- Do not close or hand off a card based on text that merely looks like a tool call. Only actual tool results, board reads, command output, commits, files, or recorded evidence count.
+
+Known failure pattern:
+
+- In Claude Code session `8b125223-44cb-43a3-b5fe-fd221f3e9a0b`, the assistant emitted `课` followed by `<invoke name="Bash">...` inside a normal text message. Claude Code displayed it as prose, so that block did not execute. Later the same session repeatedly emitted `course` as ordinary text before valid Bash or ScheduleWakeup tool calls. The first case was a malformed pseudo-tool call; the later cases were stray text leakage. The recovery pattern is to verify the real tool result and retry only if the real action did not occur.
+- That incident attempted to call Claude Code's `Bash` tool, with a command that ran the project-local board wrapper `python3 tl_board.py update ...`. It was operationally related to Feishu board work, but the malformed wrapper was not a `lark-cli` or Lark skill invocation.
+- Local inspection of `/Users/claire/.claude/skills`, `/Users/claire/.codex/skills`, and `/Users/claire/.agents/skills` found no `SKILL.md` instructions that teach `<invoke ...>`, `<parameter ...>`, or `antml` style tool-call markup. Treat this as a Claude Code/tool-boundary leakage hazard, not as an approved Lark skill syntax.
+- Similar `<invoke name="Bash">` leakage has appeared in Claude Code ecosystem issue data outside this project, including samples with other stray pre-tool tokens such as `court`. Do not assume the exact leaked token is semantically meaningful; it is a symptom of model/tool serialization drift.
+- Never include the leaked token itself in future loop prompts as a warning. Use neutral wording such as `keep ordinary text separate from tool calls`; repeating `course`, `课`, or similar tokens in wakeup prompts can make the token more likely to reappear.
+
 ## 4. Claiming Work
 
 To avoid two agents working the same card:
 
-- Before starting a `todo` card, set `状态 = in progress`, keep `负责人` as the current role, and write `最新进展` with the session identity and current action.
-- If a card already has another clear active `最新进展`, do not overwrite it unless the role owns that card and the previous session is clearly finished or stale.
+- Before starting a `todo` card, set `状态 = in progress`, keep `负责人` as the current role, and write `最新进展` with the session label, stable identity, start time, current action, and touched scope.
+- Use a stable session label, for example `DESIGN-A`, `DESIGN-2`, `QA-Visual`, or `QA-Audio`, plus a stable identity such as `CodexThread:<thread-id>`, `ClaudeSession:<session-id>`, or `Automation:<automation-id>`. Both must appear in the first line of the claiming update: `执行者：<label>；身份ID：<runtime-id>；开始：<time>；范围：<asset/test scope>`.
+- If the role session does not know its stable identity, it may read the board but should not claim formal work until the launcher/PM provides the Codex thread ID, Claude Code session ID, or automation ID.
+- If a card already has another clear active `最新进展` from the same role, do not overwrite it unless PM explicitly allowed takeover, the previous claim is stale past `截止/检查点`, or the previous session has returned the card to PM review.
+- If taking over a stale or PM-authorized card, preserve previous evidence and write why takeover is valid.
 - If ownership is unclear, move it to `review` for PM triage rather than racing another role.
+- Multiple sessions under the same role should prefer different cards. If they must share one large card, PM must write the sub-scopes explicitly before the sessions start.
 
 ## 5. PM Automation/Cron
 
@@ -75,6 +109,13 @@ Recommended PM cron responsibilities:
 - summarize board health and urgent decisions
 
 PM automation must use PM Feishu credentials and must not impersonate TL, DESIGN, or QA.
+
+PM automation also owns session-surface hygiene:
+
+- Inspect active TL, DESIGN, and QA session transcripts or thread summaries when they are locally available and a card is active, stale, confusing, or has several sibling cards claimed at once.
+- Treat session text as a signal, not as the source of truth. If a role asks Ethan for a screenshot, says an asset is missing, reports an instruction conflict, or describes a blocker in chat, PM must write the resolved instruction or blocker into the Feishu card.
+- For implementation/design/test cards, PM should verify that `依赖` or `下一步动作` names exact requirement and asset paths before expecting the role to proceed, for example `docs/index.html`, `docs/assets/accepted-mvp-mockup.png`, `docs/design/wtj-081-main-ui-visual-motion-spec.md`, or a runtime folder under `app/web/assets/`.
+- If PM cannot inspect the external session, the card must say so and require the role to summarize blockers in `最新进展`; PM should not rely on Ethan monitoring role chats.
 
 For implementation cards in `in progress`, PM automation should treat local branch and worktree observations as informational only. Do not move a card to `blocking` or repeatedly rewrite its next action just because a shared worktree is dirty, has untracked files, or the TL branch has advanced.
 
@@ -109,16 +150,22 @@ TL loop:
 DESIGN loop:
 
 - works only cards assigned to DESIGN
+- uses its stable session label and stable identity in every claim/progress handoff
+- claims one card or explicit asset scope at a time
 - uses image generation and project-local assets
 - records prompts, output paths, and design rationale
+- avoids folders, source prompts, sprite sheets, or output files already claimed by another DESIGN session unless PM defined the merge plan
 - returns finished work to PM review
 
 QA loop:
 
 - works only cards assigned to QA
+- uses its stable session label and stable identity in every claim/progress handoff
+- claims one card or explicit test scope at a time
 - maintains persistent tests under `tests/`
 - separates scripted tests from agentic visual tests
 - performs adversarial review before accepting new test assets
+- avoids concurrent edits to the same test file, visual prompt, fixture, or report path unless PM defined the merge owner
 - returns test result cards to PM review
 - before answering any "why is this not moving" or card-ownership question, re-read the board live and quote the current `状态` and `负责人`
 - during an active sprint with nonterminal development cards, an idle QA loop should wake again within 10 minutes; use longer idle delays only when the whole board is quiet or PM has explicitly paused QA work

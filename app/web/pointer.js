@@ -617,6 +617,15 @@
     });
     if (!hit) return;
 
+    // WTJ-080：命中了 draggable target、确认要开始自定义拖拽时，preventDefault 这次 mousedown，
+    // 阻止浏览器/WKWebView 由它启动原生 HTML5 drag-and-drop——原生拖拽一旦启动，mousemove/
+    // mouseup 会被 drag 系事件取代不再派发，onMouseUp 永不触发，下面的拖拽状态机就会卡在
+    // dragging=true 出不来，任务永远不完成（根因诊断的核心一环）。只在真的开始拖拽（hit 非空）
+    // 时才 preventDefault，未命中的 mousedown 不受影响（避免误伤 focus 等原生默认行为）。
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
     activeDragId = hit.id;
     dragging = true;
 

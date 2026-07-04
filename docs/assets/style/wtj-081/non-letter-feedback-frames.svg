@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-label="WTJ 081 non-letter key feedback motion frames">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#090d15"/>
+      <stop offset="0.58" stop-color="#06101d"/>
+      <stop offset="1" stop-color="#050812"/>
+    </linearGradient>
+    <radialGradient id="soft" cx="50%" cy="44%" r="56%">
+      <stop offset="0" stop-color="#4a80d6" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#4a80d6" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .title { fill: #f5f8ff; font: 820 34px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+      .label { fill: #a8b6cc; font: 650 22px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+      .small { fill: #a8b6cc; font: 560 18px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+      .frame { fill: rgba(16,25,42,.72); stroke: rgba(142,166,205,.28); stroke-width: 1.5; }
+      .ring { fill: none; stroke: #3ce7ff; stroke-width: 4; }
+      .weak { fill: none; stroke: #82a8ff; stroke-width: 3; }
+      .other { fill: none; stroke: #ff77b8; stroke-width: 3; }
+    </style>
+  </defs>
+  <rect width="1600" height="760" rx="24" fill="url(#bg)"/>
+  <rect width="1600" height="760" rx="24" fill="url(#soft)"/>
+  <text x="56" y="70" class="title">WTJ-081 non-letter key feedback frames</text>
+  <text x="56" y="112" class="label">Space/Enter get a soft ring. Modifiers get weak glints. Punctuation/other keys stay subtle and decay quickly.</text>
+
+  <g transform="translate(80 180)">
+    <rect class="frame" width="440" height="440" rx="18"/>
+    <text x="28" y="48" class="label">Space / Enter</text>
+    <text x="28" y="82" class="small">360ms ring, no reward, no count</text>
+    <circle class="ring" cx="220" cy="245" r="24" opacity=".46"/>
+    <circle class="ring" cx="220" cy="245" r="58" opacity=".26"/>
+    <circle class="ring" cx="220" cy="245" r="96" opacity=".08"/>
+    <circle cx="220" cy="245" r="7" fill="#3ce7ff" opacity=".78"/>
+    <text x="28" y="392" class="small">Stage radial light may lift by 4% for 140ms.</text>
+  </g>
+
+  <g transform="translate(580 180)">
+    <rect class="frame" width="440" height="440" rx="18"/>
+    <text x="28" y="48" class="label">Shift / Command / Option / Control</text>
+    <text x="28" y="82" class="small">220ms weak glint, max opacity 0.22</text>
+    <circle class="weak" cx="118" cy="318" r="22" opacity=".18"/>
+    <circle cx="118" cy="318" r="8" fill="#82a8ff" opacity=".22"/>
+    <circle cx="154" cy="318" r="8" fill="#34415c" stroke="rgba(255,255,255,.18)"/>
+    <circle cx="190" cy="318" r="8" fill="#34415c" stroke="rgba(255,255,255,.18)"/>
+    <text x="28" y="392" class="small">Use lower-left status area; do not create a new object.</text>
+  </g>
+
+  <g transform="translate(1080 180)">
+    <rect class="frame" width="440" height="440" rx="18"/>
+    <text x="28" y="48" class="label">Punctuation / arrows / other</text>
+    <text x="28" y="82" class="small">260ms tiny ripple, no reward</text>
+    <circle class="other" cx="220" cy="245" r="14" opacity=".25"/>
+    <circle class="other" cx="220" cy="245" r="34" opacity=".12"/>
+    <circle cx="220" cy="245" r="4" fill="#ff77b8" opacity=".45"/>
+    <text x="28" y="392" class="small">Same-key mashing decays to near-zero by press 4.</text>
+  </g>
+
+  <g transform="translate(80 665)">
+    <rect x="0" y="-22" width="1440" height="1" fill="rgba(156,180,220,.16)"/>
+    <text x="0" y="18" class="small">Footer shell remains quiet. WTJ-20260704-082 owns final slots, stickers, and chest visuals.</text>
+  </g>
+</svg>
+

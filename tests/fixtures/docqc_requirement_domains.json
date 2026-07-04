@@ -1,0 +1,329 @@
+{
+  "_comment": [
+    "DOCQC-004/005 fixture. This file is the coverage contract for docs/index.html:",
+    "domains = 10 requirement areas from WTJ-20260703-002; facts = decided spec points that must survive any rewrite.",
+    "CONTRACT (doc-side): the document is obligated to carry its own QA assertion inventory —",
+    "  * every atomic requirement is a node with data-req-id=\"REQ-{DOMAIN}-{NN}\";",
+    "  * every requirement domain is a section with data-domain=\"{DOMAIN}\" (codes below in domain_code);",
+    "  * the #coverage matrix table (域码/需求域名称/章节锚点/REQ ID范围/条数 + 合计行) declares itself",
+    "    『此表同时作为 QA 的断言清单』. DOCQC-004 reconciles that matrix against the actual visible",
+    "    data-req-id nodes: every declared REQ id must have exactly one visible definition node, no wild",
+    "    REQ ids outside the matrix, per-domain counts and the 合计 must agree, and each matrix anchor must",
+    "    point to an existing section whose data-domain matches. If the doc drops the whole",
+    "    data-req-id/#coverage system, DOCQC-004 reports a missing-contract problem — that is the TL's",
+    "    obligation to restore, not a test to relax.",
+    "CONTRACT (fixture-side / maintenance):",
+    "  * domain patterns and fact groups are case-insensitive regexes matched ONLY against the visible text",
+    "    of the data-domain section slice(s) named by domain_code / scope (style/script stripped, whitespace",
+    "    collapsed, img alt & aria-label included, hidden/display:none subtrees excluded). Residue in nav,",
+    "    captions or parameter tables outside the owning section does NOT count.",
+    "  * facts pin DECISIONS, not wording. Each group is a disjunction of concept-level regexes. If a",
+    "    legitimate synonymous copy-edit (e.g. 不算失败→不判定为失败, 长按→按住, 自带→内置) turns a fact red,",
+    "    the correct fix is to broaden the group regex here — never to ask the TL to change the prose.",
+    "    A fact should only stay red when the underlying product decision actually disappeared or changed;",
+    "    in that case update the fixture together with the decision and note it in the QA card.",
+    "  * if TL deliberately renames a concept, update this fixture in the same change and note it in the QA card."
+  ],
+  "domains": [
+    {
+      "id": "default_interface",
+      "domain_code": "DEF",
+      "name": "默认界面（干净画布、低调入口）",
+      "min_match": 2,
+      "patterns": [
+        "默认",
+        "干净",
+        "画布",
+        "低调|极简|简洁"
+      ]
+    },
+    {
+      "id": "keyboard_exploration",
+      "domain_code": "KB",
+      "name": "键盘自由探索",
+      "min_match": 3,
+      "patterns": [
+        "键盘",
+        "按键|按下|按一个|按住",
+        "字母",
+        "长按|按住",
+        "衰减|变弱|减弱"
+      ]
+    },
+    {
+      "id": "secret_word",
+      "domain_code": "SEC",
+      "name": "秘密词机制",
+      "min_match": 2,
+      "patterns": [
+        "秘密词|暗语|secret\\s*word",
+        "命中",
+        "dog",
+        "字母流|监听|输入流"
+      ]
+    },
+    {
+      "id": "five_slots",
+      "domain_code": "SLOT",
+      "name": "五个发现槽",
+      "min_match": 2,
+      "patterns": [
+        "五个\\s*(发现)?槽|五槽|5\\s*个?\\s*槽",
+        "发现槽|槽位",
+        "五格|点亮",
+        "满"
+      ]
+    },
+    {
+      "id": "question_task",
+      "domain_code": "TASK",
+      "name": "问号小任务",
+      "min_match": 3,
+      "patterns": [
+        "问号",
+        "任务",
+        "语音",
+        "拖拽|拖到|拖进",
+        "超时|15\\s*秒|30\\s*秒|45\\s*-?\\s*60\\s*秒"
+      ]
+    },
+    {
+      "id": "exit_mechanism",
+      "domain_code": "EXIT",
+      "name": "退出机制与快捷键安全",
+      "min_match": 3,
+      "patterns": [
+        "退出",
+        "Esc",
+        "长按|按住",
+        "口令|密码",
+        "Command\\s*\\+|Cmd\\s*\\+",
+        "拦截|屏蔽|禁"
+      ]
+    },
+    {
+      "id": "pointer_feedback",
+      "domain_code": "PTR",
+      "name": "鼠标/触控板反馈",
+      "min_match": 3,
+      "patterns": [
+        "鼠标",
+        "触控板|指针",
+        "尾迹|光点",
+        "波纹|印章",
+        "点击",
+        "拖拽|拖动"
+      ]
+    },
+    {
+      "id": "rewards",
+      "domain_code": "RWD",
+      "name": "奖励系统（宝箱/状态灯/一次性）",
+      "min_match": 3,
+      "patterns": [
+        "奖励",
+        "宝箱",
+        "烟花",
+        "状态灯",
+        "一次性"
+      ]
+    },
+    {
+      "id": "assets_sound",
+      "domain_code": "AST",
+      "name": "素材与声音策略",
+      "min_match": 3,
+      "patterns": [
+        "素材",
+        "TTS|语音",
+        "音效|声音|发音",
+        "PNG|sprite|贴图|贴纸",
+        "授权"
+      ]
+    },
+    {
+      "id": "desktop_constraints",
+      "domain_code": "DESK",
+      "name": "桌面应用与运行约束",
+      "min_match": 3,
+      "patterns": [
+        "全屏",
+        "macOS|MacBook",
+        "桌面",
+        "DMG|打包|安装",
+        "Electron|原生"
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "id": "five_slot_count",
+      "name": "发现槽数量为五",
+      "scope": [
+        "SLOT",
+        "DEF"
+      ],
+      "groups": [
+        [
+          "五个\\s*(发现)?槽|五槽|五格|5\\s*个发现槽"
+        ]
+      ]
+    },
+    {
+      "id": "esc_long_press_exit",
+      "name": "Esc 不直接退出，家长退出走长按/口令",
+      "scope": [
+        "EXIT"
+      ],
+      "groups": [
+        [
+          "Esc"
+        ],
+        [
+          "不直接(触发)?退出|不.{0,4}直接退出|(长按|按住|持续按).{0,12}Esc"
+        ]
+      ]
+    },
+    {
+      "id": "shortcut_interception",
+      "name": "应用内拦截 Command+H/W/Q 等常见快捷键",
+      "scope": [
+        "EXIT",
+        "DESK"
+      ],
+      "groups": [
+        [
+          "(Command|Cmd)\\s*\\+\\s*(H|W|Q)"
+        ],
+        [
+          "拦截|屏蔽|禁|阻止|挡(住|下)|吃掉"
+        ]
+      ]
+    },
+    {
+      "id": "no_full_block_promise",
+      "name": "不虚假承诺完全屏蔽系统级快捷键",
+      "scope": [
+        "DESK",
+        "EXIT"
+      ],
+      "groups": [
+        [
+          "未必|不承诺|不能保证|无法保证|不保证|做不到|虚假承诺"
+        ],
+        [
+          "100\\s*%|完全|彻底|系统级"
+        ]
+      ]
+    },
+    {
+      "id": "no_chrome_builtin_tts",
+      "name": "不使用 Chrome 自带发音作为产品声音",
+      "scope": [
+        "AST"
+      ],
+      "groups": [
+        [
+          "不(使用|采用|用|依赖|拿)\\s*.{0,6}(Chrome|浏览器).{0,4}(自带|内置|默认)"
+        ]
+      ]
+    },
+    {
+      "id": "transient_rewards",
+      "name": "奖励一次性、画面能回到干净",
+      "scope": [
+        "RWD",
+        "DEF"
+      ],
+      "groups": [
+        [
+          "一次性|短(暂|动画)|临时"
+        ],
+        [
+          "淡出|消失|消退|退场"
+        ],
+        [
+          "干净|不长期占用|不.{0,10}(变脏|堆积|堆满)"
+        ]
+      ]
+    },
+    {
+      "id": "task_timeout_autoclose",
+      "name": "任务超时自动收起且不算失败",
+      "scope": [
+        "TASK",
+        "EXIT"
+      ],
+      "groups": [
+        [
+          "自动(收起|淡出|关闭|消失|退场)"
+        ],
+        [
+          "不(算|判定为|判为|视为|视作|记为?)失败"
+        ]
+      ]
+    },
+    {
+      "id": "no_chinese_text_dependency",
+      "name": "任务不依赖中文文字说明",
+      "scope": [
+        "TASK"
+      ],
+      "groups": [
+        [
+          "不(显示|依赖|出现|靠).{0,6}(中文|文字)|(中文|文字).{0,8}不(显示|出现)"
+        ]
+      ]
+    },
+    {
+      "id": "repeat_word_no_new_slot",
+      "name": "同词重复命中只给小反馈、不再占新槽",
+      "scope": [
+        "SEC",
+        "SLOT"
+      ],
+      "groups": [
+        [
+          "重复命中|同一个词.{0,14}重复|重复.{0,10}同一个词"
+        ],
+        [
+          "不再?(点亮|占)|不占|小反馈"
+        ]
+      ]
+    },
+    {
+      "id": "target_env_2014_mba_fullscreen",
+      "name": "目标机器 2014 MacBook Air、全屏桌面应用",
+      "scope": [
+        "DESK"
+      ],
+      "groups": [
+        [
+          "MacBook\\s*Air"
+        ],
+        [
+          "全屏"
+        ]
+      ]
+    },
+    {
+      "id": "repeated_key_decay",
+      "name": "重复按键衰减、长按不持续计数",
+      "scope": [
+        "KB"
+      ],
+      "groups": [
+        [
+          "衰减|变弱|减弱"
+        ],
+        [
+          "(长按|按住|一直按).{0,12}不.{0,8}计数|(长按|按住)一个键"
+        ]
+      ]
+    }
+  ],
+  "expectations": {
+    "_comment": "跨脚本共享的可配置预期。min_images: docqc_browser.py 与 capture_docs.py 的最小 <img> 数下限;TL 把 mock 全部换成内联 SVG/canvas 时在同一变更里设为 0(空集语义通过),不需要改脚本。",
+    "min_images": 1
+  }
+}

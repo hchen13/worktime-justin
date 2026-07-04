@@ -586,3 +586,44 @@ test('17b. longestMatchPriority:false → 非最长优先：SCAR 命中遍历中
   assert.deepEqual(hits, ['car'], 'longestMatchPriority:false 时同位置多词命中取遍历最先者 car（pool 中 car 在 scar 前），不取最长 scar');
   console.log('PASS 17b: longestMatchPriority:false → 取遍历最先命中者 car（非最长 scar），覆盖 best 保留分支。');
 });
+
+// =====================================================================
+// 18. WTJ-20260704-066 回归：跨轮 rolling buffer 清空（QA 020 对抗评审发现的真实缺陷）
+// =====================================================================
+test('18a. resetRound() 清空 rolling buffer（WTJ-20260704-066）：残留半词 "do" + resetRound + 新轮 "g" 不得跨轮误命中 dog', function () {
+  var sb = createSandbox();
+  var hits = [];
+  sb.SECRET.onHit(function (p) { hits.push(p.word); });
+
+  // 先证明"不 reset"时 do+g 确实会跨"输入"命中 dog（对照组，证明测试本身有效）。
+  var sbNoReset = createSandbox();
+  var hitsNoReset = [];
+  sbNoReset.SECRET.onHit(function (p) { hitsNoReset.push(p.word); });
+  sbNoReset.feed('DO');
+  sbNoReset.feed('G'); // 不 reset，直接跟 G：buffer 变 'dog' → 应该命中（对照）
+  assert.deepEqual(hitsNoReset, ['dog'], '对照组：不 reset 时 DO+G 连续输入应正常命中 dog（证明测试有效）');
+
+  // 缺陷复现场景：输入半词 "do"（不满 5 槽/未构成任何词），随后触发 resetRound()（模拟五槽满
+  // 触发宝箱 → 010 WTJ_SLOTS.reset() → 调用本文件 resetRound()），新一轮首个字母 "g" 到来。
+  sb.feed('DO');
+  assert.equal(sb.SECRET.getBuffer(), 'do', 'reset 前 buffer 应含残留半词 do');
+  sb.SECRET.resetRound();
+  assert.equal(sb.SECRET.getBuffer(), '', 'resetRound() 后 buffer 必须清空（WTJ-20260704-066 修复核心断言）');
+
+  sb.feed('G'); // 新一轮第一个字母
+  assert.deepEqual(hits, [], 'resetRound() 清空 buffer 后，"do|reset|g" 跨轮拼接不得误命中 dog');
+  assert.equal(sb.SECRET.getBuffer(), 'g', '新一轮 buffer 应只含新字母 g，不含上轮残留');
+  console.log('PASS 18a: resetRound() 清空 rolling buffer —— do + reset + g 不再跨轮误命中 dog（对照组证明不 reset 时会命中，验证测试有效）。');
+});
+
+test('18b. resetRound() 清空 buffer 后，新一轮完整重新输入 dog 仍应正常命中（不是"再也无法命中"）', function () {
+  var sb = createSandbox();
+  var hits = [];
+  sb.SECRET.onHit(function (p) { hits.push(p.word); });
+
+  sb.feed('DO');
+  sb.SECRET.resetRound();
+  sb.feed('DOG'); // 新一轮完整重新输入 dog（而非依赖上轮残留）
+  assert.deepEqual(hits, ['dog'], 'resetRound() 后新一轮完整输入 dog 仍应正常命中（buffer 清空不影响后续正常匹配）');
+  console.log('PASS 18b: resetRound() 清空 buffer 不影响新一轮独立、完整地重新命中同一个词。');
+});

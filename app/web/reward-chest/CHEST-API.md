@@ -53,6 +53,16 @@ window.WTJ_SLOTS.onFull(handleSlotsFull);
 **不会**级联调用 `WTJ_SLOTS.reset()`；后者是序列自然播完的收尾动作。这一区分与
 `status-rewards.js` 的 `reset()`（同样只清自己的状态，不反向通知 014）同一取舍。
 
+**WTJ-20260704-083 返工（PM 打回①，footer 常驻宝箱三态指示器接线）**：`hud.js` 新增了一个
+footer 右侧 lane 里全程可见的宝箱指示器（`.wtj-hud-chest`，Disabled/Active/Open 三态，见
+`app/web/MANIFEST.md`「HUD API」`setChestOpen`），与本文件这套一次性开箱 Canvas 序列是两个
+独立的视觉——后者是"打开(Open)"态本身的可见表现（DESIGN 082 明确不新增第三张静态图）。本文件
+通过 `callHudSetChestOpenDefensive(isOpen)`（防御式，与本文件对 `WTJ_SLOTS`/`WTJ_AUDIO` 一贯
+的包装同款）在三处调用 `window.WTJ_HUD.setChestOpen`：`runSequence()` 开始时传 `true`；
+`finishSequence()`（序列自然播完）与 `reset()`（外部中止）都传 `false`——两条路径都要让指示器
+退出 Open，否则外部中止时指示器会永久卡在"看起来在打开"（`reset()` 不级联
+`WTJ_SLOTS.reset()`，不会有其它路径把它带回正确的 Active/Disabled）。
+
 ## 3. 表现形式（REQ-RWD-01，`manifest.rewards.chest.formsAllowed` 是允许菜单，非强制全实现）
 
 本文件落地的子集（`IMPLEMENTED_FORMS`）：
@@ -165,6 +175,9 @@ CSS 管不到，因此由 JS 显式判断：命中时不启动 tick 循环，改
 - `prefers-reduced-motion` 命中时烟花冻结为静态定格帧，仍照常展示/移除/调用 `reset()`；
 - `reset()` 外部中止：立即清空叠层，不级联调用 `WTJ_SLOTS.reset()`；
 - 防御式：`WTJ_SLOTS`/`WTJ_AUDIO`/manifest 任一或全部缺失时不抛错；`playSfx` 抛错不影响流程；
-- 重复引入守卫 + 冻结 + 绑定加固。
+- 重复引入守卫 + 冻结 + 绑定加固；
+- （WTJ-20260704-083 返工）footer 常驻宝箱指示器接线：`onFull` 触发时调用一次
+  `WTJ_HUD.setChestOpen(true)`；序列自然播完 / `reset()` 外部中止都各自调用一次
+  `WTJ_HUD.setChestOpen(false)`；`window.WTJ_HUD` 缺失时整段流程不抛错。
 
 Run: `node --test tests/unit/reward-chest.test.mjs`（或整目录 `node --test 'tests/unit/*.test.mjs'`）。

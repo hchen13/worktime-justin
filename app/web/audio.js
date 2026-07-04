@@ -83,7 +83,16 @@
     'water-drop': 'audio/sfx/water-drop.m4a',
     'water-splash': 'audio/sfx/water-splash.m4a',
     'chest-open': 'audio/sfx/chest-open.m4a',
-    'chest-lid-creak': 'audio/sfx/chest-lid-creak.m4a'
+    'chest-lid-creak': 'audio/sfx/chest-lid-creak.m4a',
+    // WTJ-20260704-084 新增：逐键机械键盘反馈音（keysound.js 消费，见该文件顶部注释）。
+    // 5 类：普通字母/数字键（清脆）、Space（低沉 thock）、Enter（确认感 click+短音）、
+    // 其余功能键中未分类的标点等（'other' 类，中性轻 click）、Meta/Alt/Control/Shift 等
+    // 修饰键（'weak' 类，最钝/最轻）。全部为 ffmpeg 程序化合成，无第三方版权。
+    'key-letter': 'audio/sfx/key-letter.m4a',
+    'key-space': 'audio/sfx/key-space.m4a',
+    'key-enter': 'audio/sfx/key-enter.m4a',
+    'key-punct': 'audio/sfx/key-punct.m4a',
+    'key-modifier': 'audio/sfx/key-modifier.m4a'
   };
 
   var VALID_TYPES = { word: true, sfx: true, task: true, phrase: true, path: true };
@@ -672,19 +681,50 @@
     return playFromPath(descriptor.type, descriptor.key, descriptor.path);
   }
 
-  // playTaskVoice(taskKey) / playTaskVoice({ id, voicePrompt })
-  // 任务语音提示；013 任务引擎卡消费。
+  // 字符串入参的 path-like 判定：含目录分隔符 '/'，或以 '.m4a' 结尾，就视为「调用方
+  // 已经给出的原始路径字符串」而非「待约定拼接的裸 taskKey」。
   //
-  // 重要：字符串快捷式按约定拼 audio/tasks/<taskKey>.m4a；但 app/web/manifest.js
-  // 里少数任务示例（press-letter-a / press-digit-3）的 id 与 voicePrompt 文件名
-  // stem 并不一致（见 audio/missing-audio.json taskVoice 段落的 note 字段）。
-  // 更稳妥的用法是直接把 manifest 任务对象整个传进来，让本函数直接读取
-  // voicePrompt 字段，不做约定拼接：
+  // WTJ-20260704-078 根因：app/web/task.js 的 playTaskVoiceDefensive() 传给这里的
+  // voiceArg 本就是 taskDef.voicePrompt——一个形如 "audio/tasks/press-a.m4a" 的路径
+  // 字符串，而非裸 key。修复前这里对所有字符串入参一律走
+  // resolveDescriptor({type:'task', key: taskKeyOrObj})，把整段路径当 key 交给
+  // conventionalPath('task', key)：sanitizeToken() 会把 '/' '.' 等非 [a-z0-9-] 字符
+  // 全部剥掉，"audio/tasks/press-a.m4a" 就被 mangle 成
+  // "audio/tasks/audiotaskspress-am4a.m4a" -> fetch 404 -> 全部 8 个任务语音静默。
+  //
+  // 修法：先判定 path-like，是则整串按原始 path 透传（见下方 isPathLike 分支），
+  // 不做任何约定拼接；否则保持原有裸 taskKey 行为不变（如 'press-a' 仍拼
+  // audio/tasks/press-a.m4a）。这与 resolveDescriptor() 对纯字符串描述符的既有语义
+  // （本文件约168行「字符串 -> 视为原始 path」，playComposite/preload 已在用）保持
+  // 一致，不新造一套判定规则。
+  function isTaskVoiceArgPathLike(str) {
+    return str.indexOf('/') !== -1 || (/\.m4a$/i).test(str);
+  }
+
+  // playTaskVoice(taskKey) / playTaskVoice(path) / playTaskVoice({ id, voicePrompt })
+  // 任务语音提示；013 任务引擎卡消费，task.js 的 playTaskVoiceDefensive() 是唯一
+  // 会把字符串快捷式实参喂成「路径」（而非裸 key）的调用方。
+  //
+  // 字符串入参分两种：
+  //   - path-like（含 '/' 或以 '.m4a' 结尾，如 "audio/tasks/press-a.m4a"）：整串按原始
+  //     path 透传播放，不做约定拼接（见 isTaskVoiceArgPathLike 的注记，WTJ-20260704-078）。
+  //   - 裸 taskKey（如 "press-a"，不含 '/'）：仍按约定拼 audio/tasks/<taskKey>.m4a。
+  //
+  // 对象入参：app/web/manifest.js 里少数任务示例（press-letter-a / press-digit-3）的
+  // id 与 voicePrompt 文件名 stem 并不一致（见 audio/missing-audio.json taskVoice 段落
+  // 的 note 字段）。更稳妥的用法是直接把 manifest 任务对象整个传进来，让本函数直接
+  // 读取 voicePrompt 字段，不做约定拼接：
   //   WTJ_AUDIO.playTaskVoice(WTJ_MANIFEST.tasks.templates.press.examples[0]);
   function playTaskVoice(taskKeyOrObj) {
     var descriptor;
     if (typeof taskKeyOrObj === 'string') {
-      descriptor = resolveDescriptor({ type: 'task', key: taskKeyOrObj });
+      if (taskKeyOrObj.length > 0 && isTaskVoiceArgPathLike(taskKeyOrObj)) {
+        // 整串本就是路径：复用 resolveDescriptor() 对纯字符串描述符的既有语义
+        // （{type:'path', key:item, path:item}），原样透传，不经过 conventionalPath。
+        descriptor = resolveDescriptor(taskKeyOrObj);
+      } else {
+        descriptor = resolveDescriptor({ type: 'task', key: taskKeyOrObj });
+      }
     } else if (isPlainObject(taskKeyOrObj)) {
       descriptor = resolveDescriptor({
         type: 'task',

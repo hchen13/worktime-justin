@@ -1,0 +1,285 @@
+{
+  "pack_id": "production-animations-v1",
+  "card_id": "WTJ-20260704-026",
+  "created_by": "DESIGN",
+  "created_at_cst": "2026-07-04 02:30",
+  "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
+  "asset_spec": {
+    "format": "PNG frames",
+    "color_mode": "RGBA",
+    "canvas": "1024x1024",
+    "background": "transparent"
+  },
+  "contact_sheet": "docs/assets/production-animations-v1/contact-sheets/animation-v1-contact-sheet.png",
+  "previews": {
+    "faucet_running": "docs/assets/production-animations-v1/previews/faucet-running-preview.gif",
+    "faucet_closing": "docs/assets/production-animations-v1/previews/faucet-closing-preview.gif",
+    "horse_idle": "docs/assets/production-animations-v1/previews/horse-idle-preview.gif",
+    "horse_run": "docs/assets/production-animations-v1/previews/horse-run-preview.gif",
+    "horse_stop_success": "docs/assets/production-animations-v1/previews/horse-stop-success-preview.gif",
+    "lamp_toggle": "docs/assets/production-animations-v1/previews/lamp-toggle-preview.gif"
+  },
+  "assets": {
+    "faucet": {
+      "source": "docs/assets/production-animations-v1/source/faucet-base.png",
+      "animations": {
+        "off": {
+          "fps": 1,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.78
+          ],
+          "bounds": [
+            178,
+            211,
+            845,
+            813
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/faucet/off/faucet_off_000.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/off-sheet.png"
+        },
+        "running": {
+          "fps": 10,
+          "loop": true,
+          "anchor": [
+            0.5,
+            0.78
+          ],
+          "bounds": [
+            178,
+            211,
+            845,
+            1011
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_000.png",
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_001.png",
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_002.png",
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_003.png",
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_004.png",
+            "docs/assets/production-animations-v1/faucet/running/faucet_running_005.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/running-sheet.png"
+        },
+        "closing": {
+          "fps": 8,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.78
+          ],
+          "bounds": [
+            178,
+            178,
+            845,
+            1003
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_000.png",
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_001.png",
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_002.png",
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_003.png",
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_004.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/closing-sheet.png"
+        },
+        "closed": {
+          "fps": 1,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.78
+          ],
+          "bounds": [
+            178,
+            178,
+            845,
+            813
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/faucet/closed/faucet_closed_000.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/closed-sheet.png"
+        }
+      }
+    },
+    "horse": {
+      "source": "docs/assets/production-animations-v1/source/horse-base.png",
+      "animations": {
+        "idle": {
+          "fps": 6,
+          "loop": true,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "bounds": [
+            152,
+            149,
+            872,
+            881
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/horse/idle/horse_idle_000.png",
+            "docs/assets/production-animations-v1/horse/idle/horse_idle_001.png",
+            "docs/assets/production-animations-v1/horse/idle/horse_idle_002.png",
+            "docs/assets/production-animations-v1/horse/idle/horse_idle_003.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/idle-sheet.png"
+        },
+        "run": {
+          "fps": 12,
+          "loop": true,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "bounds": [
+            63,
+            125,
+            887,
+            889
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/horse/run/horse_run_000.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_001.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_002.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_003.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_004.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_005.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_006.png",
+            "docs/assets/production-animations-v1/horse/run/horse_run_007.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/run-sheet.png"
+        },
+        "stop_success": {
+          "fps": 9,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "bounds": [
+            81,
+            133,
+            901,
+            883
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_000.png",
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_001.png",
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_002.png",
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_003.png",
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_004.png",
+            "docs/assets/production-animations-v1/horse/stop-success/horse_stop_success_005.png"
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/horse/sheets/stop-success-sheet.png"
+        }
+      }
+    },
+    "lamp": {
+      "source": "docs/assets/production-animations-v1/source/lamp-base.png",
+      "animations": {
+        "off": {
+          "fps": 1,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/off-sheet.png",
+          "bounds": [
+            244,
+            141,
+            780,
+            882
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/lamp/off/lamp_off_000.png"
+          ]
+        },
+        "turning-on": {
+          "fps": 12,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/turning-on-sheet.png",
+          "bounds": [
+            14,
+            141,
+            780,
+            960
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_000.png",
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_001.png",
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_002.png",
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_003.png",
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_004.png",
+            "docs/assets/production-animations-v1/lamp/turning-on/lamp_turning_on_005.png"
+          ]
+        },
+        "on": {
+          "fps": 1,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/on-sheet.png",
+          "bounds": [
+            26,
+            141,
+            780,
+            947
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/lamp/on/lamp_on_000.png"
+          ]
+        },
+        "turning-off": {
+          "fps": 10,
+          "loop": false,
+          "anchor": [
+            0.5,
+            0.86
+          ],
+          "frame_sheet": "docs/assets/production-animations-v1/lamp/sheets/turning-off-sheet.png",
+          "bounds": [
+            24,
+            141,
+            780,
+            948
+          ],
+          "frames": [
+            "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_000.png",
+            "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_001.png",
+            "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_002.png",
+            "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_003.png",
+            "docs/assets/production-animations-v1/lamp/turning-off/lamp_turning_off_004.png"
+          ]
+        }
+      },
+      "manifest": "docs/assets/production-animations-v1/lamp/manifest.json",
+      "contact_sheet": "docs/assets/production-animations-v1/lamp/lamp-contact-sheet.png"
+    }
+  },
+  "v1_boundary": {
+    "included": [
+      "faucet off/running/closing/closed",
+      "horse idle/run/stop_success",
+      "lamp off/turning-on/on/turning-off"
+    ],
+    "deferred_to_v2": [
+      "door opening",
+      "bell ring"
+    ],
+    "reason": "P0 acceptance required faucet and horse first; deferred props need separate pose-specific generation to avoid low-quality flattened distortions."
+  },
+  "updated_at_cst": "2026-07-04 03:40"
+}

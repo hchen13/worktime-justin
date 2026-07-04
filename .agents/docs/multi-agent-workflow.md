@@ -69,6 +69,13 @@ Required fields:
 - `最新进展`: concise human-written status note.
 - `截止/检查点`: date for the next expected transition or review.
 
+Path-specific card instructions:
+
+- If a card depends on a requirement, mockup, design spec, runtime asset, audio source, branch, test, or generated output, PM must name the exact path or upstream card ID directly on the card.
+- Use local project paths that the role can open without asking Ethan, for example `docs/index.html`, `docs/assets/accepted-mvp-mockup.png`, `docs/design/wtj-081-main-ui-visual-motion-spec.md`, `docs/assets/style/wtj-082/manifest.json`, `app/web/audio/AUDIO-API.md`, or `tests/e2e/task_reward_integration.py`.
+- A vague reference such as "the image", "the design", "the mock", or "the requirement doc" is not actionable. PM must clarify it before routing, or during the next PM loop if the gap is discovered later.
+- If a role discovers that a named path is missing, stale, or insufficient, it records the exact path and question in `最新进展` or `阻塞问题` and returns to PM instead of asking Ethan only in the session chat.
+
 ## 4. Card Creation And Routing Authority
 
 PM is the single routing authority for official project work.
@@ -91,7 +98,53 @@ When TL, DESIGN, or QA finishes assigned work, they hand it back to PM:
 
 PM then decides the next state and owner.
 
-## 5. 状态流转
+## 5. Multi-Session Role Coordination
+
+`负责人` is role-level ownership, not a unique human/session identifier. Multiple sessions may run under the same role, especially `DESIGN` and `QA`, as long as each active card records which concrete session has claimed it.
+
+Session identity rules:
+
+- Each role session must have both a human-readable short label and a stable unique session identity.
+- The short label is for scanning, for example `DESIGN-A`, `DESIGN-2`, `QA-Audio`, `QA-Visual`, or a named label chosen by Ethan/PM.
+- The unique identity is for unambiguous ownership. Use the real runtime identifier whenever available: `CodexThread:<thread-id>` for Codex threads, `ClaudeSession:<session-id>` for Claude Code sessions, or `Automation:<automation-id>` for scheduled PM automation.
+- The label and identity do not replace `负责人`; `负责人` remains `DESIGN`, `QA`, `TL`, `PM`, or `Ethan`.
+- Do not write app secrets, OAuth tokens, cookies, local passwords, or API keys as identity. Thread/session/automation IDs are acceptable because they identify the working session, not credentials.
+- A role session should not claim a formal card until it can write a stable identity. If the launcher has not provided one, the session should ask the launcher/PM for the Codex thread ID or Claude Code session ID before taking ownership.
+- When claiming or updating a card, the session writes both label and identity at the start of `最新进展`, using this shape: `执行者：DESIGN-A；身份ID：CodexThread:019f2771-...；开始：2026-07-04 14:30 CST；范围：horse run sheet rework`.
+- If the card has a concrete output path, branch, test file, or asset folder, the claiming note must include the touched scope so another same-role session can avoid collisions.
+- Feishu comments may contain detail, but the table fields must still show the active session label, stable identity, and next action.
+
+Claiming and takeover rules:
+
+- A same-role session may claim an unstarted `todo` card by moving it to `in progress`, keeping `负责人` as that role, and writing the session label plus stable identity in `最新进展`.
+- If another same-role session has already claimed the card and the claim is still current, do not overwrite it. Pick another card or ask PM to split/triage.
+- A claim is current when `最新进展` or Feishu comments show recent work and `下一步动作` still belongs to that same session.
+- A same-role session may take over only when PM explicitly says it may, the previous claim is stale past `截止/检查点`, or the previous executor has returned the card to `review`/PM.
+- On takeover, preserve the previous evidence and write a new `最新进展` line naming both the new executor label/identity and why takeover is valid.
+- If two same-role sessions race on the same card or asset path, the later claimant must stop and return the card to `review` for PM triage instead of silently continuing.
+
+Returned and rejected cards:
+
+- If PM rejects a delivered card for rework, PM should route it back to the same role and, when useful, name the preferred original executor by label and identity in `下一步动作`, for example `优先 DESIGN-A (CodexThread:019f2771-...) 继续；若该 session 空闲超 30 分钟，任意 DESIGN 可接手并保留原证据`.
+- If PM does not name a preferred executor, any same-role session may claim the returned `todo` card, but it must read the previous `产物/证据`, `最新进展`, and comments before editing.
+- A non-PM role still returns finished work to PM review. Multiple DESIGN or QA sessions do not directly pass cards to each other unless PM has written that handoff into the card.
+
+Parallel DESIGN rules:
+
+- PM should split large asset work into small cards by asset family, letter group, animation, or output folder whenever possible.
+- Two DESIGN sessions must not edit the same output folder, sprite sheet, or source prompt file at the same time unless PM explicitly defines a merge plan.
+- For production assets, each DESIGN session records prompt, selected asset paths, rejected outputs if relevant, cleanup steps, and known visual risks.
+- If a DESIGN session discovers systemic style drift or quality-bar failure, it returns the card to PM review with evidence instead of continuing a large batch in the wrong direction.
+
+Parallel QA rules:
+
+- QA sessions may run concurrently by test type, feature area, or artifact path, for example `QA-Visual`, `QA-E2E`, and `QA-Audio`.
+- Each QA session must claim a distinct card or a distinct scope explicitly written in the card. If one QA card covers multiple scopes, the first QA session must either split the work through PM or write a clear sub-scope before starting.
+- New or changed reusable tests must name the creating executor label/identity and the adversarial reviewer label/identity in `对抗评审` or `产物/证据`.
+- QA sessions may share test assets, but they must not rewrite the same test file or visual prompt concurrently without a named owner and merge plan.
+- QA failures always return to PM review with suspected owner and evidence. QA sessions do not directly route failed work to TL or DESIGN.
+
+## 6. 状态流转
 
 Normal flow:
 
@@ -135,7 +188,7 @@ Whole-board completion:
 - PM loop must run `.agents/tools/pm_completion_notify.py` after each board scan. If the board is complete, the tool sends Ethan a one-time Feishu direct message using PM app credentials and records local notification state under `.agents/state/` to avoid duplicate messages.
 - If new active work appears after a completion notification, the notification state resets; the next all-terminal state may notify again.
 
-## 6. No-Stale Rules
+## 7. No-Stale Rules
 
 Every active card must have:
 
@@ -148,6 +201,7 @@ Every active card must have:
 
 Additional rules:
 
+- For cards owned by a role with multiple live sessions, `最新进展` must name the concrete active executor label plus stable identity, or say why no session has claimed it yet.
 - A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`.
 - Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
@@ -161,7 +215,7 @@ Additional rules:
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
 - A role receiving a card must either accept it, return it with a concrete reason, or block it with a precise question. Do not leave it ambiguous.
 
-## 7. Card Intake And Handoff
+## 8. Card Intake And Handoff
 
 Every role starts by checking cards where `负责人` is that role, across all active statuses.
 
@@ -174,6 +228,8 @@ Minimum handling rules:
 - `blocking`: the named `阻塞负责人` owns the next answer or decision.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
+
+When multiple sessions exist for the same role, the acting session must also update or preserve the executor label described in Section 5.
 
 Implementation handoff contract:
 
@@ -191,7 +247,7 @@ Non-PM handoff rule:
 - They finish by moving the card to `review` and assigning PM.
 - PM performs the actual routing decision.
 
-## 8. Task Size And Review Depth
+## 9. Task Size And Review Depth
 
 PM chooses the review depth when creating or routing a card. The goal is to keep rigor where it matters and avoid making obvious small fixes wait behind heavyweight process.
 
@@ -224,7 +280,7 @@ For `轻量流程`:
 
 If a light card uncovers unclear requirements, cross-module coupling, or high-risk behavior, TL/QA must stop, record the reason, and return it to PM for rerouting as `完整流程`.
 
-## 9. PM Workflow
+## 10. PM Workflow
 
 PM responsibilities:
 
@@ -235,6 +291,9 @@ PM responsibilities:
 5. Handle blockers that need Ethan clarification or PM decision.
 6. Decide all cross-role routing after cards return to `review`.
 7. Notify Ethan through Feishu when the entire board reaches whole-board completion.
+8. Split large DESIGN/QA work enough that multiple same-role sessions can run without editing the same assets or test files.
+9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
+10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
 
 PM acceptance requires:
 
@@ -250,7 +309,7 @@ PM branch discipline:
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
 - In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.
 
-## 10. TL Workflow
+## 11. TL Workflow
 
 TL responsibilities:
 
@@ -277,7 +336,7 @@ TL handoff must include:
 
 If PM returns a review card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
 
-## 11. DESIGN Workflow
+## 12. DESIGN Workflow
 
 DESIGN responsibilities:
 
@@ -289,9 +348,11 @@ DESIGN responsibilities:
 
 Design cards move to `review` with `负责人 = PM`. DESIGN may recommend TL implementation or further design iteration, but PM decides the route.
 
+When multiple DESIGN sessions are running, each DESIGN session must use its session label in `最新进展`, claim only one active card or one explicit asset scope at a time, and avoid touching folders claimed by another DESIGN session.
+
 Detailed production asset standard: [production-asset-quality.md](production-asset-quality.md).
 
-## 12. QA Workflow
+## 13. QA Workflow
 
 QA responsibilities:
 
@@ -309,11 +370,13 @@ QA cards can appear in `todo` before implementation reaches `testing` when the t
 
 When QA finishes testing, QA does not directly assign the card back to TL/DESIGN. QA moves it to `review`, sets `负责人 = PM`, records `QA结果`, evidence, failures, suspected owner, and recommended next action. PM decides whether to close, route rework, create a new QA asset card, block for Ethan, or deprecate.
 
+When multiple QA sessions are running, each QA session must claim a distinct card or explicit test scope, write its session label in `最新进展`, and avoid concurrent edits to the same test asset unless PM has named a merge owner.
+
 Detailed QA protocol: [.agents/docs/qa-testing-protocol.md](qa-testing-protocol.md).
 
 Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agent-runtime-loops.md).
 
-## 13. Blocker Handling
+## 14. Blocker Handling
 
 Use `blocking` only when progress genuinely requires another role or Ethan.
 
@@ -331,7 +394,7 @@ Resolution:
 - Technical/design/QA issue resolved by owner: owner records evidence and moves card forward.
 - Work no longer needed: PM moves card to `_deprecated`.
 
-## 14. Local Skills
+## 15. Local Skills
 
 Hyperframes skills from `heygen-com/hyperframes` are installed project-locally under `.codex/skills/` for Codex and `.claude/skills/` for Claude Code.
 
