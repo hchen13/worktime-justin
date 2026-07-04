@@ -1,52 +1,7 @@
 {
-  "missing_count": 8,
+  "missing_count": 3,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "xylophone",
-      "first_letter": "X",
-      "display_name": "Xylophone",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/xylophone.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.xylophone"
-    },
-    {
-      "word": "xray",
-      "first_letter": "X",
-      "display_name": "X-ray",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/xray.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.xray"
-    },
-    {
-      "word": "yoyo",
-      "first_letter": "Y",
-      "display_name": "Yo-yo",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/yoyo.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.yoyo"
-    },
-    {
-      "word": "yarn",
-      "first_letter": "Y",
-      "display_name": "Yarn",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/yarn.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.yarn"
-    },
-    {
-      "word": "yak",
-      "first_letter": "Y",
-      "display_name": "Yak",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/yak.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.yak"
-    },
     {
       "word": "zebra",
       "first_letter": "Z",
@@ -75,7 +30,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 09:54",
+  "updated_at_cst": "2026-07-04 10:38",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -406,6 +361,36 @@
       "word": "wagon",
       "asset_path": "docs/assets/production-pack-b/sprites/wagon.png",
       "resolved_at_cst": "2026-07-04 09:54"
+    },
+    {
+      "card_id": "WTJ-20260704-052",
+      "word": "xylophone",
+      "asset_path": "docs/assets/production-pack-b/sprites/xylophone.png",
+      "resolved_at_cst": "2026-07-04 10:23"
+    },
+    {
+      "card_id": "WTJ-20260704-052",
+      "word": "xray",
+      "asset_path": "docs/assets/production-pack-b/sprites/xray.png",
+      "resolved_at_cst": "2026-07-04 10:23"
+    },
+    {
+      "card_id": "WTJ-20260704-053",
+      "word": "yoyo",
+      "asset_path": "docs/assets/production-pack-b/sprites/yoyo.png",
+      "resolved_at_cst": "2026-07-04 10:38"
+    },
+    {
+      "card_id": "WTJ-20260704-053",
+      "word": "yarn",
+      "asset_path": "docs/assets/production-pack-b/sprites/yarn.png",
+      "resolved_at_cst": "2026-07-04 10:38"
+    },
+    {
+      "card_id": "WTJ-20260704-053",
+      "word": "yak",
+      "asset_path": "docs/assets/production-pack-b/sprites/yak.png",
+      "resolved_at_cst": "2026-07-04 10:38"
     }
   ]
 }
