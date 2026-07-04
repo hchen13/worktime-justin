@@ -1,43 +1,7 @@
 {
-  "missing_count": 20,
+  "missing_count": 16,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "umbrella",
-      "first_letter": "U",
-      "display_name": "Umbrella",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/umbrella.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.umbrella"
-    },
-    {
-      "word": "unicorn",
-      "first_letter": "U",
-      "display_name": "Unicorn",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/unicorn.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.unicorn"
-    },
-    {
-      "word": "ukulele",
-      "first_letter": "U",
-      "display_name": "Ukulele",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/ukulele.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.ukulele"
-    },
-    {
-      "word": "uniform",
-      "first_letter": "U",
-      "display_name": "Uniform",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/uniform.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.uniform"
-    },
     {
       "word": "van",
       "first_letter": "V",
@@ -183,7 +147,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 08:35",
+  "updated_at_cst": "2026-07-04 09:06",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -442,6 +406,30 @@
       "word": "quarter",
       "asset_path": "docs/assets/production-pack-b/sprites/quarter.png",
       "resolved_at_cst": "2026-07-04 08:35"
+    },
+    {
+      "card_id": "WTJ-20260704-049",
+      "word": "umbrella",
+      "asset_path": "docs/assets/production-pack-b/sprites/umbrella.png",
+      "resolved_at_cst": "2026-07-04 09:06"
+    },
+    {
+      "card_id": "WTJ-20260704-049",
+      "word": "unicorn",
+      "asset_path": "docs/assets/production-pack-b/sprites/unicorn.png",
+      "resolved_at_cst": "2026-07-04 09:06"
+    },
+    {
+      "card_id": "WTJ-20260704-049",
+      "word": "ukulele",
+      "asset_path": "docs/assets/production-pack-b/sprites/ukulele.png",
+      "resolved_at_cst": "2026-07-04 09:06"
+    },
+    {
+      "card_id": "WTJ-20260704-049",
+      "word": "uniform",
+      "asset_path": "docs/assets/production-pack-b/sprites/uniform.png",
+      "resolved_at_cst": "2026-07-04 09:06"
     }
   ]
 }

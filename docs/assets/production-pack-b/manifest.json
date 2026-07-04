@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 80,
-  "stubbed_pending_count": 20,
+  "production_ready_count": 84,
+  "stubbed_pending_count": 16,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -117,7 +117,16 @@
     "quail_alpha_raw": "docs/assets/production-pack-b/source/quail-alpha-raw.png",
     "quarter_source_magenta": "docs/assets/production-pack-b/source/quarter-source-magenta.png",
     "quarter_alpha_raw": "docs/assets/production-pack-b/source/quarter-alpha-raw.png",
-    "letter_q_prompt_record": "docs/assets/production-pack-b/source/letter-q-prompt.md"
+    "letter_q_prompt_record": "docs/assets/production-pack-b/source/letter-q-prompt.md",
+    "umbrella_source_green": "docs/assets/production-pack-b/source/umbrella-source-green.png",
+    "umbrella_alpha_raw": "docs/assets/production-pack-b/source/umbrella-alpha-raw.png",
+    "unicorn_source_green": "docs/assets/production-pack-b/source/unicorn-source-green.png",
+    "unicorn_alpha_raw": "docs/assets/production-pack-b/source/unicorn-alpha-raw.png",
+    "ukulele_source_green": "docs/assets/production-pack-b/source/ukulele-source-green.png",
+    "ukulele_alpha_raw": "docs/assets/production-pack-b/source/ukulele-alpha-raw.png",
+    "uniform_source_green": "docs/assets/production-pack-b/source/uniform-source-green.png",
+    "uniform_alpha_raw": "docs/assets/production-pack-b/source/uniform-alpha-raw.png",
+    "letter_u_prompt_record": "docs/assets/production-pack-b/source/letter-u-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -934,9 +943,9 @@
       "word": "umbrella",
       "first_letter": "U",
       "display_name": "Umbrella",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/umbrella.png",
       "sound_key": "secret.word.umbrella",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/umbrella.png"
     },
@@ -944,9 +953,9 @@
       "word": "unicorn",
       "first_letter": "U",
       "display_name": "Unicorn",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/unicorn.png",
       "sound_key": "secret.word.unicorn",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/unicorn.png"
     },
@@ -954,9 +963,9 @@
       "word": "ukulele",
       "first_letter": "U",
       "display_name": "Ukulele",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/ukulele.png",
       "sound_key": "secret.word.ukulele",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/ukulele.png"
     },
@@ -964,9 +973,9 @@
       "word": "uniform",
       "first_letter": "U",
       "display_name": "Uniform",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/uniform.png",
       "sound_key": "secret.word.uniform",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/uniform.png"
     },
@@ -1131,7 +1140,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 08:35",
+  "updated_at_cst": "2026-07-04 09:06",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1287,6 +1296,17 @@
         "quarter"
       ],
       "changes": "Generated production queen, quilt, quail, and quarter sprites, replaced placeholder asset_paths, and marked all four ready."
+    },
+    {
+      "card_id": "WTJ-20260704-049",
+      "updated_at_cst": "2026-07-04 09:06",
+      "words": [
+        "umbrella",
+        "unicorn",
+        "ukulele",
+        "uniform"
+      ],
+      "changes": "Generated production umbrella, unicorn, ukulele, and uniform sprites, replaced placeholder asset_paths, and marked all four ready."
     }
   ]
 }
