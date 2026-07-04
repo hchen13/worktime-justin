@@ -1,0 +1,196 @@
+/* WTJ-20260704-015 — 工作状态灯「今日工作完成」连续奖励叠层样式
+   延续 style.css / hud.css / secretword.css / task-templates.css 的深色低调基调（#0e1117 系）。
+   整个叠层 pointer-events:none，永不拦截鼠标；小火箭 + sparkle-burst/star-sticker 一次性
+   出现 → 上升/淡入 → 淡出，由 status-rewards.js 用可注入时钟定时移除，不永久堆积
+   （REQ-RWD-04「不污染主画面」）。
+
+   Safari 14 兼容基线（延续既有 CSS 文件的约束）：不使用 inset 简写（拆四个物理属性）、
+   不使用 aspect-ratio / flex gap / :focus-visible 等 Safari 14 不支持的特性、不用
+   clip-path（避免额外的前缀兼容负担，形状改用 border-radius / border 三角形写法）。
+   prefers-reduced-motion 下关闭全部动画/过渡，改为无动效地短暂静态显示（JS 定时移除逻辑
+   不变，见 status-rewards.js 的 prefersReducedMotion() 一节说明）。 */
+
+.wtj-sr-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* 高于 HUD（5）/ 任务叠层（6）/ 秘密词命中叠层（8），低于 debug-overlay / esc-progress-wrap
+     （10）——「今日工作完成」是本产品当前最大的一次性奖励表现，理应出现在其余舞台内容之上，
+     但依然不遮挡调试/退出叠层。 */
+  z-index: 9;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* 小火箭（mini-rocket-launch）：纯 CSS 形状，无贴图。                    */
+/* 用 border-radius 拼出箭体 + border 三角形拼出鼻锥/尾焰，避免使用       */
+/* Safari 14 不支持的 clip-path。                                       */
+/* ------------------------------------------------------------------ */
+
+.wtj-sr-rocket {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: 28px;
+  height: 64px;
+  /* 箭体：圆头圆角矩形，暖白偏蓝，呼应"工作台状态灯"科技感基调。 */
+  background: linear-gradient(180deg, #f4f7fb 0%, #cdd9e8 70%, #9fb3cc 100%);
+  border-radius: 14px 14px 8px 8px;
+  box-shadow: inset 0 0 0 1px rgba(20, 30, 45, 0.25), 0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, 0) scale(0.7);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* 鼻锥：border 三角形叠在箭体顶部。 */
+.wtj-sr-rocket::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 16px solid #ffd57a;
+}
+
+/* 尾焰：border 三角形叠在箭体底部，暖橙渐变靠滤镜近似。 */
+.wtj-sr-rocket::after {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  left: 4px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 20px solid #ff9d4d;
+  filter: drop-shadow(0 0 6px rgba(255, 157, 77, 0.75));
+}
+
+.wtj-sr-rocket.wtj-sr-anim {
+  -webkit-animation: wtj-sr-rocket-rise 1.8s ease-out forwards;
+  animation: wtj-sr-rocket-rise 1.8s ease-out forwards;
+}
+
+@-webkit-keyframes wtj-sr-rocket-rise {
+  0%   { opacity: 0; -webkit-transform: translate(-50%, 0) scale(0.7); transform: translate(-50%, 0) scale(0.7); }
+  14%  { opacity: 1; -webkit-transform: translate(-50%, -8vh) scale(1); transform: translate(-50%, -8vh) scale(1); }
+  70%  { opacity: 1; -webkit-transform: translate(-50%, -46vh) scale(1); transform: translate(-50%, -46vh) scale(1); }
+  100% { opacity: 0; -webkit-transform: translate(-50%, -62vh) scale(0.9); transform: translate(-50%, -62vh) scale(0.9); }
+}
+
+@keyframes wtj-sr-rocket-rise {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+  14%  { opacity: 1; transform: translate(-50%, -8vh) scale(1); }
+  70%  { opacity: 1; transform: translate(-50%, -46vh) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -62vh) scale(0.9); }
+}
+
+/* ------------------------------------------------------------------ */
+/* sparkle-burst.png：升空到高点时的"爆发"闪光，延迟出现衔接火箭上升节奏。 */
+/* ------------------------------------------------------------------ */
+
+.wtj-sr-sparkle {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: clamp(140px, 20vw, 240px);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4));
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  will-change: transform, opacity;
+}
+
+.wtj-sr-sparkle.wtj-sr-anim {
+  -webkit-animation: wtj-sr-sparkle-pop 1.8s ease-out forwards;
+  animation: wtj-sr-sparkle-pop 1.8s ease-out forwards;
+}
+
+@-webkit-keyframes wtj-sr-sparkle-pop {
+  0%   { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.5); transform: translate(-50%, -50%) scale(0.5); }
+  55%  { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.5); transform: translate(-50%, -50%) scale(0.5); }
+  68%  { opacity: 1; -webkit-transform: translate(-50%, -50%) scale(1.08); transform: translate(-50%, -50%) scale(1.08); }
+  82%  { opacity: 1; -webkit-transform: translate(-50%, -50%) scale(1); transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.9); transform: translate(-50%, -50%) scale(0.9); }
+}
+
+@keyframes wtj-sr-sparkle-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  55%  { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  68%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  82%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+/* ------------------------------------------------------------------ */
+/* star-sticker.png：伴随 sparkle 一起出现的小贴纸，位置略偏移做出"组合"感。 */
+/* ------------------------------------------------------------------ */
+
+.wtj-sr-star {
+  position: absolute;
+  top: 26%;
+  left: 62%;
+  width: clamp(56px, 9vw, 100px);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5) rotate(-12deg);
+  will-change: transform, opacity;
+}
+
+.wtj-sr-star.wtj-sr-anim {
+  -webkit-animation: wtj-sr-star-pop 1.8s ease-out forwards;
+  animation: wtj-sr-star-pop 1.8s ease-out forwards;
+}
+
+@-webkit-keyframes wtj-sr-star-pop {
+  0%   { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); }
+  60%  { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); }
+  76%  { opacity: 1; -webkit-transform: translate(-50%, -50%) scale(1.05) rotate(6deg); transform: translate(-50%, -50%) scale(1.05) rotate(6deg); }
+  88%  { opacity: 1; -webkit-transform: translate(-50%, -50%) scale(1) rotate(0deg); transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; -webkit-transform: translate(-50%, -50%) scale(0.92) rotate(0deg); transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+}
+
+@keyframes wtj-sr-star-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); }
+  60%  { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); }
+  76%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(6deg); }
+  88%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+}
+
+/* ------------------------------------------------------------------ */
+/* 无障碍偏好：关闭一切过渡/动画，冻结为静态完成态（不闪不动）。            */
+/* JS 定时展示/移除的时长不受影响（见 status-rewards.js 说明），这里只去掉  */
+/* 视觉运动本身；三个元素改为"直接以动画终点附近的样态短暂静态出现"。       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-sr-rocket,
+  .wtj-sr-sparkle,
+  .wtj-sr-star {
+    -webkit-animation: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .wtj-sr-rocket {
+    transform: translate(-50%, -30vh) scale(1) !important;
+  }
+
+  .wtj-sr-sparkle {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  .wtj-sr-star {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+  }
+}

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="hud.css" />
   <link rel="stylesheet" href="secretword.css" />
   <link rel="stylesheet" href="task-templates.css" />
+  <link rel="stylesheet" href="status-rewards.css" />
 </head>
 <body>
   <canvas id="stage"></canvas>
@@ -45,5 +46,9 @@
        订阅 WTJ_TASK.onQuestionClicked、用 WTJ_POINTER.registerTarget、WTJ_KEYBOARD.onLetter。
        见 app/web/task-templates.js 顶部注释。 -->
   <script src="task-templates.js"></script>
+  <!-- status-rewards.js（015 工作状态灯「今日工作完成」连续奖励）需在 task-templates.js
+       之后——订阅它暴露的 WTJ_TASK_TEMPLATES.onTaskComplete 事件累计连续完成计数。见
+       app/web/status-rewards.js 顶部注释。 -->
+  <script src="status-rewards.js"></script>
 </body>
 </html>
