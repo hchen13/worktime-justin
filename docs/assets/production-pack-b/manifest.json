@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 88,
-  "stubbed_pending_count": 12,
+  "production_ready_count": 92,
+  "stubbed_pending_count": 8,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -135,7 +135,16 @@
     "violin_alpha_raw": "docs/assets/production-pack-b/source/violin-alpha-raw.png",
     "volcano_source_green": "docs/assets/production-pack-b/source/volcano-source-green.png",
     "volcano_alpha_raw": "docs/assets/production-pack-b/source/volcano-alpha-raw.png",
-    "letter_v_prompt_record": "docs/assets/production-pack-b/source/letter-v-prompt.md"
+    "letter_v_prompt_record": "docs/assets/production-pack-b/source/letter-v-prompt.md",
+    "whale_source_green": "docs/assets/production-pack-b/source/whale-source-green.png",
+    "whale_alpha_raw": "docs/assets/production-pack-b/source/whale-alpha-raw.png",
+    "watch_source_green": "docs/assets/production-pack-b/source/watch-source-green.png",
+    "watch_alpha_raw": "docs/assets/production-pack-b/source/watch-alpha-raw.png",
+    "window_source_green": "docs/assets/production-pack-b/source/window-source-green.png",
+    "window_alpha_raw": "docs/assets/production-pack-b/source/window-alpha-raw.png",
+    "wagon_source_green": "docs/assets/production-pack-b/source/wagon-source-green.png",
+    "wagon_alpha_raw": "docs/assets/production-pack-b/source/wagon-alpha-raw.png",
+    "letter_w_prompt_record": "docs/assets/production-pack-b/source/letter-w-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -1032,9 +1041,9 @@
       "word": "whale",
       "first_letter": "W",
       "display_name": "Whale",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/whale.png",
       "sound_key": "secret.word.whale",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/whale.png"
     },
@@ -1042,9 +1051,9 @@
       "word": "watch",
       "first_letter": "W",
       "display_name": "Watch",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/watch.png",
       "sound_key": "secret.word.watch",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/watch.png"
     },
@@ -1052,9 +1061,9 @@
       "word": "window",
       "first_letter": "W",
       "display_name": "Window",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/window.png",
       "sound_key": "secret.word.window",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/window.png"
     },
@@ -1062,9 +1071,9 @@
       "word": "wagon",
       "first_letter": "W",
       "display_name": "Wagon",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/wagon.png",
       "sound_key": "secret.word.wagon",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-04",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/wagon.png"
     },
@@ -1149,7 +1158,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 09:29",
+  "updated_at_cst": "2026-07-04 09:54",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1327,6 +1336,17 @@
         "volcano"
       ],
       "changes": "Generated production van, vase, violin, and volcano sprites, replaced placeholder asset_paths, and marked all four ready."
+    },
+    {
+      "card_id": "WTJ-20260704-051",
+      "updated_at_cst": "2026-07-04 09:54",
+      "words": [
+        "whale",
+        "watch",
+        "window",
+        "wagon"
+      ],
+      "changes": "Generated production whale, watch, window, and wagon sprites, replaced placeholder asset_paths, and marked all four ready."
     }
   ]
 }

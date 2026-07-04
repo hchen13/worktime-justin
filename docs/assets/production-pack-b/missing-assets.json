@@ -1,43 +1,7 @@
 {
-  "missing_count": 12,
+  "missing_count": 8,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "whale",
-      "first_letter": "W",
-      "display_name": "Whale",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/whale.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.whale"
-    },
-    {
-      "word": "watch",
-      "first_letter": "W",
-      "display_name": "Watch",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/watch.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.watch"
-    },
-    {
-      "word": "window",
-      "first_letter": "W",
-      "display_name": "Window",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/window.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.window"
-    },
-    {
-      "word": "wagon",
-      "first_letter": "W",
-      "display_name": "Wagon",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/wagon.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-04",
-      "sound_key": "secret.word.wagon"
-    },
     {
       "word": "xylophone",
       "first_letter": "X",
@@ -111,7 +75,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 09:29",
+  "updated_at_cst": "2026-07-04 09:54",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -418,6 +382,30 @@
       "word": "volcano",
       "asset_path": "docs/assets/production-pack-b/sprites/volcano.png",
       "resolved_at_cst": "2026-07-04 09:29"
+    },
+    {
+      "card_id": "WTJ-20260704-051",
+      "word": "whale",
+      "asset_path": "docs/assets/production-pack-b/sprites/whale.png",
+      "resolved_at_cst": "2026-07-04 09:54"
+    },
+    {
+      "card_id": "WTJ-20260704-051",
+      "word": "watch",
+      "asset_path": "docs/assets/production-pack-b/sprites/watch.png",
+      "resolved_at_cst": "2026-07-04 09:54"
+    },
+    {
+      "card_id": "WTJ-20260704-051",
+      "word": "window",
+      "asset_path": "docs/assets/production-pack-b/sprites/window.png",
+      "resolved_at_cst": "2026-07-04 09:54"
+    },
+    {
+      "card_id": "WTJ-20260704-051",
+      "word": "wagon",
+      "asset_path": "docs/assets/production-pack-b/sprites/wagon.png",
+      "resolved_at_cst": "2026-07-04 09:54"
     }
   ]
 }
