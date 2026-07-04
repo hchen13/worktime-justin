@@ -198,7 +198,9 @@
   // 双保险（Fable 对抗评审 P2-2）。
   var roundHitSet = Object.create(null); // { normalizedWord: true }
   var roundHitOrder = []; // 本轮已命中词（按首次命中顺序），getRoundHits() 返回其快照
-  var secretSlotCursor = 0; // 本卡内部的"下一个待点亮空槽"游标（009 最小联动，010 将接管）
+  // 本卡内部的"下一个待点亮空槽"游标——010（window.WTJ_SLOTS）接管点槽后，只在其 fillSlot
+  // 委托路径不可用时的 fallback 分支（lightNextSlotFallback）里使用，委托路径下不再被读取。
+  var secretSlotCursor = 0;
 
   // ---------------------------------------------------------------------
   // 订阅者管理：多订阅者数组 + 逐个 try/catch，防止下游回调抛错裸冒泡打断本引擎。
@@ -336,14 +338,17 @@
   }
 
   // ---------------------------------------------------------------------
-  // 五槽基础联动（REQ-SLOT-01 / REQ-SEC-07，本卡最小实现，010 接管完整轮次去重）：命中一个
-  // 新词时点亮下一个空槽（游标 0..SLOT_COUNT-1）。游标满后不再点亮（等 010 的轮次状态机或
-  // resetRound() 开启新一轮）。防御式：WTJ_HUD 缺失/setSlot 抛错都不影响其它反馈。
+  // 五槽联动（REQ-SLOT-01 / REQ-SEC-07）：优先委托 010 的统一五槽状态机
+  // window.WTJ_SLOTS.fillSlot('secret-word', { itemKey: word, renderState: { spriteUrl } })——
+  // 由它负责跨"秘密词命中"与"008 键盘里程碑"两种来源的统一去重、槽位分配与满槽事件
+  // （见 app/web/slots/SLOTS-API.md）。
   //
-  // 已知局限：本游标只跟踪"秘密词命中"占用的槽，不感知 008 键盘里程碑经由 WTJ_HUD.setSlot
-  // 独立点亮的槽——两种来源统一去重/避免槽位冲突属于 010 五槽引擎卡范畴，见 manifest slots 域。
+  // Fallback（WTJ_SLOTS 不可用时，如 slots.js 未加载/被移除，不视为回归）：退回本卡原有的
+  // "内部游标 secretSlotCursor 直接点 WTJ_HUD.setSlot" 最小实现——只跟踪本文件自己点亮过的槽，
+  // 不感知 008 键盘里程碑经由 WTJ_HUD.setSlot 独立点亮的槽，游标满后不再点亮（等 resetRound()
+  // 开启新一轮）。防御式：WTJ_HUD 缺失/setSlot 抛错都不影响其它反馈。
   // ---------------------------------------------------------------------
-  function lightNextSlot(spriteFile) {
+  function lightNextSlotFallback(spriteFile) {
     if (secretSlotCursor >= SLOT_COUNT) return;
     var idx = secretSlotCursor;
     secretSlotCursor += 1;
@@ -355,6 +360,21 @@
     } catch (err) {
       console.error('[WTJ_SECRET] 调用 window.WTJ_HUD.setSlot 失败，已捕获：', err);
     }
+  }
+
+  function lightNextSlot(word, spriteFile) {
+    if (window.WTJ_SLOTS && typeof window.WTJ_SLOTS.fillSlot === 'function') {
+      try {
+        window.WTJ_SLOTS.fillSlot('secret-word', {
+          itemKey: word,
+          renderState: { spriteUrl: resolveSpritePath(spriteFile) }
+        });
+      } catch (err) {
+        console.error('[WTJ_SECRET] 调用 window.WTJ_SLOTS.fillSlot 失败，已捕获：', err);
+      }
+      return;
+    }
+    lightNextSlotFallback(spriteFile);
   }
 
   // ---------------------------------------------------------------------
@@ -383,7 +403,7 @@
     emit(hitSubscribers, payload);
     playWordDefensive(entry);
     showSpriteOverlay(entry.spriteFile);
-    lightNextSlot(entry.spriteFile);
+    lightNextSlot(word, entry.spriteFile);
   }
 
   // ---------------------------------------------------------------------

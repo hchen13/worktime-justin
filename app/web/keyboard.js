@@ -203,7 +203,40 @@
 
   function milestoneSlotIndex(milestoneValue) {
     var idx = indexOfStr(EFFECTIVE_KEY_MILESTONES, milestoneValue);
-    return idx === -1 ? 0 : idx; // 里程碑各占一槽，见文件顶部设计说明第 5 条
+    return idx === -1 ? 0 : idx; // 里程碑各占一槽（fallback 专用策略，见下方 lightMilestoneSlot）
+  }
+
+  // ---------------------------------------------------------------------
+  // 五槽联动（REQ-SLOT-03）：优先委托 010 的统一五槽状态机
+  // window.WTJ_SLOTS.fillSlot('keyboard-milestone', { itemKey: m, renderState: { milestone: true } })
+  // ——由它负责跨"键盘里程碑"与"009 秘密词命中"两种来源的统一去重、槽位分配与满槽事件
+  // （见 app/web/slots/SLOTS-API.md）。010 接管分配逻辑后，milestoneSlotIndex()/
+  // firedMilestones 仍用于判定"该里程碑是否本轮已触发过"（未变），但具体点亮哪个槽由 010 决定，
+  // 不再是 milestoneSlotIndex() 的返回值。
+  //
+  // Fallback（WTJ_SLOTS 不可用时，如 slots.js 未加载/被移除，不视为回归）：退回本卡原有的
+  // "按里程碑在数组中的顺序各占一槽（milestoneSlotIndex）直接点 WTJ_HUD.setSlot" 最小实现。
+  // ---------------------------------------------------------------------
+  function lightMilestoneSlotFallback(m) {
+    try {
+      if (window.WTJ_HUD && typeof window.WTJ_HUD.setSlot === 'function') {
+        window.WTJ_HUD.setSlot(milestoneSlotIndex(m), { milestone: true });
+      }
+    } catch (err) {
+      console.error('[WTJ_KEYBOARD] 调用 window.WTJ_HUD.setSlot 失败，已捕获：', err);
+    }
+  }
+
+  function lightMilestoneSlot(m) {
+    if (window.WTJ_SLOTS && typeof window.WTJ_SLOTS.fillSlot === 'function') {
+      try {
+        window.WTJ_SLOTS.fillSlot('keyboard-milestone', { itemKey: m, renderState: { milestone: true } });
+      } catch (err) {
+        console.error('[WTJ_KEYBOARD] 调用 window.WTJ_SLOTS.fillSlot 失败，已捕获：', err);
+      }
+      return;
+    }
+    lightMilestoneSlotFallback(m);
   }
 
   function checkMilestones() {
@@ -212,13 +245,7 @@
       if (effectiveKeyCount >= m && !firedMilestones[m]) {
         firedMilestones[m] = true;
         emit(milestoneSubscribers, m);
-        try {
-          if (window.WTJ_HUD && typeof window.WTJ_HUD.setSlot === 'function') {
-            window.WTJ_HUD.setSlot(milestoneSlotIndex(m), { milestone: true });
-          }
-        } catch (err) {
-          console.error('[WTJ_KEYBOARD] 调用 window.WTJ_HUD.setSlot 失败，已捕获：', err);
-        }
+        lightMilestoneSlot(m);
       }
     }
   }

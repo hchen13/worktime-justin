@@ -30,6 +30,11 @@
   </div>
 
   <script src="manifest.js"></script>
+  <!-- slots.js（010 五槽统一状态机）需在 keyboard.js 与 secretword.js 之前——这样两者首次
+       点槽时 window.WTJ_SLOTS 已存在，走委托路径而非各自 fallback。只需 manifest.js 先加载；
+       与 hud.js 加载顺序无强依赖（本文件对 WTJ_HUD 的调用发生在运行时，见 app/web/slots.js
+       顶部注释）。见 app/web/slots/SLOTS-API.md。 -->
+  <script src="slots.js"></script>
   <script src="keyboard.js"></script>
   <!-- pointer.js 需在 keyboard.js 之后、app.js 之前——app.js 初始化时要读
        window.WTJ_POINTER.onMove/onClickFeedback 完成订阅。见 app/web/pointer.js 顶部注释。 -->
