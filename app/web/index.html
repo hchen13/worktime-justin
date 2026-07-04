@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="hud.css" />
   <link rel="stylesheet" href="secretword.css" />
+  <link rel="stylesheet" href="task-templates.css" />
 </head>
 <body>
   <canvas id="stage"></canvas>
@@ -37,5 +38,12 @@
   <!-- secretword.js 需在 keyboard.js 之后（订阅 WTJ_KEYBOARD.onLetter）；放在 hud.js 之后
        确保命中时 WTJ_HUD.setSlot 已就绪（五槽联动）。见 app/web/secretword/SECRETWORD-API.md。 -->
   <script src="secretword.js"></script>
+  <!-- task.js（013 任务生命周期框架，此前未 wire，接入留 014/019）需在 hud.js/keyboard.js
+       之后（订阅 WTJ_HUD.onQuestionClick、WTJ_KEYBOARD.onEffectiveKey）。见 app/web/task/TASK-API.md。 -->
+  <script src="task.js"></script>
+  <!-- task-templates.js（014 四类任务模板）需在 task.js/pointer.js/keyboard.js 之后——
+       订阅 WTJ_TASK.onQuestionClicked、用 WTJ_POINTER.registerTarget、WTJ_KEYBOARD.onLetter。
+       见 app/web/task-templates.js 顶部注释。 -->
+  <script src="task-templates.js"></script>
 </body>
 </html>

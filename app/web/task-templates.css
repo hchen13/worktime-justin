@@ -1,0 +1,121 @@
+/* WTJ-20260704-014 — 四类任务模板叠层样式（拖拽物体/放置目标/点击目标/寻找目标与干扰项）
+   延续 style.css / hud.css / secretword.css 的深色低调基调（#0e1117 系）。
+   Safari 14 兼容基线：不使用 inset 简写（拆四个物理属性）、不使用 aspect-ratio / flex gap /
+   :focus-visible 等 Safari 14 不支持的特性。prefers-reduced-motion 下关闭全部过渡/动画。
+
+   动画状态接口说明（见 task-templates.js 文件头「animation state 接口预留」一节 与
+   app/web/assets/task-props/PROVENANCE.md）：[data-anim-state] 相关规则是 faucet/horse/
+   door/bell/lamp 五个道具的**占位**视觉（静态 PNG + 轻量 CSS 过渡），不是最终动效；真实
+   开合/奔跑/摇铃/流水/点亮动效由后续动效卡（026/028/030/031/032）接管替换这几条规则。 */
+
+.wtj-tt-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* 高于 canvas（auto）与 HUD（5），低于秘密词命中叠层（8）与 debug/esc 叠层（10）——
+     任务目标出现在舞台与 HUD 之上，但不遮挡命中反馈与调试/退出叠层。 */
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* 任务道具基础样式（拖拽物体/放置目标/点击目标/寻找目标与干扰项共用）    */
+/* ------------------------------------------------------------------ */
+
+.wtj-tt-prop {
+  position: absolute;
+  width: clamp(88px, 12vw, 160px);
+  height: auto;
+  /* 保持透明 PNG 原比例；1024×1024 正方形素材，height:auto 由浏览器按 naturalWidth/Height
+     换算，不依赖 aspect-ratio（Safari 15+），与 secretword.css 的 .wtj-secret-sprite 同款。 */
+  transform: translate(-50%, -50%);
+  /* 任务道具本身允许接收指针事件，只为鼠标 hover 时的光标反馈（cursor）——实际的点击/拖拽/
+     悬停判定完全由 pointer.js 基于坐标做几何命中测试，不依赖真正的 DOM 事件冒泡（见
+     app/web/pointer/POINTER-API.md），因此这里开 pointer-events:auto 不会绕过或重复 012
+     的判定逻辑，纯粹是给 3 岁儿童一个"这个东西能碰"的视觉提示。 */
+  pointer-events: auto;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease, filter 0.3s ease;
+  will-change: transform, filter;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.wtj-tt-drag-object {
+  cursor: grab;
+}
+
+.wtj-tt-drag-target {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.wtj-tt-click-target {
+  cursor: pointer;
+}
+
+.wtj-tt-find-target,
+.wtj-tt-find-distractor {
+  cursor: pointer;
+}
+
+/* 干扰项与目标视觉上刻意保持一致（不做区分标记），寻找类任务的判定线索只来自语音提示，
+   不应该靠视觉暗示"哪个是干扰项"降低任务难度（REQ-TASK-09）。 */
+
+/* ------------------------------------------------------------------ */
+/* 15s 轻提示（hint）：一次性小弹跳，不改变最终状态（动画结束即回到原样）  */
+/* ------------------------------------------------------------------ */
+
+.wtj-tt-prop.wtj-tt-hint {
+  -webkit-animation: wtj-tt-hint-bounce 0.6s ease-out;
+  animation: wtj-tt-hint-bounce 0.6s ease-out;
+}
+
+@-webkit-keyframes wtj-tt-hint-bounce {
+  0%   { -webkit-transform: translate(-50%, -50%) scale(1); transform: translate(-50%, -50%) scale(1); }
+  40%  { -webkit-transform: translate(-50%, -50%) scale(1.12); transform: translate(-50%, -50%) scale(1.12); }
+  100% { -webkit-transform: translate(-50%, -50%) scale(1); transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes wtj-tt-hint-bounce {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  40%  { transform: translate(-50%, -50%) scale(1.12); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ------------------------------------------------------------------ */
+/* 30s 目标增强（emphasize）：持续放大 + 发光，直到任务完成/收起（叠层被移除） */
+/* ------------------------------------------------------------------ */
+
+.wtj-tt-prop.wtj-tt-emphasize {
+  transform: translate(-50%, -50%) scale(1.14);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 18px rgba(94, 231, 255, 0.55));
+}
+
+/* ------------------------------------------------------------------ */
+/* animation state 占位接口：faucet/horse/door/bell/lamp 完成后的 idle→active 过渡视觉  */
+/* ------------------------------------------------------------------ */
+
+.wtj-tt-prop[data-anim-state="active"] {
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 14px rgba(255, 216, 130, 0.75));
+}
+
+/* ------------------------------------------------------------------ */
+/* 无障碍偏好：关闭一切过渡/动画                                        */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-tt-prop {
+    transition: none !important;
+    -webkit-animation: none !important;
+    animation: none !important;
+  }
+
+  .wtj-tt-prop.wtj-tt-emphasize {
+    /* 仍需要传达"目标增强"这个事实，只是不用运动表达——保留最终放大状态，去掉过渡感。 */
+    transform: translate(-50%, -50%) scale(1.14);
+  }
+}
