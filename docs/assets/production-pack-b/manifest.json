@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 70,
-  "stubbed_pending_count": 30,
+  "production_ready_count": 73,
+  "stubbed_pending_count": 27,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -94,7 +94,14 @@
     "rainbow_alpha_raw": "docs/assets/production-pack-b/source/rainbow-alpha-raw.png",
     "ring_source_green": "docs/assets/production-pack-b/source/ring-source-green.png",
     "ring_alpha_raw": "docs/assets/production-pack-b/source/ring-alpha-raw.png",
-    "letter_r_prompt_record": "docs/assets/production-pack-b/source/letter-r-prompt.md"
+    "letter_r_prompt_record": "docs/assets/production-pack-b/source/letter-r-prompt.md",
+    "sun_source_green": "docs/assets/production-pack-b/source/sun-source-green.png",
+    "sun_alpha_raw": "docs/assets/production-pack-b/source/sun-alpha-raw.png",
+    "shoe_source_green": "docs/assets/production-pack-b/source/shoe-source-green.png",
+    "shoe_alpha_raw": "docs/assets/production-pack-b/source/shoe-alpha-raw.png",
+    "spoon_source_green": "docs/assets/production-pack-b/source/spoon-source-green.png",
+    "spoon_alpha_raw": "docs/assets/production-pack-b/source/spoon-alpha-raw.png",
+    "letter_s_prompt_record": "docs/assets/production-pack-b/source/letter-s-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -841,9 +848,9 @@
       "word": "sun",
       "first_letter": "S",
       "display_name": "Sun",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/sun.png",
       "sound_key": "secret.word.sun",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/sun.png"
     },
@@ -851,9 +858,9 @@
       "word": "shoe",
       "first_letter": "S",
       "display_name": "Shoe",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/shoe.png",
       "sound_key": "secret.word.shoe",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/shoe.png"
     },
@@ -861,9 +868,9 @@
       "word": "spoon",
       "first_letter": "S",
       "display_name": "Spoon",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/spoon.png",
       "sound_key": "secret.word.spoon",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/spoon.png"
     },
@@ -1108,7 +1115,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 07:05",
+  "updated_at_cst": "2026-07-04 07:46",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1233,6 +1240,16 @@
         "ring"
       ],
       "changes": "Generated production robot, rainbow, and ring sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-047",
+      "updated_at_cst": "2026-07-04 07:46",
+      "words": [
+        "sun",
+        "shoe",
+        "spoon"
+      ],
+      "changes": "Generated production sun, shoe, and spoon sprites, replaced placeholder asset_paths, and marked all three ready."
     }
   ]
 }

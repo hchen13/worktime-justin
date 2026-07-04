@@ -1,5 +1,5 @@
 {
-  "missing_count": 30,
+  "missing_count": 27,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
     {
@@ -37,33 +37,6 @@
       "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
       "planned_batch": "batch-03",
       "sound_key": "secret.word.quarter"
-    },
-    {
-      "word": "sun",
-      "first_letter": "S",
-      "display_name": "Sun",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/sun.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.sun"
-    },
-    {
-      "word": "shoe",
-      "first_letter": "S",
-      "display_name": "Shoe",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/shoe.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.shoe"
-    },
-    {
-      "word": "spoon",
-      "first_letter": "S",
-      "display_name": "Spoon",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/spoon.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.spoon"
     },
     {
       "word": "tree",
@@ -273,7 +246,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 07:05",
+  "updated_at_cst": "2026-07-04 07:46",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -472,6 +445,24 @@
       "word": "ring",
       "asset_path": "docs/assets/production-pack-b/sprites/ring.png",
       "resolved_at_cst": "2026-07-04 07:05"
+    },
+    {
+      "card_id": "WTJ-20260704-047",
+      "word": "sun",
+      "asset_path": "docs/assets/production-pack-b/sprites/sun.png",
+      "resolved_at_cst": "2026-07-04 07:46"
+    },
+    {
+      "card_id": "WTJ-20260704-047",
+      "word": "shoe",
+      "asset_path": "docs/assets/production-pack-b/sprites/shoe.png",
+      "resolved_at_cst": "2026-07-04 07:46"
+    },
+    {
+      "card_id": "WTJ-20260704-047",
+      "word": "spoon",
+      "asset_path": "docs/assets/production-pack-b/sprites/spoon.png",
+      "resolved_at_cst": "2026-07-04 07:46"
     }
   ]
 }

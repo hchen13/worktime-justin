@@ -2,27 +2,27 @@
 
 对应飞书卡：`WTJ-20260704-006`。
 
-本包交付秘密词词池与 sprite 库 v1。目标词池一次性定为 100 个儿童常见英语词，其中 70 个已有生产级透明 PNG，其余 30 个先接入统一 placeholder，并在 `missing-assets.json` 中列出后续批次，避免开发被素材缺口阻塞。
+本包交付秘密词词池与 sprite 库 v1。目标词池一次性定为 100 个儿童常见英语词，其中 73 个已有生产级透明 PNG，其余 27 个先接入统一 placeholder，并在 `missing-assets.json` 中列出后续批次，避免开发被素材缺口阻塞。
 
 ## 产物
 
 - `manifest.json`: 100 词词池，字段包含 `word`、`first_letter`、`display_name`、`asset_path`、`sound_key`、`status`、`batch`、`intended_asset_path`。
-- `sprites/`: 70 个生产级秘密词 sprite，均为 `1024x1024 RGBA` 透明 PNG。
+- `sprites/`: 73 个生产级秘密词 sprite，均为 `1024x1024 RGBA` 透明 PNG。
 - `stubs/secret-word-placeholder.png`: pending 词的临时占位素材，来自 A 包问号 token。
-- `missing-assets.json`: 30 个待生产词的完整缺口清单和计划批次。
-- `source/`: 三张批量生成源图、alligator/letter-E/letter-G/letter-H/letter-I/letter-J/letter-K/letter-L/letter-M/letter-N/letter-O/letter-P/letter-R 单图源图、去背 alpha 与提示词记录。
+- `missing-assets.json`: 27 个待生产词的完整缺口清单和计划批次。
+- `source/`: 三张批量生成源图、alligator/letter-E/letter-G/letter-H/letter-I/letter-J/letter-K/letter-L/letter-M/letter-N/letter-O/letter-P/letter-R/letter-S 单图源图、去背 alpha 与提示词记录。
 - `contact-sheets/secret-word-sprites-v1-contact-sheet.png`: 暗底评审接触表。
 
 ## Ready 词
 
-`apple`, `ant`, `airplane`, `alligator`, `ball`, `basket`, `bell`, `banana`, `cat`, `car`, `cup`, `cake`, `dog`, `door`, `duck`, `drum`, `egg`, `elephant`, `eye`, `envelope`, `fish`, `flower`, `frog`, `faucet`, `goat`, `grapes`, `gift`, `guitar`, `horse`, `hat`, `heart`, `house`, `icecream`, `igloo`, `insect`, `island`, `juice`, `jam`, `jar`, `jellyfish`, `key`, `kite`, `koala`, `kettle`, `lamp`, `leaf`, `lion`, `lemon`, `moon`, `mouse`, `milk`, `monkey`, `nest`, `nose`, `net`, `noodle`, `orange`, `owl`, `octopus`, `oven`, `pig`, `pear`, `pencil`, `pizza`, `rocket`, `robot`, `rainbow`, `ring`, `star`, `treasure`。
+`apple`, `ant`, `airplane`, `alligator`, `ball`, `basket`, `bell`, `banana`, `cat`, `car`, `cup`, `cake`, `dog`, `door`, `duck`, `drum`, `egg`, `elephant`, `eye`, `envelope`, `fish`, `flower`, `frog`, `faucet`, `goat`, `grapes`, `gift`, `guitar`, `horse`, `hat`, `heart`, `house`, `icecream`, `igloo`, `insect`, `island`, `juice`, `jam`, `jar`, `jellyfish`, `key`, `kite`, `koala`, `kettle`, `lamp`, `leaf`, `lion`, `lemon`, `moon`, `mouse`, `milk`, `monkey`, `nest`, `nose`, `net`, `noodle`, `orange`, `owl`, `octopus`, `oven`, `pig`, `pear`, `pencil`, `pizza`, `rocket`, `robot`, `rainbow`, `ring`, `star`, `sun`, `shoe`, `spoon`, `treasure`。
 
-其中 `apple`、`ball`、`basket`、`car`、`cat`、`dog`、`star`、`treasure` 复用 v3 sprite 基准；`bell`、`door`、`faucet`、`horse`、`lamp` 复用 A 包任务道具；`alligator` 来自 `WTJ-20260704-033` 单图补齐；`eye`、`envelope` 来自 `WTJ-20260704-034` 单图补齐；`goat`、`gift`、`guitar` 来自 `WTJ-20260704-035` 单图补齐；`house` 来自 `WTJ-20260704-036` 单图补齐；`igloo`、`insect`、`island` 来自 `WTJ-20260704-037` 单图补齐；`juice`、`jam`、`jar`、`jellyfish` 来自 `WTJ-20260704-038` 单图补齐；`koala`、`kettle` 来自 `WTJ-20260704-039` 单图补齐；`lion`、`lemon` 来自 `WTJ-20260704-040` 单图补齐；`milk`、`monkey` 来自 `WTJ-20260704-041` 单图补齐；`nest`、`nose`、`net`、`noodle` 来自 `WTJ-20260704-042` 单图补齐；`owl`、`octopus`、`oven` 来自 `WTJ-20260704-043` 单图补齐；`pear`、`pencil`、`pizza` 来自 `WTJ-20260704-044` 单图补齐；`robot`、`rainbow`、`ring` 来自 `WTJ-20260704-046` 单图补齐；其余 24 个来自本卡三张新生成 sheet。
+其中 `apple`、`ball`、`basket`、`car`、`cat`、`dog`、`star`、`treasure` 复用 v3 sprite 基准；`bell`、`door`、`faucet`、`horse`、`lamp` 复用 A 包任务道具；`alligator` 来自 `WTJ-20260704-033` 单图补齐；`eye`、`envelope` 来自 `WTJ-20260704-034` 单图补齐；`goat`、`gift`、`guitar` 来自 `WTJ-20260704-035` 单图补齐；`house` 来自 `WTJ-20260704-036` 单图补齐；`igloo`、`insect`、`island` 来自 `WTJ-20260704-037` 单图补齐；`juice`、`jam`、`jar`、`jellyfish` 来自 `WTJ-20260704-038` 单图补齐；`koala`、`kettle` 来自 `WTJ-20260704-039` 单图补齐；`lion`、`lemon` 来自 `WTJ-20260704-040` 单图补齐；`milk`、`monkey` 来自 `WTJ-20260704-041` 单图补齐；`nest`、`nose`、`net`、`noodle` 来自 `WTJ-20260704-042` 单图补齐；`owl`、`octopus`、`oven` 来自 `WTJ-20260704-043` 单图补齐；`pear`、`pencil`、`pizza` 来自 `WTJ-20260704-044` 单图补齐；`robot`、`rainbow`、`ring` 来自 `WTJ-20260704-046` 单图补齐；`sun`、`shoe`、`spoon` 来自 `WTJ-20260704-047` 单图补齐；其余 24 个来自本卡三张新生成 sheet。
 
 ## 后续批次
 
 - `batch-02`: 补齐 E-N 范围中缺口较多的常见物体。`alligator` 已由 `WTJ-20260704-033` 补齐，`eye`、`envelope` 已由 `WTJ-20260704-034` 补齐，`goat`、`gift`、`guitar` 已由 `WTJ-20260704-035` 补齐，`house` 已由 `WTJ-20260704-036` 补齐，`igloo`、`insect`、`island` 已由 `WTJ-20260704-037` 补齐，`juice`、`jam`、`jar`、`jellyfish` 已由 `WTJ-20260704-038` 补齐，`koala`、`kettle` 已由 `WTJ-20260704-039` 补齐，`lion`、`lemon` 已由 `WTJ-20260704-040` 补齐，`milk`、`monkey` 已由 `WTJ-20260704-041` 补齐，`nest`、`nose`、`net`、`noodle` 已由 `WTJ-20260704-042` 补齐；batch-02 当前小卡已补齐。
-- `batch-03`: 补齐 O-W 主体词。`owl`、`octopus`、`oven` 已由 `WTJ-20260704-043` 补齐，`pear`、`pencil`、`pizza` 已由 `WTJ-20260704-044` 补齐，`robot`、`rainbow`、`ring` 已由 `WTJ-20260704-046` 补齐；剩余包括 `queen`、`sun`、`tree`、`umbrella`、`van`、`violin` 等。
+- `batch-03`: 补齐 O-W 主体词。`owl`、`octopus`、`oven` 已由 `WTJ-20260704-043` 补齐，`pear`、`pencil`、`pizza` 已由 `WTJ-20260704-044` 补齐，`robot`、`rainbow`、`ring` 已由 `WTJ-20260704-046` 补齐，`sun`、`shoe`、`spoon` 已由 `WTJ-20260704-047` 补齐；剩余包括 `queen`、`quilt`、`quail`、`quarter`、`tree`、`train`、`turtle`、`umbrella`、`unicorn`、`ukulele`、`uniform`、`van`、`vase`、`violin`、`volcano`。
 - `batch-04`: 补齐难字母和尾部词，含 `whale`、`watch`、`window`、`wagon`、`xylophone`、`xray`、`yoyo`、`yarn`、`yak`、`zebra`、`zipper`、`zucchini`。
 
 pending 词在 `manifest.json` 中的 `asset_path` 指向 `stubs/secret-word-placeholder.png`，`intended_asset_path` 保留最终路径。开发可以先接入词库、判定、声音 key 和槽位逻辑；正式 sprite 补齐时只需要替换对应文件并把 `status` 改成 `ready`。
@@ -43,6 +43,7 @@ pending 词在 `manifest.json` 中的 `asset_path` 指向 `stubs/secret-word-pla
 - `owl`、`octopus`、`oven` 使用内置 image generation 单图生成，源图使用 #00ff00 chroma key，去背后分别保存为 `sprites/owl.png`、`sprites/octopus.png`、`sprites/oven.png`，提示词和取舍记录在 `source/letter-o-prompt.md`。
 - `pear` 使用内置 image generation 单图生成，源图使用 #ff00ff chroma key；`pencil`、`pizza` 使用 #00ff00 chroma key，去背后分别保存为 `sprites/pear.png`、`sprites/pencil.png`、`sprites/pizza.png`，提示词和取舍记录在 `source/letter-p-prompt.md`。
 - `robot`、`ring` 使用内置 image generation 单图生成，源图使用 #00ff00 chroma key；`rainbow` 使用 #00ffff chroma key 并无 despill 去背以保留蓝紫色条，去背后分别保存为 `sprites/robot.png`、`sprites/rainbow.png`、`sprites/ring.png`，提示词和取舍记录在 `source/letter-r-prompt.md`。
+- `sun`、`shoe`、`spoon` 使用内置 image generation 单图生成，源图使用 #00ff00 chroma key，去背后分别保存为 `sprites/sun.png`、`sprites/shoe.png`、`sprites/spoon.png`，提示词和取舍记录在 `source/letter-s-prompt.md`。
 - 第三张 sheet 是宽画布，但仍按实际尺寸 4x2 切片，没有强行拉伸。
 - `flower`、`grapes`、`fish` 有轻微贴纸式白边；暗色画布上识别更强，且整体仍在 v3 soft-clay 风格内，本批标记为可接受。
 - `icecream` 作为无空格秘密输入 token；显示名保留 `Ice cream`，声音 key 为 `secret.word.icecream`。
@@ -88,8 +89,8 @@ Quality constraints: production-quality finished illustration, readable on a dar
 
 ## 自检
 
-- `manifest.json` 共 100 个词；70 个 `ready`，30 个 `pending_sprite_stubbed`。
-- 70 个 ready sprite 加 placeholder 均为 `1024x1024 RGBA`。
+- `manifest.json` 共 100 个词；73 个 `ready`，27 个 `pending_sprite_stubbed`。
+- 73 个 ready sprite 加 placeholder 均为 `1024x1024 RGBA`。
 - 四角 alpha 均为 0。
 - 可见像素中无 #ff00ff / #00ff00 / #00ffff 色键残留。
 - `manifest.json` 中所有 `asset_path` 均存在，pending 词指向 placeholder，ready 词指向真实 sprite。
