@@ -1,43 +1,7 @@
 {
-  "missing_count": 24,
+  "missing_count": 20,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [
-    {
-      "word": "queen",
-      "first_letter": "Q",
-      "display_name": "Queen",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/queen.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.queen"
-    },
-    {
-      "word": "quilt",
-      "first_letter": "Q",
-      "display_name": "Quilt",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/quilt.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.quilt"
-    },
-    {
-      "word": "quail",
-      "first_letter": "Q",
-      "display_name": "Quail",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/quail.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.quail"
-    },
-    {
-      "word": "quarter",
-      "first_letter": "Q",
-      "display_name": "Quarter",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/quarter.png",
-      "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
-      "planned_batch": "batch-03",
-      "sound_key": "secret.word.quarter"
-    },
     {
       "word": "umbrella",
       "first_letter": "U",
@@ -219,7 +183,7 @@
       "sound_key": "secret.word.zucchini"
     }
   ],
-  "updated_at_cst": "2026-07-04 08:04",
+  "updated_at_cst": "2026-07-04 08:35",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -454,6 +418,30 @@
       "word": "turtle",
       "asset_path": "docs/assets/production-pack-b/sprites/turtle.png",
       "resolved_at_cst": "2026-07-04 08:04"
+    },
+    {
+      "card_id": "WTJ-20260704-045",
+      "word": "queen",
+      "asset_path": "docs/assets/production-pack-b/sprites/queen.png",
+      "resolved_at_cst": "2026-07-04 08:35"
+    },
+    {
+      "card_id": "WTJ-20260704-045",
+      "word": "quilt",
+      "asset_path": "docs/assets/production-pack-b/sprites/quilt.png",
+      "resolved_at_cst": "2026-07-04 08:35"
+    },
+    {
+      "card_id": "WTJ-20260704-045",
+      "word": "quail",
+      "asset_path": "docs/assets/production-pack-b/sprites/quail.png",
+      "resolved_at_cst": "2026-07-04 08:35"
+    },
+    {
+      "card_id": "WTJ-20260704-045",
+      "word": "quarter",
+      "asset_path": "docs/assets/production-pack-b/sprites/quarter.png",
+      "resolved_at_cst": "2026-07-04 08:35"
     }
   ]
 }

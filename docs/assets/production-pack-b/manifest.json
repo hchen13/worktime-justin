@@ -4,8 +4,8 @@
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
   "target_word_count": 100,
-  "production_ready_count": 76,
-  "stubbed_pending_count": 24,
+  "production_ready_count": 80,
+  "stubbed_pending_count": 20,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "contact_sheet": "docs/assets/production-pack-b/contact-sheets/secret-word-sprites-v1-contact-sheet.png",
@@ -108,7 +108,16 @@
     "train_alpha_raw": "docs/assets/production-pack-b/source/train-alpha-raw.png",
     "turtle_source_magenta": "docs/assets/production-pack-b/source/turtle-source-magenta.png",
     "turtle_alpha_raw": "docs/assets/production-pack-b/source/turtle-alpha-raw.png",
-    "letter_t_prompt_record": "docs/assets/production-pack-b/source/letter-t-prompt.md"
+    "letter_t_prompt_record": "docs/assets/production-pack-b/source/letter-t-prompt.md",
+    "queen_source_green": "docs/assets/production-pack-b/source/queen-source-green.png",
+    "queen_alpha_raw": "docs/assets/production-pack-b/source/queen-alpha-raw.png",
+    "quilt_source_green": "docs/assets/production-pack-b/source/quilt-source-green.png",
+    "quilt_alpha_raw": "docs/assets/production-pack-b/source/quilt-alpha-raw.png",
+    "quail_source_green": "docs/assets/production-pack-b/source/quail-source-green.png",
+    "quail_alpha_raw": "docs/assets/production-pack-b/source/quail-alpha-raw.png",
+    "quarter_source_magenta": "docs/assets/production-pack-b/source/quarter-source-magenta.png",
+    "quarter_alpha_raw": "docs/assets/production-pack-b/source/quarter-alpha-raw.png",
+    "letter_q_prompt_record": "docs/assets/production-pack-b/source/letter-q-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -765,9 +774,9 @@
       "word": "queen",
       "first_letter": "Q",
       "display_name": "Queen",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/queen.png",
       "sound_key": "secret.word.queen",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/queen.png"
     },
@@ -775,9 +784,9 @@
       "word": "quilt",
       "first_letter": "Q",
       "display_name": "Quilt",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/quilt.png",
       "sound_key": "secret.word.quilt",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/quilt.png"
     },
@@ -785,9 +794,9 @@
       "word": "quail",
       "first_letter": "Q",
       "display_name": "Quail",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/quail.png",
       "sound_key": "secret.word.quail",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/quail.png"
     },
@@ -795,9 +804,9 @@
       "word": "quarter",
       "first_letter": "Q",
       "display_name": "Quarter",
-      "asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
+      "asset_path": "docs/assets/production-pack-b/sprites/quarter.png",
       "sound_key": "secret.word.quarter",
-      "status": "pending_sprite_stubbed",
+      "status": "ready",
       "batch": "batch-03",
       "intended_asset_path": "docs/assets/production-pack-b/sprites/quarter.png"
     },
@@ -1122,7 +1131,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 08:04",
+  "updated_at_cst": "2026-07-04 08:35",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1267,6 +1276,17 @@
         "turtle"
       ],
       "changes": "Generated production tree, train, and turtle sprites, replaced placeholder asset_paths, and marked all three ready."
+    },
+    {
+      "card_id": "WTJ-20260704-045",
+      "updated_at_cst": "2026-07-04 08:35",
+      "words": [
+        "queen",
+        "quilt",
+        "quail",
+        "quarter"
+      ],
+      "changes": "Generated production queen, quilt, quail, and quarter sprites, replaced placeholder asset_paths, and marked all four ready."
     }
   ]
 }
