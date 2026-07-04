@@ -113,3 +113,4 @@ WTJ_SET_PASSCODE=<你的新口令> dist/WorkTimeJustin.app/Contents/MacOS/WorkTi
 - `Cmd+Space`（Spotlight）、`Cmd+Tab`（应用切换）、`Cmd+Option+Esc`（强制退出面板，仅 `.disableForceQuit` best-effort 抑制）等系统级全局快捷键**无法**在本 App（或任何普通、非辅助功能特权的 App）层面 100% 屏蔽——这些快捷键在到达 App 事件队列之前就已被系统全局热键机制处理掉，不是本实现的疏漏。完整说明与家长可选的系统层面补强方式见 [`SECURITY.md`](SECURITY.md)。
 - 本次交付在 Apple Silicon + macOS 26.1（仅 CommandLineTools，无完整 Xcode）的环境下交叉编译，**尚未在真实的 2014 MacBook Air / Big Sur 11 上做过实机冒烟**——SDK 26 交叉编译产物在 Big Sur 上的实际兼容性（尤其 WKWebView 行为、字体渲染、presentationOptions 细节）待后续卡片上机验证。
 - 若实机冒烟发现 AppKit/WebKit 交叉编译产物在 Big Sur 上无法正常运行，技术方案的备胎是切换到 **Electron 37**（三路评审时已讨论过的备选项）。
+- 2014 MacBook Air 性能预算（动画/粒子数量上限、常驻 sprite 与内存预算、音频加载风险、Canvas2D 帧率红线、全屏稳定性）与必须真机验证的 P0 风险清单，见 [`PERFORMANCE.md`](PERFORMANCE.md)。
