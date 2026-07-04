@@ -134,33 +134,171 @@
       // REQ-SEC-03：出现对象——命中后同时出现对应物体（spriteFile）并播放授权音效或预生成语音
       // （audioFile）。下方 pool 数组的 word/spriteFile/audioFile 三字段即对应本条的落地结构。
       //
-      // 扩展说明：当前 pool 仅落地"首批 8 词"，对应已验收 sprite（卡 WTJ-20260703-007，v3 生产基准，
-      // REQ-AST-12）。扩展到约 100 词规模属于后续词池 / 素材卡范畴（对应 docs/index.html #open
-      // 待确认项「第一批词池和每个词对应素材」）；新增词池条目的步骤见 app/web/MANIFEST.md。
+      // 词池扩展记录（本卡 WTJ-20260704-019 第二批，2026-07-04）：pool 已从"首批 8 词"
+      // 同步扩展到 Pack B 生产词池（卡 WTJ-20260704-006，源 docs/assets/production-pack-b/
+      // manifest.json + missing-assets.json）。Pack B 曾是活数据源、DESIGN 分批补齐 stub，现已
+      // **全部产出完毕**——现场核对以两个 json 的 updated_at_cst 2026-07-04 10:58 版本为准：
+      // target_word_count=100、production_ready_count=100、stubbed_pending_count=0（卡
+      // WTJ-20260704-054 补齐最后 Z 组 zebra/zipper/zucchini，PM 已验收）。下方 pool 共 101 条，
+      // **全部 ready、无 spriteStub**：Pack B 的 100 词（100 条 ready，每词 spriteFile 指向真实
+      // sprite）+ 1 条非 Pack B 的遗留词 treasurechest（复用已验收 treasure-chest.png，见下方说明）。
+      // 曾用于 stub 占位的共享图 sprites/secret-word-placeholder.png 现已无 pool 条目引用，作为
+      // "未来若有新 stub 词可复用"的备用素材保留在 app/web/assets/sprites/，不被运行时加载。
       //
       // 已知差异（据实记录，不在本卡自行裁决）：docs/index.html #secret 词池规模段落下方给出的示例词
-      // 标签是 dog / cat / apple / ball / moon / star / car / zoo（8 个，仅作规模示意，覆盖不同字母），
-      // 与本卡实际可用的"首批 8 词对应已验收 sprite"集合不完全一致 —— 已验收 sprite 是
-      // dog / cat / apple / ball / star / car / basket / treasure-chest（REQ-AST-12）。
-      // 其中 basket、treasure-chest 两个 sprite 在 docs/index.html 素材章节中原本对应的是
-      // REQ-AST-05（任务物件：篮子）与 REQ-AST-06（宝箱），而非 REQ-AST-04（秘密词对应物体）；
-      // moon、zoo 两词目前没有对应 sprite。本卡按 TL 架构指令「首批 8 词对应已验收 sprite」执行，
-      // 采用 basket / treasure-chest 作为词池条目，但这属于已验收素材复用而非文档原意的秘密词示例，
-      // 请 PM / DESIGN 在词池扩展卡或 016 音频供给卡之前确认是否保留 basket / treasurechest 作为
-      // 正式秘密词，或改为任务专用素材、另行补齐 moon / zoo 的 sprite。
+      // 标签是 dog / cat / apple / ball / moon / star / car / zoo（8 个，仅作规模示意，覆盖不同字母）。
+      // Pack B 100 词已覆盖 dog / cat / apple / ball / star / car / basket（moon 词已在 Pack B M 组
+      // 补齐为正式秘密词；zoo 仍未补齐，Pack B 未提供对应词）。这 7 个词与"首批 8 词"最初
+      // 已验收的 v3 baseline sprite（卡 WTJ-20260703-007，REQ-AST-12）同名，但 Pack B 对它们
+      // 重新生成了一版不同的 sprite（md5 与 v3 baseline 不同，已现场核对）——本卡按"以已验收为准，
+      // 避免重复/冲突"原则，这 7 词继续复用已验收并已被 009 测试覆盖的 v3 baseline sprite 文件，
+      // 不切换成 Pack B 重生成版（Pack B 版未拷贝进运行时，仅停留在 docs/assets/production-pack-b/
+      // sprites/），下方各条目已用行内注释标注。
+      //
+      // treasurechest（101st，非 Pack B 词）：遗留自 004/009 首批 8 词基线，Pack B 100 词范围内
+      // 用的是不同的词 treasure（T 组，含义相近但字面不同，各自独立词条、互不冲突，均已入池）。
+      // treasurechest 对应的 sprite（treasure-chest.png）在 docs/index.html 素材章节原本对应的是
+      // REQ-AST-06（宝箱），而非 REQ-AST-04（秘密词对应物体），且不在 Pack B 的 100 词正式清单内。
+      // 本卡不删除这个已存在两个批次（004/009、016）都引用过的词（audio/missing-audio.json 已把它
+      // 登记为 additionalManifestOnlyWords: 1、totalNotDelivered 101 的一部分，删除会与该清单的
+      // 既有口径不一致），仅在此如实记录，请 PM / DESIGN 后续裁决是否正式保留 treasurechest 为
+      // 秘密词，或改回任务专用素材。
       pool: [
-        { word: 'dog', spriteFile: 'sprites/dog.png', audioFile: 'audio/words/dog.m4a' },
-        { word: 'cat', spriteFile: 'sprites/cat.png', audioFile: 'audio/words/cat.m4a' },
-        { word: 'apple', spriteFile: 'sprites/apple.png', audioFile: 'audio/words/apple.m4a' },
-        { word: 'ball', spriteFile: 'sprites/ball.png', audioFile: 'audio/words/ball.m4a' },
-        { word: 'star', spriteFile: 'sprites/star.png', audioFile: 'audio/words/star.m4a' },
-        { word: 'car', spriteFile: 'sprites/car.png', audioFile: 'audio/words/car.m4a' },
-        { word: 'basket', spriteFile: 'sprites/basket.png', audioFile: 'audio/words/basket.m4a' },
-        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' }
+        // --- A ---
+        { word: 'apple', spriteFile: 'sprites/apple.png', audioFile: 'audio/words/apple.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'ant', spriteFile: 'sprites/ant.png', audioFile: 'audio/words/ant.m4a' }, // Pack B ready（ready-v1）
+        { word: 'airplane', spriteFile: 'sprites/airplane.png', audioFile: 'audio/words/airplane.m4a' }, // Pack B ready（ready-v1）
+        { word: 'alligator', spriteFile: 'sprites/alligator.png', audioFile: 'audio/words/alligator.m4a' }, // Pack B ready（batch-02）
+        // --- B ---
+        { word: 'ball', spriteFile: 'sprites/ball.png', audioFile: 'audio/words/ball.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'basket', spriteFile: 'sprites/basket.png', audioFile: 'audio/words/basket.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'bell', spriteFile: 'sprites/bell.png', audioFile: 'audio/words/bell.m4a' }, // Pack B ready（ready-v1）
+        { word: 'banana', spriteFile: 'sprites/banana.png', audioFile: 'audio/words/banana.m4a' }, // Pack B ready（ready-v1）
+        // --- C ---
+        { word: 'cat', spriteFile: 'sprites/cat.png', audioFile: 'audio/words/cat.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'car', spriteFile: 'sprites/car.png', audioFile: 'audio/words/car.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'cup', spriteFile: 'sprites/cup.png', audioFile: 'audio/words/cup.m4a' }, // Pack B ready（ready-v1）
+        { word: 'cake', spriteFile: 'sprites/cake.png', audioFile: 'audio/words/cake.m4a' }, // Pack B ready（ready-v1）
+        // --- D ---
+        { word: 'dog', spriteFile: 'sprites/dog.png', audioFile: 'audio/words/dog.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'door', spriteFile: 'sprites/door.png', audioFile: 'audio/words/door.m4a' }, // Pack B ready（ready-v1）
+        { word: 'duck', spriteFile: 'sprites/duck.png', audioFile: 'audio/words/duck.m4a' }, // Pack B ready（ready-v1）
+        { word: 'drum', spriteFile: 'sprites/drum.png', audioFile: 'audio/words/drum.m4a' }, // Pack B ready（ready-v1）
+        // --- E ---
+        { word: 'egg', spriteFile: 'sprites/egg.png', audioFile: 'audio/words/egg.m4a' }, // Pack B ready（ready-v1）
+        { word: 'elephant', spriteFile: 'sprites/elephant.png', audioFile: 'audio/words/elephant.m4a' }, // Pack B ready（ready-v1）
+        { word: 'eye', spriteFile: 'sprites/eye.png', audioFile: 'audio/words/eye.m4a' }, // Pack B ready（batch-02）
+        { word: 'envelope', spriteFile: 'sprites/envelope.png', audioFile: 'audio/words/envelope.m4a' }, // Pack B ready（batch-02）
+        // --- F ---
+        { word: 'fish', spriteFile: 'sprites/fish.png', audioFile: 'audio/words/fish.m4a' }, // Pack B ready（ready-v1）
+        { word: 'flower', spriteFile: 'sprites/flower.png', audioFile: 'audio/words/flower.m4a' }, // Pack B ready（ready-v1）
+        { word: 'frog', spriteFile: 'sprites/frog.png', audioFile: 'audio/words/frog.m4a' }, // Pack B ready（ready-v1）
+        { word: 'faucet', spriteFile: 'sprites/faucet.png', audioFile: 'audio/words/faucet.m4a' }, // Pack B ready（ready-v1）
+        // --- G ---
+        { word: 'goat', spriteFile: 'sprites/goat.png', audioFile: 'audio/words/goat.m4a' }, // Pack B ready（batch-02）
+        { word: 'grapes', spriteFile: 'sprites/grapes.png', audioFile: 'audio/words/grapes.m4a' }, // Pack B ready（ready-v1）
+        { word: 'gift', spriteFile: 'sprites/gift.png', audioFile: 'audio/words/gift.m4a' }, // Pack B ready（batch-02）
+        { word: 'guitar', spriteFile: 'sprites/guitar.png', audioFile: 'audio/words/guitar.m4a' }, // Pack B ready（batch-02）
+        // --- H ---
+        { word: 'horse', spriteFile: 'sprites/horse.png', audioFile: 'audio/words/horse.m4a' }, // Pack B ready（ready-v1）
+        { word: 'hat', spriteFile: 'sprites/hat.png', audioFile: 'audio/words/hat.m4a' }, // Pack B ready（ready-v1）
+        { word: 'heart', spriteFile: 'sprites/heart.png', audioFile: 'audio/words/heart.m4a' }, // Pack B ready（ready-v1）
+        { word: 'house', spriteFile: 'sprites/house.png', audioFile: 'audio/words/house.m4a' }, // Pack B ready（batch-02）
+        // --- I ---
+        { word: 'icecream', spriteFile: 'sprites/icecream.png', audioFile: 'audio/words/icecream.m4a' }, // Pack B ready（ready-v1）
+        { word: 'igloo', spriteFile: 'sprites/igloo.png', audioFile: 'audio/words/igloo.m4a' }, // Pack B ready（batch-02）
+        { word: 'insect', spriteFile: 'sprites/insect.png', audioFile: 'audio/words/insect.m4a' }, // Pack B ready（batch-02）
+        { word: 'island', spriteFile: 'sprites/island.png', audioFile: 'audio/words/island.m4a' }, // Pack B ready（batch-02）
+        // --- J ---
+        { word: 'juice', spriteFile: 'sprites/juice.png', audioFile: 'audio/words/juice.m4a' }, // Pack B ready（batch-02）
+        { word: 'jam', spriteFile: 'sprites/jam.png', audioFile: 'audio/words/jam.m4a' }, // Pack B ready（batch-02）
+        { word: 'jar', spriteFile: 'sprites/jar.png', audioFile: 'audio/words/jar.m4a' }, // Pack B ready（batch-02）
+        { word: 'jellyfish', spriteFile: 'sprites/jellyfish.png', audioFile: 'audio/words/jellyfish.m4a' }, // Pack B ready（batch-02）
+        // --- K ---
+        { word: 'key', spriteFile: 'sprites/key.png', audioFile: 'audio/words/key.m4a' }, // Pack B ready（ready-v1）
+        { word: 'kite', spriteFile: 'sprites/kite.png', audioFile: 'audio/words/kite.m4a' }, // Pack B ready（ready-v1）
+        { word: 'koala', spriteFile: 'sprites/koala.png', audioFile: 'audio/words/koala.m4a' }, // Pack B ready（batch-02）
+        { word: 'kettle', spriteFile: 'sprites/kettle.png', audioFile: 'audio/words/kettle.m4a' }, // Pack B ready（batch-02）
+        // --- L ---
+        { word: 'lamp', spriteFile: 'sprites/lamp.png', audioFile: 'audio/words/lamp.m4a' }, // Pack B ready（ready-v1）
+        { word: 'leaf', spriteFile: 'sprites/leaf.png', audioFile: 'audio/words/leaf.m4a' }, // Pack B ready（ready-v1）
+        { word: 'lion', spriteFile: 'sprites/lion.png', audioFile: 'audio/words/lion.m4a' }, // Pack B ready（batch-02）
+        { word: 'lemon', spriteFile: 'sprites/lemon.png', audioFile: 'audio/words/lemon.m4a' }, // Pack B ready（batch-02）
+        // --- M ---
+        { word: 'moon', spriteFile: 'sprites/moon.png', audioFile: 'audio/words/moon.m4a' }, // Pack B ready（ready-v1）
+        { word: 'mouse', spriteFile: 'sprites/mouse.png', audioFile: 'audio/words/mouse.m4a' }, // Pack B ready（ready-v1）
+        { word: 'milk', spriteFile: 'sprites/milk.png', audioFile: 'audio/words/milk.m4a' }, // Pack B ready（batch-02）
+        { word: 'monkey', spriteFile: 'sprites/monkey.png', audioFile: 'audio/words/monkey.m4a' }, // Pack B ready（batch-02）
+        // --- N ---
+        { word: 'nest', spriteFile: 'sprites/nest.png', audioFile: 'audio/words/nest.m4a' }, // Pack B ready（batch-02）
+        { word: 'nose', spriteFile: 'sprites/nose.png', audioFile: 'audio/words/nose.m4a' }, // Pack B ready（batch-02）
+        { word: 'net', spriteFile: 'sprites/net.png', audioFile: 'audio/words/net.m4a' }, // Pack B ready（batch-02）
+        { word: 'noodle', spriteFile: 'sprites/noodle.png', audioFile: 'audio/words/noodle.m4a' }, // Pack B ready（batch-02）
+        // --- O ---
+        { word: 'orange', spriteFile: 'sprites/orange.png', audioFile: 'audio/words/orange.m4a' }, // Pack B ready（ready-v1）
+        { word: 'owl', spriteFile: 'sprites/owl.png', audioFile: 'audio/words/owl.m4a' }, // Pack B ready（batch-03）
+        { word: 'octopus', spriteFile: 'sprites/octopus.png', audioFile: 'audio/words/octopus.m4a' }, // Pack B ready（batch-03）
+        { word: 'oven', spriteFile: 'sprites/oven.png', audioFile: 'audio/words/oven.m4a' }, // Pack B ready（batch-03）
+        // --- P ---
+        { word: 'pig', spriteFile: 'sprites/pig.png', audioFile: 'audio/words/pig.m4a' }, // Pack B ready（ready-v1）
+        { word: 'pear', spriteFile: 'sprites/pear.png', audioFile: 'audio/words/pear.m4a' }, // Pack B ready（batch-03）
+        { word: 'pencil', spriteFile: 'sprites/pencil.png', audioFile: 'audio/words/pencil.m4a' }, // Pack B ready（batch-03）
+        { word: 'pizza', spriteFile: 'sprites/pizza.png', audioFile: 'audio/words/pizza.m4a' }, // Pack B ready（batch-03）
+        // --- Q ---
+        { word: 'queen', spriteFile: 'sprites/queen.png', audioFile: 'audio/words/queen.m4a' }, // Pack B ready（batch-03）
+        { word: 'quilt', spriteFile: 'sprites/quilt.png', audioFile: 'audio/words/quilt.m4a' }, // Pack B ready（batch-03）
+        { word: 'quail', spriteFile: 'sprites/quail.png', audioFile: 'audio/words/quail.m4a' }, // Pack B ready（batch-03）
+        { word: 'quarter', spriteFile: 'sprites/quarter.png', audioFile: 'audio/words/quarter.m4a' }, // Pack B ready（batch-03）
+        // --- R ---
+        { word: 'rocket', spriteFile: 'sprites/rocket.png', audioFile: 'audio/words/rocket.m4a' }, // Pack B ready（ready-v1）
+        { word: 'robot', spriteFile: 'sprites/robot.png', audioFile: 'audio/words/robot.m4a' }, // Pack B ready（batch-03）
+        { word: 'rainbow', spriteFile: 'sprites/rainbow.png', audioFile: 'audio/words/rainbow.m4a' }, // Pack B ready（batch-03）
+        { word: 'ring', spriteFile: 'sprites/ring.png', audioFile: 'audio/words/ring.m4a' }, // Pack B ready（batch-03）
+        // --- S ---
+        { word: 'star', spriteFile: 'sprites/star.png', audioFile: 'audio/words/star.m4a' }, // Pack B ready。沿用已验收 v3 baseline sprite（非 Pack B 重生成版，避免重复/冲突，见 PROVENANCE）
+        { word: 'sun', spriteFile: 'sprites/sun.png', audioFile: 'audio/words/sun.m4a' }, // Pack B ready（batch-03）
+        { word: 'shoe', spriteFile: 'sprites/shoe.png', audioFile: 'audio/words/shoe.m4a' }, // Pack B ready（batch-03）
+        { word: 'spoon', spriteFile: 'sprites/spoon.png', audioFile: 'audio/words/spoon.m4a' }, // Pack B ready（batch-03）
+        // --- T ---
+        { word: 'treasure', spriteFile: 'sprites/treasure.png', audioFile: 'audio/words/treasure.m4a' }, // Pack B ready（ready-v1）
+        { word: 'tree', spriteFile: 'sprites/tree.png', audioFile: 'audio/words/tree.m4a' }, // Pack B ready（batch-03）
+        { word: 'train', spriteFile: 'sprites/train.png', audioFile: 'audio/words/train.m4a' }, // Pack B ready（batch-03）
+        { word: 'turtle', spriteFile: 'sprites/turtle.png', audioFile: 'audio/words/turtle.m4a' }, // Pack B ready（batch-03）
+        // --- U ---
+        { word: 'umbrella', spriteFile: 'sprites/umbrella.png', audioFile: 'audio/words/umbrella.m4a' }, // Pack B ready（batch-03）
+        { word: 'unicorn', spriteFile: 'sprites/unicorn.png', audioFile: 'audio/words/unicorn.m4a' }, // Pack B ready（batch-03）
+        { word: 'ukulele', spriteFile: 'sprites/ukulele.png', audioFile: 'audio/words/ukulele.m4a' }, // Pack B ready（batch-03）
+        { word: 'uniform', spriteFile: 'sprites/uniform.png', audioFile: 'audio/words/uniform.m4a' }, // Pack B ready（batch-03）
+        // --- V ---
+        { word: 'van', spriteFile: 'sprites/van.png', audioFile: 'audio/words/van.m4a' }, // Pack B ready（batch-03）
+        { word: 'vase', spriteFile: 'sprites/vase.png', audioFile: 'audio/words/vase.m4a' }, // Pack B ready（batch-03）
+        { word: 'violin', spriteFile: 'sprites/violin.png', audioFile: 'audio/words/violin.m4a' }, // Pack B ready（batch-03）
+        { word: 'volcano', spriteFile: 'sprites/volcano.png', audioFile: 'audio/words/volcano.m4a' }, // Pack B ready（batch-03）
+        // --- W ---
+        { word: 'whale', spriteFile: 'sprites/whale.png', audioFile: 'audio/words/whale.m4a' }, // Pack B ready（batch-04）
+        { word: 'watch', spriteFile: 'sprites/watch.png', audioFile: 'audio/words/watch.m4a' }, // Pack B ready（batch-04）
+        { word: 'window', spriteFile: 'sprites/window.png', audioFile: 'audio/words/window.m4a' }, // Pack B ready（batch-04）
+        { word: 'wagon', spriteFile: 'sprites/wagon.png', audioFile: 'audio/words/wagon.m4a' }, // Pack B ready（batch-04）
+        // --- X ---
+        { word: 'xylophone', spriteFile: 'sprites/xylophone.png', audioFile: 'audio/words/xylophone.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
+        { word: 'xray', spriteFile: 'sprites/xray.png', audioFile: 'audio/words/xray.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
+        // --- Y ---
+        { word: 'yoyo', spriteFile: 'sprites/yoyo.png', audioFile: 'audio/words/yoyo.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
+        { word: 'yarn', spriteFile: 'sprites/yarn.png', audioFile: 'audio/words/yarn.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
+        { word: 'yak', spriteFile: 'sprites/yak.png', audioFile: 'audio/words/yak.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
+        // --- Z ---
+        { word: 'zebra', spriteFile: 'sprites/zebra.png', audioFile: 'audio/words/zebra.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
+        { word: 'zipper', spriteFile: 'sprites/zipper.png', audioFile: 'audio/words/zipper.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
+        { word: 'zucchini', spriteFile: 'sprites/zucchini.png', audioFile: 'audio/words/zucchini.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
+        // --- 非 Pack B：既有 v3 基线遗留词（101st，见上方说明） ---
+        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' } // 遗留自 004/009 首批 8 词基线；不在 Pack B 100 词范围内（Pack B 用的是 'treasure'，见上方 T 组），PM/DESIGN 尚未裁决是否保留（见 app/web/MANIFEST.md「已知的文档/素材对齐问题」与 app/web/audio/missing-audio.json additionalManifestOnlyWords）
       ],
-      // 上述 8 条 audioFile 均为约定路径 stub：授权语音 / 音效素材尚未到位，
-      // 由音频供给卡（016，命名沿用本文件 WTJ-20260704-016）交付 .m4a 文件后落地，
-      // 届时无需改动路径，只需补齐对应文件（见 REQ-AST-08 / REQ-AST-09）。
+      // 上述 101 条 audioFile 均为约定路径 stub：授权语音 / 音效素材尚未到位（全部 137 条缺口的一部分，
+      // 见 app/web/audio/missing-audio.json 的 secretWords 段，totalNotDelivered: 101 = Pack B 100 +
+      // 本 manifest 独有的 treasurechest 1 条），由音频供给卡（016，命名沿用本文件 WTJ-20260704-016）
+      // 交付 .m4a 文件后落地，届时无需改动路径，只需补齐对应文件（见 REQ-AST-08 / REQ-AST-09）。
+      // wtjres:// 加载层（019 第一批，见 shell/main.swift WTJResourceSchemeHandler）已就位：真实
+      // .m4a 文件放入对应路径后，audio.js 的 fetch() 即可直接加载播放，无需再改任何代码。
       audioNotDelivered: true,
       audioSupplyCard: 'WTJ-20260704-016'
     },
