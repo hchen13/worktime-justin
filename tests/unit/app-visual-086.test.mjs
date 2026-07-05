@@ -509,11 +509,40 @@ test('hud.css：.wtj-hud-topbar 高度为 081 token 的 44px（取代 007 占位
   assert.match(HUD_CSS_SRC, /\.wtj-hud-topbar\s*{[^}]*height:\s*44px/, 'topbar 高度应为 44px');
 });
 
-test('hud.css：.wtj-hud-title 字号 15px / 字重 800（081 token titleFontPx/titleWeight）', function () {
-  var m = HUD_CSS_SRC.match(/\.wtj-hud-title\s*{([^}]*)}/);
-  assert.ok(m, '应存在 .wtj-hud-title 规则');
-  assert.match(m[1], /font-size:\s*15px/, '标题字号应为 15px');
-  assert.match(m[1], /font-weight:\s*800/, '标题字重应为 800');
+// WTJ-20260705-019b（Ethan 截图反馈①，双语标题居中 + 英文字体更接近参考图）：单行
+// .wtj-hud-title（15px/800）拆成 .wtj-hud-title-en（英文主标题）+ .wtj-hud-title-zh（中文
+// 副标题）两行。英文行字号仍沿用 081 token 的 titleFontPx=15px，但字重按 Ethan 反馈从 800
+// 提到 900（对齐 docs/assets/style/visual-style-tile.html 的 .app-title 同为 900，那份
+// DESIGN 参考页是 Ethan 截图评审时明确点名的字体/构图对照对象），且字体栈换成该参考页
+// :root 声明的 ui-rounded/SF Pro Rounded 圆体优先栈——这是对 081 token 字面数值的一次
+// 有意偏离（081 定的是 800），与 011 terminal 装饰条那次被 Ethan 显式推翻的先例同一性质：
+// 产品视觉的最终裁决权在 Ethan，不在早期 DESIGN 卡自己的初始规范。
+test('hud.css：.wtj-hud-title-en 字号 15px / 字重 900 / 圆体字体栈（Ethan 反馈①：更接近 visual-style-tile.html 参考图）；.wtj-hud-title-zh 作为更小号副标题存在', function () {
+  var enRule = HUD_CSS_SRC.match(/\.wtj-hud-title-en\s*{([^}]*)}/);
+  assert.ok(enRule, '应存在 .wtj-hud-title-en 规则（英文主标题）');
+  assert.match(enRule[1], /font-size:\s*15px/, '英文标题字号应沿用 081 token 的 15px');
+  assert.match(enRule[1], /font-weight:\s*900/, '英文标题字重应为 900（对齐参考图 .app-title）');
+  assert.match(enRule[1], /ui-rounded/, '英文标题字体栈应包含 ui-rounded（对齐参考图字体家族）');
+
+  var zhRule = HUD_CSS_SRC.match(/\.wtj-hud-title-zh\s*{([^}]*)}/);
+  assert.ok(zhRule, '应存在 .wtj-hud-title-zh 规则（中文副标题）');
+  var zhFontSizeMatch = zhRule[1].match(/font-size:\s*(\d+)px/);
+  assert.ok(zhFontSizeMatch, '中文副标题应声明 font-size');
+  assert.ok(Number(zhFontSizeMatch[1]) < 15, '中文副标题字号应小于英文主标题（层级差，副标题更小）');
+
+  // 旧的单行 .wtj-hud-title 选择器不应再出现在样式表里（应已被拆分替代，不是新旧并存）。
+  assert.equal(/\.wtj-hud-title\s*\{/.test(HUD_CSS_SRC), false, '不应再存在旧的单行 .wtj-hud-title 规则（已拆分为 -en/-zh 两行）');
+});
+
+test('hud.css：.wtj-hud-topbar 标题真正居中（justify-content:center），锁形 glyph 改为 position:absolute 右锚定，不再占用 flex 空间挤偏标题', function () {
+  var topbarRule = HUD_CSS_SRC.match(/\.wtj-hud-topbar\s*{([^}]*)}/);
+  assert.ok(topbarRule, '应存在 .wtj-hud-topbar 规则');
+  assert.match(topbarRule[1], /justify-content:\s*center/, 'topbar 应 justify-content:center（Ethan 反馈①：标题居中，不是 space-between 贴左）');
+
+  var lockRule = HUD_CSS_SRC.match(/\.wtj-hud-lock\s*{([^}]*)}/);
+  assert.ok(lockRule, '应存在 .wtj-hud-lock 规则');
+  assert.match(lockRule[1], /position:\s*absolute/, '锁形 glyph 应从 flex 布局摘出，改为 position:absolute，避免继续占用 flex 空间把居中的标题挤偏');
+  assert.match(lockRule[1], /right:\s*14px/, '锁形 glyph 应保持右锚定');
 });
 
 test('hud.css：.wtj-hud-lock-icon 尺寸 13px、.wtj-hud-lock opacity 0.36（081 token，071 已落地不变）', function () {

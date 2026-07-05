@@ -218,9 +218,38 @@
   var chestState = 'disabled'; // 'disabled' | 'active' | 'open'（见「footer 常驻宝箱指示器」一节）
   var terminalEl = null; // WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条根节点
   var terminalKeyPulseTimer = null; // pulseTerminalKeyActivity() 的一次性 140ms 定时器句柄
+  var terminalWordEl = null; // WTJ-20260705-019b：秘密词完成态展示区根节点（.wtj-hud-terminal-word）
+  var terminalWordClearTimer = null; // showTerminalSecretWord() 的一次性展示窗口定时器句柄
   var questionClickHandler = function () {
     console.log('[WTJ_HUD] question mark clicked（默认占位回调，尚未被后续卡片接管）。');
   };
+
+  // -----------------------------------------------------------------------
+  // WTJ-20260705-019b：可注入时钟（默认真实 setTimeout/clearTimeout；测试用 _setClock 整体或
+  // 部分替换），与 task.js/pointer.js/task-templates.js/status-rewards.js 的 _setClock 同款
+  // 模式。terminal 的两个一次性展示窗口（140ms 按键活跃微亮 / 秘密词完成态拼写展示）都改走
+  // clockRef，供单测用假时钟 advance(ms) 快进虚拟时间断言"展示后会自动清空"，不需要真的等待。
+  // 注意：hud.js 顶层执行时立即调用的 wireTerminalSecretWordDeferred() 里那个跨脚本加载顺序
+  // 用的 setTimeout(fn, 0)（diag.js 同款宏任务延后手法）不走这条 clockRef——那是一次性的模块
+  // 加载时序基础设施，不是"用户可见的展示时长"，测试只需要真的等一次 0ms 宏任务，不需要快进。
+  // -----------------------------------------------------------------------
+  var clockRef = {
+    setTimeout: function (fn, ms) { return setTimeout(fn, ms); },
+    clearTimeout: function (id) { clearTimeout(id); }
+  };
+
+  function _setClock(clock) {
+    if (!clock || typeof clock !== 'object') {
+      console.warn('[WTJ_HUD] _setClock: 参数必须是对象，已忽略。');
+      return;
+    }
+    if (typeof clock.setTimeout === 'function') {
+      clockRef.setTimeout = clock.setTimeout;
+    }
+    if (typeof clock.clearTimeout === 'function') {
+      clockRef.clearTimeout = clock.clearTimeout;
+    }
+  }
 
   (function initState() {
     var i;
@@ -291,13 +320,28 @@
     return svg;
   }
 
+  // WTJ-20260705-019b（Ethan 截图反馈①，双语标题居中 + 英文字体更接近参考图）：单行
+  // "Work Time, Justin! / 小小工作台" 拆成两个独立文本节点——英文主标题 + 中文副标题各自一个
+  // <span>，方便 hud.css 对二者分别应用不同字体栈/字号/字重（英文换成参考图同款的 ui-rounded/
+  // SF Pro Rounded 圆体优先栈 + weight 900，中文降一档做真正的副标题层级）。整个标题组
+  // （.wtj-hud-title-group）配合 hud.css 把 .wtj-hud-topbar 的 justify-content 从
+  // space-between 改成 center，实现真正的水平居中（锁形 glyph 改用 position:absolute 钉住
+  // 右侧，不再占用 flex 布局空间，见 hud.css 对应注释）。
   function buildTopbar() {
     var bar = el('div', 'wtj-hud-topbar');
     bar.setAttribute('aria-hidden', 'true');
 
-    var title = el('span', 'wtj-hud-title');
-    title.textContent = 'Work Time, Justin! / 小小工作台';
-    bar.appendChild(title);
+    var titleGroup = el('div', 'wtj-hud-title-group');
+
+    var titleEn = el('span', 'wtj-hud-title-en');
+    titleEn.textContent = 'Work Time, Justin!';
+    titleGroup.appendChild(titleEn);
+
+    var titleZh = el('span', 'wtj-hud-title-zh');
+    titleZh.textContent = '小小工作台';
+    titleGroup.appendChild(titleZh);
+
+    bar.appendChild(titleGroup);
 
     var lock = el('span', 'wtj-hud-lock');
     // 当前无 pointer-events，title 提示暂不会在悬停时出现；实际长按判定与是否开放
@@ -440,11 +484,20 @@
 
   // -----------------------------------------------------------------------
   // WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条——纯状态装饰，不是
-  // 输入框，不做任何按键回显。规范/tokens：docs/design/wtj-20260705-011-terminal-prompt-
-  // decoration-spec.md（DESIGN 011，PM 已验收）。DOM 结构固定为三个静态子节点：arrow「>」+
-  // cursor「_」（合起来构成规范要求的可见 glyph `>_`，恰好 2 个字符，不多不少）+ 一个
-  // activity pip（纯装饰圆点）。三者的文本/存在性在整个运行期内恒定，任何交互都不会往这里
-  // 追加字符或替换文本——这是满足"不是输入框、不回显"边界的结构性保证（而不是靠运行时判断）。
+  // 输入框，不做逐键回显。原始规范：docs/design/wtj-20260705-011-terminal-prompt-decoration-
+  // spec.md（DESIGN 011，PM 已验收），当时只允许 `>_` 两字符 + 一个 activity pip。
+  //
+  // WTJ-20260705-019b（Ethan 截图反馈③，显式推翻 011 的"禁止 justin@worktime / 禁止秘密词"
+  // 两条）：DOM 结构改为四个子节点：
+  //   prefix「justin@worktime:」 —— 恒定文本，永不改变，不含任何真实用户名/路径/命令。
+  //   word「」/「dog」等         —— idle 为空字符串；仅在 window.WTJ_SECRET.onHit（秘密词
+  //                                完整拼出的"完成态"事件，不是逐键回显）触发时短暂写入命中
+  //                                词文本，与 secretword.js 的 sprite 一次性叠层同步出现，
+  //                                展示窗口结束后清空回空字符串（见 showTerminalSecretWord()）。
+  //   cursor「_」                —— 恒定字符，只做 CSS opacity 呼吸动画，不是真实输入光标。
+  //   pip                        —— 纯装饰 activity 圆点，无文本。
+  // 仍然坚持的红线：不建输入框/textarea/contenteditable；word 节点只在"一个词已完整拼出"的
+  // 完成事件里被整体写入/清空，绝不逐字符增量拼接（不是回显每次按键）。
   // -----------------------------------------------------------------------
 
   function buildTerminalPrompt() {
@@ -453,9 +506,14 @@
 
     var glyph = el('span', 'wtj-hud-terminal-glyph');
 
-    var arrow = el('span', 'wtj-hud-terminal-arrow');
-    arrow.textContent = '>'; // 静态字符，永不改变
-    glyph.appendChild(arrow);
+    var prefix = el('span', 'wtj-hud-terminal-prefix');
+    prefix.textContent = 'justin@worktime:'; // 静态字符串，永不改变，不含真实用户名/路径
+    glyph.appendChild(prefix);
+
+    var word = el('span', 'wtj-hud-terminal-word');
+    word.textContent = ''; // idle 为空；showTerminalSecretWord() 在秘密词完成时短暂写入
+    glyph.appendChild(word);
+    terminalWordEl = word;
 
     var cursor = el('span', 'wtj-hud-terminal-cursor');
     cursor.textContent = '_'; // 静态字符（CSS 动画只改 opacity 做呼吸闪烁，不改文本，不是真实输入光标）
@@ -473,7 +531,7 @@
 
   // 任意"有效键盘反馈"（window.WTJ_KEYBOARD.onEffectiveKey，只回传累计计数——一个数字，从不
   // 携带具体按下的字符）出现时，装饰条只做一次 140ms 的边框/背景微亮（切一个纯样式 class），
-  // 不改变 `>_`、不新增任何文本节点。
+  // 不改变前缀/光标文本、不新增任何文本节点。
   var TERMINAL_KEY_PULSE_MS = 140; // 对齐 DESIGN 011 tokens.motion.keyActivityPulseMs
 
   function pulseTerminalKeyActivity() {
@@ -482,12 +540,73 @@
     }
     terminalEl.classList.add('is-key-pulse');
     if (terminalKeyPulseTimer) {
-      clearTimeout(terminalKeyPulseTimer);
+      clockRef.clearTimeout(terminalKeyPulseTimer);
     }
-    terminalKeyPulseTimer = setTimeout(function () {
+    terminalKeyPulseTimer = clockRef.setTimeout(function () {
       terminalEl.classList.remove('is-key-pulse');
       terminalKeyPulseTimer = null;
     }, TERMINAL_KEY_PULSE_MS);
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-019b（Ethan 截图反馈③）：秘密词完成态展示——word 素材来自
+  // window.WTJ_SECRET.onHit(payload)（payload.word，见 secretword.js handleHit()）。该回调
+  // 与 secretword.js 的 sprite 一次性叠层出现（showSpriteOverlay）在同一次同步的 handleHit()
+  // 调用里触发，因此 terminal 文本与 sprite 天然"同步出现"，不需要额外的时间戳协调。
+  // TERMINAL_WORD_DISPLAY_MS 与 secretword.js 内部的 SPRITE_TOTAL_MS（sprite 叠层总展示时长）
+  // 数值上呼应，让两者在同一时间量级淡出——两个常量刻意保持独立（不做跨文件耦合读取），只是
+  // 数值上对齐，避免"词已经消失但小狗贴纸还在"或反过来的观感割裂。
+  // ---------------------------------------------------------------------
+  var TERMINAL_WORD_DISPLAY_MS = 1900; // 呼应 secretword.js SPRITE_TOTAL_MS
+
+  function showTerminalSecretWord(word) {
+    if (!terminalWordEl || typeof word !== 'string' || !word) {
+      return;
+    }
+    terminalWordEl.textContent = word;
+    terminalWordEl.classList.remove('is-visible'); // 先移除再加：连续快速命中时让 pop 动画重新播放一次
+    terminalWordEl.classList.add('is-visible');
+    if (terminalEl) {
+      terminalEl.classList.add('is-word-pulse');
+    }
+    if (terminalWordClearTimer) {
+      clockRef.clearTimeout(terminalWordClearTimer);
+    }
+    terminalWordClearTimer = clockRef.setTimeout(function () {
+      terminalWordEl.textContent = '';
+      terminalWordEl.classList.remove('is-visible');
+      if (terminalEl) {
+        terminalEl.classList.remove('is-word-pulse');
+      }
+      terminalWordClearTimer = null;
+    }, TERMINAL_WORD_DISPLAY_MS);
+  }
+
+  // secretword.js 在 index.html 里加载顺序晚于本文件（见该文件顶部注释："放在 hud.js 之后
+  // 确保命中时 WTJ_HUD.setSlot 已就绪"）——本文件反过来要订阅它暴露的
+  // window.WTJ_SECRET.onHit，若在本文件顶层同步执行时立即读取会读到 undefined。复用 diag.js
+  // 已确立的 setTimeout(fn, 0) 宏任务延后手法（见该文件顶部"语法基线与加载位置"一节）：
+  // 浏览器按文档顺序同步加载/执行非 async/defer 的 <script src>，0ms 宏任务触发时其后所有
+  // 同步脚本（含 secretword.js）必已执行完毕。try/catch 防御 setTimeout 在极端沙箱环境
+  // （如本文件的 Node vm 单测）里未定义的情况——与 secretword.js scheduleRemoval() 同款写法。
+  function wireTerminalSecretWordDeferred() {
+    try {
+      setTimeout(function () {
+        if (window.WTJ_SECRET && typeof window.WTJ_SECRET.onHit === 'function') {
+          window.WTJ_SECRET.onHit(function (payload) {
+            try {
+              showTerminalSecretWord(payload && payload.word);
+            } catch (err) {
+              console.error('[WTJ_HUD] showTerminalSecretWord 执行异常，已捕获：', err);
+            }
+          });
+        } else {
+          console.warn('[WTJ_HUD] window.WTJ_SECRET.onHit 不可用（secretword.js 未加载或加载失败），terminal 秘密词拼写展示降级为不可用（不影响 sprite/音效等其它反馈）。');
+        }
+      }, 0);
+    } catch (err) {
+      console.warn('[WTJ_HUD] 延后订阅 window.WTJ_SECRET.onHit 失败（setTimeout 不可用），已捕获：', err);
+    }
   }
 
   // keyboard.js 是可选依赖（与该文件里 window.WTJ_SLOTS 的可选接入方式一致）：未加载时静默跳过，
@@ -660,6 +779,7 @@
   mount();
   applyDebugQueryFlag();
   wireTerminalKeyActivity(); // WTJ-20260705-019（移植 001 Phase B）：可选接入 keyboard.js 的 onEffectiveKey 节奏信号
+  wireTerminalSecretWordDeferred(); // WTJ-20260705-019b：延后订阅 secretword.js 的 onHit，展示秘密词完成态拼写
 
   // -----------------------------------------------------------------------
   // 对外 API：window.WTJ_HUD（冻结对象）
@@ -768,6 +888,7 @@
     setStatusLight: setStatusLight,
     onQuestionClick: onQuestionClick,
     setChestOpen: setChestOpen, // WTJ-20260704-083 返工：011（reward-chest.js）开箱序列开始/结束时调用
-    getState: getState
+    getState: getState,
+    _setClock: _setClock // WTJ-20260705-019b：测试专用，注入假时钟以快进 terminal 两个一次性展示窗口
   });
 })();

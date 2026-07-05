@@ -318,11 +318,24 @@
   // 调用一次，结果存在 letter 记录上，逐帧复用，不逐帧重新生成）。SPARKLE_PARAMS 是本卡本地
   // 占位数值（非 081 motion-token-sheet.json 来源），一并冻结导出，供消费方/单测直接读取
   // 边界值，避免手工镜像数值漂移（与本文件其余 081 token 的处理哲学一致）。
+  //
+  // WTJ-20260705-019b（Ethan 截图反馈④「字母拖尾更像流星尾迹：周围星点更小、更自然」）：
+  // 002 首版的 sizeFracRange [0.32, 0.8] 相对字母尺寸偏大——按字母渲染尺寸区间
+  // 56~148px（见 TOKENS.letters.desktopSizeRangePx）换算，上限星点可以画到约 118px，
+  // 接近字母本体大小，观感是"大块光斑"而不是"细碎流星尘"。本次把整个区间下移收窄到
+  // [0.12, 0.32]（新上限恰好等于旧下限，星点整体明显缩小），countRange 从 [2,4] 提到
+  // [3,6] 略微增加颗粒数——单颗更小 + 数量略多，总体视觉"重量"不增反降，但连续感更强，
+  // 更像细碎的流星尾迹而不是零星几个大光点。
+  // 同时新增 tBiasPower：真实流星/彗星尾迹的光尘在靠近本体（t 接近 0）一端更密集，越往
+  // 尾端（t 接近 1）越稀疏，不是沿整条拖尾长度等概率分布。randomSparkles() 用
+  // Math.pow(Math.random(), tBiasPower) 对 [0,1) 均匀随机数做幂次变形（指数 > 1 时把分布
+  // 向 0 端压缩）实现这种"头密尾疏"的非均匀分布。
   // ---------------------------------------------------------------------
   var SPARKLE_PARAMS = {
-    countRange: [2, 4],           // 每条拖尾上的星点数量区间（"几个同色星星/闪点"）
-    sizeFracRange: [0.32, 0.8],   // 相对字母渲染尺寸（size）的比例
-    twinkleHzRange: [0.6, 1.6]    // 闪烁频率区间（Hz），供消费方按 now 算出逐帧 twinkle alpha
+    countRange: [3, 6],           // 每条拖尾上的星点数量区间（"几个同色星星/闪点"）
+    sizeFracRange: [0.12, 0.32],  // 相对字母渲染尺寸（size）的比例——较 002 首版明显缩小
+    twinkleHzRange: [0.6, 1.6],   // 闪烁频率区间（Hz），供消费方按 now 算出逐帧 twinkle alpha
+    tBiasPower: 1.6               // t 分布幂次偏置：>1 时越靠近字母本体（t 小）越密集
   };
   deepFreeze(SPARKLE_PARAMS);
 
@@ -333,7 +346,9 @@
     var i;
     for (i = 0; i < count; i++) {
       list.push({
-        t: Math.random(), // 沿拖尾方向的位置比例：0=贴近字母本体，1=拖尾末端
+        // 沿拖尾方向的位置比例：0=贴近字母本体，1=拖尾末端。用 tBiasPower 对均匀随机数做
+        // 幂次变形，让星点"头密尾疏"（见上方文件内「019b」说明），而不是均匀撒在整条拖尾上。
+        t: Math.pow(Math.random(), SPARKLE_PARAMS.tBiasPower),
         sizeFrac: rand(SPARKLE_PARAMS.sizeFracRange[0], SPARKLE_PARAMS.sizeFracRange[1]),
         phaseRad: Math.random() * Math.PI * 2, // 闪烁相位偏移，让多个星点不同步闪烁
         twinkleHz: rand(SPARKLE_PARAMS.twinkleHzRange[0], SPARKLE_PARAMS.twinkleHzRange[1])
