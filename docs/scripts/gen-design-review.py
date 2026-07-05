@@ -23,10 +23,26 @@
       （stub/placeholder → 疑似旧版）。design-expansion-v2 下的候选包，其 README 普遍
       明确写明“供 PM/Ethan 评审，非自动运行时接入”，故整体标记为“待接入”。
     - 本脚本可重复运行、幂等，不依赖网络或外部依赖，仅用标准库。
+
+返工（WTJ-20260705-021b，Ethan 原话「不用跑 app 就能试听所有发音/任务语音」）：
+    - 新增「音频试听专区」（见 render_audio_preview_section 及其三个子函数），置于页面最顶部，
+      不复制音频、只引用现有相对路径，用原生 <audio controls preload="none">（非 <script>，
+      符合 docs 零 JS 约束）。
+    - 秘密词英文发音：直接解析 app/web/manifest.js 里 secretWords.pool 数组（唯一权威的
+      word → spriteFile → audioFile 三元组来源，运行时引擎本身也读这份数据），而不是靠文件名
+      猜测配对——pool 里有 sprite 文件名与音频文件名对不上的已知例外（如 treasurechest 词对应
+      sprite treasure-chest.png），只有解析 manifest.js 才能保证配对正确。新增词只需追加到
+      pool，重跑本脚本即自动出现，不需要改这份生成器。
+    - 中文/英文任务语音列表：扫描 app/web/audio/tasks/*.zh.m4a 与 *.m4a（不含 .zh），文案从
+      app/scripts/tts-text-manifest.zh.json / .json 的 out 字段反查，同样新增文件+manifest 条目
+      即自动出现。
+    - 音频引用同样走 rel_href() + ALL_REFS，复用既有 check_links() 静态检查，缺失的音频文件会
+      和图片断链一样出现在页尾「断链/待补清单」，不需要额外写检查逻辑。
 """
 from __future__ import annotations
 
 import html
+import json
 import os
 import re
 from pathlib import Path
@@ -264,6 +280,184 @@ def render_source_root(root_relpath: str, title: str, anchor: str, note: str = "
         for i, (subdir, files) in enumerate(groups):
             sub_anchor = f"{anchor}-{i}"
             parts.append(render_group(f"{title} / {subdir}", files, root_relpath, anchor=sub_anchor))
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# 音频试听专区（WTJ-20260705-021b 返工）：不用跑 app 就能试听所有发音/任务语音。
+# 三组：秘密词英文发音 / 中文任务语音 / 英文任务语音（对照）。全部现场扫描目录 + manifest，
+# 新增文件后重跑本脚本即出现，不手写任何条目。
+# ---------------------------------------------------------------------------
+
+MANIFEST_JS_RELPATH = "app/web/manifest.js"
+POOL_ITEM_RE = re.compile(
+    r"\{\s*word:\s*'([^']+)',\s*spriteFile:\s*'([^']+)',\s*audioFile:\s*'([^']+)'\s*\}"
+)
+
+
+def parse_secret_word_pool() -> list[dict[str, str]]:
+    """解析 app/web/manifest.js 的 secretWords.pool 数组，取得权威的
+    word → spriteFile → audioFile 三元组（唯一真源；运行时引擎本身也读这份数据，
+    比按文件名猜测配对更可靠——pool 里存在 sprite/audio 文件名对不上的已知例外，
+    如 treasurechest 词对应 sprite 文件 treasure-chest.png）。
+    只在 `pool: [ ... ]` 这一段范围内匹配，避免误配 manifest.js 其他同构对象。
+    spriteFile 相对 app/web/assets/ 解析；audioFile 相对 app/web/ 解析
+    （与 manifest.js 里两个字段的既有路径约定一致，已用磁盘文件核对过）。
+    找不到文件或解析失败时返回空列表，调用方需处理空结果（不让生成器整体失败）。
+    """
+    path = REPO_ROOT / MANIFEST_JS_RELPATH
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    m = re.search(r"pool:\s*\[(.*?)\n(\s*)\],\n", text, re.S)
+    if not m:
+        return []
+    body = m.group(1)
+    out = []
+    for word, sprite_file, audio_file in POOL_ITEM_RE.findall(body):
+        out.append({
+            "word": word,
+            "sprite_relpath": f"app/web/assets/{sprite_file}",
+            "audio_relpath": f"app/web/{audio_file}",
+        })
+    return out
+
+
+def load_tts_text_manifest(relpath: str) -> dict:
+    """加载 app/scripts/tts-text-manifest(.zh).json，用于按 out 路径反查任务文案。
+    文件不存在/JSON 解析失败时返回空 dict（调用方按“找不到文案”处理，不让生成器崩溃）。
+    """
+    path = REPO_ROOT / relpath
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def build_out_index(manifest: dict) -> dict[str, dict[str, str]]:
+    """把 tts-text-manifest(.zh).json 的 tasks/phrases 两段都摊平成
+    {out路径(如 'audio/tasks/press-a.zh.m4a'): {taskId, text}}，供按音频文件名反查文案。"""
+    idx: dict[str, dict[str, str]] = {}
+    for section in ("tasks", "phrases"):
+        for task_id, entry in (manifest.get(section) or {}).items():
+            out = entry.get("out")
+            if out:
+                idx[out] = {"taskId": task_id, "text": entry.get("text", "")}
+    return idx
+
+
+def render_secret_word_audio_group() -> str:
+    pool = parse_secret_word_pool()
+    STATS["per_root"].append(("秘密词英文发音（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
+    parts = [
+        f'<h3 id="audio-words">秘密词英文发音 <span class="count">(共 {len(pool)} 词)</span></h3>',
+        '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]（word/spriteFile/audioFile 三元组，'
+        '运行时引擎本身读的就是这份数据，比按文件名猜配对更可靠）。sprite 缩略图 + 对应英文发音，'
+        '用 preload="none" 避免一次性加载 100+ 条音频。</p>',
+    ]
+    if not pool:
+        parts.append('<p class="section-note pending-note">未能从 manifest.js 解析出 secretWords.pool，请检查该文件结构是否变化。</p>')
+        return "\n".join(parts)
+    items = []
+    for entry in pool:
+        word = entry["word"]
+        sprite_relpath = entry["sprite_relpath"]
+        audio_relpath = entry["audio_relpath"]
+        sprite_href = rel_href(sprite_relpath)
+        audio_href = rel_href(audio_relpath)
+        ALL_REFS.append((sprite_href, sprite_relpath))
+        ALL_REFS.append((audio_href, audio_relpath))
+        items.append(
+            '<figure class="item audio-item">'
+            f'<a href="{esc(sprite_href)}" target="_blank" rel="noopener" class="thumb-link">'
+            f'<img src="{esc(sprite_href)}" loading="lazy" alt="{esc(word)}" /></a>'
+            '<figcaption>'
+            f'<span class="word-label">{esc(word)}</span>'
+            f'<audio controls preload="none" src="{esc(audio_href)}">您的浏览器不支持音频播放。</audio>'
+            f'<code class="path">{esc(entry["audio_relpath"])}</code>'
+            '</figcaption>'
+            '</figure>'
+        )
+    parts.append(f'<div class="grid">{"".join(items)}</div>')
+    return "\n".join(parts)
+
+
+def list_task_audio_files(zh: bool) -> list[str]:
+    """列出 app/web/audio/tasks/ 下的 .m4a 文件名（不含目录），按 zh 参数筛选
+    .zh.m4a（中文完整句）或非 .zh 的 .m4a（英文）。排序后返回，纯目录扫描，不硬编码文件名。
+    """
+    root = REPO_ROOT / "app/web/audio/tasks"
+    if not root.exists():
+        return []
+    out = []
+    for fn in sorted(os.listdir(root)):
+        if not fn.endswith(".m4a"):
+            continue
+        if fn.endswith(".zh.m4a") == zh:
+            out.append(fn)
+    return out
+
+
+def render_task_voice_group(zh: bool) -> str:
+    anchor = "audio-tasks-zh" if zh else "audio-tasks-en"
+    title = "中文任务语音" if zh else "英文任务语音（对照）"
+    manifest_relpath = "app/scripts/tts-text-manifest.zh.json" if zh else "app/scripts/tts-text-manifest.json"
+    manifest = load_tts_text_manifest(manifest_relpath)
+    out_index = build_out_index(manifest)
+    filenames = list_task_audio_files(zh)
+    STATS["per_root"].append((title, "app/web/audio/tasks", len(filenames)))
+    suffix_desc = "*.zh.m4a" if zh else "*.m4a（不含 .zh.m4a）"
+    parts = [
+        f'<h3 id="{esc(anchor)}">{esc(title)} <span class="count">(共 {len(filenames)} 条)</span></h3>',
+        f'<p class="section-note">来源：app/web/audio/tasks/{esc(suffix_desc)}（目录扫描，新增文件重跑本脚本即出现）；'
+        f'文案从 {esc(manifest_relpath)} 的 out 字段反查（找不到时标注“—”）。</p>',
+    ]
+    if not filenames:
+        parts.append('<p class="section-note pending-note">（目录下未找到匹配文件）</p>')
+        return "\n".join(parts)
+    items = []
+    for fn in filenames:
+        repo_relpath = f"app/web/audio/tasks/{fn}"
+        out_key = f"audio/tasks/{fn}"
+        info = out_index.get(out_key)
+        task_id = info["taskId"] if info else "—"
+        text = info["text"] if info else "（未在 manifest 中找到对应文案）"
+        href = rel_href(repo_relpath)
+        ALL_REFS.append((href, repo_relpath))
+        items.append(
+            '<div class="audio-task-item">'
+            f'<code class="task-id">{esc(task_id)}</code>'
+            f'<span class="task-text">{esc(text)}</span>'
+            f'<audio controls preload="none" src="{esc(href)}">您的浏览器不支持音频播放。</audio>'
+            f'<code class="path">{esc(repo_relpath)}</code>'
+            '</div>'
+        )
+    parts.append(f'<div class="audio-task-list">{"".join(items)}</div>')
+    return "\n".join(parts)
+
+
+def render_audio_preview_section() -> str:
+    total_words = len(parse_secret_word_pool())
+    total_zh = len(list_task_audio_files(zh=True))
+    total_en = len(list_task_audio_files(zh=False))
+    parts = [
+        '<h2 id="audio-preview">音频试听专区 '
+        f'<span class="count">(秘密词发音 {total_words} + 中文任务语音 {total_zh} + 英文任务语音 {total_en})</span></h2>',
+        '<p class="section-note">Ethan 原话「不用跑 app 就能试听所有发音/任务语音」——本区不复制任何音频文件，'
+        '只用原生 <code class="inline-code">&lt;audio controls preload="none"&gt;</code> 引用现有相对路径'
+        '（非 &lt;script&gt;，符合 docs 零 JS 约束）。三组均为目录/manifest 自动扫描结果，新增音频后重跑'
+        '<code class="inline-code">docs/scripts/gen-design-review.py</code> 即自动出现。</p>',
+        '<div class="subnav">'
+        '<a href="#audio-words">秘密词英文发音</a>'
+        '<a href="#audio-tasks-zh">中文任务语音</a>'
+        '<a href="#audio-tasks-en">英文任务语音</a>'
+        '</div>',
+        render_secret_word_audio_group(),
+        render_task_voice_group(zh=True),
+        render_task_voice_group(zh=False),
+    ]
     return "\n".join(parts)
 
 
@@ -601,6 +795,16 @@ h4 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercas
 .compare-row { display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:22px; }
 .compare-col { border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.02); }
 @media (max-width: 860px) { .compare-row { grid-template-columns: 1fr; } }
+.audio-item .word-label { font-weight:600; color:#fff; font-size:12.5px; }
+.audio-item audio { width:100%; height:30px; margin:2px 0; }
+.audio-task-list { display:flex; flex-direction:column; gap:8px; margin: 6px 0 20px; }
+.audio-task-item { display:grid; grid-template-columns: 150px 1fr 260px; gap:10px 14px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:9px 12px; background:rgba(255,255,255,.03); }
+.audio-task-item .task-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:#cfe3ee; }
+.audio-task-item .task-text { font-size:14px; color:#fff; }
+.audio-task-item audio { width:100%; height:30px; }
+.audio-task-item .path { grid-column: 1 / -1; }
+@media (max-width: 760px) { .audio-task-item { grid-template-columns: 1fr; } }
+.inline-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:rgba(255,255,255,.06); padding:1px 5px; border-radius:4px; }
 #broken ul { line-height:1.8; }
 #broken .ok { color: var(--ok); }
 #broken .bad { color: var(--bad); }
@@ -611,6 +815,7 @@ footer.page-footer { margin-top:50px; padding-top:18px; border-top:1px solid var
 def build_body_sections() -> list[tuple[str, str]]:
     """只应调用一次：内部会触发 render_item，产生 STATS / ALL_REFS 的副作用。"""
     return [
+        ("audio-preview", render_audio_preview_section()),
         ("compare", render_compare_section()),
         ("runtime", render_runtime_section()),
         ("pack-a", render_pack_a_section()),
@@ -629,11 +834,13 @@ def assemble_html(body_sections: list[tuple[str, str]], broken_html: str, stats_
     """纯字符串拼装，不触发任何 render_item 副作用，可安全多次调用。"""
     header = f"""<header class="top">
   <h1>WorkTime Justin 设计总览 —— 历史 DESIGN 产出全量画廊</h1>
-  <p class="subtitle">卡片 WTJ-20260705-021。汇总 docs/assets/style、docs/assets/sprites、docs/assets/states、
+  <p class="subtitle">卡片 WTJ-20260705-021（返工 021b：新增「音频试听专区」，不用跑 app 就能试听所有发音/任务语音）。
+  汇总 docs/assets/style、docs/assets/sprites、docs/assets/states、
   docs/assets 顶层散图、docs/design、docs/assets/design-expansion-v2（11 类）、docs/assets/production-animations-v1、
   docs/assets/production-pack-a、docs/assets/production-pack-b、.agents/briefs/design、
   app/web/assets/sprites、app/web/assets/task-props、app/web/assets/rewards、app/web/assets/ui、
-  app/web/assets/anim、app/web/anim 下的全部历史设计产出，供 Ethan 一次性目视验收。本页只引用现有文件的相对路径，
+  app/web/assets/anim、app/web/anim、app/web/audio/words、app/web/audio/tasks 下的全部历史设计产出与音频，
+  供 Ethan 一次性目视 + 试听验收。本页只引用现有文件的相对路径，
   不复制任何素材；由 <code class="inline-code">docs/scripts/gen-design-review.py</code> 生成，可重新运行以覆盖更新。</p>
   <div class="legend">
     <span class="tag tag-runtime">运行时已接入</span>
@@ -647,6 +854,7 @@ def assemble_html(body_sections: list[tuple[str, str]], broken_html: str, stats_
 </header>
 
 <nav class="pagenav" aria-label="设计总览页导航">
+  <a href="#audio-preview">音频试听专区</a>
   <a href="#compare">动效对比专区</a>
   <a href="#runtime">运行时已接入</a>
   <a href="#pack-a">生产素材 Pack A</a>
