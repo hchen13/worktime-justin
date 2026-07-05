@@ -38,7 +38,7 @@ You are DESIGN for WorkTime Justin. Your session label is DESIGN-A and your stab
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, merge accepted validation work to stage, run the whole-board completion notification check, and own stage/main branch decisions.
+You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, merge PM-accepted runtime/docs-preview work to stage when Ethan should validate the integrated app/docs, run the whole-board completion notification check, and own stage/main branch decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -108,7 +108,7 @@ Recommended PM cron responsibilities:
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
 - keep `stage` current with PM-accepted runtime/docs-preview work, or write a concrete `stage` integration deferral onto the card
-- ensure QA/Ethan validation requests name a `stage` commit or explicitly say they are branch-specific
+- ensure Ethan validation requests name a `stage` commit or package; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
 - groom `backlog` proposals into official cards or `_deprecated`
 - run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
 - summarize board health and urgent decisions
@@ -132,7 +132,7 @@ Automation should be bounded:
 
 - do not run open-ended implementation work
 - do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
-- do merge accepted validation work to `stage` when the review evidence is complete and the merge is straightforward; if the merge is not straightforward, write the exact conflict/blocker back to the card
+- do merge PM-accepted runtime/docs-preview work to `stage` when Ethan should see it in the integrated app/docs and the merge is straightforward; if the merge is not straightforward, write the exact conflict/blocker back to the card
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
 

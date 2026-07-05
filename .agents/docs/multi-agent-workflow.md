@@ -100,7 +100,9 @@ PM then decides the next state and owner.
 
 ## 4.1 Stage Integration Branch
 
-`stage` is the shared branch for integrated validation. Ethan and QA should be able to run one build from `stage` and see the combined state of all PM-accepted feature work that has not yet been promoted to `main`.
+`stage` is Ethan's runnable integration-acceptance branch. Ethan should be able to run one build from `stage` and see the combined state of all PM-accepted feature work that has not yet been promoted to `main`.
+
+QA does not have to test on `stage`. QA may run focused target tests from a named implementation branch, package, or independent worktree when the card names the exact target and scope. Those QA results prove the named target, not the integrated app state shown to Ethan on `stage`.
 
 Branch ownership:
 
@@ -114,17 +116,18 @@ Integration rule:
 - When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must merge the accepted delivery branch into `stage` promptly.
 - PM resolves straightforward conflicts on `stage` when the correct resolution follows the accepted card evidence. If the conflict requires product, architecture, or asset judgment, PM creates or routes a card with the exact conflict files and leaves the original accepted card nonterminal or records a deferral.
 - A card may be marked `done` before `stage` integration only for changes that do not affect the runnable validation surface, or when PM records `stage integration deferred` with a concrete reason, target card, and expected merge condition.
-- A one-off integration branch may be used for emergency builds, but PM must either promote/sync it into `stage` or record why it is intentionally temporary. QA/Ethan should not have to switch between unrelated feature branches to inspect normal progress.
+- A one-off integration branch may be used for emergency builds, but PM must either promote/sync it into `stage` or record why it is intentionally temporary. Ethan should not have to switch between unrelated feature branches to inspect normal integrated progress.
 
 Evidence rule:
 
 - After merging to `stage`, PM records the `stage` commit and any build/package path in `产物/证据`.
-- QA and Ethan validation cards should point to a `stage` commit or a package built from `stage`. A package built from an arbitrary feature branch is acceptable only when the card explicitly says it is a narrow branch-specific validation.
+- Ethan integration-acceptance cards should point to a `stage` commit or a package built from `stage`.
+- QA cards may point to `stage`, but may also point to a named branch, package, or independent worktree for targeted validation. The card must explicitly say whether the result is `stage` integration validation or branch/worktree-specific target testing.
 - If `stage` is behind accepted work, PM must surface that in `最新进展` and either integrate it before the next validation request or explain the blocker.
 
 Promotion rule:
 
-- `main` remains the stable PM-owned line. PM promotes `stage` to `main` only after the intended acceptance gate is satisfied, or when PM intentionally chooses to make the integrated state the new stable baseline.
+- `main` remains the stable PM-owned line. PM promotes `stage` to `main` only after Ethan has accepted the integrated state, or when PM intentionally chooses to make the integrated state the new stable baseline with explicit evidence.
 - `stage` may contain accepted work that is still awaiting broader QA or Ethan visual acceptance. It is the working validation line, not a final release promise.
 
 ## 5. Multi-Session Role Coordination
@@ -327,7 +330,7 @@ PM responsibilities:
 8. Split large DESIGN/QA work enough that multiple same-role sessions can run without editing the same assets or test files.
 9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
 10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
-11. Keep `stage` current with PM-accepted validation work, or record a concrete integration deferral on the relevant cards.
+11. Keep `stage` current with PM-accepted runtime/docs-preview work that Ethan should see in the integrated app/docs, or record a concrete integration deferral on the relevant cards.
 
 PM acceptance requires:
 
@@ -341,7 +344,8 @@ PM branch discipline:
 
 - PM owns `stage` and `main`, but should avoid turning in-progress implementation mechanics into blockers.
 - PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `stage`/`main` history was changed outside PM control or a destructive operation is underway.
-- PM should merge accepted validation work to `stage` before asking QA or Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest app.
+- PM should merge accepted runtime/docs-preview work to `stage` before asking Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest integrated app.
+- QA may validate a combined app build from `stage` when the card asks for integrated-app QA, but QA may also run target-specific tests from a named branch/package/worktree. PM must not treat a target-specific QA pass as Ethan acceptance of `stage`.
 - PM resolves normal `stage` merge conflicts. If the conflict requires implementation judgment, PM routes a focused card back to TL with exact files and the target `stage` baseline.
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
 - In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.

@@ -4,7 +4,7 @@ QA is a coordinator role, not only a final checker. Its output is both a test re
 
 Multiple QA sessions may run at the same time. They share the role owner `QA`, but each concrete session must use both a stable executor label and stable runtime identity in `最新进展`, for example `执行者：QA-Visual；身份ID：ClaudeSession:<session-id>`.
 
-Integrated QA validation should run against the PM-maintained `stage` branch or a package built from a named `stage` commit. QA may test a feature branch only when the card explicitly says the run is branch-specific and not representative of the combined app state.
+QA testing targets are card-scoped. QA may test the PM-maintained `stage` branch, a package built from `stage`, a named implementation branch, a package built from a named branch, or an independent worktree. The card must state the exact target and whether the result represents Ethan's integrated `stage` acceptance surface or only a branch/worktree-specific target check.
 
 ## 1. Test Asset Principle
 
@@ -125,7 +125,7 @@ QA-related cards should fill these fields when relevant:
 - `对抗评审`: adversarial review outcome
 - `QA结果`: current execution result
 - `产物/证据`: command output summary, screenshot path, report path, or reviewer notes
-- `分支` or `产物/证据`: source branch/commit under test. For integrated app validation this must be a `stage` commit or a package built from `stage`.
+- `分支` or `产物/证据`: source branch/commit, package, or worktree under test. If the test is for Ethan-facing integrated acceptance, this must be a `stage` commit or a package built from `stage`; otherwise the card must clearly say the QA result is target-specific and does not claim full integrated app acceptance.
 
 QA cards can start from `todo` when the work is test design or test asset maintenance. They do not need to wait for an implementation card to enter `testing`.
 
