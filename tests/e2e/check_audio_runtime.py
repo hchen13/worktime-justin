@@ -89,7 +89,11 @@ def main() -> int:
               var m = window.WTJ_MANIFEST, tpl = (m.tasks&&m.tasks.templates)||{}, defs=[];
               for (var k in tpl){ (tpl[k].examples||[]).forEach(function(e){ if(e.id) defs.push(e); }); }
               for (var d of defs){
-                var voiceArg = (d && d.voicePrompt) ? d.voicePrompt : d;  // mirrors task.js
+                // WTJ-20260705-025：voicePrompt 为空=有意静音(door/bell/drag 新任务待 024/084
+                // 补中文语音),与 task.js 一致——空 voicePrompt 时 task.js 直接跳过播放(不 fetch、
+                // 不算 missing),测试也应跳过,不能拿"未交付的语音"当运行时缺陷。
+                if (!(d && d.voicePrompt)) continue;
+                var voiceArg = d.voicePrompt;  // mirrors task.js: 有 voicePrompt 就用路径字符串
                 out.tasks.push([d.id, await play((function(v){return function(){return api.playTaskVoice(v);};})(voiceArg))]);
               }
               await new Promise(function(r){setTimeout(r,700);});
