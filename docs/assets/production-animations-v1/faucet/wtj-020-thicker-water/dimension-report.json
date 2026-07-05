@@ -1,0 +1,150 @@
+{
+  "scale_x": 1.48,
+  "states": {
+    "open": [
+      {
+        "frame": 0,
+        "water_bbox": [
+          208,
+          777,
+          428,
+          995
+        ],
+        "water_width": 220
+      }
+    ],
+    "running": [
+      {
+        "frame": 0,
+        "water_bbox": [
+          208,
+          777,
+          428,
+          995
+        ],
+        "water_width": 220
+      },
+      {
+        "frame": 1,
+        "water_bbox": [
+          211,
+          778,
+          426,
+          1003
+        ],
+        "water_width": 215
+      },
+      {
+        "frame": 2,
+        "water_bbox": [
+          205,
+          776,
+          431,
+          984
+        ],
+        "water_width": 226
+      },
+      {
+        "frame": 3,
+        "water_bbox": [
+          209,
+          778,
+          426,
+          1012
+        ],
+        "water_width": 217
+      },
+      {
+        "frame": 4,
+        "water_bbox": [
+          207,
+          776,
+          430,
+          996
+        ],
+        "water_width": 223
+      },
+      {
+        "frame": 5,
+        "water_bbox": [
+          212,
+          779,
+          424,
+          998
+        ],
+        "water_width": 212
+      }
+    ],
+    "closing": [
+      {
+        "frame": 0,
+        "water_bbox": [
+          208,
+          777,
+          428,
+          995
+        ],
+        "water_width": 220
+      },
+      {
+        "frame": 1,
+        "water_bbox": [
+          224,
+          784,
+          412,
+          964
+        ],
+        "water_width": 188
+      },
+      {
+        "frame": 2,
+        "water_bbox": [
+          243,
+          790,
+          392,
+          933
+        ],
+        "water_width": 149
+      },
+      {
+        "frame": 3,
+        "water_bbox": [
+          263,
+          795,
+          374,
+          904
+        ],
+        "water_width": 111
+      },
+      {
+        "frame": 4,
+        "water_bbox": [
+          282,
+          798,
+          354,
+          867
+        ],
+        "water_width": 72
+      },
+      {
+        "frame": 5,
+        "water_bbox": null,
+        "water_width": null
+      }
+    ],
+    "closed": [
+      {
+        "frame": 0,
+        "water_bbox": null,
+        "water_width": null
+      }
+    ],
+    "off": [
+      {
+        "frame": 0,
+        "water_bbox": null,
+        "water_width": null
+      }
+    ]
+  }
+}

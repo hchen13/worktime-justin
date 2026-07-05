@@ -1,0 +1,47 @@
+{
+  "card": "WTJ-20260705-020",
+  "asset": "faucet thicker water repair",
+  "source": "docs/assets/production-animations-v1/faucet",
+  "method": "isolated existing water pixels, widened horizontally 1.48x, preserved faucet body and timing",
+  "frame_size": [
+    1024,
+    1024
+  ],
+  "runtime_target_size": [
+    256,
+    256
+  ],
+  "states": {
+    "open": {
+      "frames": 1,
+      "fps": 8,
+      "loop": false
+    },
+    "running": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true
+    },
+    "closing": {
+      "frames": 6,
+      "fps": 10,
+      "loop": false
+    },
+    "closed": {
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    },
+    "off": {
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    }
+  },
+  "runtime_candidate_mapping": {
+    "running": "app/web/assets/anim/faucet/running-sheet.png",
+    "closing": "app/web/assets/anim/faucet/closing-sheet.png",
+    "closed": "app/web/assets/anim/faucet/closed-sheet.png",
+    "off": "app/web/assets/anim/faucet/off-sheet.png"
+  }
+}
