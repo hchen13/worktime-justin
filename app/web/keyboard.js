@@ -23,6 +23,17 @@
 //   onFunctionKey(fn)          功能键弱反馈事件（可选），fn({ key, category, intensity })。
 //                              category: 'light' | 'weak' | 'other'；intensity: 0~1，
 //                              随同键连打快速衰减（REQ-KB-06）。功能键永不计入有效键/里程碑。
+//   onSymbol(fn)               WTJ-20260705-002 新增：单个可打印非字母数字键（如 , [ ] = ? /）
+//                              的弹出通道，fn(char, intensity)（注意是两个位置参数，不是
+//                              payload 对象——与 onLetter/onMilestone 的单参数约定一致，仅
+//                              onFunctionKey 用 payload 对象）。与 onFunctionKey 并行
+//                              DUAL-EMIT，同一次按键两个事件都会触发，互不替代——不改变
+//                              onFunctionKey 现有路由（keysound.js 的 key-punct 音效、
+//                              intensity 连打衰减仍完全由 onFunctionKey 驱动），onSymbol 只是
+//                              给 app.js 一个额外的"渲染更小号/无拖尾弹出 token"的钩子。
+//                              Space/Enter（本身有专属 light 类别）与 Escape/Tab/F1~F12/
+//                              Meta/Alt/Control/Shift 等具名功能键（e.key.length !== 1）都
+//                              不会触发 onSymbol，见 isSymbolKey()。
 //   getEffectiveKeyCount()     返回当前累计有效键计数。
 //   resetEffectiveKeyCount()   重置有效键计数、已触发里程碑记录，**以及"连续同键"节奏状态
 //                              （lastKeyId/sameKeyStreak）**（供五槽轮次重置等场景调用；
@@ -172,6 +183,14 @@
     return typeof key === 'string' && key.length === 1 && ALNUM_RE.test(key);
   }
 
+  // WTJ-20260705-002：单个可打印非字母数字键（标点/符号），供 onSymbol 通道判定。
+  // e.key.length === 1 天然排除所有具名功能键（Escape/Tab/F1~F12/Meta/Alt/Control/Shift/
+  // ArrowUp 等 e.key 值长度都 >1），额外显式排除 ' '（Space 的 e.key 实际值是单个空格字符，
+  // 长度恰好为 1，但 Space 已有专属 light 类别 + key-space 音效，不应再重复算作"标点弹出"）。
+  function isSymbolKey(key) {
+    return typeof key === 'string' && key.length === 1 && key !== ' ' && !ALNUM_RE.test(key);
+  }
+
   function normalizeFunctionKeyName(key) {
     // KeyboardEvent.key 的空格键实际值是单个空格字符 ' '，非 'Space'；与 app.js 现有
     // dbgKey 显示逻辑保持同一约定，统一归一化为 'Space' 便于对照 manifest.functionKeys 配置。
@@ -192,6 +211,7 @@
   var effectiveKeySubscribers = [];
   var milestoneSubscribers = [];
   var functionKeySubscribers = [];
+  var symbolSubscribers = []; // WTJ-20260705-002：onSymbol(char, intensity) 订阅者
 
   function addSubscriber(list, fn) {
     if (typeof fn !== 'function') {
@@ -207,6 +227,19 @@
         list[i](arg);
       } catch (err) {
         console.error('[WTJ_KEYBOARD] 订阅回调抛出异常，已捕获：', err);
+      }
+    }
+  }
+
+  // WTJ-20260705-002：onSymbol(char, intensity) 是两个位置参数（不是单一 payload 对象），
+  // 单独给一个双参数版本的 emit，避免为了这一个调用点改动上面单参数 emit() 的既有契约
+  // （onLetter/onMilestone/onEffectiveKey/onFunctionKey 都依赖 emit() 是单参数调用）。
+  function emit2(list, a, b) {
+    for (var i = 0; i < list.length; i++) {
+      try {
+        list[i](a, b);
+      } catch (err) {
+        console.error('[WTJ_KEYBOARD] onSymbol 订阅回调抛出异常，已捕获：', err);
       }
     }
   }
@@ -342,6 +375,16 @@
 
     emit(functionKeySubscribers, { key: normalized, category: category, intensity: intensity });
     // 功能键永不计入有效键计数/里程碑（REQ-KB-05：修饰键"不计奖励"；本引擎对所有功能键一视同仁）。
+
+    // WTJ-20260705-002：DUAL-EMIT——上面的 onFunctionKey 路由完全不变（keysound.js 的
+    // key-punct 音效、mash-decay intensity 依旧只由它驱动），这里额外并行触发一份 onSymbol，
+    // 供 app.js 渲染一个更小号、无拖尾的标点/符号弹出。绝不复用 onLetter：onLetter 的语义是
+    // "有效字母/数字键"，复用会污染 effectiveKeyCount/里程碑判定，以及 009 秘密词引擎的
+    // rolling buffer（后者只应由真正的字母流驱动）。用同一个 intensity（同键连打衰减后的
+    // 强度），让符号弹出的强弱观感与它已有的音效衰减保持一致，不必另开一套衰减状态。
+    if (isSymbolKey(e.key)) {
+      emit2(symbolSubscribers, e.key, intensity);
+    }
   }
 
   function onKeyDown(e) {
@@ -362,12 +405,14 @@
   function onEffectiveKey(fn) { addSubscriber(effectiveKeySubscribers, fn); }
   function onMilestone(fn) { addSubscriber(milestoneSubscribers, fn); }
   function onFunctionKey(fn) { addSubscriber(functionKeySubscribers, fn); }
+  function onSymbol(fn) { addSubscriber(symbolSubscribers, fn); }
 
   window.WTJ_KEYBOARD = Object.freeze({
     onLetter: onLetter,
     onEffectiveKey: onEffectiveKey,
     onMilestone: onMilestone,
     onFunctionKey: onFunctionKey,
+    onSymbol: onSymbol,
     getEffectiveKeyCount: getEffectiveKeyCount,
     resetEffectiveKeyCount: resetEffectiveKeyCount
   });
