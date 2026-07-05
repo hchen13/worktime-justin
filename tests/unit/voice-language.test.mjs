@@ -275,9 +275,23 @@ test('9a. ALL_TASK_IDS 恰好 24 条，与 manifest.js 四类模板 example 的 
   // 记录、task-voice-path.test.mjs 有专项断言），voice-language.js 的三份清单统一按"语音
   // 文件 stem"编目（见该文件 extractTaskId() 顶部的详细说明），这里的核对必须用同一套 key
   // 空间，否则会产生一次假阳性的"清单漂移"报告。
+  //
+  // WTJ-20260705-025：跳过 voicePrompt 为空字符串的 example——这些是本卡新增、024/084 尚未
+  // 交付中文语音的任务（drag 池扩容的 6 条 + door/doorbell 点击任务 2 条，见 manifest.js
+  // 对应 example 行内注释的 no-silent-fallback 说明）。它们的 voicePrompt 是空字符串这个
+  // "falsy 短路"本身就是设计好的降级路径（task.js/voice-language.js 见到空 voicePrompt 会
+  // 直接跳过播放，不会走到 ALL_TASK_IDS 查找这一步，见 voice-language.js resolveTaskVoicePath()
+  // 的 `if (!voicePrompt) return null;` 首行短路），因此它们**刻意不参与**本文件 ALL_TASK_IDS
+  // 的语言完整度台账——这既避免了把"个别新任务缺配音"错误折算成"中文这门语言本身不完整"从而
+  // 意外禁用家长设置面板里已经稳定工作的"中文"选项，也不需要为它们编造一个从未真实交付的
+  // stem 字符串。缺口台账另见 app/web/audio/missing-audio.json 的 taskVoiceZh 新增
+  // not-delivered 条目与 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落。
   var stemIds = [];
   ['drag', 'click', 'find', 'press'].forEach(function (type) {
     (templates[type].examples || []).forEach(function (ex) {
+      if (!ex.voicePrompt) {
+        return;
+      }
       var m = /([^\/]+?)(\.zh)?\.m4a$/i.exec(ex.voicePrompt);
       stemIds.push(m ? m[1] : ex.voicePrompt);
     });

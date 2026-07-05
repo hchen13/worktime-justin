@@ -73,10 +73,20 @@ VIEWPORTS = [
 ]
 
 # One full rotation cycle of TASK_TYPES is 4 (drag/click/find/press); click has
-# 3 examples (lamp/faucet/horse). 12 question-clicks = 3 full type-cycles,
-# guaranteeing every click example (typeRotationIndex 0,1,2) is reached at
-# least once — see task-templates.js handleQuestionClicked()'s rotation math.
-CLICKS_PER_VIEWPORT = 12
+# 5 examples (lamp/faucet/horse/door/bell — WTJ-20260705-025 added click-door-open/
+# click-doorbell-ring, wiring in the door.png/bell.png task-props that shipped with
+# Pack A but were never referenced by any manifest example). One full type-cycle is
+# now 4*5=20 question-clicks; 24 gives a small margin, guaranteeing every click
+# example (typeRotationIndex 0..4) is reached at least once — see task-templates.js
+# handleQuestionClicked()'s rotation math.
+CLICKS_PER_VIEWPORT = 24
+
+# The five click examples that must be forced reachable + visible (original three
+# TL named explicitly, plus WTJ-20260705-025's door/doorbell additions).
+ALL_CLICK_EXAMPLE_IDS = {
+    "click-lamp-on", "click-faucet-on", "click-horse-run",
+    "click-door-open", "click-doorbell-ring"
+}
 
 EXTRACT_JS = """() => {
     function rectOf(sel) {
@@ -257,11 +267,12 @@ def run_suite(pw, app_web: Path, engine: str, port: int):
                   "; ".join(content_problems) if content_problems else
                   "every IMG loaded (naturalWidth>0) and every CANVAS has >=1 non-transparent pixel")
 
-            # ----- the exact three click examples TL was asked to force -----
+            # ----- the exact five click examples that must be forced (WTJ-20260705-025
+            # added click-door-open/click-doorbell-ring to the original three TL forced) -----
             click_ids = {s["taskInfo"]["taskId"] for s in samples if s["taskInfo"]["type"] == "click"}
             click_examples_seen_overall |= click_ids
             check(f"VIS-{vp_name}-all-click-examples-reached",
-                  {"click-lamp-on", "click-faucet-on", "click-horse-run"} <= click_ids,
+                  ALL_CLICK_EXAMPLE_IDS <= click_ids,
                   f"click examples reached this viewport: {sorted(click_ids)}")
 
             # ----- real trusted click at the measured rect center completes -----
@@ -271,7 +282,7 @@ def run_suite(pw, app_web: Path, engine: str, port: int):
                   f"measured DOM rect center completed their task; failures={ct_fail}")
 
         check("VIS-all-viewports-click-examples-reached",
-              {"click-lamp-on", "click-faucet-on", "click-horse-run"} <= click_examples_seen_overall,
+              ALL_CLICK_EXAMPLE_IDS <= click_examples_seen_overall,
               f"union across all viewports: {sorted(click_examples_seen_overall)}")
     finally:
         httpd.shutdown()
