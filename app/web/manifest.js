@@ -585,6 +585,27 @@
         reqIds: ['REQ-SLOT-03'],
         oneTimePresentation: true,
         rewardSticker: 'assets/discovery-icons/keyboard-spark.png'
+      },
+      // WTJ-20260705-010：接入 completion-stamp-v3 素材，替换「今日工作完成」奖励此前的
+      // 纯 CSS 小火箭 + sparkle-burst/star-sticker 占位视觉（mini-rocket-launch 表现形式），
+      // 改为 streakRewardForms 菜单里的 desk-stamp（工作台盖章）表现形式：一次性 pop/scale/
+      // fade 展示这枚金色印章 + 三个打勾徽章的静态贴图（语义正好呼应"连续完成 3 个任务"）。
+      // DESIGN 交付（docs/assets/design-expansion-v2/work-complete-reward/completion-stamp-v3/）
+      // 实际只给了 source/ 下 1 张已抠像静态图（completion-stamp-cutout.png），没有多帧序列/
+      // manifest.json/sheet/preview gif（与卡片原文列出的资产清单有出入，据实记录于
+      // app/web/assets/rewards/PROVENANCE.md「与卡片原文档述的资产清单有出入」一节），因此本卡
+      // 走纯 CSS 一次性 pop 方案而非 frame-anim.js 多帧管线，sprite 字段就是唯一需要的 config。
+      // sprite 路径是 sips -Z 640 降采副本，见 app/web/assets/rewards/PROVENANCE.md
+      // 「completion-stamp-v3.png」一节；status-rewards.js 读取本字段，不硬编码 docs/ 设计目录
+      // 路径，缺配置时回退到与此处相同的默认相对路径（防御式，与 keyboardMilestone 的
+      // getMilestoneRewardSticker() 同一读取模式，唯一区别是本字段有内置默认值兜底而非返回 null
+      // ——「今日工作完成」奖励必须每次都展示视觉，不像键盘里程碑贴纸允许缺配置时空叠层）。
+      completionStamp: {
+        card: 'WTJ-20260705-010',
+        reqIds: ['REQ-RWD-05', 'REQ-RWD-06'],
+        oneTimePresentation: true,
+        sprite: 'assets/rewards/completion-stamp-v3.png',
+        form: 'desk-stamp'
       }
     },
 

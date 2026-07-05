@@ -4,8 +4,9 @@
 // const / 模板字符串 / 可选链 ?. / 空值合并 ??；零外部请求（不 fetch 任何东西，不访问任何
 // 外部 URL）、非 module（无 import/export），以普通 <script src="status-rewards.js"> 标签
 // 加载，需排在 014（task-templates.js）之后——本文件订阅它暴露的 onTaskComplete 事件。也需要
-// manifest.js（读 rewards.statusLights 配置）之后加载；与 hud.js / audio.js 的加载顺序无强
-// 依赖（三者调用均走下方防御式包装，缺失时优雅降级为 console.warn/console.error，不阻断）。
+// manifest.js（读 rewards.statusLights / rewards.completionStamp 配置）之后加载；与 hud.js /
+// audio.js 的加载顺序无强依赖（三者调用均走下方防御式包装，缺失时优雅降级为
+// console.warn/console.error，不阻断）。
 //
 // -----------------------------------------------------------------------
 // 职责边界（本卡 015，消费 014 的 onTaskComplete 事件，落地 REQ-RWD-04~06 的「连续奖励」半）
@@ -18,9 +19,10 @@
 // 哪一个灯，用一个独立的 streak 计数器累计"连续完成了几个任务"。streak 达到
 // manifest.rewards.statusLights.streakThreshold（默认 3）即触发 REQ-RWD-05「今日工作完成」奖励：
 // 三个状态灯一起闪（REQ-RWD-06 的 lights-flash-together 表现形式，通过反复调用
-// WTJ_HUD.setStatusLight 实现快闪，不新增 HUD 内部状态/样式）+ 一次性大奖励视觉叠层（小火箭升空
-// + sparkle-burst/star-sticker 素材做的"烟花/闪光"收尾，对应 mini-rocket-launch 表现形式）+
-// 防御式播放奖励音效，随后清空叠层、熄灭三个状态灯、streak 归零，进入下一轮「工作」。
+// WTJ_HUD.setStatusLight 实现快闪，不新增 HUD 内部状态/样式）+ 一次性大奖励视觉叠层
+// （WTJ-20260705-010：completion-stamp-v3 素材一次性 pop/scale/fade，对应 desk-stamp 表现
+// 形式，见下方「WTJ-20260705-010」一节）+ 防御式播放奖励音效，随后清空叠层、熄灭三个状态灯、
+// streak 归零，进入下一轮「工作」。
 //
 // 与 014 的协调说明（据实记录，供 PM/QA 核对）：014 的状态灯点亮顺序（statusLightIndex，
 // 0→1→2→0→…循环）与本文件的 streak 计数器是两个完全独立的计数——manifest 当前配置下
@@ -56,10 +58,28 @@
 //   REQ-RWD-05（连续 3 个任务触发今日工作完成）：handleTaskComplete() 累计 streak，达到
 //               getStreakThreshold() 时调用 triggerWorkComplete()。
 //   REQ-RWD-06（奖励表现：三灯连闪 / 盖章 / 小火箭 / 宝箱小开一次）：本文件实现
-//               'lights-flash-together'（flashLightsSequence()）+ 'mini-rocket-launch'
-//               （showRewardOverlay() 渲染的纯 CSS 小火箭 + sparkle-burst/star-sticker 素材）
+//               'lights-flash-together'（flashLightsSequence()）+ 'desk-stamp'
+//               （showRewardOverlay() 渲染的 completion-stamp-v3 一次性 pop/scale/fade 素材，
+//               WTJ-20260705-010 接入，替换此前的 mini-rocket-launch 纯 CSS 小火箭占位）
 //               两种组合表现，IMPLEMENTED_FORMS 常量声明实际落地的表现形式子集。
 // -----------------------------------------------------------------------
+//
+// WTJ-20260705-010（接入 completion-stamp-v3，替换粗糙火箭/星星占位）：
+// DESIGN 交付目录 docs/assets/design-expansion-v2/work-complete-reward/completion-stamp-v3/
+// 实际只有 source/completion-stamp-cutout.png 这 1 张已抠像静态图（RGBA，四角透明），没有
+// manifest.json / sheet / frames 序列 / preview gif（与卡片原文列出的资产清单有出入，据实记录
+// 于 app/web/assets/rewards/PROVENANCE.md）。因此本卡不走 frame-anim.js 多帧 sheet 管线，改用
+// 纯 CSS 一次性 pop/scale/fade（status-rewards.css 的 .wtj-sr-stamp / @keyframes
+// wtj-sr-stamp-pop）：淡入放大 → 短暂停留 → 淡出，约 1.8s（与此前 mini-rocket-launch 同一
+// 展示时长量级），由 showRewardOverlay() 里同一个 clockRef.setTimeout(...OVERLAY_TOTAL_MS)
+// 统一调度移除，JS 侧调度逻辑完全不变，只是叠层内容从"CSS 小火箭 + sparkle-burst.png +
+// star-sticker.png 三个元素"换成"completion-stamp-v3.png 一个元素"。素材路径读取见
+// resolveCompletionStampPath()，config 驱动（manifest.rewards.completionStamp.sprite），不
+// 硬编码 docs/ 设计目录路径；缺配置时回退到与 manifest 里相同的默认 runtime 相对路径（不同于
+// keyboardMilestone 缺配置时选择空叠层，因为「今日工作完成」是本产品最大的一次性奖励，必须每次
+// 都有视觉，不适合静默跳过）。sparkle-burst.png/star-sticker.png 两个文件本身未删除（保留在
+// app/web/assets/rewards/，未来若需要恢复/复用 mini-rocket-launch 或做别的表现形式可直接取用），
+// 只是不再被本文件引用。
 
 (function () {
   'use strict';
@@ -113,29 +133,27 @@
 
   // 本文件实际落地的表现形式子集（见文件头 REQ-RWD-06 落地位置索引）。manifest 的
   // streakRewardForms 是"产品允许的表现形式菜单"，不要求每次全部实现；这里显式声明选用的两种。
-  var IMPLEMENTED_FORMS = ['lights-flash-together', 'mini-rocket-launch'];
+  // WTJ-20260705-010：'mini-rocket-launch' → 'desk-stamp'（接入 completion-stamp-v3，见文件头
+  // 「WTJ-20260705-010」一节）。
+  var IMPLEMENTED_FORMS = ['lights-flash-together', 'desk-stamp'];
 
   // ---------------------------------------------------------------------
-  // 素材路径解析：sparkle-burst.png / star-sticker.png 已复制到 app/web/assets/rewards/
-  // （见该目录 PROVENANCE.md）。与 task-templates.js 的 resolveSpritePath() 同一工程取舍：
-  // 用一张已知文件名清单做校验，不盲目拼路径。
+  // WTJ-20260705-010：completion-stamp-v3 素材路径解析（desk-stamp 表现形式，替换此前的
+  // sparkle-burst.png/star-sticker.png + 纯 CSS 小火箭）。config 驱动：优先读
+  // manifest.rewards.completionStamp.sprite；manifest 缺失/字段缺失时回退到下方默认值——
+  // 默认值本身就是已经复制进 app/web/assets/rewards/ 的 runtime 相对路径（不是 docs/ 设计目录
+  // 路径），因此"回退"不等于"硬编码临时 design 目录"，只是把同一份 config 值兜底了一份，保证
+  // 「今日工作完成」这个本产品最大的一次性奖励在 manifest 加载失败时仍有视觉可展示（不同于
+  // keyboardMilestone 缺配置时选择空叠层的取舍）。
   // ---------------------------------------------------------------------
-  var REWARD_ASSET_FILENAMES = ['sparkle-burst.png', 'star-sticker.png'];
-  var REWARD_ASSET_BASE = 'assets/rewards/';
+  var COMPLETION_STAMP_CFG = (MANIFEST && MANIFEST.rewards && MANIFEST.rewards.completionStamp) ? MANIFEST.rewards.completionStamp : null;
+  var DEFAULT_COMPLETION_STAMP_SPRITE = 'assets/rewards/completion-stamp-v3.png';
 
-  function resolveRewardAssetPath(filename) {
-    var known = false;
-    var i;
-    for (i = 0; i < REWARD_ASSET_FILENAMES.length; i++) {
-      if (REWARD_ASSET_FILENAMES[i] === filename) {
-        known = true;
-        break;
-      }
+  function getCompletionStampSpritePath() {
+    if (COMPLETION_STAMP_CFG && typeof COMPLETION_STAMP_CFG.sprite === 'string' && COMPLETION_STAMP_CFG.sprite) {
+      return COMPLETION_STAMP_CFG.sprite;
     }
-    if (!known) {
-      console.warn('[WTJ_STATUS_REWARDS] 奖励素材文件名 "' + filename + '" 不在已知清单内，仍尝试用 assets/rewards/ 前缀兜底（可能 404）。');
-    }
-    return REWARD_ASSET_BASE + filename;
+    return DEFAULT_COMPLETION_STAMP_SPRITE;
   }
 
   // ---------------------------------------------------------------------
@@ -351,7 +369,7 @@
   // on/off 实现快闪，不新增 HUD 内部状态。节拍数值（FLASH_STEP_MS/FLASH_STEP_COUNT）是本卡
   // 占位值（卡片原文未给出精确数值，与 keyboard.js FUNCTION_KEY_DECAY_SPAN、task-templates.js
   // COMPLETE_VISUAL_HOLD_MS 同一工程取舍）。快闪与一次性大奖励叠层（showRewardOverlay()）在
-  // triggerWorkComplete() 里同时发起、并行播放（火箭升空的同时状态灯在快闪），不是"先闪完再
+  // triggerWorkComplete() 里同时发起、并行播放（盖章 pop 出现的同时状态灯在快闪），不是"先闪完再
   // 出叠层"的串行等待——这样三岁小孩不需要等两段动画依次播完，观感也更像"一起爆发"的庆祝。
   // 快闪总时长（FLASH_STEP_MS * FLASH_STEP_COUNT = 1320ms）刻意小于 OVERLAY_TOTAL_MS
   // （1800ms），保证真正收尾熄灯（finishCelebration()，由 overlay 计时器驱动）发生时，快闪
@@ -387,11 +405,14 @@
   }
 
   // ---------------------------------------------------------------------
-  // 一次性大奖励视觉（mini-rocket-launch，REQ-RWD-06 / REQ-AST-02）：纯 CSS 生成的小火箭
-  // 升空动画（status-rewards.css 的 @keyframes wtj-sr-rocket-rise），叠加 sparkle-burst.png /
-  // star-sticker.png 两张已验收素材做"升空烟花/闪光"收尾。淡入 → 停留/上升 → 淡出，约 1.8s
-  // （落在 TL 架构指令给出的 1.5-2s 区间内），由可注入时钟统一调度移除，不依赖 CSS animationend
-  // 事件（与 task-templates.js/secretword.js 的既有取舍一致：JS 定时移除，CSS 只管视觉）。
+  // 一次性大奖励视觉（desk-stamp，REQ-RWD-06 / REQ-AST-02，WTJ-20260705-010 接入
+  // completion-stamp-v3，替换此前的 mini-rocket-launch 纯 CSS 小火箭 + sparkle-burst.png /
+  // star-sticker.png 占位）：单张已抠像静态图（金色印章 + 三个打勾徽章 + 环形闪光，语义正好
+  // 呼应"连续完成 3 个任务"），status-rewards.css 的 @keyframes wtj-sr-stamp-pop 做一次性
+  // pop/scale/fade（淡入放大 → 短暂停留 → 淡出）。约 1.8s（落在 TL 架构指令给出的 1.5-2s
+  // 区间内），由可注入时钟统一调度移除，不依赖 CSS animationend 事件（与
+  // task-templates.js/secretword.js 的既有取舍一致：JS 定时移除，CSS 只管视觉）。素材路径见
+  // getCompletionStampSpritePath()（config 驱动，见上方「WTJ-20260705-010」一节）。
   // ---------------------------------------------------------------------
   var OVERLAY_TOTAL_MS = 1800;
   var overlayTimerId = null;
@@ -399,18 +420,10 @@
   function showRewardOverlay() {
     clearOverlayChildren(); // 保险：正常不应该有上一轮残留（celebrating 标志已经防止重入）。
 
-    createOverlayChild('div', 'wtj-sr-rocket wtj-sr-anim');
-
-    var sparkleEl = createOverlayChild('img', 'wtj-sr-sparkle wtj-sr-anim');
-    if (sparkleEl) {
-      sparkleEl.src = resolveRewardAssetPath('sparkle-burst.png');
-      sparkleEl.alt = '';
-    }
-
-    var starEl = createOverlayChild('img', 'wtj-sr-star wtj-sr-anim');
-    if (starEl) {
-      starEl.src = resolveRewardAssetPath('star-sticker.png');
-      starEl.alt = '';
+    var stampEl = createOverlayChild('img', 'wtj-sr-stamp wtj-sr-anim');
+    if (stampEl) {
+      stampEl.src = getCompletionStampSpritePath();
+      stampEl.alt = '';
     }
 
     overlayTimerId = clockRef.setTimeout(function () {
