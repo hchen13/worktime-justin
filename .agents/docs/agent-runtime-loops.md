@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
 ```
 
 Example QA start prompt:
@@ -38,7 +38,7 @@ You are DESIGN for WorkTime Justin. Your session label is DESIGN-A and your stab
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, run the whole-board completion notification check, and own main branch decisions.
+You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, route PM-accepted runtime/docs-preview work to TL for stage integration when Ethan should validate the integrated app/docs, run the whole-board completion notification check, and own main promotion decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -60,6 +60,8 @@ Do not process multiple cards in parallel inside one role session unless the rol
 Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
 
 If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
+
+When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment.
 
 ### 3.1 Tool Call Hygiene
 
@@ -88,6 +90,7 @@ Known failure pattern:
 To avoid two agents working the same card:
 
 - Before starting a `todo` card, set `状态 = in progress`, keep `负责人` as the current role, and write `最新进展` with the session label, stable identity, start time, current action, and touched scope.
+- Treat `in progress` as a strong stakeholder-facing signal: a concrete live session has accepted responsibility and is actively expected to continue. If a card is merely ready for a role but no session has acknowledged it yet, it belongs in `todo`.
 - Use a stable session label, for example `DESIGN-A`, `DESIGN-2`, `QA-Visual`, or `QA-Audio`, plus a stable identity such as `CodexThread:<thread-id>`, `ClaudeSession:<session-id>`, or `Automation:<automation-id>`. Both must appear in the first line of the claiming update: `执行者：<label>；身份ID：<runtime-id>；开始：<time>；范围：<asset/test scope>`.
 - If the role session does not know its stable identity, it may read the board but should not claim formal work until the launcher/PM provides the Codex thread ID, Claude Code session ID, or automation ID.
 - If a card already has another clear active `最新进展` from the same role, do not overwrite it unless PM explicitly allowed takeover, the previous claim is stale past `截止/检查点`, or the previous session has returned the card to PM review.
@@ -104,6 +107,9 @@ Recommended PM cron responsibilities:
 - scan `review` cards and route them
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
+- keep `stage` current by routing PM-accepted runtime/docs-preview work to TL, or write a concrete `stage` integration deferral onto the card
+- ensure Ethan validation requests name a `stage` commit or a package/docs preview built from a clean checkout of that `stage` commit; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
+- before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names a `stage` commit/package from a clean `stage` checkout where Ethan can immediately see the accepted change; branch-only review or target-specific QA pass is not enough
 - groom `backlog` proposals into official cards or `_deprecated`
 - run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
 - summarize board health and urgent decisions
@@ -121,10 +127,15 @@ For implementation cards in `in progress`, PM automation should treat local bran
 
 For implementation cards in `review`, PM automation first checks the handoff metadata: final branch, final commit, evidence, risks, and recommended route. If only handoff metadata is missing or inconsistent, keep `状态 = review`, set `负责人 = TL`, and ask for a narrow metadata correction. Do not route it as technical rework unless PM found a real defect.
 
+When PM automation rejects a delivered card for real rework, route it to `todo` with the fixing role as `负责人` unless a named live executor has already acknowledged and accepted the returned work. Only use `in progress` for rejected work when that concrete session label and stable identity are written in `最新进展`.
+
 Automation should be bounded:
 
 - do not run open-ended implementation work
-- do not merge code unless the card explicitly calls for PM git work and evidence is complete
+- do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
+- do not merge code into `stage` as PM; route PM-accepted runtime/docs-preview work to TL for `stage` integration when Ethan should see it in the integrated app/docs
+- if a `stage` or `stage` to `main` conflict is code/build/test/package related, write the exact conflict/blocker back to the card and assign TL; PM may resolve only PM-owned docs/protocol conflicts
+- do not ask Ethan to validate the shared project checkout unless it is actually on the named `stage` state or points to a package/docs preview built from a clean checkout of that `stage` commit; if the checkout is dirty or on another branch, keep the card active and route a stage/package handoff
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
 
@@ -140,10 +151,11 @@ Whole-board completion notification:
 TL loop:
 
 - works only cards assigned to TL
-- owns non-main branches
+- owns implementation branches and TL-routed `stage` integration work
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
-- may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and provide final branch/commit evidence at `review`
+- may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
+- resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit plus clean-stage-checkout build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
 - returns finished work to PM review
 
