@@ -125,7 +125,7 @@ QA-related cards should fill these fields when relevant:
 - `对抗评审`: adversarial review outcome
 - `QA结果`: current execution result
 - `产物/证据`: command output summary, screenshot path, report path, or reviewer notes
-- `分支` or `产物/证据`: source branch/commit, package, or worktree under test. If the test is for Ethan-facing integrated acceptance, this must be a `stage` commit or a package built from `stage`; otherwise the card must clearly say the QA result is target-specific and does not claim full integrated app acceptance.
+- `分支` or `产物/证据`: source branch/commit, package, or worktree under test. If the test is for Ethan-facing integrated acceptance, this must be `/Users/claire/Documents/worktime-justin` at the recorded `stage` commit, or a package built/copied from that exact directory and commit; otherwise the card must clearly say the QA result is target-specific and does not claim full integrated app acceptance.
 
 QA cards can start from `todo` when the work is test design or test asset maintenance. They do not need to wait for an implementation card to enter `testing`.
 
