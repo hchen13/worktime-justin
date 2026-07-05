@@ -323,8 +323,14 @@
       // REQ-SLOT-04：建议秘密词命中显示为对应对象图标，键盘里程碑显示为抽象「键盘星星」图标。
       sourceIconHint: {
         'secret-word': 'sprite: 对应命中词的物体 sprite（见 secretWords.pool[].spriteFile）',
-        'keyboard-milestone': 'sprite: states/keyboard-star.png（stub，素材未到位，待素材卡供给）'
+        'keyboard-milestone': 'sprite: slots.milestoneStickerSprite（DESIGN-007 键盘 medallion，见下）'
       },
+      // WTJ-20260705-008：键盘里程碑点亮发现槽时，槽内显示的贴纸 sprite（DESIGN-007 discovery-icons
+      // 包 keyboard_exploration 组的 keyboard-star medallion，卡 WTJ-20260704-061，已 accepted）。
+      // hud.js renderSlot() 的 is-milestone 分支读取本字段渲染 <img>，替换掉此前的 ★ Unicode
+      // 星字占位（production-asset-quality rule 12）。路径相对 app/web/，与 secretWords.pool[].
+      // spriteFile 同一约定；素材接入方式见 app/web/assets/PROVENANCE.md「discovery-icons」节。
+      milestoneStickerSprite: 'assets/discovery-icons/keyboard-star.png',
       // REQ-SLOT-02 / REQ-RWD-02：五格全部点亮后触发宝箱开启（见 rewards.chest），随后清空五槽，进入下一轮。
       onFull: {
         reqIds: ['REQ-SLOT-02', 'REQ-RWD-02'],
@@ -567,6 +573,18 @@
         streakThreshold: 3,
         // REQ-RWD-06：奖励表现可以是三个灯一起闪、工作台盖章、小火箭发射、宝箱小开一次。
         streakRewardForms: ['lights-flash-together', 'desk-stamp', 'mini-rocket-launch', 'chest-partial-open']
+      },
+      // WTJ-20260705-008：键盘自由探索里程碑奖励表现（REQ-SLOT-03 关联）。累计有效键达到
+      // keyboard.effectiveKeyMilestones（[100, 200]）之一时，除了点亮一个发现槽（槽内贴纸见
+      // slots.milestoneStickerSprite），还弹出一次性「键盘主题奖励」叠层做正反馈——用 DESIGN-007
+      // discovery-icons 的 keyboard-spark（键盘星火迸发 medallion，卡 WTJ-20260704-061，已 accepted）
+      // 一次性淡入 → 停留 → 淡出，不常驻屏幕（与 rewards.chest.oneTimePresentation 同一「一次性
+      // 表现，不长期占屏」原则）。由 status-rewards.js 订阅 WTJ_KEYBOARD.onMilestone 落地。
+      // rewardSticker 路径相对 app/web/，素材接入方式见 app/web/assets/PROVENANCE.md。
+      keyboardMilestone: {
+        reqIds: ['REQ-SLOT-03'],
+        oneTimePresentation: true,
+        rewardSticker: 'assets/discovery-icons/keyboard-spark.png'
       }
     },
 
