@@ -30,13 +30,18 @@
 /* 顶栏：极简标题 + 家长入口锁形 glyph（低调、极细）                    */
 /* ------------------------------------------------------------------ */
 
-/* WTJ-20260704-086（DESIGN 081 已验收规范落地）：高度/标题字号字重按
-   docs/assets/style/wtj-081/motion-token-sheet.json 的 header 域取值——
-   heightPx:44 / titleFontPx:15 / titleWeight:800（此前 007 首版是 34px/12px/常规字重的
-   占位值）。背景渐变 rgba(9,12,17,0.34)->透明 与 081 Layout Spec「Header」一节的
-   rgba(8,12,20,0.38)->transparent 数值上非常接近（同为深色顶部渐隐蒙层），07 首版取值
-   予以保留，不做无意义的小数点级别改动。矮屏（2014 MacBook Air 全屏但视口有效高度较小时）
-   降级到 minHeightPx:38，见下方 @media (max-height) 规则。 */
+/* WTJ-20260704-086（DESIGN 081 已验收规范落地）：高度按
+   docs/assets/style/wtj-081/motion-token-sheet.json 的 header 域取值——heightPx:44
+   （此前 007 首版是 34px 的占位值）。背景渐变 rgba(9,12,17,0.34)->透明 与 081 Layout Spec
+   「Header」一节的 rgba(8,12,20,0.38)->transparent 数值上非常接近（同为深色顶部渐隐蒙层），
+   07 首版取值予以保留，不做无意义的小数点级别改动。矮屏（2014 MacBook Air 全屏但视口有效
+   高度较小时）降级到 minHeightPx:38，见下方 @media (max-height) 规则。
+   WTJ-20260705-019b（Ethan 截图反馈①，视觉返工）：`justify-content:space-between` 让标题
+   贴在左边、锁形 glyph 贴在右边——Ethan 反馈标题应该居中。改为 `justify-content:center`
+   把标题组（.wtj-hud-title-group）真正居中；锁形 glyph 从 flex 布局里摘出来，改用
+   `position:absolute` 钉在右侧（见下方 .wtj-hud-lock），这样"标题居中"不会因为右侧还有一个
+   占位的锁图标而实际上偏向左边（float 布局下 flex justify-content:center 只在"两侧不再有
+   其它 flex item 分走空间"时才是视觉正中）。 */
 .wtj-hud-topbar {
   position: fixed;
   top: 0;
@@ -45,24 +50,65 @@
   height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 14px;
   background: linear-gradient(180deg, rgba(9, 12, 17, 0.34), rgba(9, 12, 17, 0));
   pointer-events: none;
 }
 
-.wtj-hud-title {
+/* WTJ-20260705-019b（Ethan 反馈①，双语标题居中 + 英文字体更接近参考图）：标题从单行
+   "Work Time, Justin! / 小小工作台" 拆成两行——英文主标题（.wtj-hud-title-en）+ 中文副标题
+   （.wtj-hud-title-zh）垂直堆叠、水平居中，视觉构图对齐 docs/assets/style/visual-style-tile.html
+   的 .app-top/.app-title/.app-sub（英文大字号 + 粗体在上，中文小字号在下，整体居中）——那份
+   DESIGN 参考页是 wtj-081/082 两张卡片共用的视觉基准，Ethan 截图评审时明确点名它作为字体/构图
+   对照对象。44px 顶栏高度不变（081 token 硬约束，见上方注释），两行文字用更紧凑的字号/行高
+   叠在一起，仍能在这个高度内完整显示。 */
+.wtj-hud-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* 英文主标题：字体栈换成 docs/assets/style/visual-style-tile.html 顶部 :root 声明的
+   `ui-rounded, "SF Pro Rounded", ...` 圆体优先栈（081 motion-token-sheet.json 里字母渲染用的
+   "Arial Rounded MT Bold" 系是给巨大字母贴纸用的极端粗体家族，标题文字量更适合系统级的
+   ui-rounded/SF Pro Rounded——与参考图标题字体家族一致，观感上更接近"圆润、友好、儿童化"，
+   而不是此前的系统默认无圆角字重）。weight 提到 900（参考图 .app-title 同为 900），字号沿用
+   081 token 的 15px（未新增/改动 letter-motion.js 里 header.titleFontPx 这个既有 token 数值，
+   只是把这个数值应用到新的两行结构里的"英文行"上）。透明度从 0.48 提到 0.66——Ethan 反馈的
+   参考图标题是接近全白的高对比度文字，08 略微提亮是在"不做仪表盘感的常驻高对比 UI"（081
+   Visual Direction 红线）与"看起来像随手截图里被裁掉的半透明占位符"这两种反馈之间取的折衷，
+   仍明显比正文/字母反馈暗，不会喧宾夺主。 */
+.wtj-hud-title-en {
+  font-family: ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   font-size: 15px;
-  font-weight: 800;
-  line-height: 1;
+  font-weight: 900;
   letter-spacing: 0.01em;
-  color: rgba(244, 247, 251, 0.48);
+  color: rgba(244, 247, 251, 0.66);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+/* 中文副标题：保留原有中文字体栈（PingFang SC / Hiragino Sans GB / Microsoft YaHei），字号
+   收到 10px 做真正的"副标题"层级差，颜色比英文行更暗一档，呼应参考图 .app-sub 比 .app-title
+   更淡、字号更小的层级关系。 */
+.wtj-hud-title-zh {
+  margin-top: 1px;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(244, 247, 251, 0.4);
+  white-space: nowrap;
 }
 
 .wtj-hud-lock {
+  position: absolute; /* WTJ-20260705-019b：从 flex 布局摘出，钉在右侧，见上方 .wtj-hud-topbar 注释 */
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   line-height: 0;
@@ -152,6 +198,20 @@
 /* 其余是动画留白），因此不设置 overflow:hidden，允许子元素视觉上超出这个高度往上延伸。         */
 /* ------------------------------------------------------------------ */
 
+/* WTJ-20260705-019b（Ethan 截图反馈②「footer 全宽底栏：三槽卡槽浮在/坐在全宽 footer 上
+   （不是独立小 container 悬空）。footer 从左到右贯通」）：019 首版把 082 doc 建议的深色背景/
+   分界线数值（rgba(5,10,18,0.78) + rgba(156,180,220,0.16)）错放到了下面 `.wtj-hud-footer-bar`
+   ——一个只有 260~380px 宽、局部圆角的小胶囊上，而这个真正 left:0/right:0/width:100% 通铺到
+   视口边缘的 `.wtj-hud-footer` 本体，反而只有更弱的 0.58 背景 + 0.14 分界线，几乎看不出来。
+   实测截图（tests/reports/hud-visual-rework-019b/before/03-chest-active.png）能清楚看到：
+   三个卡槽是一个悬浮在几乎看不见的通栏之上的独立圆角小卡片，而不是"坐在"一条清晰可见的
+   全宽底栏上——这正是 Ethan 反馈的视觉问题本体。
+   本次返工把 082 doc 的"可交付 footer 背景"数值搬到这里（真正全宽的容器），并把顶部分界线
+   进一步提亮到 0.2、加一条极细的顶部内发光（081 footer.topGlow token 的
+   rgba(94,231,255,0.06)，一次性静态 box-shadow，不是逐帧 canvas 效果，不触碰
+   app/PERFORMANCE.md 的 gradient/shadowBlur 红线）——让这一整条通栏本身就清晰可辨，三个卡槽
+   与宝箱指示器都直接"坐"在它上面。下方 `.wtj-hud-footer-bar` 相应降级为不再单独抢视觉的
+   过渡层（细节见该规则新注释）。 */
 .wtj-hud-footer {
   position: fixed;
   left: 0;
@@ -159,8 +219,9 @@
   bottom: 0;
   width: 100%;
   height: 96px; /* 082/011 共用基准：footer 高度桌面端建议 96px 左右 */
-  background: rgba(5, 10, 18, 0.58);
-  border-top: 1px solid rgba(156, 180, 220, 0.14);
+  background: rgba(5, 10, 18, 0.82);
+  border-top: 1px solid rgba(156, 180, 220, 0.2);
+  box-shadow: inset 0 1px 0 rgba(94, 231, 255, 0.06);
   pointer-events: none;
 }
 
@@ -189,6 +250,26 @@
   pointer-events: none;
 }
 
+/* WTJ-20260705-019b（Ethan 反馈②，续）：上面这套 `left:50%` + 正方形 `clamp(260px,30vw,380px)`
+   宽高 + `translate(-50%, 35.5%)` 垂直补偿，是专门为 five-slot-tray.png 这张 1024×1024、
+   托盘图形只占中段约 29.3% 可见高度的方形已验收美术资产量身定制的定位技巧（count===5，
+   `--imaged` 修饰类，见下方与 hud.js resolveTrayBgFile()）——不能动，动了会导致那张图的槽位
+   凹槽和实际渲染的槽位圆点错位。
+   但 count!==5 的 `--generic` 分支根本没有这张底图，继续套用这套"方形留白画布 + 垂直平移
+   补偿"纯粹是历史遗留，代价是槽位组变成一个只有 260~380px 宽、悬浮于 footer 中央的小方块
+   （见文件头「Ethan 截图反馈②」的问题描述与截图路径）。这里单独覆盖 generic 分支的尺寸：
+   不再是方形留白画布，直接是一个贴近 footer 宽度、扁平的横向容器，宽度上限从"一小块"放宽到
+   接近 footer 可用宽度（预留右侧宝箱 lane 的间距，见下方数值推导），`bottom` 收紧到贴近
+   footer 底边，让三个卡槽视觉上直接"坐"在下方 `.wtj-hud-footer` 这条通栏上，而不是继续悬浮在
+   一个独立的小方块容器里。 */
+.wtj-hud-tray-wrap--generic {
+  left: 50%;
+  bottom: 8px;
+  width: min(720px, 82vw); /* 1440px 桌面目标下与右侧宝箱 lane（见 .wtj-hud-chest-lane）留出 >=200px 间距，不做无意义的贴边 */
+  height: 80px;
+  transform: translateX(-50%);
+}
+
 .wtj-hud-tray-bg {
   position: absolute;
   /* Safari 14 兼容：inset 简写是 Safari 14.1+ 才支持，拆成四个物理属性，见 .wtj-hud-root
@@ -206,22 +287,28 @@
 /* WTJ-20260704-083 返工（PM 打回②，DESIGN 082 验收资产接入）：五槽底图（five-slot-tray.png）
    按 5 槽构图，只在 SLOT_COUNT===5 时使用（见 hud.js resolveTrayBgFile()，.wtj-hud-tray-wrap
    会额外挂 --imaged 修饰类）。其余槽数（如默认 3）没有对应的已验收托盘底图美术，改用这条
-   DESIGN 082 规则的 footer 背景条——不再是上一版纯色胶囊占位（旧 .wtj-hud-tray-bg-fallback，
-   PM 判定"粗糙占位"不可接受）：深蓝黑半透明背景 + 顶部低对比蓝灰分界线，数值取自 082 doc
-   「发现槽规则」布局一节（background 建议 rgba(5,10,18,0.78)，分界线建议
-   rgba(156,180,220,0.16)）。top/height 数值让背景条的垂直中心落在约 48.8%（与 .wtj-hud-slot
-   的 top 一致），槽位指示点视觉上居中落在条内。 */
+   DESIGN 082 规则的 footer 背景条。
+   WTJ-20260705-019b（Ethan 截图反馈②，续）：083 返工版把 082 doc 建议的"可交付 footer 背景"
+   数值（rgba(5,10,18,0.78) 深色背景 + 圆角 18px + 内发光 box-shadow）整套搬到了这个只有
+   260~380px 宽的小胶囊上——效果是画出一张比外层真正全宽的 `.wtj-hud-footer` 本体更显眼、
+   更"像卡片"的独立小面板，正是 Ethan 反馈"三槽卡槽像悬浮在一个独立小 container 里"的视觉
+   成因（对照 tests/reports/hud-visual-rework-019b/before/03-chest-active.png）。
+   本次返工把 082 那组高对比度数值移到了上面的 `.wtj-hud-footer` 本体（现在是真正全宽、清晰
+   可辨的通栏），这里反过来降级成一条不抢戏的"搁板高光"：去掉圆角卡片感（大幅收窄
+   border-radius）、去掉让它看起来"浮起来"的内发光 box-shadow、背景改成极低对比度的浅色叠加
+   （而不是比外层 footer 更深/更不透明的独立色块），且横向铺满新的 --generic 宽版
+   tray-wrap（left/right 由 4%/96% 改为 0/0）——现在它只是外层全宽 footer 上一条几乎不可见的
+   "槽位分区提示"，视觉重心完全交给外层 `.wtj-hud-footer`，三个卡槽读起来是"坐在 footer 上"
+   而不是"浮在一个独立小盒子里"。 */
 .wtj-hud-footer-bar {
   position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 28%;
-  height: 40%;
-  border-radius: 18px;
-  background: rgba(5, 10, 18, 0.78);
-  border-top: 1px solid rgba(156, 180, 220, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  opacity: 0.98;
+  left: 0;
+  right: 0;
+  top: 30%;
+  height: 44%;
+  border-radius: 10px;
+  background: rgba(148, 180, 220, 0.05);
+  border-top: 1px solid rgba(156, 180, 220, 0.12);
 }
 
 .wtj-hud-slot {
@@ -237,17 +324,22 @@
 
 /* WTJ-20260704-083 返工：槽位直径按托盘背景路径分两套数值，互不影响——
    --imaged（count===5，已验收 five-slot-tray.png）保留 007 原始的 12%（不倒退，那张底图的
-   凹槽位置是按这个尺寸校准出来的）；--generic（其余槽数，DESIGN 082 新规则）放大到约
-   82px~92px 桌面目标（容器 clamp(260px,30vw,380px) 下 24% ≈ 62px~91px，随视口宽度落在
-   082 建议区间附近，精确像素复核见 QA085）。 */
+   凹槽位置是按这个尺寸校准出来的）。 */
 .wtj-hud-tray-wrap--imaged .wtj-hud-slot {
   width: 12%;
   height: 12%;
 }
 
+/* WTJ-20260705-019b（Ethan 反馈②，续）：--generic 容器不再是正方形留白画布（见上方
+   .wtj-hud-tray-wrap--generic 新注释），槽径若继续用"容器尺寸的 24%"这种相对值，会因为容器
+   宽高比不再是 1:1 而失真（24% 的高度和 24% 的宽度不再相等）。改用绝对 clamp() 直径，直接
+   落在 082 doc「发现槽规则」给出的桌面 82px~92px / 移动端 64px~76px 目标区间，与容器尺寸
+   解耦；`top` 也从借用 five-slot-tray.png 采样出的 48.8% 改回几何居中的 50%（--generic 分支
+   没有底图可采样，48.8% 只是历史上跟着 --imaged 分支抄来的巧合数值）。 */
 .wtj-hud-tray-wrap--generic .wtj-hud-slot {
-  width: 24%;
-  height: 24%;
+  width: clamp(64px, 6.4vw, 92px);
+  height: clamp(64px, 6.4vw, 92px);
+  top: 50%;
 }
 
 /* Empty（082 slot_rules.empty_state：深色内芯 + 细蓝灰外圈，避免白色空洞感）。 */
@@ -384,27 +476,43 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条——纯状态装饰，非输入框    */
+/* WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条                          */
 /* ------------------------------------------------------------------ */
-/* 规范：docs/design/wtj-20260705-011-terminal-prompt-decoration-spec.md（DESIGN 011，PM 已     */
-/* 验收）。基础规则写在这里；对应的短屏/窄屏覆盖值见上方 @media (max-height: 700px) 与下方       */
-/* @media (max-width: 640px) 两个既有断点块（就近复用，不新开一套断点）。                        */
+/* 原始规范：docs/design/wtj-20260705-011-terminal-prompt-decoration-spec.md（DESIGN 011）——   */
+/* 只允许 `>_` 两字符 + 一个 activity pip，明确禁止 `justin@worktime`、禁止显示秘密词。          */
 /*                                                                                              */
-/* 诚实边界（WTJ-081 + docs REQ-DEF-02 已判定）：可见内容恒定只有 `>_` 两个字符（.wtj-hud-       */
-/* terminal-arrow「>」+ .wtj-hud-terminal-cursor「_」两个静态文本节点，见 hud.js                 */
-/* buildTerminalPrompt()）+ 一个 4px~5px 的 activity pip（纯装饰圆点，没有 textContent）。永不   */
-/* 渲染输入框、当前按键、秘密词、用户名/路径或命令输出，也不会在 `>_` 之后追加任何字符——这里的    */
-/* "cursor" 只是一个恒定的 "_" 字符做透明度呼吸动画（wtj-hud-terminal-cursor-pulse），不是真实    */
-/* 可输入的文本光标，闪烁完全由 CSS animation 驱动 opacity/visibility，不使用 canvas 逐帧重绘     */
-/* （app/PERFORMANCE.md 红线：禁止每帧 gradient/shadowBlur）。                                   */
+/* WTJ-20260705-019b（Ethan 截图反馈③，明确推翻 011 的这两条禁令）：                            */
+/*   "terminal prompt 用类似 justin@worktime: 前缀样式；秘密词完成时在 terminal 显示拼写          */
+/*    （如完成 dog 就显示 dog）且与对应 sprite 同步出现。"                                       */
+/* Ethan 是产品视觉的最终裁决者，这条反馈是对 011 规范的显式反悔，不是对本卡的误读——011 当时       */
+/* 顾虑的是"孩子按键会被读成命令输入"，Ethan 现在要的不是实时按键回显（那条红线仍然成立：本文件   */
+/* 不建输入框、不做逐键回显），而是"秘密词拼出后，在 terminal 里补一句它拼出了什么"这一个更明确、  */
+/* 频率低得多的完成态事件——与 999px 精细流式敲字幕的观感完全不同。                               */
+/* 新结构（buildTerminalPrompt()，hud.js）：                                                    */
+/*   .wtj-hud-terminal-prefix   恒定文本 "justin@worktime:"（永不改变，不含任何真实用户名/路径/  */
+/*                              命令语义，纯粹是复刻"爸爸的工作终端"这个氛围符号）。               */
+/*   .wtj-hud-terminal-word     秘密词完成态展示区，idle 时是空字符串——只有 window.WTJ_SECRET     */
+/*                              .onHit 触发（hud.js wireTerminalSecretWordDeferred()）时才短暂    */
+/*                              写入命中词文本，与 secretword.js 的 sprite 一次性叠层同一次        */
+/*                              handleHit() 调用内同步出现，展示窗口结束后清空回空字符串。         */
+/*   .wtj-hud-terminal-cursor   恒定 "_" 字符，只做 CSS opacity 呼吸动画，不是真实可输入光标。     */
+/*   .wtj-hud-terminal-pip      纯装饰 activity pip，无文本。                                    */
+/* 仍然坚持的红线：不建输入框/textarea/contenteditable；不做逐键回显（.wtj-hud-terminal-word      */
+/* 只在"一个词已经完整拼出"的完成事件里被写入，不会在孩子敲每个字母时增量拼接）。                 */
 /* ------------------------------------------------------------------ */
 
 .wtj-hud-terminal {
   position: fixed; /* 独立锚定，不依赖 .wtj-hud-footer 的定位上下文——与 .wtj-hud-lights 同款写法 */
   left: 32px; /* DESIGN 011 桌面档：left: 32px */
   bottom: calc(var(--wtj-footer-height, 92px) + 14px); /* 贴在 footer 上方 14px 处的左下 status lane */
-  width: clamp(136px, 15vw, 184px);
-  max-width: 220px; /* DESIGN 011：宽度上限，超过会被读成输入框 */
+  /* WTJ-20260705-019b：011 原先的 max-width:220px 是"避免读成输入框"的红线，但 Ethan 明确要
+     完整展示 "justin@worktime:" 前缀（16 字符）+ 词池最长词（13 字符，如 treasurechest）+
+     光标，按 13px 等宽字体估算需要约 260px~300px，遠超 220px。改用 min-width（idle 态最小
+     舒适宽度）+ max-width（放宽到能装下最长词，而不是任意长）+ width:auto 按内容自适应，
+     宽度仍然是"有限的一句提示"，不是无边界的输入长条。 */
+  min-width: clamp(150px, 16vw, 190px);
+  max-width: clamp(240px, 30vw, 360px);
+  width: auto;
   height: 24px;
   border-radius: 12px;
   box-sizing: border-box;
@@ -412,6 +520,9 @@
   align-items: center;
   justify-content: flex-start;
   padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; /* 防御式兜底：极端情况下（未来词池混入更长词）截断而不撑破布局 */
   background: rgba(5, 10, 18, 0.48); /* tokens.color.background */
   border: 1px solid rgba(156, 180, 220, 0.20); /* tokens.color.border */
   opacity: 0.72; /* tokens.motion.idleOpacity */
@@ -427,6 +538,15 @@
   background: rgba(8, 20, 34, 0.58); /* tokens.color.backgroundPulse */
 }
 
+/* WTJ-20260705-019b：秘密词完成展示期间（.is-word-pulse，与 .wtj-hud-terminal-word 的
+   is-visible 同一时刻挂上），给整条装饰条一个比 key-pulse 更明显、更暖的边框/背景高亮——
+   呼应 011 规范里"Secret word success：可做一次绿色 glyph glow"的强度层级（比逐键的 140ms
+   微亮更强、停留更久），让"秘密词命中"这个较稀有事件在视觉上比普通按键活跃度更突出。 */
+.wtj-hud-terminal.is-word-pulse {
+  border-color: rgba(101, 240, 141, 0.62);
+  background: rgba(10, 28, 20, 0.62);
+}
+
 .wtj-hud-terminal-glyph {
   position: relative;
   display: inline-flex;
@@ -438,10 +558,11 @@
   line-height: 1;
   padding-right: 10px;
   margin-right: 8px;
+  white-space: nowrap;
 }
 
-/* tokens.color.dividerGlow：glyph 区（`>_`）与右侧 activity pip 之间的低强度分界线，呼应
-   WTJ-082 footer divider 的视觉语言（一条极低对比的竖线，不是真正的分栏功能）。 */
+/* tokens.color.dividerGlow：glyph 区（前缀 + 词 + 光标）与右侧 activity pip 之间的低强度
+   分界线，呼应 WTJ-082 footer divider 的视觉语言（一条极低对比的竖线，不是真正的分栏功能）。 */
 .wtj-hud-terminal-glyph::after {
   content: "";
   position: absolute;
@@ -453,8 +574,35 @@
   background: rgba(94, 231, 255, 0.08);
 }
 
-.wtj-hud-terminal-arrow {
+/* "justin@worktime:" 前缀——恒定文本，永不改变、永不含真实系统信息（见文件头「WTJ-20260705-
+   019b」说明）。颜色沿用 011 tokens 的 promptGlyph 绿色。 */
+.wtj-hud-terminal-prefix {
   color: rgba(101, 240, 141, 0.82); /* tokens.color.promptGlyph */
+}
+
+/* 秘密词完成态展示区：idle 时 textContent 为空字符串，宽度为 0，不占位、不影响前缀+光标的
+   紧凑 idle 观感。命中时由 hud.js showTerminalSecretWord() 写入词文本并加 .is-visible——
+   用暖金色（呼应 five-slot 「Filled」态与 terminal pip 同一色系）区别于前缀的绿色，让"哪个
+   部分是刚刚拼出来的词"一眼可辨，且与 secretword.js 的 sprite 叠层同一次 handleHit() 调用
+   内同步出现（见 hud.js wireTerminalSecretWordDeferred()）。 */
+.wtj-hud-terminal-word {
+  color: rgba(255, 216, 76, 0.92);
+  font-weight: 800;
+}
+
+.wtj-hud-terminal-word.is-visible {
+  -webkit-animation: wtj-hud-terminal-word-pop 320ms ease-out;
+  animation: wtj-hud-terminal-word-pop 320ms ease-out;
+}
+
+@-webkit-keyframes wtj-hud-terminal-word-pop {
+  0%   { opacity: 0; -webkit-transform: translateY(2px); transform: translateY(2px); }
+  100% { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
+}
+
+@keyframes wtj-hud-terminal-word-pop {
+  0%   { opacity: 0; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* "光标"：恒定的静态 "_" 字符，只做 CSS opacity 呼吸动画，不是可输入的文本光标，也不会被追加
@@ -484,6 +632,7 @@
   border-radius: 50%;
   background: rgba(255, 216, 76, 0.72); /* tokens.color.pip */
   opacity: 0.42; /* DESIGN 011 Idle：Pip opacity 固定 0.42，静态常驻圆点，不实时反映按键活动 */
+  flex-shrink: 0;
 }
 
 /* WTJ-20260704-086（DESIGN 081 已验收规范）：矮屏（视口有效高度较小）下顶栏高度降级到
@@ -527,9 +676,13 @@
     --wtj-footer-height: clamp(76px, 20vw, 88px);
   }
 
-  .wtj-hud-tray-wrap--generic .wtj-hud-slot {
-    width: 20%;
-    height: 20%;
+  /* WTJ-20260705-019b（Ethan 反馈②，续）：--generic 容器在窄屏下也要收窄宽度，避免与右侧
+     收缩后的宝箱 lane（见下方 .wtj-hud-chest-lane 覆盖值）重叠——桌面档的
+     min(720px, 82vw) 在 640px 视口下会算出约 524px，逼近宝箱 lane 左边缘，这里单独给一档
+     更保守的宽度。槽径沿用桌面档的 clamp(64px, 6.4vw, 92px)（已经在下限 64px 附近，与 082
+     doc 移动端目标一致，不需要再单独覆写）。 */
+  .wtj-hud-tray-wrap--generic {
+    width: min(420px, 66vw);
   }
 
   .wtj-hud-chest-lane {
@@ -540,13 +693,20 @@
   }
 
   /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「窄屏 icon-only 模式」）：左下 status lane
-     在窄屏下容易与 footer 槽位/宝箱/任务物件挤在一起，切到 icon-only——只保留 `>_`，宽度收到
-     48px，隐藏 activity pip 与分界线，减少视觉噪音，不把装饰条挪到画布中央（规范明确禁止）。 */
+     在窄屏下容易与 footer 槽位/宝箱/任务物件挤在一起，原方案收到固定 48px 只留 `>_`。
+     WTJ-20260705-019b：新的 "justin@worktime:" 前缀比 `>_` 长得多，48px 下会被截得只剩
+     一两个字符，不如干脆缩小字号 + 收紧宽度上限，让前缀在窄屏下仍尽量可读（读不下时靠
+     .wtj-hud-terminal 的 text-overflow:ellipsis 兜底截断，不会撑破布局），同时仍隐藏 activity
+     pip 与分界线降低视觉噪音，不把装饰条挪到画布中央（规范明确禁止）。 */
   .wtj-hud-terminal {
-    width: 48px;
+    min-width: 96px;
+    max-width: 160px;
     height: 22px;
     padding: 0 8px;
-    justify-content: center;
+  }
+
+  .wtj-hud-terminal-glyph {
+    font-size: 11px;
   }
 
   .wtj-hud-terminal-pip {
@@ -656,5 +816,13 @@
     -webkit-animation: none !important;
     animation: none !important;
     opacity: 0.38 !important;
+  }
+
+  /* WTJ-20260705-019b：秘密词完成态展示的 320ms pop-in 关键帧同样关闭，直接以终态（完全
+     不透明）呈现文字，不做位移/淡入动画——文字本身仍然会出现，只是不带动效。 */
+  .wtj-hud-terminal-word.is-visible {
+    -webkit-animation: none !important;
+    animation: none !important;
+    opacity: 1 !important;
   }
 }

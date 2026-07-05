@@ -564,11 +564,25 @@ test('11. footer 宝箱指示器资产路径应读自真实 manifest.rewards.che
 test('12. hud.css 静态契约：082 footer 背景条数值、宝箱三态视觉、Ghost 槽视觉、prefers-reduced-motion 覆盖均应存在', function () {
   var css = readFileSync(HUD_CSS_PATH, 'utf8');
 
-  // a) footer 背景条：082 doc 建议的深色背景与分界线数值应该真的出现（不是随便选的颜色）。
+  // a)（WTJ-20260705-019b 返工，Ethan 反馈②）082 doc 建议的高对比度深色背景/分界线数值——
+  //    083 首版错放到了 260~380px 的小 .wtj-hud-footer-bar 胶囊上，读起来像一张独立悬浮的小
+  //    卡片，而不是"坐在"一条清晰可见的全宽底栏上（问题截图见
+  //    tests/reports/hud-visual-rework-019b/before/03-chest-active.png）。本次把这组数值
+  //    搬到真正 left:0/right:0/width:100% 的 `.wtj-hud-footer` 本体上，`.wtj-hud-footer-bar`
+  //    相应降级为不再抢视觉的过渡层（见该规则新注释），因此断言目标也一并迁移。
+  var footerMatch = css.match(/\.wtj-hud-footer\s*\{[^}]*\}/);
+  assert.ok(footerMatch, 'hud.css 应包含 .wtj-hud-footer 规则块（全宽底栏本体）');
+  assert.ok(/rgba\(5,\s*10,\s*18,\s*0\.82\)/.test(footerMatch[0]), 'footer 本体背景应使用提亮后的可交付数值 rgba(5, 10, 18, 0.82)（原 082 doc 建议值 0.78 被 083 首版错放在小胶囊上，这里进一步提亮确保真正全宽的通栏本身清晰可辨）');
+  assert.ok(/rgba\(156,\s*180,\s*220,\s*0\.2\)/.test(footerMatch[0]), 'footer 本体顶部分界线应提亮到 rgba(156, 180, 220, 0.2)');
+
+  // footer-bar 本身仍应存在（槽位分区提示层），但不应该再携带让它读成独立浮起卡片的强对比
+  // 数值（083 首版的 0.78 深色背景 + 内发光 box-shadow）——现在应该是全宽 tray-wrap 内一条
+  // 几乎不可见的浅色叠加。
   var footerBarMatch = css.match(/\.wtj-hud-footer-bar\s*\{[^}]*\}/);
-  assert.ok(footerBarMatch, 'hud.css 应包含 .wtj-hud-footer-bar 规则块（082 可交付 footer 背景，取代旧占位胶囊）');
-  assert.ok(/rgba\(5,\s*10,\s*18,\s*0\.78\)/.test(footerBarMatch[0]), 'footer-bar 背景应使用 082 doc 建议值 rgba(5, 10, 18, 0.78)');
-  assert.ok(/rgba\(156,\s*180,\s*220,\s*0\.16\)/.test(footerBarMatch[0]), 'footer-bar 顶部分界线应使用 082 doc 建议值 rgba(156, 180, 220, 0.16)');
+  assert.ok(footerBarMatch, 'hud.css 应包含 .wtj-hud-footer-bar 规则块');
+  assert.equal(/rgba\(5,\s*10,\s*18,\s*0\.78\)/.test(footerBarMatch[0]), false, 'footer-bar 不应再携带 083 首版的高对比度深色背景（应已迁移到 .wtj-hud-footer 本体，见上）');
+  assert.equal(/box-shadow/.test(footerBarMatch[0]), false, 'footer-bar 不应再有让它看起来像独立浮起卡片的内发光 box-shadow');
+  assert.ok(/left:\s*0/.test(footerBarMatch[0]) && /right:\s*0/.test(footerBarMatch[0]), 'footer-bar 应横向铺满其父级 tray-wrap（0/0，不再是 4%/96% 的内缩胶囊）');
 
   // b) 旧占位胶囊的规则块不应该再出现在 CSS 里（防止"新增了 footer-bar 但没删旧的"两套并存）；
   //    只匹配实际的规则声明（选择器 + `{`），不匹配注释里提及这个旧类名的说明性文字。
