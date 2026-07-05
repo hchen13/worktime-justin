@@ -4,13 +4,19 @@
 //  基础壳：WTJ-20260704-002；家长退出/快捷键拦截/安全边界完整实现：WTJ-20260704-017
 //  wtjres:// 自定义 scheme 资源加载层（修复 file:// 下音频 fetch() 被 CORS 拦截的
 //  架构死穴）：WTJ-20260704-019
+//  CGEventTap 系统级快捷键拦截（Cmd+Tab/Cmd+Space/Cmd+Option+Esc，需辅助功能授权，
+//  no-silent-fallback）+ 全屏进入时序加固：WTJ-20260705-013（P0 真机返工卡）
 //
 //  目标机：2014 MacBook Air（Intel x86_64，macOS Big Sur 11，4GB RAM，HD5000）
 //  硬约束：
 //   1) 禁用一切 Swift Concurrency（async/await/Task/actor）——Big Sur 缺 _Concurrency
 //      回退库，编译能过但目标机启动即崩。全文件只用 Timer / 回调 / GCD 风格 API。
+//      CGEventTap 的回调是 C 函数指针（`@convention(c)`），不是并发 API，符合约束。
 //   2) API 限定 macOS 11.0 可用集合；更新的 API 一律 `if #available` 守卫并提供
-//      11.0 路径（本文件未使用任何 11.0 之后新增的 API，故无需守卫分支）。
+//      11.0 路径（本文件未使用任何 11.0 之后新增的 API，故无需守卫分支；
+//      `CGEvent.tapCreate`/`AXIsProcessTrusted`/`AXIsProcessTrustedWithOptions` 均为
+//      远早于 11.0 就存在的 API，已用 arm64 + x86_64 双 target 交叉编译验证可编译、
+//      不引入并发符号，见 013 卡交接记录）。
 //   3) 需兼容 -target x86_64-apple-macosx11.0 交叉编译，由 build.sh 验证。
 //
 //  无 storyboard / xib，纯代码 AppKit。文件名 main.swift，用顶层语句作为入口，
@@ -22,6 +28,7 @@
 
 import Cocoa
 import WebKit
+import ApplicationServices // AXIsProcessTrusted / AXIsProcessTrustedWithOptions（WTJ-20260705-013）
 
 // MARK: - 常量
 
@@ -42,6 +49,35 @@ private let kIsWindowedMode: Bool = {
 /// （不因模式不同而切换加载方式），避免两套加载路径分叉出不同的 bug 面。
 private let kResourceScheme = "wtjres"
 private let kResourceSchemeHost = "app"
+
+// MARK: - CGEventTap 系统级快捷键拦截常量（WTJ-20260705-013）
+//
+// 背景：REQ-DESK-04/05 与 SECURITY.md 第 2 节记录的诚实边界——Cmd+Space/Cmd+Tab/
+// Cmd+Option+Esc 是在 WindowServer/Carbon 全局热键层处理的，本地/全局 NSEvent monitor
+// （见 handleKeyDown 顶部注释）架构上拦不到。CGEventTap（`.cgSessionEventTap` +
+// `.headInsertEventTap`）是绕开这层限制的标准 kiosk 手法：在事件送达 WindowServer 自身
+// 的全局热键处理逻辑*之前*、以会话级 tap 的身份先拿到事件并可选择吞掉。代价是必须获得
+// 一次性辅助功能（Accessibility）系统级授权，未授权时 `CGEvent.tapCreate` 会返回 nil
+// （这是本文件判断"是否已获得实际生效的拦截能力"的唯一真实信号，见
+// `attemptEnableSystemHotkeyTap()`；不是仅凭 `AXIsProcessTrusted()` 的返回值就假设一定
+// 能创建成功）。
+
+/// 键盘扫描码（virtual keyCode，与 HID/AppKit 通用，和文件里已使用的 `event.keyCode == 53`
+/// 是同一套编码）。Tab/Space 在 main.swift 其余位置未定义过常量，这里首次定义，供
+/// CGEventTap 回调按数值比较使用（回调是无捕获的顶层函数，不适合引用局部变量，直接用
+/// 具名的文件作用域常量）。
+private let kKeyCodeTab: Int64 = 48
+private let kKeyCodeSpace: Int64 = 49
+private let kKeyCodeEscape: Int64 = 53 // 与 handleKeyDown 里的 53 是同一个键
+
+/// 首次启动、且辅助功能未授权时，是否已经用 NSAlert 提示过家长——只提示一次，不在每次
+/// kiosk 启动都弹一次打断家长（"首启提示"，13 卡需求原文）；此后每次仍未授权只在
+/// NSLog/Console.app 里提醒（`resolveAndLogAccessibilityTrust()`），不再弹窗打断。
+private let kAXPromptShownDefaultsKey = "WTJAccessibilityPromptShown"
+
+/// 未获得辅助功能授权时，重试创建 CGEventTap 的轮询间隔——家长可能是在 App 已经跑起来
+/// 之后才去系统偏好设置里勾选授权，这种情况下不要求家长必须重启 App 才能生效。
+private let kAXTrustRetryInterval: TimeInterval = 5.0
 
 // MARK: - 家长退出口令管理（REQ-EXIT-03 / REQ-EXIT-04，WTJ-20260704-017）
 //
@@ -312,6 +348,33 @@ final class WTJResourceSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
+// MARK: - CGEventTap C 回调（WTJ-20260705-013）
+//
+// `CGEventTapCallBack` 的类型是 `@convention(c) (CGEventTapProxy, CGEventType, CGEvent,
+// UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>?`——必须是不捕获任何上下文的顶层函数
+// （Swift 允许把无捕获的顶层/静态函数隐式转换成 C 函数指针，闭包若捕获了变量则不行）。
+// 因此这里不能写成 AppDelegate 的实例方法或闭包，只能是这样一个自由函数，通过
+// `userInfo`/`refcon` 这个不透明指针把 AppDelegate 实例传进来（对应
+// `attemptEnableSystemHotkeyTap()` 里 `Unmanaged.passUnretained(self).toOpaque()` 那次
+// 转换）；真正的按键判断逻辑都委托给 `AppDelegate.handleTappedSystemEvent`，本函数只做
+// 指针解包与转发，保持这层"C ABI 边界"尽量薄。
+//
+// 内存所有权（fable 评审修正）：CGEventTap 回调对"放行原事件"这个动作的正确返回是
+// `Unmanaged.passUnretained(event)`——系统把 event 以 +0（不转移所有权）传进回调，回调
+// 透传时也不应改变其引用计数。之前误用 `passRetained` 会给每个放行的 keyDown 多加一个
+// 永不释放的 retain，在 4GB 旧机、长时间打字的 kiosk 上是慢性内存泄漏。只有回调*自己新建*
+// 一个 CGEvent（本实现没有这种情况）时才用 `passRetained` 把新建对象的所有权交还系统。
+private func wtjSystemHotkeyTapCallback(
+    proxy: CGEventTapProxy,
+    type: CGEventType,
+    event: CGEvent,
+    refcon: UnsafeMutableRawPointer?
+) -> Unmanaged<CGEvent>? {
+    guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
+    let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
+    return appDelegate.handleTappedSystemEvent(proxy: proxy, type: type, event: event)
+}
+
 // MARK: - AppDelegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler {
@@ -332,6 +395,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var escProgressTimer: Timer?
     private var alertShowing = false
 
+    // MARK: CGEventTap 系统级快捷键拦截状态（WTJ-20260705-013）
+
+    /// CGEventTap 句柄；非 nil 表示 tap 已创建（不代表一定仍 enabled，可能被系统因超时
+    /// 暂停，见 `handleTappedSystemEvent` 里的 `.tapDisabledByTimeout` 分支）。
+    private var systemHotkeyTap: CFMachPort?
+    /// tap 挂到 run loop 上用的 source；`applicationWillTerminate` 释放时需要一并移除。
+    private var systemHotkeyRunLoopSource: CFRunLoopSource?
+    /// 未获得辅助功能授权时的轮询重试计时器；一旦成功创建 tap 就失效并置 nil。
+    private var axTrustRetryTimer: Timer?
+    /// 当前这次运行期间，CGEventTap 是否已经实际创建成功（而不仅仅是"尝试过"）。
+    /// `SECURITY.md`/日志文案根据这个值决定说"已启用"还是"未生效，回退层 2"。
+    private var systemHotkeyTapActive = false
+
     // MARK: NSApplicationDelegate
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -344,10 +420,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         setupWebView()
         if !kIsWindowedMode {
             setupKioskPresentation()
+            // CGEventTap 系统级快捷键拦截（WTJ-20260705-013）：只在 kiosk 生产模式启用，
+            // 窗口化调试模式刻意不启用——道理与 setupKioskPresentation() 一致（见其注释），
+            // 调试时不应该让 Cmd+Tab/Cmd+Space 也变得拦不住，否则开发者没法方便地切出去看
+            // 文档/查日志。
+            setupSystemHotkeyBlocker()
         }
         setupKeyMonitor()
-        window.makeKeyAndOrderFront(nil)
+        // 全屏进入可靠性加固（层 3，WTJ-20260705-013）：顺序调整为"先 activate 进程，再让
+        // 窗口成为 key + front，kiosk 模式下最后再 orderFrontRegardless 兜底一次"。
+        // 之前的顺序是 makeKeyAndOrderFront 在前、activate 在后；查阅 AppKit 行为，
+        // `NSApp.activate` 负责把*进程*带到前台（激活菜单栏/输入焦点归属），
+        // `makeKeyAndOrderFront` 负责把*这个窗口*设为 key + 排到最前——如果进程还没被
+        // activate，"这个窗口"在系统眼里可能还不是"当前活跃 App 的窗口"，排序结果在不同
+        // macOS 版本上可能不一致（这正是 Ethan 在 Big Sur 上可能观察到"偶发没进全屏/菜单栏
+        // 短暂露出"的候选原因之一——构建机 macOS 26 上顺序颠倒不容易复现问题，不代表 Big
+        // Sur 11 上时序行为完全一致，这也是本节改动**仍需真机验证**、不是"改了就一定解决"
+        // 的原因）。调整后先 activate、再 makeKeyAndOrderFront，kiosk 模式再加一次
+        // orderFrontRegardless（忽略"当前是否已是 front"这一判断，无条件把窗口排到最前，
+        // 兜住"某些系统对话框/前一个进程的残留窗口在 activate 之后仍短暂盖在上面"这种情况）。
+        // webView(_:didFinish:) 里 didFinish 后还会再交一次 first responder，覆盖"WKWebView
+        // 首帧渲染完成时机早于/晚于这里的窗口排序"这一时序分支。
         NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        if !kIsWindowedMode {
+            window.orderFrontRegardless()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -367,6 +465,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         }
         escProgressTimer?.invalidate()
         escProgressTimer = nil
+        tearDownSystemHotkeyBlocker()
     }
 
     // MARK: 菜单 / 键盘
@@ -574,7 +673,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                                  backing: .buffered,
                                  defer: false)
             w.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 1)
-            w.collectionBehavior = [.fullScreenPrimary]
+            // collectionBehavior 修正（层 3，WTJ-20260705-013）：原先是 `.fullScreenPrimary`，
+            // 但那个标志位语义是"这个窗口可以参与系统原生全屏空间（NSWindow.toggleFullScreen
+            // 那一套、配合 titled 窗口右上角的绿色按钮）"——本窗口从来不调用
+            // `toggleFullScreen`，是纯手工用 borderless + 屏幕尺寸 frame + 高 window level
+            // 模拟出来的"伪全屏"，`.fullScreenPrimary` 对这种窗口大概率是无效标志位，也可能是
+            // 多余的干扰项（不同 macOS 版本对"borderless 窗口挂 fullScreenPrimary"的处理是否
+            // 一致未经验证，是"偶发没进全屏/层级异常"的候选原因之一）。改为
+            // `[.canJoinAllSpaces, .stationary]`：`.canJoinAllSpaces` 让这个窗口在任何
+            // Space 切换后依然可见（不会被摁在原来那个 Space 里）；`.stationary` 让它在
+            // Mission Control / Exposé 触发时不参与窗口重排动画、保持原地——这两个标志位才是
+            // "伪全屏、恒驻顶层"这个真实架构需要的语义，`.fullScreenPrimary` 不是。
+            w.collectionBehavior = [.canJoinAllSpaces, .stationary]
             w.isOpaque = true
             w.hasShadow = false
             w.backgroundColor = NSColor.black
@@ -635,12 +745,201 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     //
     // presentationOptions 是系统级"给 WindowServer 的建议标志位"，不是本 app 拦截按键
     // 那种确定性的事件消费；它们能显著提高干扰门槛（隐藏 Dock/菜单栏、抑制强制退出面板/
-    // 注销关机/隐藏窗口/大部分 App 切换手势），但不构成对 Cmd+Space/Cmd+Tab 等系统级
-    // 全局快捷键的保证屏蔽——这些快捷键的处理点在事件送达 app 之前，任何普通（非辅助功能
-    // 特权）app 都拦不住。诚实边界与家长可选的补强方式见 app/SECURITY.md。
+    // 注销关机/隐藏窗口/大部分 App 切换手势），但**本身**不构成对 Cmd+Space/Cmd+Tab 等
+    // 系统级全局快捷键的保证屏蔽——这些快捷键的处理点在事件送达普通 app 之前，普通（未获
+    // 辅助功能特权）app 都拦不住。13 卡新增的 `setupSystemHotkeyBlocker()`
+    // （CGEventTap，见下方 MARK）是这一诚实边界的分层升级：拿到辅助功能授权后才能真正
+    // 兜住 Cmd+Tab/Cmd+Space；未授权时仍然只有这里的 best-effort 标志位 + 层 2 机器级
+    // `symbolichotkeys` 脚本（`app/scripts/kiosk-setup.sh`）兜底。诚实边界与家长可选的
+    // 补强方式见 app/SECURITY.md。
     private func setupKioskPresentation() {
         NSApp.presentationOptions = [.hideDock, .hideMenuBar, .disableProcessSwitching,
                                       .disableForceQuit, .disableSessionTermination, .disableHideApplication]
+    }
+
+    // MARK: CGEventTap 系统级快捷键拦截（层 1，WTJ-20260705-013）
+    //
+    // 目标：吞掉 Cmd+Tab（App 切换）、Cmd+Space / Cmd+Option+Space（Spotlight / Finder
+    // 搜索窗口）、Cmd+Option+Esc（强制退出面板）这几个 setupKeyMonitor() 的本地 NSEvent
+    // monitor 架构上拦不到的系统级组合键（见该函数顶部"诚实边界"注释）。
+    //
+    // 原理：`.cgSessionEventTap` + `.headInsertEventTap` + `.defaultTap` 三个参数的组合
+    // 意味着——在当前登录 session 范围内（不只是本 app 的事件流）、以"最先看到事件"的优先级
+    // （headInsert）、以"可读可改可吞"的模式（defaultTap，相对的 `.listenOnly` 只能观察不能
+    // 吞）插入一个事件 tap。回调里对匹配的组合键返回 nil 即可让事件到此为止，不再往下传给
+    // WindowServer 自己的全局热键分发逻辑（也就不会触发 Cmd+Tab 切出去的界面）。
+    //
+    // 代价：`CGEvent.tapCreate` 需要本进程已获得"辅助功能"（Accessibility）系统级授权
+    // （系统偏好设置 → 安全性与隐私 → 隐私 → 辅助功能），未授权时直接返回 nil、不会抛异常
+    // 也不会崩溃，只是拿不到 tap。**no-silent-fallback 硬要求**：未拿到 tap 时必须显式
+    // 让家长/维护者知道"系统快捷键拦截未生效"，绝不能因为拿不到就悄悄退化成"看起来和拦住了
+    // 一样"——见 `attemptEnableSystemHotkeyTap()` 与 `promptAccessibilityTrustIfNeeded()`。
+    private func setupSystemHotkeyBlocker() {
+        if attemptEnableSystemHotkeyTap() {
+            return
+        }
+        // 首次尝试即失败：说明还没有辅助功能授权（或授权判断与实际创建结果不一致——
+        // 这里以 tapCreate 的真实返回值为准，而不是仅信 AXIsProcessTrusted() 的布尔值）。
+        promptAccessibilityTrustIfNeeded()
+        // 家长很可能是在 App 已经跑起来之后才去系统偏好设置里勾选授权；用一个不依赖并发的
+        // 轮询 Timer（而非一次性判断）持续重试，一旦成功就自动切换到"已拦截"状态，不强制
+        // 要求家长重启 App。
+        axTrustRetryTimer?.invalidate()
+        axTrustRetryTimer = Timer.scheduledTimer(withTimeInterval: kAXTrustRetryInterval, repeats: true) { [weak self] timer in
+            guard let self = self else { timer.invalidate(); return }
+            if self.attemptEnableSystemHotkeyTap() {
+                timer.invalidate()
+                self.axTrustRetryTimer = nil
+                NSLog("WTJ: 辅助功能授权已在运行期间生效，CGEventTap 系统级快捷键拦截现已启用" +
+                      "（Cmd+Tab/Cmd+Space/Cmd+Option+Esc）。")
+            }
+        }
+    }
+
+    /// 尝试创建并启用 CGEventTap；成功返回 true 并把状态记到 `systemHotkeyTapActive`，
+    /// 失败（通常是未授权辅助功能）返回 false、不做任何静默假装成功的事。可重复调用
+    /// （轮询重试场景），已启用时直接返回 true 不重复创建。
+    @discardableResult
+    private func attemptEnableSystemHotkeyTap() -> Bool {
+        if systemHotkeyTapActive, let tap = systemHotkeyTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+            return true
+        }
+
+        let eventMask: CGEventMask = 1 << CGEventType.keyDown.rawValue
+        let refcon = Unmanaged.passUnretained(self).toOpaque()
+        guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap,
+                                           place: .headInsertEventTap,
+                                           options: .defaultTap,
+                                           eventsOfInterest: eventMask,
+                                           callback: wtjSystemHotkeyTapCallback,
+                                           userInfo: refcon) else {
+            // tapCreate 返回 nil：绝大多数情况就是辅助功能未授权。这里不重复弹窗（弹窗只在
+            // promptAccessibilityTrustIfNeeded() 的首启逻辑里做一次），但每次尝试失败都要有
+            // 客观可查的日志，供家长/QA 在 Console.app 里核实"现在到底有没有拦住"。
+            NSLog("WTJ: CGEventTap 创建失败（通常因为辅助功能未授权）。Cmd+Tab/Cmd+Space/" +
+                  "Cmd+Option+Esc 当前**未被**本层拦截；回退到层 2（机器级 symbolichotkeys，" +
+                  "见 app/scripts/kiosk-setup.sh，若已运行则 Cmd+Space 仍会被系统层面挡住）" +
+                  "与既有 presentationOptions best-effort 抑制。")
+            systemHotkeyTapActive = false
+            return false
+        }
+
+        systemHotkeyTap = tap
+        systemHotkeyRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), systemHotkeyRunLoopSource, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        systemHotkeyTapActive = true
+        NSLog("WTJ: CGEventTap 已创建并启用，Cmd+Tab/Cmd+Space/Cmd+Option+Space/" +
+              "Cmd+Option+Esc 现由本层确定性拦截（辅助功能已授权）。")
+        return true
+    }
+
+    /// CGEventTap 回调的实际处理逻辑（由文件顶层的 `wtjSystemHotkeyTapCallback` 转发过来）。
+    /// 返回 nil 表示吞掉事件；返回 `Unmanaged.passUnretained(event)` 表示原样放行（不改变
+    /// 引用计数，见 `wtjSystemHotkeyTapCallback` 上方的内存所有权注释）——语义上与
+    /// `handleKeyDown` 的"放行/吞掉"一致，但这里操作的是 `CGEvent`（更底层），不是 `NSEvent`。
+    fileprivate func handleTappedSystemEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        // 系统在 tap 处理耗时过久或用户输入压力大时可能单方面关闭 tap（这两种情况都不是
+        // 我们主动调用 tapEnable(false)），需要立刻重新启用，否则会静默永久失效而不自知。
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let tap = systemHotkeyTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+                NSLog("WTJ: CGEventTap 被系统暂停（type=%@），已重新启用。", String(describing: type))
+            }
+            return Unmanaged.passUnretained(event)
+        }
+        guard type == .keyDown else {
+            return Unmanaged.passUnretained(event)
+        }
+
+        let flags = event.flags
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let cmd = flags.contains(.maskCommand)
+        let opt = flags.contains(.maskAlternate)
+
+        // Cmd+Tab（含 Cmd+Shift+Tab 反向循环，Shift 是否按下不影响判断——都属于 App 切换）。
+        if cmd && keyCode == kKeyCodeTab {
+            return nil
+        }
+        // Cmd+Space（Spotlight）与 Cmd+Option+Space（Finder 搜索窗口）：只要按住 Cmd 且是
+        // 空格键就吞掉，不细分是否同时按了 Option，两者都属于 Spotlight 家族的逃逸入口。
+        if cmd && keyCode == kKeyCodeSpace {
+            return nil
+        }
+        // Cmd+Option+Esc（强制退出面板）：注意这里要求 Cmd**且**Option 同时按住才拦截，
+        // 单纯的 Esc（无修饰键）必须原样放行——它要继续流向本 app 自己的 NSEvent 本地
+        // monitor，走 handleKeyDown 里长按 5 秒 + 口令的既有状态机（REQ-EXIT-02/03）。
+        // CGEventTap 只在这一个组合键分支上与长按 Esc 状态机产生"同一物理按键"的交集，且
+        // 判断条件（要求同时有 Cmd+Option）与长按状态机（不要求任何修饰键）互斥，不会误吞
+        // 家长长按退出用的那个 Esc。
+        if cmd && opt && keyCode == kKeyCodeEscape {
+            return nil
+        }
+        return Unmanaged.passUnretained(event)
+    }
+
+    /// no-silent-fallback：辅助功能未授权时，首次启动用 NSAlert 主动告知家长（而不是只写
+    /// 一条 Console.app 才看得到的 NSLog），并调用 `AXIsProcessTrustedWithOptions` 触发
+    /// 系统自带的"申请辅助功能权限"注册流程（把本 app 加进"辅助功能"列表，初始为未勾选，
+    /// 家长手动勾选后即可生效，见 axTrustRetryTimer 的轮询逻辑）。只提示一次（用
+    /// `kAXPromptShownDefaultsKey` 记录），避免家长每次开机都被打断；但每次未授权仍会有
+    /// NSLog（见 `attemptEnableSystemHotkeyTap()`），不会彻底沉默。
+    private func promptAccessibilityTrustIfNeeded() {
+        // 调用一次 WithOptions(prompt: false)：只查询信任状态、不弹系统自己的授权对话框。
+        // 注意（fable 评审 fix 5）：prompt:false 等价于 AXIsProcessTrusted，通常**不会**把本
+        // app 注册进「辅助功能」列表——注册多半发生在 CGEventTap 实际创建失败时的 TCC 记录，
+        // 或家长手动"+"添加；因此下面的 NSAlert 指引家长手动到列表里勾选/添加，不依赖此调用
+        // 把 app 送进列表。另需真机核实 Big Sur 键盘事件 tap 归"辅助功能"还是"输入监控"面板
+        // 管辖（见 app/SECURITY.md 的 QA-055 真机核查项）。
+        let promptOptionKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        _ = AXIsProcessTrustedWithOptions([promptOptionKey: false] as CFDictionary)
+
+        let alreadyPrompted = UserDefaults.standard.bool(forKey: kAXPromptShownDefaultsKey)
+        if alreadyPrompted {
+            return
+        }
+        UserDefaults.standard.set(true, forKey: kAXPromptShownDefaultsKey)
+        UserDefaults.standard.synchronize()
+
+        let alert = NSAlert()
+        alert.messageText = "需要「辅助功能」权限才能锁住 Cmd+Tab / Cmd+Space"
+        alert.informativeText = """
+        WorkTime Justin 尚未获得「辅助功能」授权，Cmd+Tab（切换应用）和 Cmd+Space \
+        （Spotlight 搜索）目前还**拦不住**，孩子可能借这两个组合键切出全屏界面。
+
+        由于本 App 全屏 kiosk 运行会盖住系统设置窗口（本窗口层级在菜单栏之上），\
+        请按以下顺序授权：① 长按 Esc 键 5 秒 → 输入家长口令退出 App；② 打开 系统偏好设置 \
+        → 安全性与隐私 → 隐私 → 辅助功能 → 勾选（或用左下"+"添加）WorkTime Justin；\
+        ③ 重新启动 App，Cmd+Tab / Cmd+Space 即被拦截。（若你在别的非全屏时机授权且 App 仍在\
+        运行，勾选后本 App 也会在几秒内自动生效、无需重启——但全屏 kiosk 下通常需要先退出。）
+
+        在授权之前，仍可运行 app/scripts/kiosk-setup.sh 在系统层面单独关闭 Spotlight（Cmd+Space）
+        作为过渡兜底，但 Cmd+Tab 目前没有等效的系统设置可以关闭，只能靠这里的辅助功能授权。
+        """
+        // fable 评审 fix 4：kiosk 窗口在 mainMenu+1 层且置顶，NSWorkspace.open 打开的系统设置窗
+        // 会被本窗口完全盖死、家长看不到反应，故不再提供"打开系统设置"按钮误导；改为单一确认，
+        // 由上面的文案明确指引"先长按 Esc + 口令退出 App 再授权"（退出走既有合法路径）。
+        alert.addButton(withTitle: "知道了（先退出 App 再授权）")
+        alert.window.level = window.level
+        _ = alert.runModal()
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(webView)
+    }
+
+    /// 释放 CGEventTap 相关资源；在 `applicationWillTerminate` 里调用。
+    private func tearDownSystemHotkeyBlocker() {
+        axTrustRetryTimer?.invalidate()
+        axTrustRetryTimer = nil
+        if let tap = systemHotkeyTap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
+        if let source = systemHotkeyRunLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
+        }
+        systemHotkeyRunLoopSource = nil
+        systemHotkeyTap = nil
+        systemHotkeyTapActive = false
     }
 
     // MARK: WKNavigationDelegate
