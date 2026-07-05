@@ -5,8 +5,8 @@
 The project has five named roles:
 
 - Ethan: stakeholder. Clarifies product intent, accepts major direction changes, and answers questions that cannot be resolved from context.
-- PM: product owner and coordinator. Owns requirement discussion, task breakdown, official Feishu card creation, cross-role routing, `main` branch version control, merge/commit/push on `main`, acceptance of TL/DESIGN/QA outputs, and blocker triage.
-- TL: technical lead. Owns implementation cards assigned to TL and non-main branch version control.
+- PM: product owner and coordinator. Owns requirement discussion, task breakdown, official Feishu card creation, cross-role routing, `stage` runnable integration branch, `main` branch version control, merge/commit/push on PM-owned branches, acceptance of TL/DESIGN/QA outputs, and blocker triage.
+- TL: technical lead. Owns implementation cards assigned to TL and branch version control outside PM-owned branches.
 - DESIGN: design owner. Owns visual exploration and image generation cards assigned to DESIGN.
 - QA: quality owner. Owns test planning, automated/agentic testing, and test result cards assigned to QA.
 
@@ -64,10 +64,17 @@ Required fields:
 - `阻塞负责人`: role expected to unblock, when relevant.
 - `阻塞问题`: exact question or missing decision, when blocked.
 - `依赖`: upstream card IDs or dependencies. Prefix blocking dependencies with `Hard:` and non-blocking coordination dependencies with `Soft:`. If the field contains unqualified card IDs, PM must clarify them before the owner treats them as a stop condition.
-- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`.
+- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. After PM accepts a runtime-impacting or docs-preview-impacting delivery, this field or `产物/证据` must also name the integrated `stage` commit, unless PM records an explicit integration deferral.
 - `产物/证据`: PR, commit, screenshot, generated asset path, test report, or other proof.
 - `最新进展`: concise human-written status note.
 - `截止/检查点`: date for the next expected transition or review.
+
+Path-specific card instructions:
+
+- If a card depends on a requirement, mockup, design spec, runtime asset, audio source, branch, test, or generated output, PM must name the exact path or upstream card ID directly on the card.
+- Use local project paths that the role can open without asking Ethan, for example `docs/index.html`, `docs/assets/accepted-mvp-mockup.png`, `docs/design/wtj-081-main-ui-visual-motion-spec.md`, `docs/assets/style/wtj-082/manifest.json`, `app/web/audio/AUDIO-API.md`, or `tests/e2e/task_reward_integration.py`.
+- A vague reference such as "the image", "the design", "the mock", or "the requirement doc" is not actionable. PM must clarify it before routing, or during the next PM loop if the gap is discovered later.
+- If a role discovers that a named path is missing, stale, or insufficient, it records the exact path and question in `最新进展` or `阻塞问题` and returns to PM instead of asking Ethan only in the session chat.
 
 ## 4. Card Creation And Routing Authority
 
@@ -91,7 +98,84 @@ When TL, DESIGN, or QA finishes assigned work, they hand it back to PM:
 
 PM then decides the next state and owner.
 
-## 5. 状态流转
+## 4.1 Stage Integration Branch
+
+`stage` is the shared branch for integrated validation. Ethan and QA should be able to run one build from `stage` and see the combined state of all PM-accepted feature work that has not yet been promoted to `main`.
+
+Branch ownership:
+
+- PM owns `stage` and `main`.
+- TL owns implementation branches that are neither `stage` nor `main`.
+- DESIGN and QA do not merge to `stage` or `main` unless PM explicitly creates a documentation-only or test-only card assigning that PM-owned git work.
+- Non-PM roles must not rewrite, reset, or force-push `stage` or `main`.
+
+Integration rule:
+
+- When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must merge the accepted delivery branch into `stage` promptly.
+- PM resolves straightforward conflicts on `stage` when the correct resolution follows the accepted card evidence. If the conflict requires product, architecture, or asset judgment, PM creates or routes a card with the exact conflict files and leaves the original accepted card nonterminal or records a deferral.
+- A card may be marked `done` before `stage` integration only for changes that do not affect the runnable validation surface, or when PM records `stage integration deferred` with a concrete reason, target card, and expected merge condition.
+- A one-off integration branch may be used for emergency builds, but PM must either promote/sync it into `stage` or record why it is intentionally temporary. QA/Ethan should not have to switch between unrelated feature branches to inspect normal progress.
+
+Evidence rule:
+
+- After merging to `stage`, PM records the `stage` commit and any build/package path in `产物/证据`.
+- QA and Ethan validation cards should point to a `stage` commit or a package built from `stage`. A package built from an arbitrary feature branch is acceptable only when the card explicitly says it is a narrow branch-specific validation.
+- If `stage` is behind accepted work, PM must surface that in `最新进展` and either integrate it before the next validation request or explain the blocker.
+
+Promotion rule:
+
+- `main` remains the stable PM-owned line. PM promotes `stage` to `main` only after the intended acceptance gate is satisfied, or when PM intentionally chooses to make the integrated state the new stable baseline.
+- `stage` may contain accepted work that is still awaiting broader QA or Ethan visual acceptance. It is the working validation line, not a final release promise.
+
+## 5. Multi-Session Role Coordination
+
+`负责人` is role-level ownership, not a unique human/session identifier. Multiple sessions may run under the same role, especially `DESIGN` and `QA`, as long as each active card records which concrete session has claimed it.
+
+Session identity rules:
+
+- Each role session must have both a human-readable short label and a stable unique session identity.
+- The short label is for scanning, for example `DESIGN-A`, `DESIGN-2`, `QA-Audio`, `QA-Visual`, or a named label chosen by Ethan/PM.
+- The unique identity is for unambiguous ownership. Use the real runtime identifier whenever available: `CodexThread:<thread-id>` for Codex threads, `ClaudeSession:<session-id>` for Claude Code sessions, or `Automation:<automation-id>` for scheduled PM automation.
+- The label and identity do not replace `负责人`; `负责人` remains `DESIGN`, `QA`, `TL`, `PM`, or `Ethan`.
+- Do not write app secrets, OAuth tokens, cookies, local passwords, or API keys as identity. Thread/session/automation IDs are acceptable because they identify the working session, not credentials.
+- A role session should not claim a formal card until it can write a stable identity. If the launcher has not provided one, the session should ask the launcher/PM for the Codex thread ID or Claude Code session ID before taking ownership.
+- When claiming or updating a card, the session writes both label and identity at the start of `最新进展`, using this shape: `执行者：DESIGN-A；身份ID：CodexThread:019f2771-...；开始：2026-07-04 14:30 CST；范围：horse run sheet rework`.
+- If the card has a concrete output path, branch, test file, or asset folder, the claiming note must include the touched scope so another same-role session can avoid collisions.
+- Feishu comments may contain detail, but the table fields must still show the active session label, stable identity, and next action.
+
+Claiming and takeover rules:
+
+- A same-role session may claim an unstarted `todo` card by moving it to `in progress`, keeping `负责人` as that role, and writing the session label plus stable identity in `最新进展`.
+- If another same-role session has already claimed the card and the claim is still current, do not overwrite it. Pick another card or ask PM to split/triage.
+- A claim is current when `最新进展` or Feishu comments show recent work and `下一步动作` still belongs to that same session.
+- A same-role session may take over only when PM explicitly says it may, the previous claim is stale past `截止/检查点`, or the previous executor has returned the card to `review`/PM.
+- On takeover, preserve the previous evidence and write a new `最新进展` line naming both the new executor label/identity and why takeover is valid.
+- If two same-role sessions race on the same card or asset path, the later claimant must stop and return the card to `review` for PM triage instead of silently continuing.
+
+Returned and rejected cards:
+
+- If PM rejects a delivered card for real rework, PM routes it back to `todo` by default, keeps `负责人` as the role expected to fix it, and writes the exact defect, branch/path, and acceptance condition in `下一步动作`. `todo` means the work is ready but no concrete session has acknowledged the returned work yet.
+- PM may route rejected work directly back to `in progress` only when the original executor is still active and has explicitly acknowledged the rejection in the current session, or when PM is directly handing it to a named live session. The card's `最新进展` must then name that executor label and stable identity. Do not use `in progress` as a parking state after PM rejection.
+- When useful, PM should name the preferred original executor by label and identity in `下一步动作`, for example `优先 DESIGN-A (CodexThread:019f2771-...) 继续；若该 session 空闲超 30 分钟，任意 DESIGN 可接手并保留原证据`.
+- If PM does not name a preferred executor, any same-role session may claim the returned `todo` card, but it must read the previous `产物/证据`, `最新进展`, and comments before editing.
+- A non-PM role still returns finished work to PM review. Multiple DESIGN or QA sessions do not directly pass cards to each other unless PM has written that handoff into the card.
+
+Parallel DESIGN rules:
+
+- PM should split large asset work into small cards by asset family, letter group, animation, or output folder whenever possible.
+- Two DESIGN sessions must not edit the same output folder, sprite sheet, or source prompt file at the same time unless PM explicitly defines a merge plan.
+- For production assets, each DESIGN session records prompt, selected asset paths, rejected outputs if relevant, cleanup steps, and known visual risks.
+- If a DESIGN session discovers systemic style drift or quality-bar failure, it returns the card to PM review with evidence instead of continuing a large batch in the wrong direction.
+
+Parallel QA rules:
+
+- QA sessions may run concurrently by test type, feature area, or artifact path, for example `QA-Visual`, `QA-E2E`, and `QA-Audio`.
+- Each QA session must claim a distinct card or a distinct scope explicitly written in the card. If one QA card covers multiple scopes, the first QA session must either split the work through PM or write a clear sub-scope before starting.
+- New or changed reusable tests must name the creating executor label/identity and the adversarial reviewer label/identity in `对抗评审` or `产物/证据`.
+- QA sessions may share test assets, but they must not rewrite the same test file or visual prompt concurrently without a named owner and merge plan.
+- QA failures always return to PM review with suspected owner and evidence. QA sessions do not directly route failed work to TL or DESIGN.
+
+## 6. 状态流转
 
 Normal flow:
 
@@ -101,7 +185,8 @@ PM review can route to:
 
 - `testing` when QA validation is needed.
 - `done` when the card is accepted.
-- `todo` or `in progress` for rework, with PM assigning the owner.
+- `todo` for real rework, with PM assigning the owner and acceptance condition.
+- `in progress` for rework only when a named live executor has already acknowledged and accepted the returned work.
 - `blocking` when another role or Ethan must unblock it.
 - `_deprecated` when the card is no longer needed.
 
@@ -113,15 +198,15 @@ Allowed side paths:
 
 - Any active status may move to `blocking` when progress needs another role or Ethan.
 - `blocking` must move back to `todo` or `in progress` after the blocker is resolved.
-- `review` may move back to `todo` or `in progress` if changes are required.
+- `review` may move back to `todo` if changes are required; it may move directly to `in progress` only under the named-live-executor rule above.
 - `testing` must move back to `review` after QA reports pass/fail. PM decides whether defects go to `todo`, `in progress`, `blocking`, or `_deprecated`.
 - Any non-`done` card may move to `_deprecated` only when PM decides it is no longer needed.
 
 状态含义:
 
 - `backlog`: captured but not ready. PM owns grooming.
-- `todo`: ready to start, owner assigned, acceptance criteria clear.
-- `in progress`: owner is actively working.
+- `todo`: ready to start, owner role assigned, acceptance criteria clear, but no concrete session is currently accountable for doing it.
+- `in progress`: a concrete live executor has claimed the card in `最新进展` with label, stable identity, start time, and touched scope; stakeholders should be able to treat it as actively owned without watching session transcripts.
 - `review`: work is delivered and awaiting PM routing or acceptance.
 - `testing`: QA is validating a delivered change; after validation it returns to PM review.
 - `blocking`: progress is stopped by a named blocker.
@@ -135,7 +220,7 @@ Whole-board completion:
 - PM loop must run `.agents/tools/pm_completion_notify.py` after each board scan. If the board is complete, the tool sends Ethan a one-time Feishu direct message using PM app credentials and records local notification state under `.agents/state/` to avoid duplicate messages.
 - If new active work appears after a completion notification, the notification state resets; the next all-terminal state may notify again.
 
-## 6. No-Stale Rules
+## 7. No-Stale Rules
 
 Every active card must have:
 
@@ -148,6 +233,8 @@ Every active card must have:
 
 Additional rules:
 
+- For cards owned by a role with multiple live sessions, `最新进展` must name the concrete active executor label plus stable identity, or say why no session has claimed it yet.
+- A card in `in progress` must name the concrete active executor label plus stable identity and a current next action. If PM returns a card for rework and no live session has acknowledged the return, the card must be `todo`, not `in progress`.
 - A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`.
 - Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
@@ -161,7 +248,7 @@ Additional rules:
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
 - A role receiving a card must either accept it, return it with a concrete reason, or block it with a precise question. Do not leave it ambiguous.
 
-## 7. Card Intake And Handoff
+## 8. Card Intake And Handoff
 
 Every role starts by checking cards where `负责人` is that role, across all active statuses.
 
@@ -175,15 +262,17 @@ Minimum handling rules:
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
 
+When multiple sessions exist for the same role, the acting session must also update or preserve the executor label described in Section 5.
+
 Implementation handoff contract:
 
 - While a TL card is `in progress`, PM checks only whether the card has an owner, next action, and enough progress context. PM should not repeatedly interrupt TL for every local branch or worktree observation.
-- TL may use a shared worktree, `commit-tree`, or other local mechanics as long as `main` history is not changed outside PM control.
+- TL may use a shared worktree, `commit-tree`, or other local mechanics as long as `main` and `stage` history are not changed outside PM control.
 - Before TL moves implementation work to `review`, TL must run `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>`. If it fails, TL fixes the branch/evidence in the same active loop and does not hand off yet.
 - When TL judges the work ready and preflight passes, TL moves the card to `review`, sets `负责人 = PM`, and records the final branch, final commit, preflight output, build/run evidence, residual risks, and recommended next route.
 - PM performs branch/commit verification after review handoff.
 - If final branch, final commit, or evidence is missing or inconsistent, but PM has not found a real product/code defect, PM keeps the card in `review`, sets `负责人 = TL`, and writes a metadata-only correction. This is not a development rejection.
-- If PM finds a real code, behavior, security, packaging, or acceptance defect, PM routes the card back to `todo` or `in progress` with the required rework.
+- If PM finds a real code, behavior, security, packaging, or acceptance defect, PM routes the card back to `todo` with the required rework. PM may use `in progress` only if a named live executor has acknowledged and accepted that rework immediately.
 
 Non-PM handoff rule:
 
@@ -191,7 +280,7 @@ Non-PM handoff rule:
 - They finish by moving the card to `review` and assigning PM.
 - PM performs the actual routing decision.
 
-## 8. Task Size And Review Depth
+## 9. Task Size And Review Depth
 
 PM chooses the review depth when creating or routing a card. The goal is to keep rigor where it matters and avoid making obvious small fixes wait behind heavyweight process.
 
@@ -224,17 +313,21 @@ For `轻量流程`:
 
 If a light card uncovers unclear requirements, cross-module coupling, or high-risk behavior, TL/QA must stop, record the reason, and return it to PM for rerouting as `完整流程`.
 
-## 9. PM Workflow
+## 10. PM Workflow
 
 PM responsibilities:
 
 1. Discuss, brainstorm, and analyze requirements with Ethan.
 2. Break work into Feishu cards with clear owner, priority, acceptance criteria, and next action.
-3. Own project git version control on `main`: initialize when appropriate, merge, commit, and push.
+3. Own project git version control on `stage` and `main`: initialize when appropriate, merge, commit, build, and push.
 4. Accept or reject TL, DESIGN, and QA outputs.
 5. Handle blockers that need Ethan clarification or PM decision.
 6. Decide all cross-role routing after cards return to `review`.
 7. Notify Ethan through Feishu when the entire board reaches whole-board completion.
+8. Split large DESIGN/QA work enough that multiple same-role sessions can run without editing the same assets or test files.
+9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
+10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
+11. Keep `stage` current with PM-accepted validation work, or record a concrete integration deferral on the relevant cards.
 
 PM acceptance requires:
 
@@ -242,15 +335,18 @@ PM acceptance requires:
 - Evidence is linked or summarized.
 - Required QA has passed, or PM explicitly marks QA as not required.
 - Any follow-up work is represented by a new card before the current card is closed.
+- For runtime-impacting or docs-preview-impacting work, either `stage` integration evidence is recorded or PM has recorded a concrete deferral reason.
 
 PM branch discipline:
 
-- PM owns `main`, but should avoid turning in-progress implementation mechanics into blockers.
-- PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `main` history was changed outside PM control or a destructive operation is underway.
+- PM owns `stage` and `main`, but should avoid turning in-progress implementation mechanics into blockers.
+- PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `stage`/`main` history was changed outside PM control or a destructive operation is underway.
+- PM should merge accepted validation work to `stage` before asking QA or Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest app.
+- PM resolves normal `stage` merge conflicts. If the conflict requires implementation judgment, PM routes a focused card back to TL with exact files and the target `stage` baseline.
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
 - In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.
 
-## 10. TL Workflow
+## 11. TL Workflow
 
 TL responsibilities:
 
@@ -260,9 +356,9 @@ TL responsibilities:
 4. Choose the implementation approach and assign dev subagents.
 5. Run adversarial code review through a separate agent before accepting implementation, scaled to card risk.
 6. Iterate until TL judges the work ready for PM review or QA.
-7. Own git version control on non-main branches.
+7. Own git version control on implementation branches that are neither `main` nor `stage`.
 
-TL must not merge directly to `main`.
+TL must not merge directly to `main` or `stage`.
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
@@ -274,10 +370,11 @@ TL handoff must include:
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card
 - whether TL recommends PM acceptance, QA testing, or further TL work
+- whether the branch is ready for PM `stage` integration, or any reason it should not be integrated yet
 
 If PM returns a review card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
 
-## 11. DESIGN Workflow
+## 12. DESIGN Workflow
 
 DESIGN responsibilities:
 
@@ -289,9 +386,11 @@ DESIGN responsibilities:
 
 Design cards move to `review` with `负责人 = PM`. DESIGN may recommend TL implementation or further design iteration, but PM decides the route.
 
+When multiple DESIGN sessions are running, each DESIGN session must use its session label in `最新进展`, claim only one active card or one explicit asset scope at a time, and avoid touching folders claimed by another DESIGN session.
+
 Detailed production asset standard: [production-asset-quality.md](production-asset-quality.md).
 
-## 12. QA Workflow
+## 13. QA Workflow
 
 QA responsibilities:
 
@@ -309,13 +408,17 @@ QA cards can appear in `todo` before implementation reaches `testing` when the t
 
 When QA finishes testing, QA does not directly assign the card back to TL/DESIGN. QA moves it to `review`, sets `负责人 = PM`, records `QA结果`, evidence, failures, suspected owner, and recommended next action. PM decides whether to close, route rework, create a new QA asset card, block for Ethan, or deprecate.
 
+When multiple QA sessions are running, each QA session must claim a distinct card or explicit test scope, write its session label in `最新进展`, and avoid concurrent edits to the same test asset unless PM has named a merge owner.
+
 Detailed QA protocol: [.agents/docs/qa-testing-protocol.md](qa-testing-protocol.md).
 
 Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agent-runtime-loops.md).
 
-## 13. Blocker Handling
+## 14. Blocker Handling
 
 Use `blocking` only when progress genuinely requires another role or Ethan.
+
+Non-PM roles do not assign blockers directly to Ethan, TL, DESIGN, or QA. When TL, DESIGN, or QA cannot continue, they set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact blocker. PM owns triage and may then reassign the blocker to Ethan or another role.
 
 Blocking card requirements:
 
@@ -326,12 +429,12 @@ Blocking card requirements:
 
 Resolution:
 
-- Ethan answer received: PM updates requirement and moves card to `todo` or `in progress`.
-- PM decision made: PM records decision and moves card forward.
-- Technical/design/QA issue resolved by owner: owner records evidence and moves card forward.
+- Ethan answer received: PM updates requirement and moves card to `todo`, or to `in progress` only if a named live executor has already accepted the work.
+- PM decision made: PM records decision and moves card forward using the same `todo` versus `in progress` ownership signal.
+- Technical/design/QA issue resolved by owner: owner records evidence and moves card forward only if that owner is still the active executor; otherwise PM routes the next work to `todo`.
 - Work no longer needed: PM moves card to `_deprecated`.
 
-## 14. Local Skills
+## 15. Local Skills
 
 Hyperframes skills from `heygen-com/hyperframes` are installed project-locally under `.codex/skills/` for Codex and `.claude/skills/` for Claude Code.
 
