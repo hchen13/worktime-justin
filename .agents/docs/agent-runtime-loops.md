@@ -108,8 +108,8 @@ Recommended PM cron responsibilities:
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
 - keep `stage` current by routing PM-accepted runtime/docs-preview work to TL, or write a concrete `stage` integration deferral onto the card
-- ensure Ethan validation requests name a `stage` commit or package; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
-- before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names a `stage` commit/package where Ethan can immediately see the accepted change; branch-only review or target-specific QA pass is not enough
+- ensure Ethan validation requests name a `stage` commit or a package/docs preview built from a clean checkout of that `stage` commit; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
+- before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names a `stage` commit/package from a clean `stage` checkout where Ethan can immediately see the accepted change; branch-only review or target-specific QA pass is not enough
 - groom `backlog` proposals into official cards or `_deprecated`
 - run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
 - summarize board health and urgent decisions
@@ -135,7 +135,7 @@ Automation should be bounded:
 - do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
 - do not merge code into `stage` as PM; route PM-accepted runtime/docs-preview work to TL for `stage` integration when Ethan should see it in the integrated app/docs
 - if a `stage` or `stage` to `main` conflict is code/build/test/package related, write the exact conflict/blocker back to the card and assign TL; PM may resolve only PM-owned docs/protocol conflicts
-- do not ask Ethan to validate the shared project checkout unless it is actually on the named `stage` state or points to a package/docs preview built from that `stage` commit; if the checkout is dirty or on another branch, keep the card active and route a stage/package handoff
+- do not ask Ethan to validate the shared project checkout unless it is actually on the named `stage` state or points to a package/docs preview built from a clean checkout of that `stage` commit; if the checkout is dirty or on another branch, keep the card active and route a stage/package handoff
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
 
@@ -155,7 +155,7 @@ TL loop:
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
-- resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit and build/package evidence before returning to PM review
+- resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit plus clean-stage-checkout build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
 - returns finished work to PM review
 

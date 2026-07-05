@@ -116,19 +116,20 @@ Branch ownership:
 Integration rule:
 
 - When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must route TL to merge the accepted delivery branch into `stage` promptly.
-- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, builds from `stage`, and records the `stage` commit plus package or run evidence on the card.
+- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, builds from a clean checkout of the `stage` branch, and records the `stage` commit plus package or run evidence on the card.
 - If a `stage` conflict requires product, requirement, or design judgment, TL routes the card to PM with the exact files, conflicting choices, and recommended technical options. PM decides or routes to Ethan, then TL completes the technical merge.
 - If a conflict is only in PM-owned process docs, requirement wording, or collaboration protocol, PM may resolve that documentation conflict directly or give TL exact text to apply.
 - A user-facing card may not be marked `done` before `stage` integration. The only exceptions are changes that do not affect the runnable validation surface; PM must state that explicitly in `最新进展` or `产物/证据`. Do not use `stage integration deferred` to close a user-facing card; keep it active and route TL until Ethan can see it in `stage`.
 - A one-off integration branch may be used for emergency builds, but TL must either promote/sync it into `stage` after PM accepts that route, or PM must record why it is intentionally temporary. Ethan should not have to switch between unrelated feature branches to inspect normal integrated progress.
+- A package built from a temporary feature branch, throwaway integration branch, or local worktree is not a `stage` package. Even if the commit later matches `stage`, the Ethan-facing artifact must either be rebuilt from a clean checkout of the recorded `stage` commit or have an explicit TL verification that the artifact was produced from that exact `stage` checkout. Otherwise it is only PM preliminary evidence.
 
 Evidence rule:
 
-- After TL merges to `stage`, TL records the `stage` commit and any build/package path in `产物/证据`, then returns the card to PM review.
-- Ethan integration-acceptance cards should point to a `stage` commit or a package built from `stage`.
+- After TL merges to `stage`, TL records the `stage` commit, the clean `stage` checkout path or command used for the build, and any build/package path in `产物/证据`, then returns the card to PM review.
+- Ethan integration-acceptance cards should point to a `stage` commit or a package built from a clean checkout of that `stage` commit.
 - QA cards may point to `stage`, but may also point to a named branch, package, or independent worktree for targeted validation. The card must explicitly say whether the result is `stage` integration validation or branch/worktree-specific target testing.
 - If `stage` is behind accepted work, PM must surface that in `最新进展` and either route TL to integrate it before the next validation request or explain the blocker.
-- Before PM tells Ethan "you can run/open it now", PM must verify the named path is actually the `stage` checkout or a package/docs preview built from the recorded `stage` commit. If the shared project checkout is dirty or cannot safely switch to `stage`, PM must not ask Ethan to validate through that checkout; route TL to provide a stage-built package or first resolve the checkout state.
+- Before PM tells Ethan "you can run/open it now", PM must verify the named path is actually the `stage` checkout or a package/docs preview built from a clean checkout of the recorded `stage` commit. If the shared project checkout is dirty or cannot safely switch to `stage`, PM must not ask Ethan to validate through that checkout; route TL to provide a stage-built package or first resolve the checkout state.
 
 Promotion rule:
 
@@ -377,7 +378,7 @@ TL handoff must include:
 
 - final branch name
 - final commit hash
-- exact reviewer entry point: PM preliminary review may use branch/worktree plus an absolute path; Ethan-facing validation must name `stage` plus the absolute file/app/package path or package built from that `stage` commit
+- exact reviewer entry point: PM preliminary review may use branch/worktree plus an absolute path; Ethan-facing validation must name `stage` plus the absolute file/app/package path or package built from a clean checkout of that `stage` commit
 - passing `.agents/tools/tl_handoff_check.py` output
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card
