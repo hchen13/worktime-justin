@@ -21,6 +21,10 @@
 //   - web -> shell（window.webkit.messageHandlers.shell.postMessage(...)，见 postToShell()）：
 //       { type: 'wtjSetDailyLimit', minutes: N }     设置面板"保存额度"
 //       { type: 'wtjResetUsageToday' }               设置面板"重置今日额度"
+//       { type: 'wtjReturnToParentMenu' }            设置面板"关闭"（WTJ-20260705-027 新增：
+//         设置页是二级页面，从这里离开必须回到一级隐藏家长菜单（原生 NSMenu：退出/设置…/
+//         重置），不能直接把家长丢回主游戏界面——shell 收到后重新调用 showParentMenu()。
+//         本文件自己只负责发这条消息 + 隐藏面板，"重新弹出哪个菜单"完全是 shell 侧权威决定。
 // 本文件自己**不**判断"是否应该锁定"——只是如实展示 shell 告知的状态；也不做额度计时——计时
 // 完全在 shell 侧的 Timer（Big Sur 无 Swift Concurrency，纯 Timer/回调风格，见 main.swift）。
 //
@@ -368,9 +372,7 @@
     var closeBtn = el('button', 'wtj-parent-settings-btn wtj-parent-settings-close');
     closeBtn.type = 'button';
     closeBtn.textContent = '关闭';
-    closeBtn.addEventListener('click', function () {
-      hideSettingsPanel();
-    }, false);
+    closeBtn.addEventListener('click', onCloseSettingsPanel, false);
     card.appendChild(closeBtn);
 
     wrap.appendChild(card);
@@ -393,6 +395,18 @@
       settingsPanel.classList.remove('is-active');
       settingsPanel.setAttribute('aria-hidden', 'true');
     }
+  }
+
+  // WTJ-20260705-027：设置页"关闭"按钮的点击处理——不管家长在面板里是否动过任何设置项
+  // （已经通过各自的"保存额度"/"重置今日额度"/语言单选即时生效，见上方各 on* 回调），点这个
+  // 按钮离开二级设置页时都必须回到一级隐藏家长菜单（原生 NSMenu：退出/设置…/重置），而不是
+  // 直接掉回主游戏界面——先隐藏本页 DOM（家长视觉上立即看到面板消失），再单独通知 shell 侧
+  // 重新弹出一级菜单；两步不合并进 hideSettingsPanel() 本身，是因为该函数也被
+  // window.WTJ_PARENT_CONTROLS.hideSettingsPanel() 这个冻结 API 对外暴露（供测试/未来其它
+  // 调用方单纯"隐藏"用），不应该每次隐藏都强制带上"重新弹菜单"这个副作用。
+  function onCloseSettingsPanel() {
+    hideSettingsPanel();
+    postToShell({ type: 'wtjReturnToParentMenu' });
   }
 
   // ---------------------------------------------------------------------

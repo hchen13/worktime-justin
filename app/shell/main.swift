@@ -995,6 +995,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     /// 家长菜单「设置…」：设置面板本身用 web 层渲染（更灵活的表单 UI，见
     /// app/web/parent-controls.js 的 showSettingsPanel()），这里只负责把当前权威状态
     /// （额度/已用/是否锁定）经 evaluateJavaScript 推给 web 并触发它显示面板。
+    ///
+    /// 对称的返回路径（WTJ-20260705-027）：家长在设置面板点「关闭」时，web 层会经
+    /// handleParentControlsMessage 的 "wtjReturnToParentMenu" 分支重新调用 showParentMenu()，
+    /// 回到这一级菜单，而不是直接露出被面板遮住的主游戏界面。
     @objc private func parentMenuOpenSettings() {
         notifySettingsPanelOpen()
     }
@@ -1498,6 +1502,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             }
         case "wtjResetUsageToday":
             resetUsageToday()
+        case "wtjReturnToParentMenu":
+            // WTJ-20260705-027：二级设置面板"关闭"时发来的消息——设置页是从一级隐藏家长菜单
+            // （showParentMenu()，NSMenu：退出/设置…/重置）的「设置…」项进入的，离开时必须
+            // 回到那一层，不能让家长直接掉回被面板遮住的主游戏界面。这里与 checkCmdQProgress
+            // 满 5 秒时的调用是同一个 showParentMenu()，行为完全一致（重新弹出同样三项）。
+            showParentMenu()
         default:
             break // 未识别的 type：忽略，不当作错误处理（前向兼容未来卡片新增的消息类型）。
         }
