@@ -195,20 +195,22 @@
   // 内置默认示例：镜像 manifest.js 里 tasks.templates.*.examples[0] 的真实产品数据，仅在
   // manifest 缺失/对应字段非法时作为兜底，不是本文件自造的另一套数据（与 keyboard.js/task.js/
   // pointer.js 的 DEFAULT_MANIFEST 兜底常量同一工程取舍）。
+  // WTJ-20260705-004 Phase B：voicePrompt 随 manifest.js 同步改指向 084 交付的中文完整句
+  // .zh.m4a（这份兜底本就承诺"镜像 manifest.js 真实产品数据"，见上方注释）。
   var DEFAULT_EXAMPLES = {
     drag: [
-      { id: 'drag-apple-to-basket', objectSprite: 'sprites/apple.png', targetSprite: 'sprites/basket.png', voicePrompt: 'audio/tasks/drag-apple-to-basket.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'drag-apple-to-basket', objectSprite: 'sprites/apple.png', targetSprite: 'sprites/basket.png', voicePrompt: 'audio/tasks/drag-apple-to-basket.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     click: [
-      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
-      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
-      { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     find: [
-      { id: 'find-the-dog', targetSprite: 'sprites/dog.png', distractorSprites: ['sprites/cat.png', 'sprites/ball.png'], voicePrompt: 'audio/tasks/find-the-dog.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'find-the-dog', targetSprite: 'sprites/dog.png', distractorSprites: ['sprites/cat.png', 'sprites/ball.png'], voicePrompt: 'audio/tasks/find-the-dog.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     press: [
-      { id: 'press-letter-a', targetKey: 'A', voicePrompt: 'audio/tasks/press-a.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'press-letter-a', targetKey: 'A', voicePrompt: 'audio/tasks/press-a.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ]
   };
 

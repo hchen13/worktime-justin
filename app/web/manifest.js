@@ -393,7 +393,11 @@
               id: 'drag-apple-to-basket',
               objectSprite: 'sprites/apple.png',
               targetSprite: 'sprites/basket.png',
-              voicePrompt: 'audio/tasks/drag-apple-to-basket.m4a', // stub，待 016 卡供给
+              // WTJ-20260705-004 Phase B：接线 084 交付的中文完整句任务语音（Kokoro
+              // zf_xiaoxiao，整句预生成，禁止运行时拼接，见 tts-text-manifest.zh.json）。
+              // 原 EN audio/tasks/drag-apple-to-basket.m4a 仍在磁盘上（074/078 交付），
+              // 未被删除，只是本 example 不再引用它。
+              voicePrompt: 'audio/tasks/drag-apple-to-basket.zh.m4a', // 已交付（084），完整句"把苹果放进篮子里！"
               successAudio: 'audio/sfx/task-success.m4a', // stub，待 016 卡供给
               successAnimation: 'bounce-in',
               // pt1：篮子旁边散落几个装饰性水果（复用 secretWords.pool 已交付 sprite，零新增
@@ -405,7 +409,7 @@
               id: 'drag-dog-home',
               objectSprite: 'sprites/dog.png',
               targetSprite: 'sprites/doghouse.png', // stub，狗窝素材未到位（REQ-AST-05），待素材卡供给
-              voicePrompt: 'audio/tasks/drag-dog-home.m4a', // stub
+              voicePrompt: 'audio/tasks/drag-dog-home.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"把小狗带回家！"
               successAudio: 'audio/sfx/task-success.m4a', // stub
               successAnimation: 'bounce-in',
               // pt1：窝旁边有一只装饰性的猫，不影响判定。
@@ -436,7 +440,7 @@
               // （PROP_ANIM_STATE_MAP: off→turning-on）驱动，不依赖 targetSprite 切图。
               targetSprite: 'sprites/lamp.png',
               targetSpriteActive: 'sprites/lamp.png',
-              voicePrompt: 'audio/tasks/click-lamp-on.m4a', // stub，语音素材未到位
+              voicePrompt: 'audio/tasks/click-lamp-on.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"点亮小台灯！"
               successAudio: 'audio/sfx/task-success.m4a', // stub
               successAnimation: 'glow-pulse',
               learningWord: 'lamp' // pt5：命中 secretWords.pool 的 'lamp' 词条。
@@ -447,9 +451,9 @@
               // 两态都指向同一张真实 faucet.png，态变化完全由帧动画驱动，不依赖静态切图。
               targetSprite: 'sprites/faucet.png',
               targetSpriteActive: 'sprites/faucet.png',
-              // voicePrompt 走 audio/tasks/<id>.m4a 约定，文件暂缺（audio/tasks/ 目录为空，
-              // 057 音频决策未决）——静默兜底是既定常态，非本卡回归。
-              voicePrompt: 'audio/tasks/click-faucet-on.m4a',
+              // WTJ-20260705-004 Phase B：接线 084 中文完整句"打开水龙头！"，
+              // 消解此前"文件暂缺静默兜底"的旧状态。
+              voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'faucet' // pt5：命中 secretWords.pool 的 'faucet' 词条。
             },
@@ -459,7 +463,7 @@
               // （一次性"成功"收尾动作）；两态都指向同一张真实 horse.png。
               targetSprite: 'sprites/horse.png',
               targetSpriteActive: 'sprites/horse.png',
-              voicePrompt: 'audio/tasks/click-horse-run.m4a', // 暂缺，同上静默兜底
+              voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"让小马跑起来！"
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'horse' // pt5：命中 secretWords.pool 的 'horse' 词条。
             }
@@ -486,9 +490,10 @@
           // 一条预生成中文句，见 app/scripts/tts-text-manifest.zh.json 骨架与 CN-TASK-DRAFT.md），
           // target/distractor 全部复用 secretWords.pool 已交付的 101 词英文 sprite（103 张真实
           // 素材，零新增美术，见 task-templates.js SPRITES_FILENAMES 白名单同步扩展）。voicePrompt
-          // 延续既有 stub 路径约定（除 find-the-dog 首条已被 074/078 交付真实 .m4a 外，新增的
-          // 11 条暂无预生成语音，静默兜底，待音频供给卡排期，不阻断任务判定——与 072 起
-          // click.examples 新增条目暂缺语音时的既定处理方式一致）。learningWord 恒等于 targetSprite
+          // WTJ-20260705-004 Phase B 更新：此前"除 find-the-dog 首条外，新增 11 条暂无预生成
+          // 语音、静默兜底"的状态已结束——084 交付了全部 12 条 find example 对应的中文完整句
+          // 语音，本节 12 条 voicePrompt 现全部指向 084 的 audio/tasks/<id>.zh.m4a（见
+          // app/scripts/tts-text-manifest.zh.json 的 out 字段）。learningWord 恒等于 targetSprite
           // 对应的英文词本身（找到即再学一遍这个词）。distractorSprites 只提供视觉干扰，
           // voicePrompt 只会念 target，不会念 distractor（REQ-TASK-09 既有约束不变）。
           examples: [
@@ -496,7 +501,7 @@
               id: 'find-the-dog',
               targetSprite: 'sprites/dog.png',
               distractorSprites: ['sprites/cat.png', 'sprites/ball.png'],
-              voicePrompt: 'audio/tasks/find-the-dog.m4a', // 已交付（074/078），见 audio/tasks/find-the-dog.m4a
+              voicePrompt: 'audio/tasks/find-the-dog.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小狗！"（原 EN find-the-dog.m4a 074/078 交付仍在磁盘，不再被引用）
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -506,7 +511,7 @@
               id: 'find-the-cat',
               targetSprite: 'sprites/cat.png',
               distractorSprites: ['sprites/dog.png', 'sprites/duck.png'],
-              voicePrompt: 'audio/tasks/find-the-cat.m4a', // stub，待音频供给卡排期
+              voicePrompt: 'audio/tasks/find-the-cat.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小猫！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -516,7 +521,7 @@
               id: 'find-the-apple',
               targetSprite: 'sprites/apple.png',
               distractorSprites: ['sprites/banana.png', 'sprites/orange.png'],
-              voicePrompt: 'audio/tasks/find-the-apple.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-apple.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到苹果！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -526,7 +531,7 @@
               id: 'find-the-star',
               targetSprite: 'sprites/star.png',
               distractorSprites: ['sprites/moon.png', 'sprites/sun.png'],
-              voicePrompt: 'audio/tasks/find-the-star.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-star.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到星星！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -536,7 +541,7 @@
               id: 'find-the-fish',
               targetSprite: 'sprites/fish.png',
               distractorSprites: ['sprites/frog.png', 'sprites/duck.png'],
-              voicePrompt: 'audio/tasks/find-the-fish.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-fish.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小鱼！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -546,7 +551,7 @@
               id: 'find-the-elephant',
               targetSprite: 'sprites/elephant.png',
               distractorSprites: ['sprites/lion.png', 'sprites/monkey.png'],
-              voicePrompt: 'audio/tasks/find-the-elephant.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-elephant.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到大象！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -556,7 +561,7 @@
               id: 'find-the-pig',
               targetSprite: 'sprites/pig.png',
               distractorSprites: ['sprites/goat.png', 'sprites/koala.png'],
-              voicePrompt: 'audio/tasks/find-the-pig.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-pig.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小猪！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -566,7 +571,7 @@
               id: 'find-the-rocket',
               targetSprite: 'sprites/rocket.png',
               distractorSprites: ['sprites/robot.png', 'sprites/rainbow.png'],
-              voicePrompt: 'audio/tasks/find-the-rocket.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-rocket.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到火箭！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -576,7 +581,7 @@
               id: 'find-the-turtle',
               targetSprite: 'sprites/turtle.png',
               distractorSprites: ['sprites/duck.png', 'sprites/frog.png'],
-              voicePrompt: 'audio/tasks/find-the-turtle.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-turtle.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小乌龟！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -586,7 +591,7 @@
               id: 'find-the-unicorn',
               targetSprite: 'sprites/unicorn.png',
               distractorSprites: ['sprites/horse.png', 'sprites/zebra.png'],
-              voicePrompt: 'audio/tasks/find-the-unicorn.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-unicorn.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到独角兽！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -596,7 +601,7 @@
               id: 'find-the-whale',
               targetSprite: 'sprites/whale.png',
               distractorSprites: ['sprites/fish.png', 'sprites/octopus.png'],
-              voicePrompt: 'audio/tasks/find-the-whale.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-whale.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到鲸鱼！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -606,7 +611,7 @@
               id: 'find-the-zebra',
               targetSprite: 'sprites/zebra.png',
               distractorSprites: ['sprites/horse.png', 'sprites/unicorn.png'],
-              voicePrompt: 'audio/tasks/find-the-zebra.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-zebra.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到斑马！"
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
               successAudio: 'audio/sfx/task-success.m4a',
@@ -625,50 +630,57 @@
             successAudio: 'string'
           },
           // WTJ-20260705-004 Phase A（pt3）：纯追加——examples[0]/[1]（press-letter-a /
-          // press-digit-3）原样不动（task-voice-path.test.mjs 用例 2 直接断言
-          // examples[0].id/voicePrompt，见该文件），下方 5 条是新追加的按键覆盖，扩大
-          // "孩子可能被要求按哪个键"的多样性，不改动既有两条的字段结构。
+          // press-digit-3）与下方 5 条新追加按键覆盖，扩大"孩子可能被要求按哪个键"的多样性，
+          // 不改动字段结构。
+          // WTJ-20260705-004 Phase B 更新：全部 7 条 voicePrompt 已从 EN audio/tasks/<key>.m4a
+          // 改接 084 交付的中文完整句 audio/tasks/<key>.zh.m4a（examples[0]/[1] 的 EN 路径不再
+          // 是 task-voice-path.test.mjs 用例 2 的断言对象——该用例已同步改为断言 ZH 路径，见该
+          // 文件）。
           examples: [
             {
               id: 'press-letter-a',
               targetKey: 'A',
-              voicePrompt: 'audio/tasks/press-a.m4a', // 已交付（074/078）
+              // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 A！"。注意 id 与
+              // 语音文件名 stem 本就不同（press-letter-a vs press-a），这正是
+              // task-voice-path.test.mjs 用例 2 专门覆盖的刁钻样本——084 的 zh 版沿用同一
+              // stem 约定（见 tts-text-manifest.zh.json out 字段），未改变这个既有落差。
+              voicePrompt: 'audio/tasks/press-a.zh.m4a', // 已交付（084）
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-digit-3',
               targetKey: '3',
-              voicePrompt: 'audio/tasks/press-3.m4a', // 已交付（074/078）
+              voicePrompt: 'audio/tasks/press-3.zh.m4a', // 已交付（084），完整句"按下数字 3！"
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-letter-b',
               targetKey: 'B',
-              voicePrompt: 'audio/tasks/press-b.m4a', // stub，待音频供给卡排期
+              voicePrompt: 'audio/tasks/press-b.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 B！"
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-letter-s',
               targetKey: 'S',
-              voicePrompt: 'audio/tasks/press-s.m4a', // stub
+              voicePrompt: 'audio/tasks/press-s.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 S！"
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-letter-m',
               targetKey: 'M',
-              voicePrompt: 'audio/tasks/press-m.m4a', // stub
+              voicePrompt: 'audio/tasks/press-m.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 M！"
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-digit-5',
               targetKey: '5',
-              voicePrompt: 'audio/tasks/press-5.m4a', // stub
+              voicePrompt: 'audio/tasks/press-5.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 5！"
               successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-digit-7',
               targetKey: '7',
-              voicePrompt: 'audio/tasks/press-7.m4a', // stub
+              voicePrompt: 'audio/tasks/press-7.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 7！"
               successAudio: 'audio/sfx/task-success.m4a'
             }
           ]
