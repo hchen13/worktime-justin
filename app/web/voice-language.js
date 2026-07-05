@@ -222,18 +222,22 @@
     return { zh: voicePromptPath, en: voicePromptPath };
   }
 
-  function extractTaskId(taskDefOrPath) {
-    if (typeof taskDefOrPath === 'string') {
-      // 尝试从裸路径里取出 "audio/tasks/<id>.m4a" 或 "audio/tasks/<id>.zh.m4a" 的 <id>；
-      // 取不出来就原样返回整个字符串（供 EN_AVAILABLE_SET/ZH_AVAILABLE_SET 查找，查不到即
-      // 视为"不在已知清单里"，见 resolveTaskVoicePath 的兜底分支）。
-      var m = /([^\/]+?)(\.zh)?\.m4a$/i.exec(taskDefOrPath);
-      return m ? m[1] : taskDefOrPath;
-    }
-    if (taskDefOrPath && typeof taskDefOrPath === 'object') {
-      return taskDefOrPath.id || taskDefOrPath.taskId || taskDefOrPath.key || null;
-    }
-    return null;
+  // 从 voicePrompt **路径**（不是 taskDef.id！见下方大段说明）里取出 EN_AVAILABLE_SET /
+  // ZH_AVAILABLE_SET 查找用的 key。取不出来就原样返回整个字符串（查不到即视为"不在已知
+  // 清单里"，见 resolveTaskVoicePath 的兜底分支）。
+  //
+  // 为什么必须从 voicePrompt 路径推导、不能用 taskDef.id：manifest.js 的 press 类任务里，
+  // taskDef.id（如 "press-letter-a" "press-digit-3"）与其语音文件 stem（"press-a"
+  // "press-3"）历来就允许不一致——这是 078 卡明确记录、task-voice-path.test.mjs 有专项
+  // 断言覆盖的既有设计（"id 与 voicePrompt 文件名 stem 本就不一致"）。ALL_TASK_IDS /
+  // EN_AVAILABLE_TASK_IDS / ZH_AVAILABLE_TASK_IDS 三份清单统一按"语音文件 stem"编目（与磁盘
+  // 上 audio/tasks/*.m4a 的真实文件名一一对应），如果这里改用 taskDef.id 去查，会把全部 7 条
+  // press 类任务都误判成"未知任务"进而拒绝播放——tests/unit/voice-language.test.mjs 用例 9a
+  // 用真实 manifest.js 数据核对过这一点。
+  function extractTaskId(voicePromptPath) {
+    if (typeof voicePromptPath !== 'string') return null;
+    var m = /([^\/]+?)(\.zh)?\.m4a$/i.exec(voicePromptPath);
+    return m ? m[1] : voicePromptPath;
   }
 
   function extractVoicePrompt(taskDefOrPath) {
@@ -262,7 +266,9 @@
 
     var lang = getEffectiveLanguage();
     var paths = deriveVoicePaths(voicePrompt);
-    var taskId = extractTaskId(taskDefOrPath) || extractTaskId(voicePrompt);
+    // 必须从 voicePrompt 路径本身推导 taskId，不能用 taskDefOrPath.id——见 extractTaskId()
+    // 顶部的详细说明（press 类任务 id 与语音文件 stem 历来不一致）。
+    var taskId = extractTaskId(voicePrompt);
 
     if (lang === 'en') {
       if (taskId && EN_AVAILABLE_SET[taskId]) {

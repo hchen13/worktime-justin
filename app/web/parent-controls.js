@@ -265,12 +265,17 @@
       return;
     }
     var result = voiceLang.setMode(mode);
+    // 顺序很关键：先 refreshLanguageSection()（把单选组 checked 状态纠正回真正生效的 mode、
+    // 把语言提示区重置为默认的可用性摘要），再在失败时把 langNote 的文案覆盖成具体失败原因
+    // ——反过来的话，refreshLanguageSection() 内部无条件重写 langNote.textContent 会把这里
+    // 刚设置的失败提示立刻冲掉，家长完全看不到"为什么切换不了"，等于又制造了一次静默失败
+    // （tests/unit/parent-controls.test.mjs 用例 7b 曾在开发中当场抓到这个顺序 bug）。
+    refreshLanguageSection();
     if (!result.ok && langNote) {
       langNote.textContent = '无法切换：素材不完整（' +
         (result.availability ? (result.availability.deliveredCount + '/' + result.availability.totalCount) : '?') +
         '），已保持原语言设置，不会静默切换。';
     }
-    refreshLanguageSection();
   }
 
   function buildSettingsPanel() {

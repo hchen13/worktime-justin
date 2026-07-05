@@ -1,0 +1,324 @@
+// WTJ-20260705-018 — voice-language.js 单元测试（durable QA asset）
+//
+// 覆盖验收标准 #4："设置里可语言/任务语音模式切换：中文 / 英文 / 跟随素材可用性；某语言
+// 素材缺失必须明确禁用或提示,不能 silent fallback"。
+//
+// 用 Node 内置 vm 模块搭沙箱（与 task-voice-path.test.mjs / hud.test.mjs 同一手法）加载真实
+// app/web/voice-language.js，对照磁盘真实文件（app/web/audio/tasks/*.m4a）核对模块内置的
+// ALL_TASK_IDS / EN_AVAILABLE_TASK_IDS / ZH_AVAILABLE_TASK_IDS 三份静态清单没有漂移——这三份
+// 清单是本文件顶部注释里明确要求"随交付同步维护"的数据，任何后续卡片交付新素材却忘记同步
+// 更新，这里的断言会当场失败。
+//
+// Run:  node --test tests/unit/voice-language.test.mjs
+//       （或整目录，本机 Node 用 glob 不能裸目录）：node --test 'tests/unit/*.test.mjs'
+// Exit: 0 = all assertions passed, 1 = failure.
+
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import vm from 'node:vm';
+
+var __filename = fileURLToPath(import.meta.url);
+var __dirname = path.dirname(__filename);
+var APP_WEB = path.resolve(__dirname, '../../app/web');
+var VOICE_LANG_SRC = readFileSync(path.join(APP_WEB, 'voice-language.js'), 'utf8');
+
+// --- 最小 localStorage stub（进程内 Map，每次 makeSandbox() 都是全新一份，测试间不串扰）---
+function makeFakeLocalStorage(preset) {
+  var store = {};
+  if (preset) {
+    Object.keys(preset).forEach(function (k) { store[k] = preset[k]; });
+  }
+  return {
+    getItem: function (k) { return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
+    setItem: function (k, v) { store[k] = String(v); },
+    removeItem: function (k) { delete store[k]; },
+    _dump: function () { return Object.assign({}, store); }
+  };
+}
+
+function makeSandbox(opts) {
+  opts = opts || {};
+  var warnCalls = [];
+  var sandbox = {};
+  sandbox.window = sandbox;
+  sandbox.localStorage = makeFakeLocalStorage(opts.presetStorage);
+  sandbox.console = {
+    warn: function () { warnCalls.push(Array.prototype.slice.call(arguments).join(' ')); },
+    error: function () {},
+    log: function () {}
+  };
+  vm.createContext(sandbox);
+  var src = opts.sourceOverride || VOICE_LANG_SRC;
+  vm.runInContext(src, sandbox, { filename: 'voice-language.js' });
+  return { sandbox: sandbox, api: sandbox.window.WTJ_VOICE_LANG, warnCalls: warnCalls };
+}
+
+// =====================================================================================
+// 1. 默认模式 / 可用性快照：中文当前 24/24 完整，英文仅 8/24（与 audio/missing-audio.json
+//    的 taskVoice(8)/taskVoiceZh(24) 两段、磁盘 app/web/audio/tasks/ 现存文件一致）。
+// =====================================================================================
+
+test('1. 默认模式为 zh；getAvailability() 如实反映 zh 24/24 完整、en 8/24 不完整', function () {
+  var env = makeSandbox();
+  assert.equal(env.api.getMode(), 'zh', '未持久化过选择时默认模式应为 zh（与 manifest.js 当前 voicePrompt 默认值一致）');
+
+  var avail = env.api.getAvailability();
+  assert.equal(avail.zh.totalCount, 24);
+  assert.equal(avail.zh.deliveredCount, 24);
+  assert.equal(avail.zh.complete, true);
+  assert.equal(avail.zh.missingIds.length, 0);
+
+  assert.equal(avail.en.totalCount, 24);
+  assert.equal(avail.en.deliveredCount, 8);
+  assert.equal(avail.en.complete, false);
+  assert.equal(avail.en.missingIds.length, 16);
+  console.log('PASS 1: 默认 zh，可用性快照 zh=24/24（完整）/ en=8/24（不完整）与磁盘现状一致。');
+});
+
+// =====================================================================================
+// 2. no-silent-fallback 核心：setMode('en') 在素材不全时必须被拒绝，且不改变当前模式。
+// =====================================================================================
+
+test('2. setMode("en") 素材不全 -> {ok:false, reason:"incomplete-assets"}，模式不变，且有 console.warn 诊断', function () {
+  var env = makeSandbox();
+  var result = env.api.setMode('en');
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'incomplete-assets');
+  assert.equal(env.api.getMode(), 'zh', 'setMode 失败不应改变当前生效模式');
+  assert.ok(env.warnCalls.length > 0, '拒绝切换时应至少 warnOnce 一次可诊断文案');
+  console.log('PASS 2: setMode("en") 在 8/24 不完整时被拒绝，模式仍为 zh，未静默切换。');
+});
+
+test('2b. setMode("zh") 素材完整 -> {ok:true}；setMode("auto") 恒可选 -> {ok:true}', function () {
+  var env = makeSandbox();
+  var r1 = env.api.setMode('zh');
+  assert.equal(r1.ok, true);
+  assert.equal(env.api.getMode(), 'zh');
+
+  var r2 = env.api.setMode('auto');
+  assert.equal(r2.ok, true);
+  assert.equal(env.api.getMode(), 'auto');
+  console.log('PASS 2b: setMode("zh")/setMode("auto") 均成功（zh 完整、auto 恒可选）。');
+});
+
+test('2c. setMode(非法值) -> {ok:false, reason:"invalid-mode"}，模式不变', function () {
+  var env = makeSandbox();
+  var result = env.api.setMode('fr');
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'invalid-mode');
+  assert.equal(env.api.getMode(), 'zh');
+  console.log('PASS 2c: setMode("fr") 非法模式被拒绝。');
+});
+
+// =====================================================================================
+// 3. getEffectiveLanguage()："auto"（跟随素材可用性）在当前 zh 完整时应折算为 'zh'。
+// =====================================================================================
+
+test('3. mode="auto" 时 getEffectiveLanguage() 折算为 "zh"（zh 当前完整，优先于不完整的 en）', function () {
+  var env = makeSandbox();
+  env.api.setMode('auto');
+  assert.equal(env.api.getEffectiveLanguage(), 'zh');
+  console.log('PASS 3: auto 模式折算为 zh。');
+});
+
+test('3b. mode="zh" 时 getEffectiveLanguage() 恒为 "zh"', function () {
+  var env = makeSandbox();
+  assert.equal(env.api.getEffectiveLanguage(), 'zh');
+  console.log('PASS 3b: zh 模式折算为 zh。');
+});
+
+// =====================================================================================
+// 4. resolveTaskVoicePath()：zh 模式下，已知任务返回其 .zh.m4a 路径（真实磁盘文件存在）。
+// =====================================================================================
+
+test('4. resolveTaskVoicePath(taskDef) — zh 模式，已知任务 id 返回 .zh.m4a 路径，磁盘文件真实存在', function () {
+  var env = makeSandbox();
+  var taskDef = { id: 'press-a', voicePrompt: 'audio/tasks/press-a.zh.m4a' };
+  var resolved = env.api.resolveTaskVoicePath(taskDef);
+  assert.equal(resolved, 'audio/tasks/press-a.zh.m4a');
+  assert.equal(existsSync(path.join(APP_WEB, resolved)), true);
+  console.log('PASS 4: zh 模式 resolveTaskVoicePath(press-a) -> ' + resolved + '，磁盘文件存在。');
+});
+
+test('4b. resolveTaskVoicePath() 也接受裸路径字符串入参（与 audio.js.playTaskVoice 同一入参形状）', function () {
+  var env = makeSandbox();
+  var resolved = env.api.resolveTaskVoicePath('audio/tasks/find-the-dog.zh.m4a');
+  assert.equal(resolved, 'audio/tasks/find-the-dog.zh.m4a');
+  console.log('PASS 4b: 裸路径字符串入参正常解析。');
+});
+
+// =====================================================================================
+// 5. no-silent-fallback 防御分支：resolveTaskVoicePath() 对"当前生效语言里查不到这条任务"
+//    的情况必须返回 null（拒绝播放），不能悄悄改播另一种语言；zh 侧可直接用真实模块验证
+//    （给一个不在 ZH_AVAILABLE_TASK_IDS 里的陌生 id）。
+// =====================================================================================
+
+test('5. resolveTaskVoicePath() 对未知任务 id（不在 zh 清单里）返回 null，不静默改播其它语言，且有诊断', function () {
+  var env = makeSandbox();
+  var taskDef = { id: 'totally-unknown-task-xyz', voicePrompt: 'audio/tasks/totally-unknown-task-xyz.zh.m4a' };
+  var resolved = env.api.resolveTaskVoicePath(taskDef);
+  assert.equal(resolved, null, '未知任务 id 应返回 null（拒绝播放），不是回退到任何路径');
+  assert.ok(env.warnCalls.length > 0, '应有 warnOnce 诊断说明拒绝原因');
+  console.log('PASS 5: 未知任务 id -> resolveTaskVoicePath 返回 null，未静默回退，有诊断。');
+});
+
+test('5b. resolveTaskVoicePath(缺 voicePrompt 字段的对象) -> null（无法解析，安全短路）', function () {
+  var env = makeSandbox();
+  assert.equal(env.api.resolveTaskVoicePath({ id: 'press-a' }), null);
+  assert.equal(env.api.resolveTaskVoicePath(null), null);
+  assert.equal(env.api.resolveTaskVoicePath(undefined), null);
+  console.log('PASS 5b: 缺 voicePrompt / null / undefined 入参均安全返回 null，不抛错。');
+});
+
+// =====================================================================================
+// 6. localStorage 持久化：setMode 成功后写入 localStorage；重新加载模块（新沙箱，模拟重启
+//    app）能读回同一 mode。localStorage 缺失/抛错时静默退化为内存变量，不影响功能。
+// =====================================================================================
+
+test('6. setMode("auto") 持久化到 localStorage，新沙箱（模拟重启）读回 "auto"', function () {
+  var env1 = makeSandbox();
+  env1.api.setMode('auto');
+  var stored = env1.sandbox.localStorage._dump();
+  assert.equal(stored.wtjVoiceLanguageMode, 'auto');
+
+  var env2 = makeSandbox({ presetStorage: stored });
+  assert.equal(env2.api.getMode(), 'auto', '新沙箱（模拟重启）应从 localStorage 读回上次选择');
+  console.log('PASS 6: setMode 的选择持久化到 localStorage，重启后（新沙箱）能读回。');
+});
+
+test('6b. localStorage 缺失时 setMode/getMode 仍工作（进程内内存兜底，不抛错）', function () {
+  var sandbox = {};
+  sandbox.window = sandbox;
+  sandbox.console = { warn: function () {}, error: function () {}, log: function () {} };
+  // 故意不提供 sandbox.localStorage —— 模拟 localStorage 完全不可用的环境。
+  vm.createContext(sandbox);
+  vm.runInContext(VOICE_LANG_SRC, sandbox, { filename: 'voice-language.js' });
+  var api = sandbox.window.WTJ_VOICE_LANG;
+  var r = api.setMode('auto');
+  assert.equal(r.ok, true);
+  assert.equal(api.getMode(), 'auto');
+  console.log('PASS 6b: localStorage 缺失时 setMode/getMode 仍正常工作（内存兜底）。');
+});
+
+test('6c. localStorage 存有非法值（不在 zh/en/auto 之列）时安全忽略，回退默认 zh', function () {
+  var env = makeSandbox({ presetStorage: { wtjVoiceLanguageMode: 'fr' } });
+  assert.equal(env.api.getMode(), 'zh', '存储的非法值应被忽略，回退默认 zh');
+  console.log('PASS 6c: localStorage 里的非法历史值被安全忽略，回退默认 zh。');
+});
+
+// =====================================================================================
+// 7. 防御双保险：即便 localStorage 里直接被写成不完整的 'en'（绕过 setMode 的守卫，模拟
+//    篡改/历史遗留数据），getEffectiveLanguage() 仍应折算回 'zh'，不会真的用 en 语言。
+// =====================================================================================
+
+test('7. localStorage 被绕过 setMode 直接写成不完整的 "en" -> getEffectiveLanguage() 仍折算回 "zh"（双保险）', function () {
+  var env = makeSandbox({ presetStorage: { wtjVoiceLanguageMode: 'en' } });
+  assert.equal(env.api.getMode(), 'en', 'getMode() 如实反映存储值（即便不完整）');
+  assert.equal(env.api.getEffectiveLanguage(), 'zh', 'getEffectiveLanguage() 的双保险应拒绝使用不完整的 en，折算回 zh');
+
+  var taskDef = { id: 'press-a', voicePrompt: 'audio/tasks/press-a.zh.m4a' };
+  assert.equal(env.api.resolveTaskVoicePath(taskDef), 'audio/tasks/press-a.zh.m4a',
+    '折算回 zh 后，resolveTaskVoicePath 应正常返回 zh 路径，而不是因为 mode 字面值是 en 就尝试解析英文路径');
+  console.log('PASS 7: 篡改 localStorage 为不完整的 en 也不会真正生效，双保险折算回 zh。');
+});
+
+// =====================================================================================
+// 8. "英文全量交付后" 场景（源码字符串替换出一份假想沙箱，模拟 EN_AVAILABLE_TASK_IDS 未来
+//    补全为 24/24）：验证一旦素材真的补全，setMode('en') 应该顺利放行、getEffectiveLanguage
+//    返回 'en'、resolveTaskVoicePath 对已知任务能正确推导出英文 .m4a 路径（deriveVoicePaths
+//    的 .zh.m4a -> .m4a 转换逻辑）；同时验证"清单里没有的陌生任务 id"在这份假想完整英文
+//    环境下依然会被拒绝（不是"只要语言完整就来者不拒"）。
+// =====================================================================================
+
+test('8. 假想英文全量交付场景：setMode("en") 放行、getEffectiveLanguage="en"、已知任务解析出正确 .m4a 路径；陌生 id 仍被拒绝', function () {
+  // 把 EN_AVAILABLE_TASK_IDS 的初始化替换成"与 ALL_TASK_IDS 相同"，模拟英文素材补齐到 24/24——
+  // 只在这一份内存字符串上做替换，不触碰磁盘上的真实 voice-language.js。
+  var patched = VOICE_LANG_SRC.replace(
+    /var EN_AVAILABLE_TASK_IDS = \[[\s\S]*?\];/,
+    'var EN_AVAILABLE_TASK_IDS = ALL_TASK_IDS.slice();'
+  );
+  assert.notEqual(patched, VOICE_LANG_SRC, '替换应当命中（否则说明源码结构变了，这条测试需要同步更新正则）');
+
+  var env = makeSandbox({ sourceOverride: patched });
+  var r = env.api.setMode('en');
+  assert.equal(r.ok, true, '假想英文补齐到 24/24 后，setMode("en") 应该被放行');
+  assert.equal(env.api.getEffectiveLanguage(), 'en');
+
+  var taskDef = { id: 'find-the-cat', voicePrompt: 'audio/tasks/find-the-cat.zh.m4a' };
+  assert.equal(env.api.resolveTaskVoicePath(taskDef), 'audio/tasks/find-the-cat.m4a',
+    'deriveVoicePaths 应把 .zh.m4a 正确转换为对应的英文 .m4a 路径');
+
+  // 陌生 id（不在 ALL_TASK_IDS 里）：即便整体语言"完整"，这条具体任务仍查不到，必须拒绝。
+  var unknownDef = { id: 'brand-new-task-not-yet-registered', voicePrompt: 'audio/tasks/brand-new-task-not-yet-registered.zh.m4a' };
+  assert.equal(env.api.resolveTaskVoicePath(unknownDef), null,
+    '未登记进清单的陌生任务 id，即便语言整体判定为完整，也不应该被静默播放');
+  console.log('PASS 8: 假想英文全量交付场景验证通过——放行/生效语言/路径推导/陌生 id 拒绝均符合预期。');
+});
+
+// =====================================================================================
+// 9. 静态清单与磁盘现状 / manifest.js 一致性核对（防漂移）
+// =====================================================================================
+
+test('9a. ALL_TASK_IDS 恰好 24 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致', function () {
+  var env = makeSandbox();
+  var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
+  var manifestSandbox = {};
+  manifestSandbox.window = manifestSandbox;
+  vm.createContext(manifestSandbox);
+  vm.runInContext(manifestSrc, manifestSandbox, { filename: 'manifest.js' });
+  var templates = manifestSandbox.window.WTJ_MANIFEST.tasks.templates;
+  // 注意：这里必须按 voicePrompt 文件名 stem 归集，不能用 ex.id——manifest.js 的 press 类
+  // 任务里 id（如 "press-letter-a"）与其语音文件 stem（"press-a"）历来就允许不一致（078 卡
+  // 记录、task-voice-path.test.mjs 有专项断言），voice-language.js 的三份清单统一按"语音
+  // 文件 stem"编目（见该文件 extractTaskId() 顶部的详细说明），这里的核对必须用同一套 key
+  // 空间，否则会产生一次假阳性的"清单漂移"报告。
+  var stemIds = [];
+  ['drag', 'click', 'find', 'press'].forEach(function (type) {
+    (templates[type].examples || []).forEach(function (ex) {
+      var m = /([^\/]+?)(\.zh)?\.m4a$/i.exec(ex.voicePrompt);
+      stemIds.push(m ? m[1] : ex.voicePrompt);
+    });
+  });
+
+  var allTaskIds = env.api.getAllTaskIds();
+  assert.equal(allTaskIds.length, 24);
+  // JSON.stringify 比较（而非 assert.deepEqual/deepStrictEqual 直接比较数组）：allTaskIds 是
+  // vm 沙箱（另一个 realm）里创建的数组，其 Array.prototype 与本文件主 realm 的 Array.prototype
+  // 不是同一个对象——assert/strict 的 deepEqual 是 deepStrictEqual 的别名，会因"同构但不同
+  // realm 的原型"判定为不相等（Node "same structure but are not reference-equal"），即便两个
+  // 数组内容逐项相同。两侧数组元素都是原始字符串（无跨 realm 引用问题），序列化成字符串比较
+  // 可以安全绕开这个陷阱。
+  assert.equal(JSON.stringify(allTaskIds.slice().sort()), JSON.stringify(stemIds.slice().sort()),
+    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 24 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
+  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 24 条 example 的 voicePrompt 文件 stem 集合完全一致。');
+});
+
+test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（24/24）', function () {
+  var env = makeSandbox();
+  var zhIds = env.api.getZhAvailableTaskIds();
+  assert.equal(zhIds.length, 24);
+  zhIds.forEach(function (id) {
+    var p = path.join(APP_WEB, 'audio/tasks/' + id + '.zh.m4a');
+    assert.equal(existsSync(p), true, id + '.zh.m4a 应在磁盘上真实存在');
+  });
+  console.log('PASS 9b: ZH_AVAILABLE_TASK_IDS 全部 24 条在磁盘上都有对应 .zh.m4a 文件。');
+});
+
+test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件集合（8 条，防止两个方向的漂移）', function () {
+  var env = makeSandbox();
+  var enIds = env.api.getEnAvailableTaskIds();
+
+  var diskFiles = readdirSync(path.join(APP_WEB, 'audio/tasks'))
+    .filter(function (f) { return f.endsWith('.m4a') && !f.endsWith('.zh.m4a'); })
+    .map(function (f) { return f.slice(0, -'.m4a'.length); });
+
+  assert.equal(enIds.length, 8);
+  // 同上一条注释：JSON.stringify 比较绕开 vm 沙箱数组与主 realm 数组的原型不一致陷阱。
+  assert.equal(JSON.stringify(enIds.slice().sort()), JSON.stringify(diskFiles.slice().sort()),
+    'voice-language.js 的 EN_AVAILABLE_TASK_IDS 必须恰好等于磁盘上现存英文 .m4a 文件集合——多了会导致误报"可用"实则 404，' +
+    '少了会导致明明已交付的素材被误判缺失、语言选项被不必要地禁用');
+  console.log('PASS 9c: EN_AVAILABLE_TASK_IDS 与磁盘现存英文 .m4a 文件集合完全一致（无漂移）。');
+});
