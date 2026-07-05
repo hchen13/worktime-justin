@@ -98,7 +98,7 @@ test('vm 直跑真实 manifest.js：引擎读到的是产品真实数值（pause
 test('API 冻结：window.WTJ_KEYBOARD 是 frozen 对象且方法齐全', function () {
   var sb = createSandbox();
   assert.equal(Object.isFrozen(sb.KEYBOARD), true);
-  ['onLetter', 'onEffectiveKey', 'onMilestone', 'onFunctionKey', 'getEffectiveKeyCount', 'resetEffectiveKeyCount'].forEach(function (name) {
+  ['onLetter', 'onEffectiveKey', 'onMilestone', 'onFunctionKey', 'onSymbol', 'getEffectiveKeyCount', 'resetEffectiveKeyCount'].forEach(function (name) {
     assert.equal(typeof sb.KEYBOARD[name], 'function', 'API 缺少方法: ' + name);
   });
   try { sb.KEYBOARD.onLetter = null; } catch (e) { /* 严格模式下抛错也算通过 */ }
@@ -147,6 +147,123 @@ test('功能键：不计入有效键计数，不触发 onLetter，触发 onFunct
   assert.equal(funcEvents[2].category, 'weak');  // Shift
   assert.equal(funcEvents[3].category, 'weak');  // Meta
   assert.equal(funcEvents[4].category, 'other'); // ArrowUp
+});
+
+// =====================================================================
+// WTJ-20260705-002 — onSymbol(char, intensity)：标点/符号弹出通道，DUAL-EMIT 与 onFunctionKey
+// 并行触发，互不替代。
+// =====================================================================
+
+test('onSymbol：单个可打印非字母数字键（, [ ] = ? /）触发，且与 onFunctionKey 并行 DUAL-EMIT（不改变后者行为）', function () {
+  var sb = createSandbox();
+  var symbolEvents = [];
+  var funcEvents = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolEvents.push({ ch: ch, intensity: intensity }); });
+  sb.KEYBOARD.onFunctionKey(function (payload) { funcEvents.push(payload); });
+
+  var chars = [',', '[', ']', '=', '?', '/'];
+  chars.forEach(function (ch) { sb.fire(ch); });
+
+  assert.equal(symbolEvents.length, chars.length, '每个标点字符都应触发一次 onSymbol');
+  symbolEvents.forEach(function (evt, i) {
+    assert.equal(evt.ch, chars[i], 'onSymbol 的 char 应是原始按键字符');
+    assert.equal(typeof evt.intensity, 'number', 'onSymbol 应携带 intensity（与 onFunctionKey 的强度一致）');
+    assert.ok(evt.intensity > 0, '首次按下、非连打，intensity 应为正');
+  });
+
+  // DUAL-EMIT：onFunctionKey 依旧对同一批按键各触发一次，category 归类为 'other'（未分类功能键，
+  // 未被 manifest.functionKeys 的 lightFeedback/weakOrNoReward 收录），intensity 与 onSymbol 一致
+  // ——证明本卡新增的 onSymbol 完全是"追加"，没有改变 onFunctionKey 现有的触发次数/分类/强度。
+  assert.equal(funcEvents.length, chars.length, 'onFunctionKey 应仍对每个标点各触发一次，未被 onSymbol 抢走');
+  funcEvents.forEach(function (payload, i) {
+    assert.equal(payload.category, 'other', 'chars[' + i + ']=' + chars[i] + ' 未分类，应归 other');
+    assert.equal(payload.intensity, symbolEvents[i].intensity, 'onSymbol 与 onFunctionKey 的 intensity 应一致（同一次衰减计算）');
+  });
+});
+
+test('onSymbol：Escape/Tab/F1~F12/Meta（具名功能键，e.key.length!==1）不触发', function () {
+  var sb = createSandbox();
+  var symbolEvents = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolEvents.push({ ch: ch, intensity: intensity }); });
+
+  ['Escape', 'Tab', 'F1', 'F5', 'F12', 'Meta', 'Shift', 'Control', 'Alt', 'ArrowUp'].forEach(function (key) {
+    sb.fire(key);
+  });
+
+  assert.deepEqual(symbolEvents, [], '具名功能键（e.key 长度 !== 1）一律不应触发 onSymbol');
+});
+
+test('onSymbol：Space/Enter（e.key.length===1 的 light 类别）不触发（已有专属 light 反馈，不应重复算作标点弹出）', function () {
+  var sb = createSandbox();
+  var symbolEvents = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolEvents.push({ ch: ch, intensity: intensity }); });
+
+  sb.fire(' ');     // Space，e.key 实际值是长度为 1 的空格字符
+  sb.fire('Enter');
+
+  assert.deepEqual(symbolEvents, [], 'Space（尽管 e.key.length===1）与 Enter 都不应触发 onSymbol');
+});
+
+test('onSymbol：字母/数字键（走 handleAlnumKey 路径）不触发，也不触发 onFunctionKey', function () {
+  var sb = createSandbox();
+  var symbolEvents = [];
+  var funcEvents = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolEvents.push({ ch: ch, intensity: intensity }); });
+  sb.KEYBOARD.onFunctionKey(function (payload) { funcEvents.push(payload); });
+
+  sb.fire('a');
+  sb.fire('5');
+
+  assert.deepEqual(symbolEvents, []);
+  assert.deepEqual(funcEvents, []);
+});
+
+test('onSymbol：e.repeat=true 不触发（长按标点键同样不应重复刷符号弹出）', function () {
+  var sb = createSandbox();
+  var symbolEvents = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolEvents.push({ ch: ch, intensity: intensity }); });
+
+  sb.fire(',', { repeat: true });
+
+  assert.deepEqual(symbolEvents, []);
+});
+
+test('onSymbol：intensity 随同键连打衰减（复用与 onFunctionKey 相同的 sameKeyStreak 状态，不另开一套）', function () {
+  var sb = createSandbox();
+  var symbolIntensities = [];
+  sb.KEYBOARD.onSymbol(function (ch, intensity) { symbolIntensities.push(intensity); });
+
+  sb.fire(',');
+  sb.fire(',');
+  sb.fire(',');
+  sb.fire(',');
+
+  assert.equal(symbolIntensities.length, 4);
+  for (var i = 1; i < symbolIntensities.length; i++) {
+    assert.ok(symbolIntensities[i] <= symbolIntensities[i - 1], 'intensity 应随连打单调不增');
+  }
+});
+
+// =====================================================================
+// WTJ-20260705-002 — manifest.keyboard.functionKeys.weakOrNoReward 追加 Escape/Tab/F1~F12
+// =====================================================================
+test('功能键分类：Escape/Tab/F1~F12 现归为 weak（manifest.js 新增，与 Meta/Alt/Control/Shift 并列）', function () {
+  var sb = createSandbox();
+  var fk = sb.manifest.keyboard.functionKeys;
+  ['Escape', 'Tab', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].forEach(function (key) {
+    assert.ok(fk.weakOrNoReward.indexOf(key) !== -1, '真实 manifest.keyboard.functionKeys.weakOrNoReward 应包含 ' + key);
+  });
+
+  var funcEvents = [];
+  sb.KEYBOARD.onFunctionKey(function (payload) { funcEvents.push(payload); });
+  sb.fire('Escape');
+  sb.fire('Tab');
+  sb.fire('F1');
+  sb.fire('F12');
+
+  funcEvents.forEach(function (payload) {
+    assert.equal(payload.category, 'weak', payload.key + ' 应归为 weak，不再是未分类的 other');
+  });
 });
 
 test('功能键连打快速衰减：同键连续按下 intensity 单调下降至趋近 0', function () {
