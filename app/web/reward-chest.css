@@ -43,27 +43,29 @@
 /* 一次性"弹出开启"：缩小态淡入 → 放大回弹 → 轻微摇晃 → 定住 → 随整段序列淡出。 */
 /* ------------------------------------------------------------------ */
 
-/* WTJ-20260704-083（开发机验收反馈③）：宝箱本体此前 bottom:16% + 最大 300px 高度，在较矮的
-   窗口/较小的画布下会向上顶到接近屏幕垂直中点，与 secretword.css 的 .wtj-secret-sprite（固定
-   top:50%，屏幕正中心，命中秘密词后弹出的物体图）在视觉上重叠——两者可能同时出现（五槽满
-   往往由第 N 次秘密词命中触发，命中瞬间中心词图与宝箱奖励序列几乎同时播放）。
-   修法：把宝箱收进一个用 vh（视口高度）而非 %（自身可用高度）表达的 footer 固定区域——
-   bottom: 2vh + max-height: 20vh，box 顶边最高只到 78vh（100vh − 22vh），而
-   .wtj-secret-sprite 在其自身最大尺寸（200px 宽高）下的下边缘最深也只到「50vh + 半高」，
-   在本产品的目标机型（2014 MacBook Air，全屏 800~900px 高）与常见桌面分辨率下均不超过
-   ~65vh，两者之间留有 >= 13vh 的安全间距，不依赖具体像素换算。tests/unit/
-   reward-chest.test.mjs 的「footer 区域」用例对这两个数值（2vh + 20vh <= 30vh）做静态断言，
-   防止今后有人改回去又顶到中心。宝箱视觉尺寸相应缩小（300px→200px 上限）——这只是过渡期布局
-   取舍，最终精细尺寸由 DESIGN 082 的正式素材接管。 */
+/* WTJ-20260705-019（移植 001 Phase A，req1/req4——取代 083 的"屏幕中央下方 + vh 代理"旧方案）：
+   083 当时把宝箱从 bottom:16% 收进 bottom:2vh + max-height:20vh 的水平居中 footer 区域，靠
+   "顶边至少 65vh，与屏幕正中心的 .wtj-secret-sprite 留 >= 15vh 安全间距"这条垂直距离代理来
+   防止重叠。这次把宝箱本体挪到 footer **右侧**——与 hud.js 常驻的 footer 宝箱三态指示器
+   （`.wtj-hud-chest-lane`，见 hud.css）共用同一个锚点数值：right: clamp(16px, 4vw, 32px)；
+   bottom: 14px。这样两个宝箱视觉（这个一次性开箱大奖励序列 + 007/083 那个 footer 常驻小
+   指示器）出现在屏幕上的同一个位置，互不打架；而 .wtj-secret-sprite 固定 left:50% 屏幕水平
+   正中心（见 secretword.css），宝箱移到右侧后与它之间天然形成**水平**净空，不再需要靠垂直
+   vh 数值做代理——见 tests/unit/reward-chest.test.mjs 「14」号用例，已从旧的
+   bottom+max-height<=30vh 代理改写为右锚定数值核对 + 水平净空核算。此改动同时满足验收④
+   （宝箱开在 footer/卡槽侧边，不在画布正中遮挡跳出物体）——旧版即使规避了与中心词图的垂直
+   重叠，仍然是"画布水平正中心弹出"，与字母/物体的中心生成区域视觉上抢镜，见
+   tests/reports/hud-footer-019/before/04-chest-open-pop.png 的回归证据。
+   max-height:20vh 保留（收窄宝箱视觉尺寸上限的意图不变，只是不再需要它来推导垂直安全间距）。 */
 .wtj-rc-chest {
   position: absolute;
-  left: 50%;
-  bottom: 2vh;
+  right: clamp(16px, 4vw, 32px);
+  bottom: 14px;
   width: clamp(120px, 14vw, 200px);
   max-height: 20vh;
   height: auto;
   filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
-  transform: translate(-50%, 0) scale(0.3) rotate(-6deg);
+  transform: scale(0.3) rotate(-6deg);
   opacity: 0;
   will-change: transform, opacity;
 }
@@ -73,24 +75,28 @@
   animation: wtj-rc-chest-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* WTJ-20260705-019：右锚定盒子本身（right/bottom）已经固定了宝箱在 footer 的水平/垂直位置，
+   这里的关键帧只再表达"弹出开启"的缩放/旋转/淡入淡出，不再叠加任何水平居中位移（旧版每一帧
+   都带 translate(-50%, 0)，是为配合当时 left:50% 的居中定位；现在 right 锚定不需要这个位移，
+   去掉后 transform 只剩 scale/rotate，二者互不冲突）。 */
 @-webkit-keyframes wtj-rc-chest-pop {
-  0%   { opacity: 0; -webkit-transform: translate(-50%, 0) scale(0.3) rotate(-6deg); transform: translate(-50%, 0) scale(0.3) rotate(-6deg); }
-  12%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1.15) rotate(4deg); transform: translate(-50%, 0) scale(1.15) rotate(4deg); }
-  20%  { -webkit-transform: translate(-50%, 0) scale(0.94) rotate(-3deg); transform: translate(-50%, 0) scale(0.94) rotate(-3deg); }
-  28%  { -webkit-transform: translate(-50%, 0) scale(1.04) rotate(2deg); transform: translate(-50%, 0) scale(1.04) rotate(2deg); }
-  38%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1) rotate(0deg); transform: translate(-50%, 0) scale(1) rotate(0deg); }
-  85%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1) rotate(0deg); transform: translate(-50%, 0) scale(1) rotate(0deg); }
-  100% { opacity: 0; -webkit-transform: translate(-50%, 0) scale(0.9) rotate(0deg); transform: translate(-50%, 0) scale(0.9) rotate(0deg); }
+  0%   { opacity: 0; -webkit-transform: scale(0.3) rotate(-6deg); transform: scale(0.3) rotate(-6deg); }
+  12%  { opacity: 1; -webkit-transform: scale(1.15) rotate(4deg); transform: scale(1.15) rotate(4deg); }
+  20%  { -webkit-transform: scale(0.94) rotate(-3deg); transform: scale(0.94) rotate(-3deg); }
+  28%  { -webkit-transform: scale(1.04) rotate(2deg); transform: scale(1.04) rotate(2deg); }
+  38%  { opacity: 1; -webkit-transform: scale(1) rotate(0deg); transform: scale(1) rotate(0deg); }
+  85%  { opacity: 1; -webkit-transform: scale(1) rotate(0deg); transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; -webkit-transform: scale(0.9) rotate(0deg); transform: scale(0.9) rotate(0deg); }
 }
 
 @keyframes wtj-rc-chest-pop {
-  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.3) rotate(-6deg); }
-  12%  { opacity: 1; transform: translate(-50%, 0) scale(1.15) rotate(4deg); }
-  20%  { transform: translate(-50%, 0) scale(0.94) rotate(-3deg); }
-  28%  { transform: translate(-50%, 0) scale(1.04) rotate(2deg); }
-  38%  { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0deg); }
-  85%  { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0deg); }
-  100% { opacity: 0; transform: translate(-50%, 0) scale(0.9) rotate(0deg); }
+  0%   { opacity: 0; transform: scale(0.3) rotate(-6deg); }
+  12%  { opacity: 1; transform: scale(1.15) rotate(4deg); }
+  20%  { transform: scale(0.94) rotate(-3deg); }
+  28%  { transform: scale(1.04) rotate(2deg); }
+  38%  { opacity: 1; transform: scale(1) rotate(0deg); }
+  85%  { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(0.9) rotate(0deg); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,7 +149,7 @@
 
   .wtj-rc-chest {
     opacity: 1 !important;
-    transform: translate(-50%, 0) scale(1) rotate(0deg) !important;
+    transform: scale(1) rotate(0deg) !important;
   }
 
   .wtj-rc-flash {

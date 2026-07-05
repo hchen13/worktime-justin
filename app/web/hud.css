@@ -18,6 +18,12 @@
   color: #f4f7fb;
   -webkit-user-select: none;
   user-select: none;
+  /* WTJ-20260705-019（移植 001 Phase B）：镜像 .wtj-hud-footer 桌面端实际高度（96px，见下方
+     该规则），供 .wtj-hud-terminal 的 bottom 用 calc(var(--wtj-footer-height, 92px) + 间距)
+     复用，避免两处各自维护一份数字。92px 的 fallback 值与 DESIGN 011 规范文档保持一致（该
+     文档假定的 footer 高度基准，未定义该自定义属性时的兜底）。窄屏断点下会覆盖为对应的移动端
+     footer 高度，见下方 @media (max-width: 640px)。 */
+  --wtj-footer-height: 96px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -131,11 +137,39 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* WTJ-20260705-019（移植 001 Phase A，验收①：运行版 footer 必须是从左到右全宽底栏/工作台区， */
+/* 不是中间一小块）：`.wtj-hud-footer` 是发现槽托盘与 footer 右侧宝箱指示器的共同父容器，      */
+/* position:fixed 真正贴视口左右边缘铺满（left:0/right:0/width:100%），高度按 082/011 两份文档 */
+/* 共用的 footer 高度基准取值（桌面 96px，移动端见下方 @media (max-width:640px)）。            */
+/* 本容器自身给出一条低对比度的全宽深色工作台背景 + 顶部分界线——取代 086 遗留的 tray-wrap 内   */
+/* 局部宽度胶囊（.wtj-hud-footer-bar，仍保留、仍在其原有的槽位区域内提供更高对比度的"槽位面板" */
+/* 视觉，两者是同一工作台的两层：外层通铺全宽，内层局部高亮托盘区），实测截图见                */
+/* tests/reports/hud-footer-019/{before,after}（WTJ-20260705-019 handoff 附带）。              */
+/* 子元素 .wtj-hud-tray-wrap / .wtj-hud-chest-lane 从各自独立的 position:fixed 改为相对本容器的 */
+/* position:absolute——本容器 left/right/bottom 均为 0，与视口边缘重合，因此子元素原有的 right/ */
+/* bottom 偏移量换算出的屏幕坐标不变，纯粹是"挂在哪个定位上下文下"的结构调整。本容器高度小于    */
+/* 槽位托盘视觉盒子（clamp(260px,30vw,380px)，那个盒子里只有底部一小段是实际可见的托盘图形，    */
+/* 其余是动画留白），因此不设置 overflow:hidden，允许子元素视觉上超出这个高度往上延伸。         */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 96px; /* 082/011 共用基准：footer 高度桌面端建议 96px 左右 */
+  background: rgba(5, 10, 18, 0.58);
+  border-top: 1px solid rgba(156, 180, 220, 0.14);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
 /* 底部五槽托盘：底图 + 5 个槽位状态指示点                              */
 /* ------------------------------------------------------------------ */
 
 .wtj-hud-tray-wrap {
-  position: fixed;
+  position: absolute; /* WTJ-20260705-019：挂到 .wtj-hud-footer 内部后不再独立 position:fixed */
   left: 50%;
   bottom: 12px;
   width: clamp(260px, 30vw, 380px);
@@ -298,7 +332,7 @@
 /* ------------------------------------------------------------------ */
 
 .wtj-hud-chest-lane {
-  position: fixed;
+  position: absolute; /* WTJ-20260705-019：挂到 .wtj-hud-footer 内部后不再独立 position:fixed */
   right: clamp(16px, 4vw, 32px);
   bottom: 14px;
   width: clamp(72px, 8vw, 96px); /* 082 宝箱规则：运行时显示 72px~96px */
@@ -349,6 +383,109 @@
   100% { transform: scale(1); }
 }
 
+/* ------------------------------------------------------------------ */
+/* WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条——纯状态装饰，非输入框    */
+/* ------------------------------------------------------------------ */
+/* 规范：docs/design/wtj-20260705-011-terminal-prompt-decoration-spec.md（DESIGN 011，PM 已     */
+/* 验收）。基础规则写在这里；对应的短屏/窄屏覆盖值见上方 @media (max-height: 700px) 与下方       */
+/* @media (max-width: 640px) 两个既有断点块（就近复用，不新开一套断点）。                        */
+/*                                                                                              */
+/* 诚实边界（WTJ-081 + docs REQ-DEF-02 已判定）：可见内容恒定只有 `>_` 两个字符（.wtj-hud-       */
+/* terminal-arrow「>」+ .wtj-hud-terminal-cursor「_」两个静态文本节点，见 hud.js                 */
+/* buildTerminalPrompt()）+ 一个 4px~5px 的 activity pip（纯装饰圆点，没有 textContent）。永不   */
+/* 渲染输入框、当前按键、秘密词、用户名/路径或命令输出，也不会在 `>_` 之后追加任何字符——这里的    */
+/* "cursor" 只是一个恒定的 "_" 字符做透明度呼吸动画（wtj-hud-terminal-cursor-pulse），不是真实    */
+/* 可输入的文本光标，闪烁完全由 CSS animation 驱动 opacity/visibility，不使用 canvas 逐帧重绘     */
+/* （app/PERFORMANCE.md 红线：禁止每帧 gradient/shadowBlur）。                                   */
+/* ------------------------------------------------------------------ */
+
+.wtj-hud-terminal {
+  position: fixed; /* 独立锚定，不依赖 .wtj-hud-footer 的定位上下文——与 .wtj-hud-lights 同款写法 */
+  left: 32px; /* DESIGN 011 桌面档：left: 32px */
+  bottom: calc(var(--wtj-footer-height, 92px) + 14px); /* 贴在 footer 上方 14px 处的左下 status lane */
+  width: clamp(136px, 15vw, 184px);
+  max-width: 220px; /* DESIGN 011：宽度上限，超过会被读成输入框 */
+  height: 24px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 10px;
+  background: rgba(5, 10, 18, 0.48); /* tokens.color.background */
+  border: 1px solid rgba(156, 180, 220, 0.20); /* tokens.color.border */
+  opacity: 0.72; /* tokens.motion.idleOpacity */
+  pointer-events: none;
+  /* Key activity pulse（140ms 边框/背景微亮，见 hud.js pulseTerminalKeyActivity()）：过渡时长
+     取远小于 140ms，让 class 切入/切出的观感接近规范描述的"一次 140ms 的边框微亮"，而不是
+     "边框渐变 140ms + 再渐变回去 140ms"叠加成一次感知不到的缓慢淡出。 */
+  transition: border-color 0.08s ease, background-color 0.08s ease;
+}
+
+.wtj-hud-terminal.is-key-pulse {
+  border-color: rgba(94, 231, 255, 0.28); /* tokens.color.borderActive */
+  background: rgba(8, 20, 34, 0.58); /* tokens.color.backgroundPulse */
+}
+
+.wtj-hud-terminal-glyph {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+  font-size: 13px; /* tokens.typography.fontSizePx（桌面档） */
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  padding-right: 10px;
+  margin-right: 8px;
+}
+
+/* tokens.color.dividerGlow：glyph 区（`>_`）与右侧 activity pip 之间的低强度分界线，呼应
+   WTJ-082 footer divider 的视觉语言（一条极低对比的竖线，不是真正的分栏功能）。 */
+.wtj-hud-terminal-glyph::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 12px;
+  background: rgba(94, 231, 255, 0.08);
+}
+
+.wtj-hud-terminal-arrow {
+  color: rgba(101, 240, 141, 0.82); /* tokens.color.promptGlyph */
+}
+
+/* "光标"：恒定的静态 "_" 字符，只做 CSS opacity 呼吸动画，不是可输入的文本光标，也不会被追加
+   任何其它字符（见 hud.js buildTerminalPrompt() 的结构性保证）。 */
+.wtj-hud-terminal-cursor {
+  color: rgba(60, 231, 255, 0.42); /* tokens.color.cursor */
+  -webkit-animation: wtj-hud-terminal-cursor-pulse 1100ms ease-in-out infinite;
+  animation: wtj-hud-terminal-cursor-pulse 1100ms ease-in-out infinite;
+}
+
+@-webkit-keyframes wtj-hud-terminal-cursor-pulse {
+  0%   { opacity: 0.28; }
+  50%  { opacity: 0.52; }
+  100% { opacity: 0.28; }
+}
+
+@keyframes wtj-hud-terminal-cursor-pulse {
+  0%   { opacity: 0.28; }
+  50%  { opacity: 0.52; }
+  100% { opacity: 0.28; }
+}
+
+.wtj-hud-terminal-pip {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 216, 76, 0.72); /* tokens.color.pip */
+  opacity: 0.42; /* DESIGN 011 Idle：Pip opacity 固定 0.42，静态常驻圆点，不实时反映按键活动 */
+}
+
 /* WTJ-20260704-086（DESIGN 081 已验收规范）：矮屏（视口有效高度较小）下顶栏高度降级到
    minHeightPx:38（081 token），标题/锁形 glyph 尺寸不变——只压缩顶栏本身的留白，避免矮窗口下
    顶栏过高侵占字母安全区（letter-motion.js 的 computeSafeArea() 用 header.heightPx 计算
@@ -359,10 +496,37 @@
   .wtj-hud-topbar {
     height: 38px;
   }
+
+  /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「短屏 / 2014 MacBook Air」尺寸档）：矮屏下
+     装饰条收窄到规范给出的固定值（不再用 clamp），bottom 间距从 14px 收到 10px，fallback
+     footer 高度用规范给出的 78px（该值是文档假定的短屏 footer 高度基准，与 --wtj-footer-height
+     实际值无关——真实高度仍由该自定义属性提供，78px 只在其未定义时兜底）。 */
+  .wtj-hud-terminal {
+    left: 24px;
+    bottom: calc(var(--wtj-footer-height, 78px) + 10px);
+    width: 136px;
+    height: 22px;
+    border-radius: 11px;
+  }
+
+  .wtj-hud-terminal-glyph {
+    font-size: 12px;
+  }
 }
 
 /* 移动端安全区压缩（082：footer 高度 76px~88px，宝箱可缩小但不能压到槽位）。 */
 @media (max-width: 640px) {
+  .wtj-hud-footer {
+    height: clamp(76px, 20vw, 88px);
+  }
+
+  /* WTJ-20260705-019（移植 001 Phase B）：镜像上面 .wtj-hud-footer 在本断点下的真实高度表达式，
+     让 .wtj-hud-terminal 的 bottom 计算（--wtj-footer-height + 间距）在窄屏下同样准确，不用一个
+     近似的固定数字。 */
+  .wtj-hud-root {
+    --wtj-footer-height: clamp(76px, 20vw, 88px);
+  }
+
   .wtj-hud-tray-wrap--generic .wtj-hud-slot {
     width: 20%;
     height: 20%;
@@ -373,6 +537,24 @@
     bottom: 10px;
     width: clamp(56px, 14vw, 76px);
     height: clamp(56px, 14vw, 76px);
+  }
+
+  /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「窄屏 icon-only 模式」）：左下 status lane
+     在窄屏下容易与 footer 槽位/宝箱/任务物件挤在一起，切到 icon-only——只保留 `>_`，宽度收到
+     48px，隐藏 activity pip 与分界线，减少视觉噪音，不把装饰条挪到画布中央（规范明确禁止）。 */
+  .wtj-hud-terminal {
+    width: 48px;
+    height: 22px;
+    padding: 0 8px;
+    justify-content: center;
+  }
+
+  .wtj-hud-terminal-pip {
+    display: none;
+  }
+
+  .wtj-hud-terminal-glyph::after {
+    display: none;
   }
 }
 
@@ -448,7 +630,8 @@
   .wtj-hud-question,
   .wtj-hud-slot,
   .wtj-hud-light,
-  .wtj-hud-chest {
+  .wtj-hud-chest,
+  .wtj-hud-terminal {
     transition: none !important;
   }
 
@@ -464,5 +647,14 @@
     -webkit-animation: none !important;
     animation: none !important;
     transform: scale(1.05) !important;
+  }
+
+  /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「Reduced motion」）：禁止光标闪烁动画，固定在
+     规范给出的 opacity 0.38；Key activity pulse 的过渡已被上面 .wtj-hud-terminal 的
+     transition:none 一并关闭（规范允许"完全关闭"这一档）。 */
+  .wtj-hud-terminal-cursor {
+    -webkit-animation: none !important;
+    animation: none !important;
+    opacity: 0.38 !important;
   }
 }

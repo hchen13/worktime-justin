@@ -176,12 +176,22 @@ function hudRoot(sb) {
   return sb.body.children.filter(function (el) { return el.id === 'wtj-hud-root'; })[0];
 }
 
+// WTJ-20260705-019（移植 001 Phase A）：新增的 `.wtj-hud-footer` 全宽底栏容器（见 hud.js
+// mount()），tray-wrap 与 chest-lane 都改成挂在这层新父级下面，不再是 #wtj-hud-root 的
+// 直接子节点。footerEl() 是本文件后续查找二者的共同入口。
+function footerEl(sb) {
+  var root = hudRoot(sb);
+  return root.children.filter(function (el) { return el.className === 'wtj-hud-footer'; })[0];
+}
+
 // WTJ-20260704-083 返工：tray-wrap 现在会额外挂 --imaged 或 --generic 修饰类（见 hud.js
 // buildTray()），className 不再恒等于纯 'wtj-hud-tray-wrap'，改用 indexOf 匹配（与
-// slotEls() 已有的匹配方式一致）。
+// slotEls() 已有的匹配方式一致）。WTJ-20260705-019 起改为从 footerEl() 而不是 root 直接查找
+// （穿过新增的 footer 父级，见上）。
 function trayWrap(sb) {
-  var root = hudRoot(sb);
-  return root.children.filter(function (el) { return el.className.indexOf('wtj-hud-tray-wrap') !== -1; })[0];
+  var footer = footerEl(sb);
+  assert.ok(footer, '应该能找到新增的 .wtj-hud-footer 全宽底栏容器');
+  return footer.children.filter(function (el) { return el.className.indexOf('wtj-hud-tray-wrap') !== -1; })[0];
 }
 
 function slotEls(sb) {
@@ -197,9 +207,12 @@ function lightsWrap(sb) {
 }
 
 // WTJ-20260704-083 返工：footer 常驻宝箱指示器（persistent Disabled/Active/Open 三态）。
+// WTJ-20260705-019（移植 001 Phase A）：同 trayWrap()，chest-lane 现在嵌套在 `.wtj-hud-footer`
+// 里面，从 footerEl() 查找（穿透新增的 footer 父级）。
 function chestLaneEl(sb) {
-  var root = hudRoot(sb);
-  return root.children.filter(function (el) { return el.className === 'wtj-hud-chest-lane'; })[0];
+  var footer = footerEl(sb);
+  assert.ok(footer, '应该能找到新增的 .wtj-hud-footer 全宽底栏容器');
+  return footer.children.filter(function (el) { return el.className === 'wtj-hud-chest-lane'; })[0];
 }
 
 function chestImgEl(sb) {
@@ -586,4 +599,62 @@ test('12. hud.css 静态契约：082 footer 背景条数值、宝箱三态视觉
   var reducedMotionBlockMatch = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*)\}\s*$/);
   assert.ok(reducedMotionBlockMatch, 'hud.css 应包含 prefers-reduced-motion 的兜底块');
   assert.ok(reducedMotionBlockMatch[1].indexOf('.wtj-hud-chest') !== -1, 'prefers-reduced-motion 块应覆盖 .wtj-hud-chest（关闭打开态呼吸脉冲）');
+});
+
+// ============================================================================================
+// 13.（WTJ-20260705-019，验收①：全宽 footer 底栏）新增用例——验证 mount() 新增的
+//     `.wtj-hud-footer` 容器：a) DOM 结构上真的包住了槽位托盘与宝箱指示器（不再各自直接挂在
+//     #wtj-hud-root 下）；b) CSS 静态契约上真的是"全宽铺满视口"（left:0/right:0/width:100%），
+//     不是又一个局部定位的胶囊；c) 宝箱指示器在这个新父级内部依然保持"右锚定"
+//     （position:absolute + right 声明，不是 left:50% 那种居中写法）——这是验收①（footer 做成
+//     全宽底栏）与验收④（宝箱在 footer/卡槽侧边，不在画布正中）两条需求在结构上同时成立的
+//     直接证据。这是"防止设计稿存在但运行版未接入"的可复用视觉回归门之一（见卡片验收⑦）。
+// ============================================================================================
+test('13. footer 全宽底栏容器：DOM 上包住槽位托盘与宝箱指示器；CSS 上 left:0/right:0/width:100% 全宽契约成立；宝箱在其内保持右锚定', function () {
+  var sb = createSandbox();
+
+  // a) DOM 结构：footer 是 #wtj-hud-root 的直接子节点；tray-wrap / chest-lane 都嵌套在 footer
+  //    内部，不再各自直接挂在 root 下（对照此前 007/083/086 的旧结构：两者都是 root 的直接
+  //    子节点，导致 footer 只是 tray-wrap 内部一小块局部宽度的胶囊）。
+  var root = hudRoot(sb);
+  var footer = footerEl(sb);
+  assert.ok(footer, '应该渲染出 .wtj-hud-footer 全宽底栏容器');
+  assert.ok(root.children.indexOf(footer) !== -1, 'footer 应该是 #wtj-hud-root 的直接子节点');
+
+  var tray = trayWrap(sb);
+  var chestLane = chestLaneEl(sb);
+  assert.ok(tray, '应该能在 footer 内找到槽位托盘');
+  assert.ok(chestLane, '应该能在 footer 内找到宝箱指示器 lane');
+  assert.ok(footer.children.indexOf(tray) !== -1, '槽位托盘应该挂在 footer 容器内');
+  assert.ok(footer.children.indexOf(chestLane) !== -1, '宝箱指示器 lane 应该挂在 footer 容器内');
+  assert.equal(root.children.indexOf(tray), -1, '槽位托盘不应该再直接挂在 root 下（结构上必须经过 footer 这层）');
+  assert.equal(root.children.indexOf(chestLane), -1, '宝箱指示器 lane 不应该再直接挂在 root 下（结构上必须经过 footer 这层）');
+
+  // b) CSS 静态契约：footer 容器真的全宽铺满视口——position:fixed + left:0 + right:0 +
+  //    width:100%，贴底（bottom:0），而不是像旧的 .wtj-hud-tray-wrap 那样 left:50% 局部居中。
+  var css = readFileSync(HUD_CSS_PATH, 'utf8');
+  var footerBlockMatch = css.match(/\.wtj-hud-footer\s*\{[^}]*\}/);
+  assert.ok(footerBlockMatch, 'hud.css 应包含 .wtj-hud-footer 规则块（全宽底栏容器，注意不要和 .wtj-hud-footer-bar 混淆——正则要求选择器后紧跟 { ，不会误匹配 -bar 变体）');
+  var footerBlock = footerBlockMatch[0];
+  assert.ok(/position:\s*fixed/.test(footerBlock), '.wtj-hud-footer 应 position:fixed（相对视口固定）');
+  assert.ok(/left:\s*0/.test(footerBlock), '.wtj-hud-footer 应声明 left:0（全宽契约的一部分，不是局部居中）');
+  assert.ok(/right:\s*0/.test(footerBlock), '.wtj-hud-footer 应声明 right:0');
+  assert.ok(/bottom:\s*0/.test(footerBlock), '.wtj-hud-footer 应贴底（bottom:0）');
+  assert.ok(/width:\s*100%/.test(footerBlock), '.wtj-hud-footer 应声明 width:100%（全宽契约的直接数值判据，防止今后又改回局部宽度）');
+
+  // c) 宝箱 lane 挂到 footer 内部后，定位方式应从独立的 position:fixed 改为相对 footer 的
+  //    position:absolute；同时仍然保持"右锚定"（right 声明），而不是变成居中（left:50%）——
+  //    验收①"footer 全宽"与验收④"宝箱在 footer/卡槽侧边"两条需求必须同时成立，不能互相抵消。
+  var chestLaneBlockMatch = css.match(/\.wtj-hud-chest-lane\s*\{[^}]*\}/);
+  assert.ok(chestLaneBlockMatch, '应能找到 .wtj-hud-chest-lane 规则块');
+  var chestLaneBlock = chestLaneBlockMatch[0];
+  assert.ok(/position:\s*absolute/.test(chestLaneBlock), '.wtj-hud-chest-lane 挂到 footer 内部后应改为 position:absolute（不再是独立的 position:fixed）');
+  assert.ok(/right:\s*clamp/.test(chestLaneBlock), '.wtj-hud-chest-lane 应继续保持 right 锚定（验收④：宝箱在 footer 右侧）');
+  assert.equal(/left:\s*50%/.test(chestLaneBlock), false, '.wtj-hud-chest-lane 不应该出现水平居中的 left:50%（应保持右锚定，不是居中）');
+
+  // 槽位托盘同理改为 position:absolute（相对 footer 定位），数值/百分比布局本身不变
+  // （computeSlotLeftPercents() 与 resolveTrayBgFile() 两个既有动态布局函数完全不动）。
+  var trayWrapBlockMatch = css.match(/\.wtj-hud-tray-wrap\s*\{[^}]*\}/);
+  assert.ok(trayWrapBlockMatch, '应能找到 .wtj-hud-tray-wrap 规则块');
+  assert.ok(/position:\s*absolute/.test(trayWrapBlockMatch[0]), '.wtj-hud-tray-wrap 挂到 footer 内部后应改为 position:absolute（不再是独立的 position:fixed）');
 });
