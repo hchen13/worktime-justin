@@ -72,9 +72,20 @@ def main() -> int:
                                   offline=True)
         page = ctx.new_page()
         console_errors: list[str] = []
+
+        # WTJ-20260705-023：file:// 测试壳的良性伪影过滤。本 smoke 刻意用 file://（offline，
+        # 验证 web 包自包含无外部请求）。但 audio.js 用 fetch() 加载**本地** .m4a 时，file://
+        # scheme 下 WebKit/Chromium 会报 `URL scheme "file" is not supported`——这是 file://
+        # harness 的固有限制，不是真实缺陷：生产原生壳用 wtjres:// scheme（同源）时 fetch 正常，
+        # 且 audio-runtime 套件经 HTTP 已实证全部音频真实可加载。故仅排除这一类"本地 .m4a 在
+        # file:// 下不可 fetch"的良性错误，其余 console/page 错误照常计入（真实 JS 错误仍会失败）。
+        def _benign_file_scheme_audio_err(text: str) -> bool:
+            return ('scheme "file" is not supported' in text) and ('.m4a' in text or '/audio/' in text)
+
         page.on("console", lambda m: console_errors.append(m.text)
-                if m.type == "error" else None)
-        page.on("pageerror", lambda e: console_errors.append(str(e)))
+                if m.type == "error" and not _benign_file_scheme_audio_err(m.text) else None)
+        page.on("pageerror", lambda e: console_errors.append(str(e))
+                if not _benign_file_scheme_audio_err(str(e)) else None)
         ext_requests: list[str] = []
         page.on("request", lambda r: ext_requests.append(r.url)
                 if r.url.startswith(("http://", "https://")) else None)
