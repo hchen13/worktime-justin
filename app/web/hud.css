@@ -252,6 +252,15 @@
   filter: drop-shadow(0 0 6px rgba(255, 217, 90, 0.4));
 }
 
+/* WTJ-20260705-008：键盘里程碑贴纸（keyboard-star medallion，DESIGN-007）。这张素材本身是一枚
+   带自有圆环的 medallion，比秘密词的物体 sprite 更适合略微填满槽位，让 medallion 的圆环与槽位
+   金色发光圈同心呼应；因此在 .wtj-hud-slot-sprite 的 72% 基础上放大到 88%（本规则排在其后，
+   同特异度覆盖 width/height）。 */
+.wtj-hud-slot-milestone-sprite {
+  width: 88%;
+  height: 88%;
+}
+
 /* Ghost（082 slot_rules.optional_state：低透明深色槽 + 低透明加号，只表达"可扩展"，不参与
    真实 Empty/Filled 判定，见 hud.js MAIN_SLOT_VISUAL_LIMIT / renderSlot()）。 */
 .wtj-hud-slot.is-ghost {

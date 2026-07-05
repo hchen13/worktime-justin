@@ -160,6 +160,26 @@
   var CHEST_ASSETS = getChestIndicatorAssets();
 
   // -----------------------------------------------------------------------
+  // WTJ-20260705-008：键盘里程碑发现槽贴纸。里程碑点亮一个发现槽时（renderState.milestone===true，
+  // 来自 008 keyboard.js → 010 slots.js），槽内渲染 DESIGN-007 交付的键盘 medallion 贴纸
+  // （keyboard-star.png），替换早期的 ★ Unicode 星字占位（production-asset-quality rule 12：真实
+  // 产品视觉必须达质量线，不留字符占位）。路径从 manifest.slots.milestoneStickerSprite 读取
+  // （config 驱动，不硬编码文件名），与 getChestIndicatorAssets()/getSlotCount() 同一防御式回退
+  // 模式；manifest 缺该字段时回退到 CSS 星形兜底（见 renderSlot()），保证不出现空槽。
+  // -----------------------------------------------------------------------
+  function getMilestoneStickerSprite() {
+    var manifest = window.WTJ_MANIFEST;
+    var v = manifest && manifest.slots && manifest.slots.milestoneStickerSprite;
+    if (typeof v === 'string' && v) {
+      return v;
+    }
+    console.warn('[WTJ_HUD] manifest.slots.milestoneStickerSprite 未找到或非法，里程碑槽回退到 CSS 星形占位。');
+    return null;
+  }
+
+  var MILESTONE_STICKER_SPRITE = getMilestoneStickerSprite();
+
+  // -----------------------------------------------------------------------
   // 内部状态（不直接暴露给外部；外部只能通过 API 读写，getState() 返回快照而非引用）
   // -----------------------------------------------------------------------
 
@@ -316,9 +336,22 @@
     }
     if (value.milestone === true) {
       slotEl.classList.add('is-milestone');
+      // WTJ-20260705-008：里程碑槽内渲染 DESIGN-007 键盘贴纸（keyboard-star medallion），复用
+      // .wtj-hud-slot-sprite 的尺寸/发光基样式（与 secret-word 命中缩略图同等对待，见 hud.css
+      // 注释），并额外挂 .wtj-hud-slot-milestone-sprite 供 milestone 专属尺寸微调。REQ-SLOT-04
+      // 「键盘里程碑显示为抽象键盘星星图标」由这张真实素材落地，取代早期的 ★ Unicode 字符占位。
+      if (MILESTONE_STICKER_SPRITE) {
+        var mimg = el('img', 'wtj-hud-slot-sprite wtj-hud-slot-milestone-sprite');
+        mimg.src = MILESTONE_STICKER_SPRITE; // 已是 app/web/ 相对完整路径（assets/discovery-icons/...）
+        mimg.alt = '';
+        slotEl.appendChild(mimg);
+        return;
+      }
+      // 防御式兜底：manifest 缺 milestoneStickerSprite 时退回 CSS 星形，不留空槽（不会走到
+      // 生产路径——真实 manifest 恒有该字段；这里只是缺配置时的降级）。
       var star = el('span', 'wtj-hud-slot-star');
       star.setAttribute('aria-hidden', 'true');
-      star.textContent = '★'; // ★，键盘里程碑星形占位（REQ-SLOT-04）
+      star.textContent = '★';
       slotEl.appendChild(star);
       return;
     }
