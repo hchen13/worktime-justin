@@ -1,0 +1,39 @@
+{
+  "card": "WTJ-20260705-011",
+  "assetPack": "terminal-prompt-decoration",
+  "createdBy": "Designer 1 / Automation:worktime-justin-design-loop",
+  "assetClass": "ui_spec_and_preview",
+  "outputs": {
+    "spec": "docs/design/wtj-20260705-011-terminal-prompt-decoration-spec.md",
+    "tokens": "terminal-prompt-decoration-tokens.json",
+    "preview": "previews/terminal-prompt-decoration-preview.png",
+    "contactSheet": "previews/terminal-prompt-decoration-contact-sheet.png",
+    "promptAndRationale": "prompt-and-rationale.md",
+    "validation": "validation.md"
+  },
+  "runtimeTarget": {
+    "role": "footer/status decoration only",
+    "notInput": true,
+    "recommendedVisibleText": ">_",
+    "maxVisibleCharacters": 2,
+    "forbiddenEchoes": [
+      "current key",
+      "secret word",
+      "username/host",
+      "command output",
+      "path"
+    ]
+  },
+  "references": [
+    "docs/assets/accepted-mvp-mockup.png",
+    "docs/design/wtj-081-main-ui-visual-motion-spec.md",
+    "docs/design/wtj-082-discovery-footer-sticker-system.md"
+  ],
+  "qualityChecks": [
+    "Spec gives position, size, colors, typography, symbols, opacity, and motion rhythm.",
+    "Spec explicitly states this is not an input field.",
+    "Spec forbids long multi-letter input streams and current-key / secret-word echo.",
+    "Preview and contact sheet are generated under the project path.",
+    "Tokens are machine-readable for TL implementation."
+  ]
+}

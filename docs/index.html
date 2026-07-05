@@ -167,6 +167,60 @@
       text-decoration: none;
     }
 
+    nav a.nav-cta {
+      color: #111723;
+      background: var(--yellow);
+      border-color: var(--yellow);
+      font-weight: 700;
+    }
+
+    nav a.nav-cta:hover {
+      border-color: #fff;
+      text-decoration: none;
+    }
+
+    .review-entry {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      border: 1px solid rgba(255,217,90,.4);
+      border-radius: 10px;
+      background: rgba(255,217,90,.07);
+      box-shadow: var(--shadow);
+    }
+
+    .review-entry h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+    }
+
+    .review-entry p {
+      margin: 0;
+      max-width: 640px;
+      color: #f0e6c8;
+    }
+
+    .review-entry .btn {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 22px;
+      border-radius: 8px;
+      background: var(--yellow);
+      color: #111723;
+      font-weight: 800;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .review-entry .btn:hover {
+      text-decoration: none;
+      background: #fff;
+    }
+
     section {
       padding: 44px 0 8px;
       scroll-margin-top: 64px;
@@ -669,6 +723,7 @@
     </header>
 
     <nav aria-label="页面导航">
+      <a href="design-review.html" class="nav-cta">设计总览（全部历史 DESIGN 产出）</a>
       <a href="#overview">一屏概览</a>
       <a href="#coverage">需求覆盖矩阵</a>
       <a href="#state-assets">状态图</a>
@@ -688,6 +743,19 @@
     </nav>
 
     <main id="main">
+
+    <section id="design-review-entry" aria-labelledby="design-review-entry-heading">
+      <div class="review-entry">
+        <div>
+          <h2 id="design-review-entry-heading">设计总览：历史 DESIGN 产出全量画廊（WTJ-20260705-021）</h2>
+          <p>一次性目视验收全部历史 DESIGN 产出：运行版 app/web 已接入素材（秘密词 sprite / 任务道具 / 奖励 / UI / 动效）、
+          视觉风格设计稿、sprite 生产基准、核心状态图、设计扩展候选 v2（11 类）、生产动效 v1、Pack A / Pack B 生产素材、
+          需求设计文档与简报，共约 973 个条目；faucet / horse / lamp / treasure-chest docs 设计源与 app/web 运行时并排对比
+          （door / bell 素材未验收，标注待接入）；静态链接自检 0 缺失。</p>
+        </div>
+        <a class="btn" href="design-review.html">打开设计总览页 →</a>
+      </div>
+    </section>
 
     <section id="overview" data-domain="DEF" aria-labelledby="overview-heading">
       <h2 id="overview-heading">一屏概览</h2>

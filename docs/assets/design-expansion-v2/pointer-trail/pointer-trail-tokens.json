@@ -1,0 +1,123 @@
+{
+  "asset_pack": "pointer-trail",
+  "version": "2026-07-05.designer1.v1",
+  "runtimeRole": "canvasPointerFeedback",
+  "notProgress": true,
+  "rendering": {
+    "engine": "Canvas2D",
+    "assetSprites": false,
+    "layer": "feedbackOverlay",
+    "zIndexGuidance": "above dark background, below task props, secret-word sprites, large keyboard letters, modal UI, and footer"
+  },
+  "colors": {
+    "trailCyan": "#3ce7ff",
+    "trailGold": "#ffd84c",
+    "trailGreen": "#65f08d",
+    "trailPink": "#ff77b8",
+    "trailBlue": "#82a8ff",
+    "glowAlphaRange": [0.12, 0.28]
+  },
+  "shapes": {
+    "softDot": {
+      "type": "circle",
+      "radiusPx": [1.8, 3.2],
+      "blurPx": [3, 8]
+    },
+    "diamondChip": {
+      "type": "rotatedSquare",
+      "longAxisPx": [4, 7],
+      "outline": false
+    },
+    "fourPointGlint": {
+      "type": "fourPointStar",
+      "radiusPx": [4, 10],
+      "centerDot": "optional"
+    },
+    "cometFleck": {
+      "type": "roundedLine",
+      "lengthPx": [10, 22],
+      "widthPx": [2, 4],
+      "orientation": "oppositePointerMotion"
+    }
+  },
+  "normalMove": {
+    "spawnDistancePx": 14,
+    "microJitterIgnorePx": 3,
+    "spawnRateCapPerSecond": 18,
+    "activeParticleCap": 44,
+    "particleSizePx": [2, 6],
+    "lifetimeMs": [720, 3000],
+    "alphaCurve": [
+      {"atMs": 0, "alpha": 0},
+      {"atMs": 90, "alpha": 0.42},
+      {"atMs": 620, "alpha": 0.3},
+      {"atMs": 2000, "alpha": 0.1},
+      {"atMs": 3000, "alpha": 0}
+    ],
+    "primaryColors": ["trailCyan", "trailGold"],
+    "rareColors": ["trailBlue"],
+    "visibleGlintsPerQuickDiagonal": [10, 18],
+    "stopEmissionAfterIdleMs": 120
+  },
+  "fastMovementThrottle": {
+    "velocityThresholdPxPerSecond": 1100,
+    "spawnDistancePx": 28,
+    "alphaMultiplier": 0.65,
+    "energyCooldown": {
+      "travelPxPerSecond": 1200,
+      "cooldownMs": 350,
+      "densityMultiplier": 0.55
+    }
+  },
+  "validObjectClick": {
+    "burstParticleCount": [10, 14],
+    "durationMs": [520, 760],
+    "ringRadiusPx": [18, 42],
+    "ringAlphaMax": 0.36,
+    "particleAlphaMax": 0.58,
+    "colors": ["trailCyan", "trailGold", "trailGreen"],
+    "rewardSticker": false,
+    "slotProgress": false
+  },
+  "dragSuccess": {
+    "dragPathFleckCap": 8,
+    "successParticleCount": [12, 18],
+    "durationMs": [760, 980],
+    "ringRadiusPx": [28, 76],
+    "particleAlphaMax": 0.62,
+    "ringAlphaMax": 0.28,
+    "targetProtection": {
+      "targetBoundsPaddingPx": 16,
+      "avoidDrawingInsideProtectedCenter": true,
+      "ringBehindTarget": true,
+      "fallbackHollowRingAlphaMax": 0.22
+    },
+    "pathParticlesBehindDraggedObject": true
+  },
+  "globalCaps": {
+    "activeParticleCap": 80,
+    "dropPolicy": "drop oldest low-alpha particles first",
+    "disableDuringParentExitUI": true
+  },
+  "reducedMotion": {
+    "normalTrail": false,
+    "validObjectClick": {
+      "singleDot": true,
+      "durationMs": 240,
+      "alphaMax": 0.28
+    },
+    "dragSuccess": {
+      "ringOnly": true,
+      "durationMs": 360,
+      "alphaMax": 0.26
+    }
+  },
+  "forbidden": [
+    "large reward stars as pointer trail particles",
+    "persistent drawing strokes",
+    "confetti shower on normal pointer movement",
+    "particle sprites loaded from PNG files",
+    "slot progress or reward increments from pointer trail",
+    "particles covering drop target silhouette"
+  ]
+}

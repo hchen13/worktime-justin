@@ -1,0 +1,88 @@
+{
+  "card": "WTJ-20260705-011",
+  "component": "terminalPromptDecoration",
+  "createdBy": "Designer 1 / Automation:worktime-justin-design-loop",
+  "runtimeRole": "footerStatusDecorationOnly",
+  "notInput": true,
+  "references": {
+    "acceptedMockup": "docs/assets/accepted-mvp-mockup.png",
+    "mainUiSpec": "docs/design/wtj-081-main-ui-visual-motion-spec.md",
+    "footerStickerSystem": "docs/design/wtj-082-discovery-footer-sticker-system.md"
+  },
+  "layout": {
+    "anchor": "leftBottomStatusLane",
+    "desktop": {
+      "leftPx": 32,
+      "bottomFromFooterTopPx": 14,
+      "widthCss": "clamp(136px, 15vw, 184px)",
+      "maxWidthPx": 220,
+      "heightPx": 24,
+      "borderRadiusPx": 12
+    },
+    "shortScreen": {
+      "leftPx": 24,
+      "bottomFromFooterTopPx": 10,
+      "widthPx": 136,
+      "heightPx": 22,
+      "borderRadiusPx": 11
+    },
+    "iconOnlyFallback": {
+      "widthPx": 48,
+      "heightPx": 22,
+      "trigger": "when left status lane overlaps footer slots, task props, or mobile safe area"
+    }
+  },
+  "color": {
+    "background": "rgba(5, 10, 18, 0.48)",
+    "backgroundPulse": "rgba(8, 20, 34, 0.58)",
+    "border": "rgba(156, 180, 220, 0.20)",
+    "borderActive": "rgba(94, 231, 255, 0.28)",
+    "dividerGlow": "rgba(94, 231, 255, 0.08)",
+    "promptGlyph": "rgba(101, 240, 141, 0.82)",
+    "promptGlyphDim": "rgba(101, 240, 141, 0.56)",
+    "pip": "rgba(255, 216, 76, 0.72)",
+    "cursor": "rgba(60, 231, 255, 0.42)"
+  },
+  "typography": {
+    "fontStack": "\"SF Mono\", \"Menlo\", \"Monaco\", \"Consolas\", monospace",
+    "fontSizePx": 13,
+    "shortScreenFontSizePx": 12,
+    "fontWeight": 800,
+    "letterSpacingPx": 0,
+    "visibleGlyph": ">_"
+  },
+  "contentPolicy": {
+    "visibleText": ">_",
+    "maxVisibleCharacters": 2,
+    "forbidCurrentKeyEcho": true,
+    "forbidSecretWordEcho": true,
+    "forbidUsernameHostPath": true,
+    "forbidCommandOutput": true,
+    "forbidLongInputBar": true,
+    "allowedDecorativeElements": ["promptGlyph", "activityPip", "microCursorPulse"]
+  },
+  "motion": {
+    "idleOpacity": 0.72,
+    "cursorPulseMs": 1100,
+    "cursorOpacityRange": [0.28, 0.52],
+    "keyActivityPulseMs": 140,
+    "secretWordSuccessGlowMs": 220,
+    "reducedMotion": {
+      "cursorPulse": false,
+      "cursorOpacity": 0.38,
+      "keyActivityPulseMs": 120,
+      "allowDisablePulse": true
+    }
+  },
+  "zIndexGuidance": {
+    "aboveFooterShell": true,
+    "belowLettersAndTaskProps": true,
+    "belowRewardOverlay": true
+  },
+  "implementationNotes": [
+    "Render as decorative status chip; do not attach a text input state.",
+    "Do not append characters after the prompt glyph.",
+    "Do not mirror keyboard events or secret words into this component.",
+    "Hide or use iconOnlyFallback rather than moving the component to the center canvas."
+  ]
+}

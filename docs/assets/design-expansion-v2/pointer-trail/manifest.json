@@ -1,0 +1,36 @@
+{
+  "asset_pack": "pointer-trail",
+  "card": "WTJ-20260705-012",
+  "owner": "Designer 1",
+  "runtime_identity": "Automation:worktime-justin-design-loop",
+  "created_at": "2026-07-05",
+  "outputs": {
+    "spec": "docs/design/wtj-20260705-012-pointer-trail-visual-tokens.md",
+    "tokens": "pointer-trail-tokens.json",
+    "runtimePreview": "previews/pointer-trail-runtime-preview.png",
+    "contactSheet": "previews/pointer-trail-contact-sheet.png",
+    "promptAndRationale": "prompt-and-rationale.md",
+    "validation": "validation.md"
+  },
+  "runtime_target": {
+    "component": "pointer feedback overlay",
+    "rendering": "Canvas2D primitives, no particle PNG sprites",
+    "modes": ["normalMove", "validObjectClick", "dragSuccess"],
+    "not_progress_source": true,
+    "drop_target_protection": true,
+    "reduced_motion_supported": true
+  },
+  "references": [
+    "docs/design/wtj-081-main-ui-visual-motion-spec.md",
+    "docs/assets/accepted-mvp-mockup.png",
+    "docs/assets/design-expansion-v2/keyboard-milestone/manifest.json",
+    "docs/assets/design-expansion-v2/drag-success/manifest.json"
+  ],
+  "handoff_summary": [
+    "Use WTJ-081 feedback palette and keyboard trail softness.",
+    "Normal pointer movement stays tiny, sparse, and capped.",
+    "Click feedback is a compact acceptance burst, not a reward.",
+    "Drag success uses target-safe ring and glints that do not cover the drop target.",
+    "Fast movement thins the trail; it never increases density for shaking."
+  ]
+}

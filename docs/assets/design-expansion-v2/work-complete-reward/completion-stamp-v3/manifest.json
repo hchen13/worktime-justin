@@ -1,0 +1,59 @@
+{
+  "card": "WTJ-20260705-006",
+  "asset_pack": "work-complete-reward/completion-stamp-v3",
+  "created_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "source_generation": {
+    "mode": "Codex built-in image_gen + local chroma-key alpha cleanup",
+    "source_chromakey": "source/completion-stamp-chromakey.png",
+    "source_cutout": "source/completion-stamp-cutout.png",
+    "generated_image_original": "/Users/claire/.codex/generated_images/019f2887-9de8-7b72-b53b-230a0857f710/ig_056aafc8fc8b85c2016a494d44f7ac81919ee29a0c51b5c899.png"
+  },
+  "canvas": {
+    "frame_size": [
+      1024,
+      1024
+    ],
+    "background": "transparent",
+    "preview_background": "dark navy",
+    "anchor": [
+      512,
+      522
+    ],
+    "target_bounds": "visible alpha stays within the 1024x1024 canvas; no edge contact"
+  },
+    "selected": {
+    "id": "completion_stamp_v3",
+    "title": "Completion stamp one-shot reward",
+    "summary": "A polished 2.5D workbench completion stamp with three check tokens; pops in, releases restrained sparkles, and fades out so it does not cover the play canvas for long.",
+    "fps": 13,
+    "loop": false,
+    "end_behavior": "fades to transparent; remove overlay after playback",
+    "static_fallback": "completion-stamp-static.png",
+    "frames": [
+      "frames/completion_stamp_000.png",
+      "frames/completion_stamp_001.png",
+      "frames/completion_stamp_002.png",
+      "frames/completion_stamp_003.png",
+      "frames/completion_stamp_004.png",
+      "frames/completion_stamp_005.png",
+      "frames/completion_stamp_006.png",
+      "frames/completion_stamp_007.png",
+      "frames/completion_stamp_008.png",
+      "frames/completion_stamp_009.png",
+      "frames/completion_stamp_010.png",
+      "frames/completion_stamp_011.png"
+    ],
+    "sheet": "completion-stamp-sheet.png",
+        "preview": "previews/completion-stamp-preview.gif",
+        "contact_sheet": "contact-sheets/completion-stamp-v3-contact-sheet.png",
+        "validation": "validation.md",
+        "prompt_and_rationale": "prompt-and-rationale.md"
+    },
+  "quality_checks": [
+    "12 numbered frames are 1024x1024 RGBA transparent PNG.",
+    "First and last frames are transparent so the reward can enter and leave cleanly.",
+    "Static fallback is provided for environments that cannot play the one-shot animation.",
+    "Preview GIF and contact sheet composite the transparent frames on a dark navy canvas.",
+    "No text, watermark, external brand, rocket, basket, treasure chest, dog, or emoji-style placeholder is introduced."
+  ]
+}

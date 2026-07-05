@@ -1,0 +1,61 @@
+{
+  "card": "WTJ-20260705-007",
+  "asset_pack": "keyboard-milestone",
+  "created_by": "Designer 1 / Automation:worktime-justin-design-loop",
+  "source_generation": {
+    "mode": "Codex built-in image_gen + local chroma-key alpha cleanup + deterministic derivatives",
+    "generated_image_original": "/Users/claire/.codex/generated_images/019f2887-9de8-7b72-b53b-230a0857f710/ig_0ff1fd68a4449576016a4950bcf2e4819181864ac46edb7235.png",
+    "source_chromakey": "source/keyboard-milestone-chromakey.png",
+    "source_cutout": "source/keyboard-milestone-cutout.png"
+  },
+  "anti_reference": [
+    "docs/assets/design-expansion-v2/discovery-icons/filled/keyboard-star.png",
+    "docs/assets/design-expansion-v2/discovery-icons/muted/keyboard-star.png"
+  ],
+  "canvas": {
+    "source_size": [
+      1024,
+      1024
+    ],
+    "background": "transparent",
+    "preview_background": "dark navy",
+    "recommended_slot_size_px": 72
+  },
+  "selected": {
+    "id": "keyboard_milestone_v1",
+    "summary": "A polished 2.5D toy keyboard milestone icon with raised keycaps; readable as a keyboard at 72px and independent from the rejected star solution.",
+    "popup": "popup/keyboard-milestone-popup.png",
+    "slot_filled": "slot/keyboard-milestone-slot-filled.png",
+    "slot_muted": "slot/keyboard-milestone-slot-muted.png",
+    "slot_filled_72": "slot/keyboard-milestone-slot-filled-72.png",
+    "slot_muted_72": "slot/keyboard-milestone-slot-muted-72.png",
+    "slot_filled_144": "slot/keyboard-milestone-slot-filled-144.png",
+    "slot_muted_144": "slot/keyboard-milestone-slot-muted-144.png",
+    "pop_animation": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/keyboard_milestone_pop_000.png",
+        "frames/keyboard_milestone_pop_001.png",
+        "frames/keyboard_milestone_pop_002.png",
+        "frames/keyboard_milestone_pop_003.png",
+        "frames/keyboard_milestone_pop_004.png",
+        "frames/keyboard_milestone_pop_005.png",
+        "frames/keyboard_milestone_pop_006.png",
+        "frames/keyboard_milestone_pop_007.png"
+      ],
+      "sheet": "keyboard-milestone-pop-sheet.png",
+      "preview": "previews/keyboard-milestone-pop-preview.gif",
+      "end_behavior": "last frame transparent; remove overlay after playback"
+    },
+    "contact_sheet": "contact-sheets/keyboard-milestone-contact-sheet.png",
+    "prompt_and_rationale": "prompt-and-rationale.md",
+    "validation": "validation.md"
+  },
+  "quality_checks": [
+    "Popup, filled slot, muted slot, source cutout, animation frames, and sheet are transparent PNG/RGBA assets.",
+    "The slot assets retain a wide keyboard silhouette and visible keycap rows at 72px.",
+    "No star is used as the primary milestone symbol.",
+    "No text, watermark, brand imitation, rocket, basket, treasure chest, dog, or emoji-style placeholder is introduced."
+  ]
+}
