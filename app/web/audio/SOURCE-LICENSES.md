@@ -105,3 +105,35 @@ ffmpeg -y -i <raw> -af "loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.794:level
 **主观验收提醒（本卡执行者未试听，交 QA/Ethan）**：
 - 5 类音色区分（letter 清脆 / space 低沉 thock / enter 确认感 / punct 中性轻 click / modifier 最钝）是否符合"机械键盘"直觉、是否儿童友好不刺耳
 - `playSfx()` 当前不支持音量/gain 参数（见 `app/web/audio.js` `playFromPath()`，`BufferSource` 直连 `ctx.destination`，无 `GainNode`）——`keysound.js` 对 `onFunctionKey` 的 `intensity` 衰减改用"低于阈值跳过播放"实现"递减到几乎没有"，而非真实音量渐弱；若未来需要真正的连续渐弱手感，需先给 `audio.js` 加一层 `GainNode`（超出本卡范围，未改动 `audio.js` 播放链路本体）。
+
+---
+
+## WTJ-20260704-084 追加：中文任务语音 TTS（24 条 `.zh.m4a`）
+
+**背景**：084 卡音频侧的 TTS 全量重生成。PM 已验收选型 spike（`tl/tts-spike-084`）并采纳默认路线
+**单引擎 Kokoro-onnx：EN=af_heart、ZH=zf_xiaoxiao**。本节记录中文任务语音（24 条完整句）的来源与授权；
+EN 侧（af_heart，119 文件）本卡确定性复跑核实与已交付 074/078 版本逐文件 sha256 一致，未改动磁盘文件，
+仅更新 provenance。逐句音素串 / 客观 QC / 复现步骤见 **`app/web/audio/TTS-PROVENANCE.md`**「WTJ-20260704-084：中文任务语音」一节。
+
+**来源 / 授权**：
+
+| 项 | 值 |
+|---|---|
+| TTS 模型 | **Kokoro-82M**（`kokoro-v1.0.onnx` + `voices-v1.0.bin`，与 EN 同一份权重） |
+| 模型许可 | **Apache-2.0**（允许个人 / 非商用 / 商用；本项目非商用，充分满足；**无水印**） |
+| 模型来源 | https://github.com/thewh1teagle/kokoro-onnx （release `model-files-v1.0`） |
+| 权重 sha256 | onnx `7d5df8ec…a6c5` / voices `bca610b8…bf7d`（下载后已核对，与 spike ENV-BUILD.md 一致） |
+| 音色 | **zf_xiaoxiao**（中文女声，来自 voices-v1.0.bin，Apache-2.0） |
+| 中文 G2P | **misaki 0.9.4 [zh]**（MIT；jieba 0.42.1 + pypinyin 0.55.0 + cn2an）。中文不经 espeak-ng。 |
+| espeak-ng | 1.52（Homebrew，GPLv3）——**仅 EN 用**，构建期音素化工具，不链接进、不随 app 分发；中文侧完全不用它 |
+| 确定性 | 固定音色 + 无采样 + **无需 seed** → 可复现字节一致 |
+| 文案来源 | `CN-TASK-DRAFT.md` v1（PM 已批），24 条逐条对齐 `app/scripts/tts-text-manifest.zh.json` |
+| 生成脚本 | `app/scripts/generate-tts-zh.py` |
+| 授权口径 | 全部模型 / G2P / 依赖均为宽松许可（Apache-2.0 / MIT），无第三方录音素材、无署名要求、无水印。中文语音产物 `.zh.m4a` 可随 app 分发。 |
+
+**统一处理方式**：`ffmpeg loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.794:level=false` → `-ar 24000 -ac 1 -c:a aac -b:a 64k`（与 074 EN 语音链完全一致；`level=false` 必需）。
+
+**客观 QC**：24/24 生成成功、0 失败（生成期 no-silent-fallback：RMS>1e-4 + 时长带校验后才编码）；
+全部 aac/24000Hz/mono；时长 1.00–1.73s；峰值 -1.9 ~ -4.7 dBFS（无过载）；均值 -15.6 ~ -17.1 dB（非静音）。逐条见 TTS-PROVENANCE.md。
+
+**主观验收提醒（本卡执行者未试听，交 QA/Ethan）**：中文发音自然度、多音字实际读音（对照 TTS-PROVENANCE.md 逐句 misaki 音素串核对，重点数字 3/5/7 读法与单字母尾音）、儿童友好度、无爆音——均需 Ethan / QA-076 主观核对。
