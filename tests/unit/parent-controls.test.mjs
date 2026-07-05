@@ -1,9 +1,14 @@
 // WTJ-20260705-018 — parent-controls.js 单元测试（durable QA asset）
+// WTJ-20260705-027 在此基础上补充：二级设置页"关闭"必须回一级家长菜单，而不是直接掉回
+// 主游戏界面（见文件末尾第 8 节）。
 //
 // 覆盖验收标准 #1（Cmd+Q 长按进度条）、#2/#6（隐藏家长菜单相关的 web 层配套：这里只测试
 // web 层能正确响应 shell 下发的状态，家长菜单本身是原生 NSMenu，不在 web 层，不在本文件
 // 覆盖范围——那部分留给真机手动验证，见 handoff 清单）、#3（设置面板保存每日额度）、
-// #4（语言切换 + no-silent-fallback UI 落地）、#5（锁定状态驱动安静锁屏叠层 + 输入抑制标志）。
+// #4（语言切换 + no-silent-fallback UI 落地）、#5（锁定状态驱动安静锁屏叠层 + 输入抑制标志）、
+// 027 卡「设置页保存/取消后回一级菜单」（第 8/8b/8c/8d 节：postMessage({ type:
+// 'wtjReturnToParentMenu' }) 是否正确、按序发出；shell 收到后是否真的重新弹出 NSMenu 是
+// app/shell/main.swift 的职责，不在本文件覆盖范围，真机验证见 QA-055）。
 //
 // 用 Node 内置 vm 模块搭沙箱，按 index.html 真实加载顺序（manifest.js -> voice-language.js
 // -> parent-controls.js）加载三个真实源码文件（与 hud.test.mjs / task-voice-path.test.mjs
@@ -396,14 +401,62 @@ test('7c. 选中 auto：setMode 成功，语言提示区展示两种语言的可
 });
 
 // =====================================================================================
-// 8. 关闭按钮
+// 8. 关闭按钮 —— WTJ-20260705-027：二级设置页离开时必须回到一级隐藏家长菜单（原生
+//    NSMenu：退出/设置…/重置），不能直接把家长丢回被面板遮住的主游戏界面。web 层能做到的
+//    验证边界是：点击"关闭"时正确 postMessage({ type: 'wtjReturnToParentMenu' }) 通知
+//    shell 重新弹出一级菜单——shell 收到后是否真的弹出 NSMenu，是 app/shell/main.swift
+//    的职责（该文件 handleParentControlsMessage 的 "wtjReturnToParentMenu" 分支），不在
+//    本文件（纯 web 沙箱）覆盖范围内，真机交互验证见 QA-055。
 // =====================================================================================
 
-test('8. 设置面板"关闭"按钮：点击后 isSettingsPanelOpen() 恢复 false', function () {
+test('8. 设置面板"关闭"按钮（取消路径，未改动任何设置项）：isSettingsPanelOpen() 恢复 false，且 postMessage 通知 shell 回一级菜单', function () {
   var sb = createSandbox();
   sb.window.wtjShowSettingsPanel({ dailyLimitMinutes: 30, usedSecondsToday: 0, remainingSecondsToday: 1800, locked: false, dailyLimitMinMinutes: 5, dailyLimitMaxMinutes: 180 });
   assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), true);
+
   findButtonByText(sb.body, '关闭').dispatch('click');
+
+  assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), false, '面板应已隐藏');
+  assert.equal(sb.shellMessages.length, 1, '"取消"（未做任何改动直接关闭）也必须通知 shell 回一级菜单');
+  assert.equal(JSON.stringify(sb.shellMessages[0]), JSON.stringify({ type: 'wtjReturnToParentMenu' }));
+  console.log('PASS 8: 取消路径——直接点"关闭"正确回一级家长菜单（未破坏 isSettingsPanelOpen() 语义）。');
+});
+
+test('8b. 先"保存额度"（保存路径），再点击"关闭"：两条消息按序发出，最终仍回一级菜单', function () {
+  var sb = createSandbox();
+  sb.window.wtjShowSettingsPanel({ dailyLimitMinutes: 30, usedSecondsToday: 0, remainingSecondsToday: 1800, locked: false, dailyLimitMinMinutes: 5, dailyLimitMaxMinutes: 180 });
+
+  var input = findById(sb.body, 'wtj-daily-limit-input');
+  input.value = '45';
+  findButtonByText(sb.body, '保存额度').dispatch('click');
+  assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), true, '保存额度本身不应关闭面板（家长可能还要接着调语言/重置）');
+
+  findButtonByText(sb.body, '关闭').dispatch('click');
+
   assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), false);
-  console.log('PASS 8: "关闭"按钮正确关闭设置面板。');
+  assert.equal(sb.shellMessages.length, 2, '保存 1 条 + 关闭时回菜单 1 条');
+  assert.equal(JSON.stringify(sb.shellMessages[0]), JSON.stringify({ type: 'wtjSetDailyLimit', minutes: 45 }));
+  assert.equal(JSON.stringify(sb.shellMessages[1]), JSON.stringify({ type: 'wtjReturnToParentMenu' }));
+  console.log('PASS 8b: 保存路径——"保存额度"后再"关闭"，保存消息与回菜单消息按序都发出。');
+});
+
+test('8c. window.webkit 桥缺失时点击"关闭"不抛错（仅隐藏面板，postToShell 静默失败，同 6d 场景）', function () {
+  var sb = createSandbox({ omitWebkitBridge: true });
+  sb.window.wtjShowSettingsPanel({ dailyLimitMinutes: 30, usedSecondsToday: 0, remainingSecondsToday: 1800, locked: false, dailyLimitMinMinutes: 5, dailyLimitMaxMinutes: 180 });
+  assert.doesNotThrow(function () {
+    findButtonByText(sb.body, '关闭').dispatch('click');
+  });
+  assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), false, '即使桥缺失，面板本身仍应正常隐藏');
+  console.log('PASS 8c: webkit 桥缺失时点击"关闭"不抛错，面板仍正常隐藏。');
+});
+
+test('8d. 直接调用冻结 API 的 hideSettingsPanel()（非经"关闭"按钮）：只隐藏面板，不发 wtjReturnToParentMenu', function () {
+  var sb = createSandbox();
+  sb.window.wtjShowSettingsPanel({ dailyLimitMinutes: 30, usedSecondsToday: 0, remainingSecondsToday: 1800, locked: false, dailyLimitMinMinutes: 5, dailyLimitMaxMinutes: 180 });
+
+  sb.PARENT_CONTROLS.hideSettingsPanel();
+
+  assert.equal(sb.PARENT_CONTROLS.isSettingsPanelOpen(), false);
+  assert.equal(sb.shellMessages.length, 0, 'hideSettingsPanel() 本身是纯隐藏语义，不应带上"回一级菜单"这个副作用（该副作用只挂在"关闭"按钮的点击处理上）');
+  console.log('PASS 8d: hideSettingsPanel() API 保持纯隐藏语义，不越权触发返回一级菜单。');
 });
