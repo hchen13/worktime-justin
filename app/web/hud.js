@@ -54,6 +54,33 @@
 //      槽位恒定渲染为低透暗色 + 低透加号，只表达"可扩展"，不参与真实空/满判定，见
 //      MAIN_SLOT_VISUAL_LIMIT）。getSlotCount()/computeSlotLeftPercents(n) 两个既有动态布局
 //      函数不变，只升级"背景/槽视觉"这一层渲染。
+//
+// -----------------------------------------------------------------------
+// WTJ-20260705-019（视觉整装：把 001 的 footer/terminal 装饰接入 stage，阻断"设计稿存在但
+// 运行版未接入"回归）。086 交付的 `.wtj-hud-footer-bar` 只是 tray-wrap 内一小块居中胶囊，
+// 不满足验收①"从左到右全宽底栏/工作台区"。001 在两个独立分支上先返工出了正确视觉——
+// tl/chest-footer-001（Phase A：全宽 footer 容器 + 宝箱移到 footer 右侧不居中）与
+// tl/terminal-prompt-001b（Phase B：左下 `>_` terminal 装饰条，按 DESIGN 011 已验收规范
+// docs/design/wtj-20260705-011-terminal-prompt-decoration-spec.md）——但那两个分支的 base
+// 早于 stage（分叉自 9a455e6，缺 010/015/017 等后续卡），不能直接整分支合并，本卡把两边的
+// 视觉/交互逻辑定向搬到 stage 的 hud.js/hud.css 上：
+//   1) mount()：新增 `.wtj-hud-footer` 容器包住 buildTray()/buildChestIndicator()（Phase A），
+//      两者的 CSS 定位从各自独立的 position:fixed 改为相对这个新父级的 position:absolute——
+//      父容器本身 left:0/right:0/bottom:0/width:100%，是真正贴视口边到边的全宽底栏（见
+//      hud.css `.wtj-hud-footer`），而不是此前 007/083/086 那种局部宽度的胶囊。
+//   2) mount()：新增 buildTerminalPrompt()（Phase B），左下角纯装饰 `.wtj-hud-terminal`——
+//      可见内容恒定只有 `>_`（arrow+cursor 两个静态文本节点）+ 一个不带文本的 activity pip，
+//      不是输入框、不做任何按键/秘密词/用户名/路径/命令回显（诚实边界见该函数注释）。与
+//      `.wtj-hud-lights` 同级挂在 root 下，不嵌套进 footer（footer 满槽后 111 宝箱一次性开箱
+//      序列可能短暂遮挡右侧，terminal 是独立于 footer 内容变化的左下 status lane，位置不受
+//      影响）。
+//   3) wireTerminalKeyActivity()：订阅 keyboard.js 的 window.WTJ_KEYBOARD.onEffectiveKey（若
+//      存在——可选依赖，未加载不报错），触发一次 140ms 边框微亮，只传一个累计计数数字，从不
+//      回显具体按下的字符。
+// reward-chest.js 的一次性开箱大奖励序列（此前居中弹出，与画布中央跳出的字母/秘密词物体
+// 抢镜，验收④"不在画布正中遮挡跳出物体"不达标）同一批一起挪到 footer 右侧，与本文件的常驻
+// 宝箱指示器共用同一组锚点数值——改动见 reward-chest.css/reward-chest.js 顶部对应注释。
+// -----------------------------------------------------------------------
 
 (function () {
   'use strict';
@@ -189,6 +216,8 @@
   var lightEls = [];
   var chestEl = null; // footer 常驻宝箱指示器 <img>（见 buildChestIndicator()）
   var chestState = 'disabled'; // 'disabled' | 'active' | 'open'（见「footer 常驻宝箱指示器」一节）
+  var terminalEl = null; // WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条根节点
+  var terminalKeyPulseTimer = null; // pulseTerminalKeyActivity() 的一次性 140ms 定时器句柄
   var questionClickHandler = function () {
     console.log('[WTJ_HUD] question mark clicked（默认占位回调，尚未被后续卡片接管）。');
   };
@@ -407,6 +436,72 @@
     return wrap;
   }
 
+  // -----------------------------------------------------------------------
+  // WTJ-20260705-019（移植 001 Phase B）：左下角 terminal prompt 装饰条——纯状态装饰，不是
+  // 输入框，不做任何按键回显。规范/tokens：docs/design/wtj-20260705-011-terminal-prompt-
+  // decoration-spec.md（DESIGN 011，PM 已验收）。DOM 结构固定为三个静态子节点：arrow「>」+
+  // cursor「_」（合起来构成规范要求的可见 glyph `>_`，恰好 2 个字符，不多不少）+ 一个
+  // activity pip（纯装饰圆点）。三者的文本/存在性在整个运行期内恒定，任何交互都不会往这里
+  // 追加字符或替换文本——这是满足"不是输入框、不回显"边界的结构性保证（而不是靠运行时判断）。
+  // -----------------------------------------------------------------------
+
+  function buildTerminalPrompt() {
+    var wrap = el('div', 'wtj-hud-terminal');
+    wrap.setAttribute('aria-hidden', 'true');
+
+    var glyph = el('span', 'wtj-hud-terminal-glyph');
+
+    var arrow = el('span', 'wtj-hud-terminal-arrow');
+    arrow.textContent = '>'; // 静态字符，永不改变
+    glyph.appendChild(arrow);
+
+    var cursor = el('span', 'wtj-hud-terminal-cursor');
+    cursor.textContent = '_'; // 静态字符（CSS 动画只改 opacity 做呼吸闪烁，不改文本，不是真实输入光标）
+    glyph.appendChild(cursor);
+
+    wrap.appendChild(glyph);
+
+    var pip = el('span', 'wtj-hud-terminal-pip');
+    // activity pip：纯装饰小圆点，没有 textContent，视觉完全交给 hud.css 的背景色 + 透明度。
+    wrap.appendChild(pip);
+
+    terminalEl = wrap;
+    return wrap;
+  }
+
+  // 任意"有效键盘反馈"（window.WTJ_KEYBOARD.onEffectiveKey，只回传累计计数——一个数字，从不
+  // 携带具体按下的字符）出现时，装饰条只做一次 140ms 的边框/背景微亮（切一个纯样式 class），
+  // 不改变 `>_`、不新增任何文本节点。
+  var TERMINAL_KEY_PULSE_MS = 140; // 对齐 DESIGN 011 tokens.motion.keyActivityPulseMs
+
+  function pulseTerminalKeyActivity() {
+    if (!terminalEl) {
+      return;
+    }
+    terminalEl.classList.add('is-key-pulse');
+    if (terminalKeyPulseTimer) {
+      clearTimeout(terminalKeyPulseTimer);
+    }
+    terminalKeyPulseTimer = setTimeout(function () {
+      terminalEl.classList.remove('is-key-pulse');
+      terminalKeyPulseTimer = null;
+    }, TERMINAL_KEY_PULSE_MS);
+  }
+
+  // keyboard.js 是可选依赖（与该文件里 window.WTJ_SLOTS 的可选接入方式一致）：未加载时静默跳过，
+  // 不 console.warn——装饰条没有键盘反馈也能正常显示 Idle 态，不是功能性缺陷。
+  function wireTerminalKeyActivity() {
+    if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onEffectiveKey === 'function') {
+      window.WTJ_KEYBOARD.onEffectiveKey(function () {
+        try {
+          pulseTerminalKeyActivity();
+        } catch (err) {
+          console.error('[WTJ_HUD] pulseTerminalKeyActivity 执行异常，已捕获：', err);
+        }
+      });
+    }
+  }
+
   function buildStatusLights() {
     var wrap = el('div', 'wtj-hud-lights');
     wrap.setAttribute('aria-hidden', 'true');
@@ -505,14 +600,31 @@
     renderChest();
   }
 
+  // WTJ-20260705-019（移植 001 Phase A，req1/req3，全宽 footer 底栏，最小 diff 路径）：把
+  // 发现槽托盘（buildTray()）与常驻宝箱指示器（buildChestIndicator()）的输出包进一个新的
+  // `.wtj-hud-footer` 父容器，而不是像此前那样各自直接挂在 `#wtj-hud-root` 下——这个父容器
+  // 才是"横跨屏幕全宽的底部栏"这个视觉本体（见 hud.css `.wtj-hud-footer`：position:fixed；
+  // left:0；right:0；bottom:0；width:100%），槽位托盘与宝箱指示器各自的 position 相应从
+  // fixed 改为 absolute，定位坐标系从"视口"变为"这个 footer"——两者数值不变（footer 本身
+  // left:0/right:0/bottom:0，与视口边缘重合，所以子元素的 right/bottom 偏移量换算出来的屏幕
+  // 位置与之前完全一致，纯粹是"挂在哪个容器下"的结构调整，不是视觉改动）。
+  // 状态灯（buildStatusLights()）与新增的左下角 terminal 装饰条（buildTerminalPrompt()）不在
+  // 这层 footer 容器范围内，继续直接挂在 root 下——两者都是独立于 footer 内容变化（满槽/宝箱
+  // 开箱）的左下角固定元素，见 buildTerminalPrompt() 顶部注释。
   function mount() {
     var root = el('div', 'wtj-hud-root');
     root.id = 'wtj-hud-root';
     root.appendChild(buildTopbar());
     root.appendChild(buildQuestion());
-    root.appendChild(buildTray());
+
+    var footer = el('div', 'wtj-hud-footer');
+    footer.setAttribute('aria-hidden', 'true');
+    footer.appendChild(buildTray());
+    footer.appendChild(buildChestIndicator());
+    root.appendChild(footer);
+
     root.appendChild(buildStatusLights());
-    root.appendChild(buildChestIndicator());
+    root.appendChild(buildTerminalPrompt());
     document.body.appendChild(root);
   }
 
@@ -545,6 +657,7 @@
   // 与 app.js 现有做法一致，无需等待 DOMContentLoaded。
   mount();
   applyDebugQueryFlag();
+  wireTerminalKeyActivity(); // WTJ-20260705-019（移植 001 Phase B）：可选接入 keyboard.js 的 onEffectiveKey 节奏信号
 
   // -----------------------------------------------------------------------
   // 对外 API：window.WTJ_HUD（冻结对象）

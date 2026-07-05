@@ -475,14 +475,31 @@
     return canvasEl;
   }
 
-  // WTJ-20260704-083：宝箱本体的 CSS 位置从 bottom:16% 收进了 footer 固定区域（bottom:2vh +
-  // max-height:20vh，见 reward-chest.css 顶部「验收反馈③」说明），这里的烟花发射原点同步下移
-  // 保持视觉一致（烟花从宝箱所在的位置炸开，不是从画面中段炸开）。0.58 → 0.86：新的宝箱视觉
-  // 中心大约落在画布高度的 82%~90% 之间（bottom 2%~22% 区间的中点附近），取 0.86 作为发射原点。
+  // WTJ-20260705-019（移植 001 Phase A，req1/req4）：宝箱本体从水平居中的 footer 区域挪到
+  // footer **右侧**（见 reward-chest.css `.wtj-rc-chest` 顶部说明），这里的烟花发射原点同步
+  // 改成右下角，与 CSS 视觉锚点保持一致的数值来源——直接复用 hud.css `.wtj-hud-chest-lane` 的
+  // 锚点数值（right: clamp(16px, 4vw, 32px)；bottom: 14px），保证烟花从 footer 右侧宝箱迸发，
+  // 而不是从画面底部中央炸开（那样会和挪走的宝箱视觉对不上）。canvasEl.width/height 就是
+  // window.innerWidth/innerHeight（见 createFireworksCanvas()），可以直接当作 CSS 里的
+  // 视口宽度来复算 clamp() 的 vw 项。不追加 hud.css 里 max-width:640px 断点的移动端数值——
+  // 那只是让发射原点在窄屏下略微偏离几像素，不影响功能，保持这个函数的实现简单。
+  var CHEST_LANE_RIGHT_MIN_PX = 16;
+  var CHEST_LANE_RIGHT_VW_PERCENT = 4;
+  var CHEST_LANE_RIGHT_MAX_PX = 32;
+  var CHEST_LANE_BOTTOM_PX = 14;
+
+  function computeChestLaneRightOffsetPx(viewportWidthPx) {
+    var vwValue = (CHEST_LANE_RIGHT_VW_PERCENT / 100) * viewportWidthPx;
+    if (vwValue < CHEST_LANE_RIGHT_MIN_PX) return CHEST_LANE_RIGHT_MIN_PX;
+    if (vwValue > CHEST_LANE_RIGHT_MAX_PX) return CHEST_LANE_RIGHT_MAX_PX;
+    return vwValue;
+  }
+
   function chestOrigin() {
     var w = canvasEl ? canvasEl.width : 800;
     var h = canvasEl ? canvasEl.height : 600;
-    return { x: w / 2, y: h * 0.86 };
+    var rightOffsetPx = computeChestLaneRightOffsetPx(w);
+    return { x: w - rightOffsetPx, y: h - CHEST_LANE_BOTTOM_PX };
   }
 
   // ---------------------------------------------------------------------
