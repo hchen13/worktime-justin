@@ -274,13 +274,12 @@
     "included": [
       "faucet off/running/closing/closed",
       "horse idle/run/stop_success",
-      "lamp off/turning-on/on/turning-off"
+      "lamp off/turning-on/on/turning-off",
+      "door closed/opening/open",
+      "bell idle/ring/settle"
     ],
-    "deferred_to_v2": [
-      "door opening",
-      "bell ring"
-    ],
-    "reason": "P0 acceptance required faucet and horse first; deferred props need separate pose-specific generation to avoid low-quality flattened distortions."
+    "deferred_to_v2": [],
+    "reason": "WTJ-20260705-025: door/bell v1 animations (delivered + DESIGN-accepted under cards WTJ-20260704-030 door-open-v1 / WTJ-20260704-031 bell-ring-v1, both DONE) moved from deferred_to_v2 into included and wired into the runtime engine. faucet/horse were only the earlier P0 ordering; the pose-specific regeneration that the deferral waited on is complete (see each prop's own manifest.json + contact-sheet), so nothing remains deferred at v1."
   },
   "updated_at_cst": "2026-07-05 11:00",
   "update_note": "WTJ-20260705-009: synced faucet.closing.frames with DESIGN-005 rework (docs/assets/production-animations-v1/faucet/manifest.json) — closing strip sheet has 6 cells (faucet_closing_000..005.png) but this top-level frames[] only listed 5, tripping build-anim-assets.sh's frame-count-mismatch WARNING. Added the missing faucet_closing_005.png entry so the declared frame count matches the actual sheet/rework asset; no other fields changed in this pass."

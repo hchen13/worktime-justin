@@ -501,20 +501,22 @@ CREATURES = [
         "id": "door",
         "label": "门 door",
         "docs_dir": "docs/assets/production-animations-v1/door",
-        "runtime_dir": None,
+        "runtime_dir": "app/web/assets/anim/door",
         "note": (
-            "运行时：待接入。app/web/anim/FRAME-ANIM-API.md 明确 door 属于 "
-            "v1_boundary.deferred_to_v2（DESIGN 素材质量未验收），本卡（WTJ-20260704-056）未接入播放引擎。"
+            "运行时：已接入（WTJ-20260705-025）。门 v1 动画（卡 WTJ-20260704-030，DESIGN 验收 done）"
+            "已从 v1_boundary.deferred_to_v2 移入 included、降采进 app/web/assets/anim/door 并登记 "
+            "PROP_ANIM_STATE_MAP（closed→opening）。click-door-open 点击任务由静态 img 升级为真实开门帧动画。"
         ),
     },
     {
         "id": "bell",
         "label": "铃铛 bell",
         "docs_dir": "docs/assets/production-animations-v1/bell",
-        "runtime_dir": None,
+        "runtime_dir": "app/web/assets/anim/bell",
         "note": (
-            "运行时：待接入。app/web/anim/FRAME-ANIM-API.md 明确 bell 属于 "
-            "v1_boundary.deferred_to_v2（DESIGN 素材质量未验收），本卡（WTJ-20260704-056）未接入播放引擎。"
+            "运行时：已接入（WTJ-20260705-025）。铃铛 v1 动画（卡 WTJ-20260704-031，DESIGN 验收 done）"
+            "已从 v1_boundary.deferred_to_v2 移入 included、降采进 app/web/assets/anim/bell 并登记 "
+            "PROP_ANIM_STATE_MAP（idle→ring）。click-doorbell-ring 点击任务由静态 img 升级为真实摇铃帧动画。"
         ),
     },
 ]
@@ -525,7 +527,8 @@ def render_compare_section() -> str:
         '<h2 id="compare">动效对比专区：docs 设计源 vs app/web 运行时 <span class="count">(重点，关联卡 020)</span></h2>',
         '<p class="section-note">每个动效道具左右并排展示：左侧是 docs/assets/production-animations-v1 下的设计源'
         '（contact sheet + 各状态 sheet），右侧是 app/web/assets/anim 下真正被引擎加载的 sheet。'
-        'door / bell 目前只有 docs 源、没有运行时对应文件（详见各自说明），因此右列显示“待接入”提示。</p>',
+        'WTJ-20260705-025 起 door / bell 的 v1 动画（卡 -030/-031 已 DESIGN 验收）已接入运行时，'
+        '六个道具的右列均有对应 app/web 运行时 sheet。</p>',
     ]
     for creature in CREATURES:
         docs_dir = creature["docs_dir"]

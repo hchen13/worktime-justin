@@ -183,41 +183,37 @@ cd app && ./scripts/build-anim-assets.sh
 现象）。4GB 目标机（`app/PERFORMANCE.md` 3.6 节"约 2GB 应用可用预算"）下，原样 1024px 解码
 内存必然引发内存压力甚至 OOM，降采后回到个位数 MB 量级，落在预算内。
 
-## 7. `door`/`bell` 未接入（上游依赖 DESIGN v2）
+## 7. `door`/`bell` 已接入（WTJ-20260705-025）
 
-`docs/assets/production-animations-v1/manifest.json` 的 `v1_boundary` 字段：
+> 历史：056 卡交付时 `door`/`bell` 曾在 `v1_boundary.deferred_to_v2`，走静态 `<img>` 占位回退，
+> 原因是当时 P0 先做 faucet/horse、且 door/bell 的 pose-specific 生成尚未验收。**WTJ-20260705-025
+> 起两者的 v1 动画（卡 `WTJ-20260704-030` 门开 / `WTJ-20260704-031` 铃响，均已 DESIGN 验收 done）
+> 已从 `deferred_to_v2` 移入 `included` 并接入运行时引擎。**
+
+`docs/assets/production-animations-v1/manifest.json` 的 `v1_boundary` 字段现为：
 
 ```json
 {
-  "included": ["faucet off/running/closing/closed", "horse idle/run/stop_success", "lamp off/turning-on/on/turning-off"],
-  "deferred_to_v2": ["door opening", "bell ring"],
-  "reason": "P0 acceptance required faucet and horse first; deferred props need separate pose-specific generation to avoid low-quality flattened distortions."
+  "included": ["faucet off/running/closing/closed", "horse idle/run/stop_success", "lamp off/turning-on/on/turning-off", "door closed/opening/open", "bell idle/ring/settle"],
+  "deferred_to_v2": [],
+  "reason": "WTJ-20260705-025: door/bell v1 animations (cards -030/-031, DONE) integrated; nothing deferred at v1."
 }
 ```
 
-`door`/`bell` 的素材质量未通过 DESIGN 验收（非本卡技术缺陷）。本卡的处理方式：
+接入方式（正是本文档第 209 行起早就写明的「重跑即纳入」路径，未改脚本任何逻辑）：
 
-- `app/scripts/build-anim-assets.sh` 不为它们生成任何降采资产，`anim-manifest.js` 里没有
-  `door`/`bell` 条目。
-- `frame-anim.js` 的 `getStateConfig()` 对未知 prop 一律 `console.warn` + 返回 `null`；
-  对 `door`/`bell` 这两个具体名字额外给出"属于 v1_boundary.deferred_to_v2"的更明确提示
-  （见 `DEFERRED_V2_PROPS` 常量），但**不改变功能行为**——即使不维护这份提示列表，缺失
-  条目时的防御式回退结果完全一致。
-- `task-templates.js` 的 `PROP_ANIM_STATE_MAP`（per-prop idle/active 映射表）**有意不包含**
-  `door`/`bell` 两项：`resolvePropAnimInfo()` 对它们返回 `null`，`createPropEl()` 因此始终
-  为它们回退静态 `<img>` 占位（与素材验收前的既有行为完全一致，不回归）。
-- **上游依赖 + 重跑即纳入（脚本已数据驱动，无需改脚本）**：`app/scripts/build-anim-assets.sh`
-  的 prop 列表不是硬编码的——它从①顶层 manifest 的 `assets` 键 + ②各独立子目录自带的
-  `manifest.json`（`animations` 域）**自动发现**道具，唯一门禁就是 `v1_boundary.deferred_to_v2`
-  （脚本取每条描述的首个 token 作为被暂缓的 prop 名并跳过）。因此 DESIGN 完成 `door`/`bell`
-  的 v2 版本（针对性重新生成、避免"直接压平失真"）、通过验收、**把它们从 `deferred_to_v2`
-  数组里移除**之后，直接重跑 `build-anim-assets.sh` 即可自动纳入两者的降采资产与 manifest
-  条目，**不需要改脚本任何逻辑**（door/bell 的 `manifest.json` 早已就位于各自目录，结构与
-  treasure-chest 完全一致，已实测可被脚本的独立子目录发现逻辑识别）。剩下唯一需要人工补的是
-  `task-templates.js` 追加两行 `PROP_ANIM_STATE_MAP` 映射（是否沿用 faucet/horse/lamp 现有的
-  "idle/active 二值映射到具体 state"这套设计，或需要更丰富的状态机，留给届时的 PM/DESIGN
-  决策，本卡不预判）——注意这一步不在本卡范围内、也不在脚本自动化范围内，是接手 v2 的卡需要
-  做的唯一手工代码改动。
+- **顶层 manifest**：把 `door`/`bell` 从 `deferred_to_v2` 移入 `included`（数组门禁，脚本数据驱动）。
+- **`app/scripts/build-anim-assets.sh`**：重跑即自动降采 `door`（closed/opening/open）与
+  `bell`（idle/ring/settle）的 strip sheet 到 `app/web/assets/anim/{door,bell}/`，并写入
+  `anim-manifest.js`（现含 6 个 prop）。door/bell 的源 `manifest.json` 早已就位于各自目录，
+  结构与 treasure-chest 一致，被脚本的独立子目录发现逻辑识别。
+- **`task-templates.js` 的 `PROP_ANIM_STATE_MAP`**：追加两行映射 —— `door: { idle:'closed',
+  active:'opening' }`（click-door-open 点击开门，opening 为 5 帧一次性过程，播完定格）、
+  `bell: { idle:'idle', active:'ring' }`（click-doorbell-ring 点击摇铃，ring 源 loop:true，
+  onClick 传 `{loop:false}` 播一轮定格，与 `faucet.running` 同构）。`resolvePropAnimInfo()`
+  对二者不再返回 `null`，`createPropEl()` 用 `<canvas>` 承载真实帧动画（引擎缺失时仍回退静态
+  `<img>`，防御式路径不变）。
+- **未来若再暂缓某 prop**：把它加回 `deferred_to_v2` 重跑脚本即可，脚本逻辑无需改动。
 
 ## 8. idle-stop 与 `app/PERFORMANCE.md` 3.1 节的关系（据实记录）
 

@@ -91,8 +91,9 @@
 // 接口预留」一节。
 //
 // 上面这段是 014 首次交付时的记录，**056 卡起，faucet/horse/lamp 三个道具的"真正的动效实现"
-// 已经接上**（door/bell 因 DESIGN v1_boundary.deferred_to_v2 素材未验收，继续走本节描述的
-// 静态占位，见下方「五、动效引擎接入」一节），data-anim-state 属性本身的读写时机完全不变
+// 已经接上**；**WTJ-20260705-025 起 door/bell 的 v1 动画（卡 -030/-031 已 DESIGN 验收 done）
+// 也已从 v1_boundary.deferred_to_v2 移入 included 并接入引擎**，五个预留道具至此全部走真实分帧
+// 动画（见下方「五、动效引擎接入」一节），data-anim-state 属性本身的读写时机完全不变
 // （创建时 idle，onClick 命中后切 active），只是 idle→active 现在真的驱动了一段
 // WTJ_FRAME_ANIM 播放的分帧动画，而不再只是一段 CSS transition。
 //
@@ -117,11 +118,13 @@
 //   | faucet | 'off'（水龙头关，单帧静止）      | 'running'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，见下） | 计入 v1_boundary，off 天然是"没人碰"的静息态；running 是唯一有"水在流"视觉意图的 state |
 //   | horse  | 'idle'（源数据 loop:true，马原地小动作）  | 'run'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，与 faucet 的 running 完全同构，见下） | REQ-TASK-08"点一下小马跑起来"要求 onClick 命中后**实际播放奔跑动效**；'run' 正是 anim-manifest.js 里 idle/run/stop_success 三态之一，资源可解析。faucet 已是先例：faucet.active='running' 同为 loop:true 源数据，靠 renderClickTask 传入的 {loop:false} 覆盖成"播一轮定格"，horse 'run' 走的是同一条通用路径，不是新逻辑。**不实现 run→stop_success 链**：068 的 run-sheet 正在返工、资产仍在流动中，run-only 已满足 072 验收 criterion 3（断言 click 后首先播放 run）且与 faucet 保持一致；链式收尾留作 068 定稿后的未来增强评估项，非本卡范围（PM 打回 072：旧版 active=stop_success 会让"点一下跑起来"不成立、也让 068 run-sheet 在运行态看不到，故本卡改回 run，替换掉上一轮"run 无自然终帧"的论证） |
 //   | lamp   | 'off'（灯灭，单帧静止）          | 'turning-on'（源数据 loop:false，一次性点亮过程）                    | 与卡片原文"lamp active→turning-on"完全一致 |
+//   | door   | 'closed'（门关，单帧静止）        | 'opening'（5 帧，源数据 loop:false，一次性开门过程，播完定格在开门末帧）  | WTJ-20260705-025：click-door-open 点门开门；'opening' 是 anim-manifest.js closed/opening/open 三态里唯一有"开门过程"视觉意图的 state（'open' 是开完的单帧静止终态，不用作 active 过程） |
+//   | bell   | 'idle'（铃静止，单帧）            | 'ring'（6 帧，源数据 loop:true，onClick 传 {loop:false} 播一轮定格，与 faucet.running 同构） | WTJ-20260705-025：click-doorbell-ring 点铃摇铃；'ring' 是 idle/ring/settle 三态里唯一有"摇铃发声"视觉意图的 state（'settle' 是摇完的阻尼收尾，链式收尾留作未来增强，非本卡范围，与 faucet 不接 closing 收尾同理） |
 //
-// door/bell **有意不在这张表里**：PROP_ANIM_STATE_MAP 没有它们的 key，
-// resolvePropAnimInfo() 对它们恒返回 null，createPropEl() 因此恒回退静态 <img>——这不是
-// 遗漏，是 v1_boundary.deferred_to_v2（DESIGN 素材质量未验收）在本文件的落地方式，上游依赖
-// DESIGN 补齐 v2 版本，见 FRAME-ANIM-API.md 第 7 节。
+// door/bell 由 WTJ-20260705-025 加入本表（v1 动画卡 -030 门 / -031 铃均已 DESIGN 验收 done，
+// 从 v1_boundary.deferred_to_v2 移入 included）。此前它们**有意不在表里**、resolvePropAnimInfo()
+// 恒返回 null 回退静态 <img>，那是当时 deferred_to_v2 在本文件的落地方式；现素材验收通过、已降采
+// 进 anim-manifest.js，故登记映射改走真实分帧动画。FRAME-ANIM-API.md 第 7 节已同步更新。
 //
 // **onClick 播放 activeState 时统一传 { loop:false, onComplete }**：即使某个 state 的源数据
 // 本身 loop:true（如 faucet 的 running），onClick 场景下也要求它"播完一轮后 clamp 定住"而
@@ -138,7 +141,8 @@
 // 800ms 恰≥success 时长是巧合非契约"）：computeVisualHoldMs() 在完成瞬间用
 // WTJ_FRAME_ANIM.getDuration(prop, activeState) 读出这个 state 播完一轮实际需要多少毫秒，
 // hold = Math.max(COMPLETE_VISUAL_HOLD_MS（800，既有占位下限）, duration + 缓冲)——非动效
-// 道具（door/bell/drag/find 等）没有 prop/activeState，直接沿用 800ms 不变。三个已接入道具
+// 道具（drag/find 等，door/bell 自 025 起已是动效道具）没有 prop/activeState，直接沿用 800ms
+// 不变。已接入道具
 // 里 horse.run（8 帧 @12fps ≈ 667ms + 150ms 缓冲 = 817ms；072 返工后 horse.active 由
 // stop_success 改为 run，二者巧合同为 ≈667ms，本地板分支的数值论证不变）已经在本次实现里
 // 真实触发了"实际时长超过 800ms 地板"的分支，不是纯假设场景。
@@ -346,12 +350,19 @@
   var PROP_ANIM_STATE_MAP = {
     faucet: { idle: 'off', active: 'running' },
     horse: { idle: 'idle', active: 'run' },
-    lamp: { idle: 'off', active: 'turning-on' }
+    lamp: { idle: 'off', active: 'turning-on' },
+    // WTJ-20260705-025：door/bell 的 v1 动画（卡 -030 门 / -031 铃，均已 DESIGN 验收 done）
+    // 已从 v1_boundary.deferred_to_v2 移入 included 并降采进 anim-manifest.js，故在此登记映射，
+    // 由「静态 img 兜底」升级为真实帧动画。door 点击 → 'closed'→'opening'（5 帧非循环，播完停在
+    // 开门末帧）；bell 点击 → 'idle'→'ring'（6 帧循环，命中期间持续摇铃）。
+    door: { idle: 'closed', active: 'opening' },
+    bell: { idle: 'idle', active: 'ring' }
   };
 
   // 把一个 spriteFile（如 'sprites/lamp-off.png'）解析成"这个道具在 WTJ_FRAME_ANIM 引擎里
-  // 对应的 prop key + idle/active state 名"，五个 animation-state 预留道具之外的 spriteFile
-  // （apple/basket/dog/cat/ball/doghouse 等）与 door/bell 两个未接入引擎的道具都返回 null。
+  // 对应的 prop key + idle/active state 名"。五个 animation-state 道具（faucet/horse/lamp/
+  // door/bell，door/bell 由 WTJ-20260705-025 接入）都在 PROP_ANIM_STATE_MAP 里；只有非动效
+  // spriteFile（apple/basket/dog/cat/ball/doghouse 等）解析不到 prop 映射、返回 null。
   // 复用 resolvedBaseName()（而不是 baseName()）是刻意的：'lamp-off.png'/'lamp-on.png' 这两个
   // stub 文件名要先经过 SPRITE_FILENAME_ALIASES 别名解析成 'lamp.png'，再去掉扩展名得到
   // prop key 'lamp'，与 wantsAnimState() 判断"是否该有 data-anim-state 属性"用的是同一份
@@ -365,7 +376,7 @@
     var prop = dotIdx === -1 ? name : name.slice(0, dotIdx);
     var states = PROP_ANIM_STATE_MAP[prop];
     if (!states) {
-      return null; // door/bell（或未来任何尚未接入引擎的预留道具）在此回退，见上方注释。
+      return null; // 非动效道具（无 PROP_ANIM_STATE_MAP 条目）在此回退静态 img，见上方注释。
     }
     return { prop: prop, idleState: states.idle, activeState: states.active };
   }
