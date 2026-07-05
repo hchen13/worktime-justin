@@ -5,8 +5,8 @@
 The project has five named roles:
 
 - Ethan: stakeholder. Clarifies product intent, accepts major direction changes, and answers questions that cannot be resolved from context.
-- PM: product owner and coordinator. Owns requirement discussion, task breakdown, official Feishu card creation, cross-role routing, `stage` runnable integration branch, `main` branch version control, merge/commit/push on PM-owned branches, acceptance of TL/DESIGN/QA outputs, and blocker triage.
-- TL: technical lead. Owns implementation cards assigned to TL and branch version control outside PM-owned branches.
+- PM: product owner and coordinator. Owns requirement discussion, task breakdown, official Feishu card creation, cross-role routing, `main` branch version control, promotion decisions from `stage` to `main`, acceptance of TL/DESIGN/QA outputs, and blocker triage.
+- TL: technical lead. Owns implementation cards assigned to TL, implementation branch version control, and technical integration into the `stage` runnable branch when PM routes accepted work for Ethan validation.
 - DESIGN: design owner. Owns visual exploration and image generation cards assigned to DESIGN.
 - QA: quality owner. Owns test planning, automated/agentic testing, and test result cards assigned to QA.
 
@@ -64,7 +64,7 @@ Required fields:
 - `阻塞负责人`: role expected to unblock, when relevant.
 - `阻塞问题`: exact question or missing decision, when blocked.
 - `依赖`: upstream card IDs or dependencies. Prefix blocking dependencies with `Hard:` and non-blocking coordination dependencies with `Soft:`. If the field contains unqualified card IDs, PM must clarify them before the owner treats them as a stop condition.
-- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. After PM accepts a runtime-impacting or docs-preview-impacting delivery, this field or `产物/证据` must also name the integrated `stage` commit, unless PM records an explicit integration deferral.
+- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. After PM accepts a runtime-impacting or docs-preview-impacting delivery for integrated Ethan validation, this field or `产物/证据` must also name the TL-integrated `stage` commit, unless PM records an explicit integration deferral.
 - `产物/证据`: PR, commit, screenshot, generated asset path, test report, or other proof.
 - `最新进展`: concise human-written status note.
 - `截止/检查点`: date for the next expected transition or review.
@@ -106,28 +106,31 @@ QA does not have to test on `stage`. QA may run focused target tests from a name
 
 Branch ownership:
 
-- PM owns `stage` and `main`.
-- TL owns implementation branches that are neither `stage` nor `main`.
-- DESIGN and QA do not merge to `stage` or `main` unless PM explicitly creates a documentation-only or test-only card assigning that PM-owned git work.
-- Non-PM roles must not rewrite, reset, or force-push `stage` or `main`.
+- PM owns `main`, the product acceptance gate, and the decision to promote a validated `stage` baseline to `main`.
+- TL owns implementation branches and the `stage` integration branch. `stage` is technical integration work, so TL handles code, build, test, package, and asset conflicts there.
+- DESIGN and QA do not merge to `stage` or `main`. If they produce documentation-only or test-only changes that need integration, the card must route that branch through TL for `stage` or PM for an accepted `main` promotion.
+- No role may rewrite, reset, or force-push `main`. No role may rewrite, reset, or force-push `stage` unless PM has routed an explicit TL recovery card and the card names the expected recovery point.
 
 Integration rule:
 
-- When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must merge the accepted delivery branch into `stage` promptly.
-- PM resolves straightforward conflicts on `stage` when the correct resolution follows the accepted card evidence. If the conflict requires product, architecture, or asset judgment, PM creates or routes a card with the exact conflict files and leaves the original accepted card nonterminal or records a deferral.
+- When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must route TL to merge the accepted delivery branch into `stage` promptly.
+- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, builds from `stage`, and records the `stage` commit plus package or run evidence on the card.
+- If a `stage` conflict requires product, requirement, or design judgment, TL routes the card to PM with the exact files, conflicting choices, and recommended technical options. PM decides or routes to Ethan, then TL completes the technical merge.
+- If a conflict is only in PM-owned process docs, requirement wording, or collaboration protocol, PM may resolve that documentation conflict directly or give TL exact text to apply.
 - A card may be marked `done` before `stage` integration only for changes that do not affect the runnable validation surface, or when PM records `stage integration deferred` with a concrete reason, target card, and expected merge condition.
-- A one-off integration branch may be used for emergency builds, but PM must either promote/sync it into `stage` or record why it is intentionally temporary. Ethan should not have to switch between unrelated feature branches to inspect normal integrated progress.
+- A one-off integration branch may be used for emergency builds, but TL must either promote/sync it into `stage` after PM accepts that route, or PM must record why it is intentionally temporary. Ethan should not have to switch between unrelated feature branches to inspect normal integrated progress.
 
 Evidence rule:
 
-- After merging to `stage`, PM records the `stage` commit and any build/package path in `产物/证据`.
+- After TL merges to `stage`, TL records the `stage` commit and any build/package path in `产物/证据`, then returns the card to PM review.
 - Ethan integration-acceptance cards should point to a `stage` commit or a package built from `stage`.
 - QA cards may point to `stage`, but may also point to a named branch, package, or independent worktree for targeted validation. The card must explicitly say whether the result is `stage` integration validation or branch/worktree-specific target testing.
-- If `stage` is behind accepted work, PM must surface that in `最新进展` and either integrate it before the next validation request or explain the blocker.
+- If `stage` is behind accepted work, PM must surface that in `最新进展` and either route TL to integrate it before the next validation request or explain the blocker.
 
 Promotion rule:
 
 - `main` remains the stable PM-owned line. PM promotes `stage` to `main` only after Ethan has accepted the integrated state, or when PM intentionally chooses to make the integrated state the new stable baseline with explicit evidence.
+- If promotion from `stage` to `main` has code/build/test conflicts, PM stops and routes a TL card with the exact conflict files. PM may resolve only PM-owned docs/protocol conflicts during promotion.
 - `stage` may contain accepted work that is still awaiting broader QA or Ethan visual acceptance. It is the working validation line, not a final release promise.
 
 ## 5. Multi-Session Role Coordination
@@ -322,7 +325,7 @@ PM responsibilities:
 
 1. Discuss, brainstorm, and analyze requirements with Ethan.
 2. Break work into Feishu cards with clear owner, priority, acceptance criteria, and next action.
-3. Own project git version control on `stage` and `main`: initialize when appropriate, merge, commit, build, and push.
+3. Own `main` version control and the promotion gate from `stage` to `main`; route technical `stage` integration work to TL.
 4. Accept or reject TL, DESIGN, and QA outputs.
 5. Handle blockers that need Ethan clarification or PM decision.
 6. Decide all cross-role routing after cards return to `review`.
@@ -330,7 +333,7 @@ PM responsibilities:
 8. Split large DESIGN/QA work enough that multiple same-role sessions can run without editing the same assets or test files.
 9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
 10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
-11. Keep `stage` current with PM-accepted runtime/docs-preview work that Ethan should see in the integrated app/docs, or record a concrete integration deferral on the relevant cards.
+11. Keep `stage` current by routing PM-accepted runtime/docs-preview work to TL for integration when Ethan should see it in the combined app/docs, or record a concrete integration deferral on the relevant cards.
 
 PM acceptance requires:
 
@@ -338,15 +341,15 @@ PM acceptance requires:
 - Evidence is linked or summarized.
 - Required QA has passed, or PM explicitly marks QA as not required.
 - Any follow-up work is represented by a new card before the current card is closed.
-- For runtime-impacting or docs-preview-impacting work, either `stage` integration evidence is recorded or PM has recorded a concrete deferral reason.
+- For runtime-impacting or docs-preview-impacting work, either TL-provided `stage` integration evidence is recorded or PM has recorded a concrete deferral reason.
 
 PM branch discipline:
 
-- PM owns `stage` and `main`, but should avoid turning in-progress implementation mechanics into blockers.
-- PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `stage`/`main` history was changed outside PM control or a destructive operation is underway.
-- PM should merge accepted runtime/docs-preview work to `stage` before asking Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest integrated app.
+- PM owns `main` and product acceptance. TL owns `stage` technical integration.
+- PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `stage`/`main` history was changed outside the defined ownership model or a destructive operation is underway.
+- PM should route accepted runtime/docs-preview work to TL for `stage` integration before asking Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest integrated app.
 - QA may validate a combined app build from `stage` when the card asks for integrated-app QA, but QA may also run target-specific tests from a named branch/package/worktree. PM must not treat a target-specific QA pass as Ethan acceptance of `stage`.
-- PM resolves normal `stage` merge conflicts. If the conflict requires implementation judgment, PM routes a focused card back to TL with exact files and the target `stage` baseline.
+- PM must not resolve code/build/test/package conflicts on `stage` or during `stage` to `main` promotion. Route those to TL with exact files and target baseline. PM may resolve PM-owned documentation, requirement wording, or workflow-protocol conflicts.
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
 - In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.
 
@@ -360,9 +363,9 @@ TL responsibilities:
 4. Choose the implementation approach and assign dev subagents.
 5. Run adversarial code review through a separate agent before accepting implementation, scaled to card risk.
 6. Iterate until TL judges the work ready for PM review or QA.
-7. Own git version control on implementation branches that are neither `main` nor `stage`.
+7. Own git version control on implementation branches and the `stage` integration branch.
 
-TL must not merge directly to `main` or `stage`.
+TL must not merge directly to `main`. TL may merge to `stage` only when PM has accepted/routed the work for integrated Ethan validation or the card explicitly defines `stage` integration as TL's next action.
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
@@ -374,7 +377,7 @@ TL handoff must include:
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card
 - whether TL recommends PM acceptance, QA testing, or further TL work
-- whether the branch is ready for PM `stage` integration, or any reason it should not be integrated yet
+- whether the branch is ready for TL `stage` integration, already integrated to `stage`, or should not be integrated yet
 
 If PM returns a review card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
 

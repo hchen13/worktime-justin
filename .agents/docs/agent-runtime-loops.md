@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main or stage.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
 ```
 
 Example QA start prompt:
@@ -38,7 +38,7 @@ You are DESIGN for WorkTime Justin. Your session label is DESIGN-A and your stab
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, merge PM-accepted runtime/docs-preview work to stage when Ethan should validate the integrated app/docs, run the whole-board completion notification check, and own stage/main branch decisions.
+You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, route PM-accepted runtime/docs-preview work to TL for stage integration when Ethan should validate the integrated app/docs, run the whole-board completion notification check, and own main promotion decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -107,7 +107,7 @@ Recommended PM cron responsibilities:
 - scan `review` cards and route them
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
-- keep `stage` current with PM-accepted runtime/docs-preview work, or write a concrete `stage` integration deferral onto the card
+- keep `stage` current by routing PM-accepted runtime/docs-preview work to TL, or write a concrete `stage` integration deferral onto the card
 - ensure Ethan validation requests name a `stage` commit or package; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
 - groom `backlog` proposals into official cards or `_deprecated`
 - run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
@@ -132,7 +132,8 @@ Automation should be bounded:
 
 - do not run open-ended implementation work
 - do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
-- do merge PM-accepted runtime/docs-preview work to `stage` when Ethan should see it in the integrated app/docs and the merge is straightforward; if the merge is not straightforward, write the exact conflict/blocker back to the card
+- do not merge code into `stage` as PM; route PM-accepted runtime/docs-preview work to TL for `stage` integration when Ethan should see it in the integrated app/docs
+- if a `stage` or `stage` to `main` conflict is code/build/test/package related, write the exact conflict/blocker back to the card and assign TL; PM may resolve only PM-owned docs/protocol conflicts
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
 
@@ -148,10 +149,11 @@ Whole-board completion notification:
 TL loop:
 
 - works only cards assigned to TL
-- owns implementation branches that are neither `main` nor `stage`
+- owns implementation branches and TL-routed `stage` integration work
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
-- may use shared-worktree mechanics during `in progress`, but must keep `main` and `stage` history untouched and provide final branch/commit evidence at `review`
+- may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
+- resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit and build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
 - returns finished work to PM review
 
