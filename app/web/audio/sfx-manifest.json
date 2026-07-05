@@ -16,7 +16,7 @@
       "sfxKey": "task-success",
       "category": "ui",
       "path": "audio/sfx/task-success.m4a",
-      "purpose": "任务成功通用反馈音；已被 app/web/manifest.js 全部任务模板示例的 successAudio 字段直接引用，路径必须保持一致。",
+      "purpose": "任务成功通用反馈音；已被 app/web/manifest.js 全部任务模板示例的 successAudio 字段直接引用，路径必须保持一致。WTJ-20260705-015 修订：原 3 音（C5-E5-G5）上行琶音升级为 4 音（C5-E5-G5-C6）+ 高频 sparkle 收尾和弦（E6/G6/C7），配合本卡新增的画布视觉爆点（见 app/web/status-rewards.js「三、任务成功即时视觉反馈」一节）同步播放，客观指标见 SOURCE-LICENSES.md。",
       "reqIds": [
         "REQ-TASK-07",
         "REQ-TASK-08",
@@ -64,13 +64,13 @@
       "sfxKey": "streak-reward-fanfare",
       "category": "ui",
       "path": "audio/sfx/streak-reward-fanfare.m4a",
-      "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈。",
+      "purpose": "连续完成 3 个任务「今日工作完成」奖励反馈。WTJ-20260705-015 修订：Ethan 现场反馈原纯合成琶音不够「cheer/yay」，改为合成琶音 + Mixkit 真实人群欢呼采样（\"Happy crowd cheer\"）分层混音（amix），保留原有奖励音乐动机的同时叠加真实欢呼声，与 010 的三灯 completion-stamp 同一触发时刻播放（status-rewards.js playRewardSfxDefensive()，调用点未变，只替换文件内容）。客观指标/来源见 SOURCE-LICENSES.md。",
       "reqIds": [
         "REQ-RWD-05",
         "REQ-RWD-06"
       ],
       "status": "delivered",
-      "source": "synthesized-ffmpeg"
+      "source": "synthesized-ffmpeg + https://assets.mixkit.co/active_storage/sfx/975/975-preview.mp3"
     },
     {
       "sfxKey": "dog-bark",

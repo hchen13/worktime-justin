@@ -20,11 +20,11 @@
 
 | sfxKey | 类型 | 来源 URL / 分类页 | License | 是否需署名 | 处理方式 |
 |---|---|---|---|---|---|
-| task-success | 合成 | N/A（ffmpeg sine C5-E5-G5 上行琶音） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
+| task-success | 合成 | N/A（WTJ-20260705-015 修订：ffmpeg sine C5-E5-G5-C6 四音上行琶音 + E6/G6/C7 高频 sparkle 收尾和弦，见文末「WTJ-20260705-015 追加」一节） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
 | light-hint-chime | 合成 | N/A（ffmpeg 单音高频 sine + 快速衰减） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
 | slot-light-up | 合成 | N/A（ffmpeg aevalsrc 线性 chirp 600→1800Hz） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
 | keyboard-milestone-chime | 合成 | N/A（ffmpeg sine 四音上行琶音 C5-E5-G5-C6） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
-| streak-reward-fanfare | 合成 | N/A（ffmpeg sine 上行琶音 + 顶音和声） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
+| streak-reward-fanfare | 合成 + Mixkit | WTJ-20260705-015 修订：原合成琶音层保留 + 叠加 Mixkit 直链 https://assets.mixkit.co/active_storage/sfx/975/975-preview.mp3 ／分类页 https://mixkit.co/free-sound-effects/party/ （条目 "Happy crowd cheer"），见文末「WTJ-20260705-015 追加」一节 | Mixkit License（免费个人+商用，新增部分）+ N/A 自制（合成部分） | 否 | 截取 cheer 0.30s-1.80s 段 + 淡出，与原合成琶音 amix 混合 → loudnorm+alimiter → m4a |
 | chest-open | 合成 | N/A（ffmpeg 噪声 pop + chirp 上扫 + 高频 sparkle 叠加） | N/A 自制 | 否 | loudnorm+alimiter → m4a |
 | dog-bark | Mixkit | 直链: https://assets.mixkit.co/active_storage/sfx/741/741-preview.mp3 ／分类页: https://mixkit.co/free-sound-effects/dog/ （条目 "Happy puppy barks"） | Mixkit License（免费个人+商用） | 否 | 截取前 1.05s → loudnorm+alimiter → m4a |
 | cat-meow | Mixkit | 直链: https://assets.mixkit.co/active_storage/sfx/93/93-preview.mp3 ／分类页: https://mixkit.co/free-sound-effects/cat/ （条目 "Sweet kitty meow"） | Mixkit License（免费个人+商用） | 否 | 原长 0.876s，无需截取 → loudnorm+alimiter → m4a |
@@ -105,3 +105,62 @@ ffmpeg -y -i <raw> -af "loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.794:level
 **主观验收提醒（本卡执行者未试听，交 QA/Ethan）**：
 - 5 类音色区分（letter 清脆 / space 低沉 thock / enter 确认感 / punct 中性轻 click / modifier 最钝）是否符合"机械键盘"直觉、是否儿童友好不刺耳
 - `playSfx()` 当前不支持音量/gain 参数（见 `app/web/audio.js` `playFromPath()`，`BufferSource` 直连 `ctx.destination`，无 `GainNode`）——`keysound.js` 对 `onFunctionKey` 的 `intensity` 衰减改用"低于阈值跳过播放"实现"递减到几乎没有"，而非真实音量渐弱；若未来需要真正的连续渐弱手感，需先给 `audio.js` 加一层 `GainNode`（超出本卡范围，未改动 `audio.js` 播放链路本体）。
+
+---
+
+## WTJ-20260705-015 追加：任务成功反馈音效升级（`task-success` 修订 + `streak-reward-fanfare` 修订）
+
+**背景**：Ethan 现场验收反馈——问号任务完成时"只有很小提示音 + 左下角灯点亮，缺视觉成功反馈"；连续完成 3 个任务的「今日工作完成」奖励音效也不够"cheer/yay"庆祝感。本卡（WTJ-20260705-015）新增画布视觉爆点（见 `app/web/status-rewards.js` 与 `app/web/task-templates.js` 的改动，非本文档范围）配合音频侧两处修订：
+
+### 1. `task-success.m4a`（单次任务成功，短促加强，不改变 sfxKey/路径）
+
+原素材是 3 音（C5-E5-G5）上行琶音、0.6s、峰值 -6.9dBFS、RMS -20.6dBFS。修订为 **4 音（C5-E5-G5-C6）上行琶音 + 一个短促的高频 sparkle 收尾和弦（E6/G6/C7 三音同时轻声进入，制造"闪光"尾韵）**，仍是纯 ffmpeg `sine` 程序化合成（无第三方版权），只是内容更丰富、RMS 更高（更有存在感），时长仍保持短促（0.57s，比原来还略短）：
+
+```
+ffmpeg -f lavfi -i "sine=frequency=523.25:duration=0.16" \
+       -f lavfi -i "sine=frequency=659.25:duration=0.16" \
+       -f lavfi -i "sine=frequency=783.99:duration=0.16" \
+       -f lavfi -i "sine=frequency=1046.50:duration=0.20" \
+       -f lavfi -i "sine=frequency=1318.51:duration=0.22" \
+       -f lavfi -i "sine=frequency=1567.98:duration=0.22" \
+       -f lavfi -i "sine=frequency=2093.00:duration=0.22" \
+       -filter_complex "
+         [0:a]afade=t=out:st=0.03:d=0.13,adelay=0|0[n1];
+         [1:a]afade=t=out:st=0.03:d=0.13,adelay=90|90,volume=0.95[n2];
+         [2:a]afade=t=out:st=0.03:d=0.13,adelay=180|180,volume=0.95[n3];
+         [3:a]afade=t=out:st=0.03:d=0.17,adelay=270|270,volume=1.0[n4];
+         [4:a]afade=t=out:st=0.02:d=0.20,adelay=330|330,volume=0.55[s1];
+         [5:a]afade=t=out:st=0.02:d=0.20,adelay=340|340,volume=0.5[s2];
+         [6:a]afade=t=out:st=0.02:d=0.20,adelay=350|350,volume=0.42[s3];
+         [n1][n2][n3][n4][s1][s2][s3]amix=inputs=7:duration=longest:dropout_transition=0,volume=1.6,
+         loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.45:level=false[out]
+       " -map "[out]" -ar 24000 -ac 1 -c:a aac -b:a 96k task-success.m4a
+```
+
+**客观 QC**：`aac`/`24000Hz`/`mono`，时长 0.57s（在 [0.15,12]s 合理区间内，且比原 0.6s 更短促），峰值 -6.94dBFS（≤ -1.5dBFS 门槛，无削波），RMS -17.7dBFS（比原 -20.6dBFS 更响，"更有存在感"的客观代理指标）。
+
+### 2. `streak-reward-fanfare.m4a`（三灯「今日工作完成」cheer/yay，与 010 completion-stamp 同步播放）
+
+原素材是纯合成上行琶音 + 顶音和声、1.2s。Ethan 要求"更强的 cheer/yay 类庆祝音效"——纯合成 chime 无法传达真实人声欢呼的"yay"语感，改为**真实 Mixkit 人群欢呼采样与原合成琶音分层混音（amix）**，保留原有"音乐奖励动机"的听觉连续性，同时叠加真实欢呼声：
+
+- 来源：Mixkit 直链 https://assets.mixkit.co/active_storage/sfx/975/975-preview.mp3 ，分类页 https://mixkit.co/free-sound-effects/party/ （条目 "Happy crowd cheer"，原长 4.38s）。License：Mixkit License（免费个人+商用，无需署名），条款同本文档其余 Mixkit 采集类条目，PM 已在 WTJ-20260704-075 裁决"免费个人/非商用授权可接受"同一口径下沿用。
+- 处理：`silencedetect` 定位真实内容区间为 0.30s~3.79s（前后是静音），截取该区间内前 1.5s（0.30s-1.80s，欢呼声起势最强的开头段）+ 末尾 0.3s 淡出，延迟 150ms 起播（让原合成琶音的头几个音先被听见，再让人群欢呼声涌入），与**原合成琶音层（未改动，逐字节复用既有 `streak-reward-fanfare.m4a` 解码后的 PCM）**做 `amix`：
+
+```
+ffmpeg -i crowd-cheer-975-raw.mp3 -i streak-reward-fanfare-orig.m4a \
+  -filter_complex "
+    [0:a]atrim=0.30:1.80,asetpts=PTS-STARTPTS,afade=t=out:st=1.2:d=0.3,adelay=150|150,volume=0.85[cheer];
+    [1:a]volume=1.0[fanfare];
+    [cheer][fanfare]amix=inputs=2:duration=longest:dropout_transition=0,volume=1.3,
+    loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.45:level=false[out]
+  " -map "[out]" -ar 24000 -ac 1 -c:a aac -b:a 96k streak-reward-fanfare.m4a
+```
+
+**客观 QC**：`aac`/`24000Hz`/`mono`，时长 1.65s（比原 1.2s 略长，仍落在 010 的 `OVERLAY_TOTAL_MS`=1.8s 一次性叠层可见窗口内，不会播完之后叠层还没消失、也不会叠层已消失但声音还没播完的明显错位），峰值 -6.66dBFS（≤ -1.5dBFS 门槛，无削波），mean_volume -19.5dBFS。
+
+**协调说明**：`status-rewards.js` 播放此音效的调用点（`playRewardSfxDefensive()` 内的 `window.WTJ_AUDIO.playSfx('streak-reward-fanfare')`）本身未改动——只替换了文件内容，sfxKey/路径/触发时机保持不变，因此与 010 的三灯连闪 + completion-stamp-v3 视觉叠层依旧是同一个 `triggerWorkComplete()` 里同时发起，不会出现新的时序冲突或"各弹各的"。
+
+**残余风险 / 主观验收提醒（本卡执行者无法试听，交 QA076/Ethan）**：
+- "Happy crowd cheer" 采样是否听感上确实像"孩子会觉得开心的欢呼"而非"体育场噪音感"过重；trim 的 0.30s-1.80s 窗口是否恰好落在该采样最有感染力的一段（本卡仅凭 `silencedetect` 定位内容边界，未做逐帧能量分析选取"最佳片段"）。
+- 4 音+sparkle 版 `task-success.m4a` 与 3 灯 cheer 版 `streak-reward-fanfare.m4a` 两者的"奖励强度阶梯感"（单次 vs 三连）是否听感上区分明显、循序渐进，不生硬跳变。
+- 二者与新增的画布视觉爆点（sparkle burst + 成功环）在真实设备上播放是否有音画不同步的观感问题（本卡未做真机录屏验证，只做了 JS 层的可注入时钟单测）。
