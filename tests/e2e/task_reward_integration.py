@@ -19,15 +19,35 @@ this file is the scriptable behaviour/wiring layer. Per-task-type completion log
 (drag/click/find/press) is covered by TL's task-templates unit; this file asserts
 the cross-module reward/status wiring is live end-to-end.
 
+WTJ-20260705-004 Phase A addition — REAL-POINTER drag + find (INT-DRAG-REAL /
+INT-FIND-REAL): the original suite above drives everything through JS-synthesized
+events (dispatchEvent / direct getActiveTaskInfo introspection), and its own
+INT-STATUS-wiring case explicitly documents "non-press need pointer geometry ->
+unit-covered" as an untested gap. That gap is exactly what the 076/080 P0 (drag
+tasks never completing because a default-draggable <img> starts a NATIVE HTML5 drag
+on mousedown, preempting pointer.js's mouseup) slipped through: synthesized events do
+NOT initiate native DnD, so a green synthesized suite hid a broken shipped app. The
+run_real_pointer_suite() below serves the REAL index.html over HTTP and drives a
+spawned drag task AND a spawned find task through Playwright's TRUSTED mouse input
+(mouse.move / mouse.down / mouse.up — which DOES initiate native drag, like a real
+child's finger), asserting each reaches WTJ_TASK_TEMPLATES.onTaskComplete. Default
+engine is WebKit (same family as the native shell's WKWebView). This is additive;
+the original chromium module-injection suite is unchanged.
+
 Run:  python3 tests/e2e/task_reward_integration.py [--app-web DIR]
+      python3 tests/e2e/task_reward_integration.py --real-pointer-only [--engine webkit|chromium]
 Exit: 0 all pass · 1 a case failed · 2 infra error.
 """
 
 from __future__ import annotations
 
 import argparse
+import functools
+import http.server
 import json
+import socketserver
 import sys
+import threading
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -223,12 +243,188 @@ def run_suite(pw, app_web: Path, break_chest_wiring: bool = False):
     return cases
 
 
+# =====================================================================================
+# WTJ-20260705-004 Phase A — REAL-POINTER drag + find suite (serves real index.html,
+# drives trusted mouse to onTaskComplete). Mirrors the proven pattern in
+# tests/e2e/drag_task_webkit.py (WTJ-085) so the 076/080 P0 stays covered here too.
+# =====================================================================================
+
+class _ReuseTCPServer(socketserver.TCPServer):
+    # SO_REUSEADDR so back-to-back runs don't collide on a port still in TIME_WAIT.
+    allow_reuse_address = True
+
+
+def _serve(app_web: Path, port: int):
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(app_web))
+    httpd = _ReuseTCPServer(("127.0.0.1", port), handler)
+    httpd.RequestHandlerClass.log_message = lambda *a, **k: None
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd
+
+
+def _center(page, selector):
+    return page.eval_on_selector(
+        selector,
+        "el => { var r = el.getBoundingClientRect();"
+        " return { x: r.x + r.width/2, y: r.y + r.height/2, w: r.width, h: r.height }; }",
+    )
+
+
+def _drag(page, frm, to, steps=14):
+    """Trusted mouse drag (initiates native DnD exactly like a real finger)."""
+    page.mouse.move(frm["x"], frm["y"])
+    page.mouse.down()
+    for i in range(1, steps + 1):
+        page.mouse.move(frm["x"] + (to["x"] - frm["x"]) * i / steps,
+                        frm["y"] + (to["y"] - frm["y"]) * i / steps, steps=1)
+    page.mouse.up()
+
+
+def _rotate_to_type(page, target_type, max_attempts=12):
+    """Click the real question button, and dismiss+retry until the active task is
+    target_type. Returns the active info dict, or None if unreachable."""
+    for _ in range(max_attempts):
+        page.evaluate("() => window.WTJ_HUD && window.WTJ_HUD.__clickQuestion "
+                      "? window.WTJ_HUD.__clickQuestion() : (document.querySelector('.wtj-hud-question')||{click:function(){}}).click()")
+        page.wait_for_timeout(180)
+        info = page.evaluate("() => (window.WTJ_TASK_TEMPLATES.getActiveTaskInfo && "
+                             "WTJ_TASK_TEMPLATES.getActiveTaskInfo()) || null")
+        if info and info.get("type") == target_type:
+            return info
+        page.evaluate("() => window.WTJ_TASK && window.WTJ_TASK.dismiss && WTJ_TASK.dismiss('qa-rotate')")
+        page.wait_for_timeout(120)
+    return None
+
+
+def run_real_pointer_suite(pw, app_web: Path, engine: str = "webkit", port: int = 8974):
+    """Serve the real index.html and drive a drag + a find task via trusted mouse to
+    onTaskComplete. Returns a cases dict (same shape as run_suite)."""
+    cases: dict[str, dict] = {}
+
+    def check(cid, ok, detail):
+        cases[cid] = {"pass": bool(ok), "detail": detail}
+        print(f"{'PASS' if ok else 'FAIL'} {cid}  {detail}")
+
+    if not (app_web / "index.html").is_file():
+        check("INT-DRAG-REAL-pointer", False, f"缺 index.html: {app_web}")
+        check("INT-FIND-REAL-pointer", False, f"缺 index.html: {app_web}")
+        return cases
+
+    httpd = _serve(app_web, port)
+    url = f"http://127.0.0.1:{port}/index.html"
+    try:
+        bt = getattr(pw, engine)
+        launch_args = ["--autoplay-policy=no-user-gesture-required"] if engine == "chromium" else []
+        b = bt.launch(args=launch_args)
+        pg = b.new_context(viewport={"width": 1280, "height": 800}).new_page()
+        perr: list[str] = []
+        pg.on("pageerror", lambda e: perr.append(str(e)))
+        pg.goto(url, wait_until="load")
+        pg.wait_for_timeout(400)
+
+        ready = pg.evaluate("() => !!(window.WTJ_TASK && window.WTJ_TASK_TEMPLATES && window.WTJ_POINTER)")
+        if not ready:
+            check("INT-DRAG-REAL-pointer", False, "engines not present (WTJ_TASK/TEMPLATES/POINTER)")
+            check("INT-FIND-REAL-pointer", False, "engines not present")
+            b.close()
+            return cases
+
+        # completion sink + native-drag counter
+        pg.evaluate("""() => {
+          window.__done = [];
+          if (window.WTJ_TASK_TEMPLATES && WTJ_TASK_TEMPLATES.onTaskComplete)
+            WTJ_TASK_TEMPLATES.onTaskComplete(function(e){ window.__done.push(e); });
+          window.__dragstart = 0;
+          window.addEventListener('dragstart', function(){ window.__dragstart++; }, true);
+          // expose a HUD click shim if hud.js named the handler differently
+          if (window.WTJ_HUD && !window.WTJ_HUD.__clickQuestion) {
+            window.WTJ_HUD.__clickQuestion = function () {
+              var b = document.querySelector('.wtj-hud-question'); if (b) b.click();
+            };
+          }
+        }""")
+
+        # ---- INT-DRAG-REAL: spawn drag, drop object on target via trusted mouse ----
+        info = _rotate_to_type(pg, "drag")
+        if not info:
+            check("INT-DRAG-REAL-pointer", False, "could not rotate to a drag task")
+        else:
+            obj_sel, tgt_sel = ".wtj-tt-drag-object", ".wtj-tt-drag-target"
+            if not pg.query_selector(obj_sel) or not pg.query_selector(tgt_sel):
+                check("INT-DRAG-REAL-pointer", False, "drag object/target element missing after spawn")
+            else:
+                done0 = len(pg.evaluate("() => window.__done"))
+                _drag(pg, _center(pg, obj_sel), _center(pg, tgt_sel))
+                pg.wait_for_timeout(400)
+                done1 = len(pg.evaluate("() => window.__done"))
+                active = pg.evaluate("() => (WTJ_TASK_TEMPLATES.getActiveTaskInfo()||{}).type || null")
+                dragging = pg.evaluate("() => (WTJ_POINTER.getPointerState && WTJ_POINTER.getPointerState().dragging) || false")
+                nativednd = pg.evaluate("() => window.__dragstart")
+                last = pg.evaluate("() => window.__done[window.__done.length-1] || null")
+                check("INT-DRAG-REAL-pointer",
+                      done1 == done0 + 1 and (last or {}).get("type") == "drag"
+                      and active is None and dragging is False,
+                      f"taskId={info.get('taskId')} completions {done0}->{done1} lastType={(last or {}).get('type')} "
+                      f"activeAfter={active} stuckDragging={dragging} nativeDragStarts={nativednd}")
+
+        # reset to IDLE before the next spawn
+        pg.evaluate("() => window.WTJ_TASK && window.WTJ_TASK.dismiss && WTJ_TASK.dismiss('qa-between')")
+        pg.wait_for_timeout(150)
+
+        # ---- INT-FIND-REAL: spawn find, complete via trusted hover(1s)+click on target ----
+        info = _rotate_to_type(pg, "find")
+        if not info:
+            check("INT-FIND-REAL-pointer", False, "could not rotate to a find task")
+        else:
+            tgt_sel = ".wtj-tt-find-target"
+            if not pg.query_selector(tgt_sel):
+                check("INT-FIND-REAL-pointer", False, "find target element missing after spawn")
+            else:
+                done0 = len(pg.evaluate("() => window.__done"))
+                c = _center(pg, tgt_sel)
+                # primary find mechanic: trusted mouse move onto target starts the 1s
+                # hover timer (findHoverSec); real-wait past it so onHover fires.
+                pg.mouse.move(c["x"] - 40, c["y"] - 40)
+                pg.mouse.move(c["x"], c["y"], steps=6)
+                pg.wait_for_timeout(1300)
+                done_hover = len(pg.evaluate("() => window.__done"))
+                # fallback (also a documented completion path — pressOrHoverAlsoCompletes):
+                # a trusted click (down+up) on the target, if hover did not land.
+                if done_hover == done0 and pg.query_selector(tgt_sel):
+                    c2 = _center(pg, tgt_sel)
+                    pg.mouse.move(c2["x"], c2["y"])
+                    pg.mouse.down(); pg.mouse.up()
+                    pg.wait_for_timeout(300)
+                done1 = len(pg.evaluate("() => window.__done"))
+                active = pg.evaluate("() => (WTJ_TASK_TEMPLATES.getActiveTaskInfo()||{}).type || null")
+                last = pg.evaluate("() => window.__done[window.__done.length-1] || null")
+                via = "hover" if done_hover > done0 else "click"
+                check("INT-FIND-REAL-pointer",
+                      done1 == done0 + 1 and (last or {}).get("type") == "find" and active is None,
+                      f"taskId={info.get('taskId')} completions {done0}->{done1} via={via} "
+                      f"lastType={(last or {}).get('type')} activeAfter={active}")
+
+        if perr:
+            print(f"  (real-pointer pageErrors: {perr[:5]})")
+        b.close()
+    finally:
+        httpd.shutdown()
+
+    return cases
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--app-web", default=str(DEFAULT_APP_WEB))
     ap.add_argument("--report", default=str(DEFAULT_REPORT))
     ap.add_argument("--self-check", action="store_true",
                     help="also run a mutation (sever chest onFull) and confirm INT-CHEST reds")
+    ap.add_argument("--engine", default="webkit", choices=["webkit", "chromium"],
+                    help="engine for the real-pointer drag/find suite (default webkit)")
+    ap.add_argument("--real-pointer-only", action="store_true",
+                    help="run ONLY the real-pointer drag/find suite (skip the chromium module-injection suite)")
+    ap.add_argument("--skip-real-pointer", action="store_true",
+                    help="skip the real-pointer drag/find suite (run only the chromium module-injection suite)")
     args = ap.parse_args()
 
     app_web = Path(args.app_web).resolve()
@@ -246,13 +442,28 @@ def main() -> int:
         print(f"INFRA-ERROR playwright 不可用: {e}")
         return 2
 
+    cases: dict[str, dict] = {}
+    mutation = None
     with sync_playwright() as pw:
-        cases = run_suite(pw, app_web)
-        mutation = None
-        if args.self_check:
-            mut_cases = run_suite(pw, app_web, break_chest_wiring=True)
-            mutation = {"INT-CHEST-caught": mut_cases.get("INT-CHEST-slots-full-drives-chest", {}).get("pass") is False}
-            print(f"\n[self-check] mutation (sever chest onFull) -> INT-CHEST caught it: {mutation['INT-CHEST-caught']}")
+        if not args.real_pointer_only:
+            cases.update(run_suite(pw, app_web))
+            if args.self_check:
+                mut_cases = run_suite(pw, app_web, break_chest_wiring=True)
+                mutation = {"INT-CHEST-caught": mut_cases.get("INT-CHEST-slots-full-drives-chest", {}).get("pass") is False}
+                print(f"\n[self-check] mutation (sever chest onFull) -> INT-CHEST caught it: {mutation['INT-CHEST-caught']}")
+
+        # WTJ-20260705-004 Phase A — real-pointer drag/find suite (default on). If the
+        # engine cannot launch locally, record it as an infra note and do NOT crash the
+        # whole run (the module-injection suite above still stands on its own).
+        if not args.skip_real_pointer:
+            print(f"\n--- real-pointer suite (engine={args.engine}) ---")
+            try:
+                cases.update(run_real_pointer_suite(pw, app_web, engine=args.engine))
+            except Exception as e:  # noqa: BLE001 — infra resilience per card brief
+                print(f"INFRA-NOTE real-pointer suite could not run ({type(e).__name__}: {str(e)[:200]}); "
+                      f"code is in place, see report.")
+                cases["INT-REAL-POINTER-infra"] = {"pass": False,
+                                                   "detail": f"engine {args.engine} unavailable: {type(e).__name__}: {str(e)[:200]}"}
 
     passed = sum(1 for c in cases.values() if c["pass"])
     report = {"passed": passed, "total": len(cases), "cases": cases, "mutation_self_check": mutation}
