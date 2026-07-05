@@ -45,10 +45,14 @@
 //    sheet（window.WTJ_ANIM_MANIFEST 里的 sheetPath 已经指向降采后的资产，不是原始 1024px
 //    源文件），不做任何"原样加载再靠 CSS 缩小"的过度解码。
 // 2. 单帧素材零常驻循环：frameCount<=1 的 state（如 faucet 'off'/'closed'、lamp 'off'/'on'）
-//    本质是静态图，play() 对这类直接画一次就返回，不进入 tick 循环——避免为了"重绘一张永远不
-//    变的图"每 16ms 空转一次 setTimeout（见 play() 内的单帧快路径）。
-// 3. idle-stop：循环动画（loop）在无全局活动 idleStopSec 秒后暂停 tick（画面定格在当前帧，
-//    不继续消耗 CPU），有新活动（本文件自己监听的 pointermove/keydown/pointerdown，或任何
+//    本质是静态图，一旦真正画出过一次就不再进入 tick 循环——避免为了"重绘一张永远不变的图"
+//    每 16ms 空转一次 setTimeout（见 play() 内的单帧快路径，复用 retryDrawUntilReady()）。
+//    **画出之前**会持续重试直到真正画出（或确认加载失败），不是"只重试一次就放弃"——见
+//    「帧未就绪 / 防御式降级」一节的 WTJ-20260705-014 根因修复说明，这条性能优化只在"已经
+//    画出过至少一次"之后才生效，不会以"目标永久不可见"为代价换取这点常驻循环的节省。
+// 3. idle-stop：循环动画（loop）在**已经画出过至少一次**之后，无全局活动 idleStopSec 秒后
+//    暂停 tick（画面定格在当前帧，不继续消耗 CPU），有新活动（本文件自己监听的
+//    pointermove/keydown/pointerdown，或任何
 //    新的 play() 调用本身）时立即恢复。这是"新增循环接同一停止条件"（PERFORMANCE.md 3.1）在
 //    本卡的落地方式——注意 app.js 的 IDLE_STOP_SEC/lastActivity 是它自己函数作用域内的私有
 //    闭包变量，没有通过任何 window.WTJ_* API 对外暴露（app.js 本身也不允许本卡改动），本文件
@@ -78,6 +82,25 @@
 // resolve（或 onload 触发、或 complete && naturalWidth>0 的同步兜底判据）之前，任何一次
 // drawImage 尝试都会被静默跳过（不抛错、不 console.error，只是这一帧什么都不画），下一次
 // tick 再检查一次是否就绪——不会导致播放崩溃或抛出未捕获异常（单测覆盖此分支）。
+//
+// **WTJ-20260705-014 根因修复（P0）：图片未就绪时必须持续重试直到真正画出第一帧，不能只
+// 重试有限次就放弃。** 056 首次交付时，两条路径都只给了"恰好一次"的补救重试：① 单帧 state
+// （frameCount<=1，如 faucet/lamp 的 idle 态 'off'）的 play() 快路径；② reduced-motion 分支
+// runReducedMotionBranch()。若图片加载/解码耗时超过一次 TICK_MS（16ms）——在真机
+// （2014 MBA / `wtjres://` scheme handler 主线程同步读盘 + 多个道具首次加载互相竞争主线程）
+// 上完全可能——这一次重试仍然会失败，而旧实现在那之后永久放弃、不再排任何后续尝试，canvas
+// 从此彻底空白，对孩子而言目标"不显示"。③ 多帧循环 state（如 horse 的 idle 态）虽然本身有
+// 持续的 tick 重试机制，但若加载耗时超过 idleStopSec（默认 5s）且用户在这期间没有任何鼠标/
+// 键盘活动，旧实现的 idle-stop 判定会在"从未成功画出过第一帧"时就把 tick 暂停掉，效果等价：
+// 永久空白，直到用户终于移动鼠标才会被 markActivity() 唤醒重新尝试。三条路径本质是同一个
+// 缺陷——「未画出首帧」与「放弃/暂停重试」这两件事被允许同时发生。修复：新增
+// `pb.hasDrawnOnce` 标记（drawFrame() 成功时置位）+ `shouldKeepRetrying()` 判据（未画出
+// 首帧且 imgEntry 未被 img.onerror 确认 failed 就应该继续重试），tick()/
+// retryDrawUntilReady() 都以此为准——只有真正画出过第一帧（或确认这个 sheet 加载失败、
+// 不可能再成功）之后，才允许进入"单帧不再重绘"/"到达末帧触发 onComplete"/"idle-stop 暂停"
+// 这几个原有的收敛分支。见 app/web/task-templates.js「五、动效引擎接入」一节与
+// tests/unit/frame-anim.test.mjs 对应新增用例（人工注入加载延迟 + 零活动窗口，复现并验证
+// 修复后两条路径均不再永久空白）。
 //
 // -----------------------------------------------------------------------
 // prefers-reduced-motion
@@ -379,9 +402,19 @@
     try {
       pb.ctx.clearRect(0, 0, pb.canvasEl.width, pb.canvasEl.height);
       pb.ctx.drawImage(pb.imgEntry.img, sx, 0, cell, cell, 0, 0, pb.canvasEl.width, pb.canvasEl.height);
+      // WTJ-20260705-014 根因修复：标记"这个 canvas 至少真正画出过一次内容"。tick()/
+      // retryDrawUntilReady() 用这个标记决定是否还能安全地放弃/暂停重试——见两者内联注释与
+      // 文件头「WTJ-20260705-014：首帧未画出前不放弃」一节。
+      pb.hasDrawnOnce = true;
     } catch (err) {
       console.error('[WTJ_FRAME_ANIM] drawImage 失败，已捕获：', err);
     }
+  }
+
+  // 图片尚未就绪（或从未成功绘制过）时是否应该继续重试的统一判据：只要还没有真正画出过第一帧
+  // 且没有被确认加载失败，就应该继续重试——见下方 retryDrawUntilReady()/tick() 两处消费方。
+  function shouldKeepRetrying(pb) {
+    return !pb.hasDrawnOnce && !(pb.imgEntry && pb.imgEntry.failed);
   }
 
   function fireOnCompleteOnce(pb) {
@@ -455,7 +488,38 @@
     var now = clockRef.now();
     var frameCount = frameCountOf(pb.cfg);
     var frameIndex = computeFrameIndex(pb, now);
-    drawFrame(pb, frameIndex);
+    drawFrame(pb, frameIndex); // 成功时会把 pb.hasDrawnOnce 置 true，见 drawFrame() 内联注释。
+
+    // WTJ-20260705-014 根因修复（P0，真机复现：justin.local 上 click-faucet-on/
+    // click-horse-run 任务的目标道具整场不可见）：在"这个 canvas 从未真正画出过一帧"期间，
+    // 不允许因为"到达末帧"或"全局 idle 超过 idleStopSec"这两个分支而放弃/暂停继续尝试——
+    // 旧实现只要中途命中这两个分支之一就会永久停止排 tick，如果那一刻恰好图片仍未加载/解码
+    // 完成（真机上完全可能：`wtjres://` scheme handler 在主线程同步读盘 + 多个道具首次加载
+    // 互相竞争主线程 + 2014 MBA 级别硬件解码耗时更长），canvas 会永久保持完全透明，对孩子
+    // 而言目标"不显示"——这正是本卡用 Playwright + WebKit 人工注入加载延迟复现出的两条实测
+    // 路径：① faucet/lamp 的 idle 态是单帧 state（frameCount<=1），旧实现只重试一次就放弃；
+    // ② horse 的 idle 态虽是多帧循环，但若加载耗时超过 idleStopSec（默认 5s）且用户在这
+    // 期间没有任何鼠标/键盘活动（3 岁小孩盯着屏幕看、还没碰任何东西完全是常态），idle-stop
+    // 会在"从未成功画出过第一帧"的情况下把 tick 暂停掉，同样导致永久空白直到用户终于移动
+    // 鼠标才会被 markActivity() 唤醒——见 tests/unit/frame-anim.test.mjs 新增用例复现两条
+    // 路径。只要图片还有可能变成功（未被 img.onerror 确认 failed）就应该持续重试；一旦确认
+    // failed（不可能再成功），才允许放弃，避免对一个真正 404 的资源无限空转 tick。
+    if (shouldKeepRetrying(pb)) {
+      scheduleTick(pb);
+      return;
+    }
+    if (!pb.hasDrawnOnce) {
+      // 走到这里说明 shouldKeepRetrying() 返回 false 且 hasDrawnOnce 仍是 false，即
+      // pb.imgEntry.failed 已确认——没有恢复可能，放弃重试（不追加 fireOnCompleteOnce，
+      // 维持"onComplete 只在真正播放到位时触发"的既有语义，见文件头 onComplete 时序说明）。
+      return;
+    }
+
+    if (frameCount <= 1) {
+      // 单帧素材：已经成功画出过，不需要继续 tick（性能优化，见文件头「性能红线落地」
+      // 第 2 点——一张恒定不变的图没有必要每 16ms 重绘一次）。
+      return;
+    }
 
     var isLastFrame = (!pb.loop) && (frameIndex >= frameCount - 1);
     if (isLastFrame) {
@@ -481,19 +545,27 @@
     return frameCountOf(pb.cfg) - 1; // 一次性 → 定格末帧（保留"看到成功"的产品意图）。
   }
 
+  // WTJ-20260705-014 根因修复：图片尚未就绪时持续重试直到真正画出第一帧（或确认加载失败）
+  // 为止——旧实现只安排"恰好一次"轻量重试，重试时若仍未就绪就永久放弃，是 014 卡复现出的
+  // 同一类"目标永久不可见"根因在 reduced-motion 路径下的等价版本。frameCount<=1 的常规
+  // play() 快路径也复用本函数（见下方 play()），两处共享同一条"直到画出为止再停"的重试逻辑，
+  // 不再各自维护一份"只重试一次"的特判代码。
+  function retryDrawUntilReady(pb, frameIndex) {
+    drawFrame(pb, frameIndex); // 成功时置 pb.hasDrawnOnce = true。
+    if (!shouldKeepRetrying(pb)) {
+      return; // 已经画出过，或已确认加载失败、不可能再成功——停止重试。
+    }
+    pb.tickTimerId = clockRef.setTimeout(function () {
+      pb.tickTimerId = null;
+      if (isActivePlayback(pb)) {
+        retryDrawUntilReady(pb, frameIndex);
+      }
+    }, TICK_MS);
+  }
+
   function runReducedMotionBranch(pb) {
     var idx = terminalFrameIndex(pb);
-    drawFrame(pb, idx);
-    if (!isEntryReady(pb.imgEntry)) {
-      // 图片这一刻还没就绪：安排一次轻量重试（只重画一次，不进入常规 tick 循环），避免
-      // reduced-motion 下永远只显示空白 canvas。
-      pb.tickTimerId = clockRef.setTimeout(function () {
-        pb.tickTimerId = null;
-        if (isActivePlayback(pb)) {
-          drawFrame(pb, idx);
-        }
-      }, TICK_MS);
-    }
+    retryDrawUntilReady(pb, idx);
     if (!pb.loop) {
       var durationMs = getDurationMsFromCfg(pb.cfg);
       clockRef.setTimeout(function () {
@@ -575,22 +647,21 @@
       tickTimerId: null,
       completeFired: false,
       idlePaused: false,
+      // WTJ-20260705-014：这个 canvas 是否已经真正成功 drawImage 过至少一次——见 drawFrame()/
+      // tick()/retryDrawUntilReady() 三处的根因修复说明。图片已经就绪（例如复用 preload() 或
+      // 上一次 play() 留下的缓存）时会在下面的首次 drawFrame() 调用里立即变 true。
+      hasDrawnOnce: false,
       reducedMotion: prefersReducedMotion()
     };
     playbacks.push(pb);
 
     var frameCount = frameCountOf(cfg);
     if (frameCount <= 1) {
-      // 单帧素材：画一次即可，永远不需要 tick 循环（性能优化，见文件头「性能红线落地」第 2 点）。
-      drawFrame(pb, 0);
-      if (!isEntryReady(pb.imgEntry)) {
-        pb.tickTimerId = clockRef.setTimeout(function () {
-          pb.tickTimerId = null;
-          if (isActivePlayback(pb)) {
-            drawFrame(pb, 0);
-          }
-        }, TICK_MS);
-      }
+      // 单帧素材：一旦画出过就永远不需要再进 tick 循环（性能优化，见文件头「性能红线落地」
+      // 第 2 点）。但"画出过"之前不能只重试一次就放弃——见 retryDrawUntilReady() 与
+      // WTJ-20260705-014 根因修复说明，这里复用同一份"持续重试直到画出/确认失败为止"的逻辑，
+      // 不再是本函数独有的一次性重试特判。
+      retryDrawUntilReady(pb, 0);
       if (!pb.loop) {
         var singleDur = getDurationMsFromCfg(cfg);
         clockRef.setTimeout(function () {
@@ -650,7 +721,10 @@
         loop: pb.loop,
         reducedMotion: pb.reducedMotion,
         idlePaused: !!pb.idlePaused,
-        completeFired: !!pb.completeFired
+        completeFired: !!pb.completeFired,
+        // WTJ-20260705-014：暴露给 QA/单测内省——"这个 canvas 是否已经真正画出过至少一帧"，
+        // 用于诊断"目标不可见"类问题时区分"还在等图片就绪"与"其余原因导致的空白"。
+        hasDrawnOnce: !!pb.hasDrawnOnce
       });
     }
     return {
