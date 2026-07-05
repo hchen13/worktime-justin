@@ -18,6 +18,14 @@ MIN_OS="11.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# WTJ-20260705-017：构建期采集 git commit，写入 Info.plist（下方 WTJBuildCommit 键），供
+# main.swift 的诊断日志头 + 注入给 web 层的 window.__WTJ_BUILD_INFO 使用（见
+# app/web/diag.js「app 版本/commit」一节）。仓库不可用（例如从 tarball 而非 git checkout
+# 构建）时优雅回退 "unknown"，不让构建因此失败——commit 号是诊断辅助信息，不是构建的
+# 必要前提条件。
+GIT_COMMIT="$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+echo "==> 记录 git commit: ${GIT_COMMIT}"
+
 DIST_DIR="$SCRIPT_DIR/dist"
 BUILD_DIR="$SCRIPT_DIR/.build-tmp"
 APP_BUNDLE="$DIST_DIR/${APP_NAME}.app"
@@ -86,6 +94,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
+    <key>WTJBuildCommit</key>
+    <string>${GIT_COMMIT}</string>
     <key>LSMinimumSystemVersion</key>
     <string>${MIN_OS}</string>
     <key>NSHighResolutionCapable</key>
@@ -148,6 +158,16 @@ for SLICE_BIN in "$X64_BIN" "$ARM64_BIN"; do
   fi
   echo "[$SLICE_NAME] 未链接 libswift_Concurrency，无 swift_task/MainActor 符号引用"
 done
+
+echo ""
+echo "--- Info.plist WTJBuildCommit（诊断日志/web 层 __WTJ_BUILD_INFO 用，见 WTJ-20260705-017）---"
+PLIST_COMMIT=$(/usr/libexec/PlistBuddy -c "Print :WTJBuildCommit" "$CONTENTS_DIR/Info.plist" 2>/dev/null || true)
+if [ -z "$PLIST_COMMIT" ]; then
+  echo "错误：Info.plist 缺少 WTJBuildCommit 键" >&2
+  exit 1
+fi
+echo "WTJBuildCommit=$PLIST_COMMIT"
+[ "$PLIST_COMMIT" = "$GIT_COMMIT" ] || { echo "错误：Info.plist 里的 WTJBuildCommit 与构建期采集值不一致" >&2; exit 1; }
 
 echo ""
 echo "--- codesign -v ---"

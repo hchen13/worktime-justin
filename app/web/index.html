@@ -31,6 +31,14 @@
     <div id="esc-progress-bar" class="esc-progress-bar"></div>
   </div>
 
+  <!-- diag.js（017 旧机动画诊断日志，window.WTJ_DIAG）必须是本文件里**第一个** <script>——
+       window.onerror/unhandledrejection 与资源加载失败/成功的 capture-phase 监听都要在其余
+       脚本（manifest.js 起）解析/执行之前就位，才能捕获它们运行期间可能发生的错误。读取
+       window.WTJ_MANIFEST / window.WTJ_TASK_TEMPLATES 等晚加载模块的部分自行做了 0ms 宏任务
+       延后，不需要调整脚本顺序即可安全读到。经 window.webkit.messageHandlers.diag 上行给
+       app/shell/main.swift，落盘到 ~/Library/Logs/WorkTimeJustin/animation-diagnostics.log。
+       见 app/web/diag.js 顶部注释。 -->
+  <script src="diag.js"></script>
   <script src="manifest.js"></script>
   <!-- voice-language.js（018 家长控制卡：语言/任务语音模式切换，window.WTJ_VOICE_LANG）——
        只需 manifest.js 先加载（读取 MANIFEST.parentControls 的默认值展示用，判定本身用内置
