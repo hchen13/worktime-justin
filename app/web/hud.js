@@ -271,9 +271,11 @@
     bar.appendChild(title);
 
     var lock = el('span', 'wtj-hud-lock');
-    // 当前无 pointer-events，title 提示暂不会在悬停时出现；实际长按 Esc 退出判定
-    // 与是否开放 pointer-events 由 017 卡接管，见 hud.css 顶部注释与 MANIFEST.md。
-    lock.title = '长按 Esc 5 秒退出';
+    // 当前无 pointer-events，title 提示暂不会在悬停时出现；实际长按判定与是否开放
+    // pointer-events 由后续卡片接管，见 hud.css 顶部注释与 MANIFEST.md。
+    // WTJ-20260705-018：家长入口主通道由 Esc 改为 Cmd+Q 长按（隐藏家长菜单，内含
+    // 退出/设置/重置今日额度）；Esc 长按 5 秒 + 口令退出保留为兜底通道，未删除。
+    lock.title = '长按 Cmd+Q 5 秒打开家长菜单（Esc 长按仍可作为退出兜底）';
     lock.appendChild(buildLockIcon());
     bar.appendChild(lock);
 

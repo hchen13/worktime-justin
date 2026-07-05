@@ -1,0 +1,238 @@
+/* WTJ-20260705-018 — 隐藏家长菜单 web 层配套样式（parent-controls.js）
+   延续 style.css / hud.css 系深色低调基调（#0e1117 系）。三个独立叠层：
+     .wtj-parent-gate-progress-wrap  Cmd+Q 长按进度条（薄条，常驻布局但默认透明）
+     .wtj-parent-lockout             每日额度耗尽后的全屏安静锁屏
+     .wtj-parent-settings            家长设置面板（长按 Cmd+Q 满 5 秒后可选「设置…」打开）
+
+   z-index：全部三者都必须能盖住游戏内容与既有 HUD/任务/奖励叠层（5/6/8/9）、也必须能盖住
+   debug-overlay/esc-progress-wrap（10）——安全/家长控制类 UI 优先级高于任何游戏内容，
+   统一取 900+ 起步，彼此之间按"锁屏 < 设置面板"排序（家长在锁屏状态下打开设置面板时，
+   面板需要盖住锁屏蒙层，见下方 .wtj-parent-settings 的 950）。
+
+   Safari 14 兼容基线（延续既有 CSS 文件约束）：不用 inset 简写、不用 aspect-ratio /
+   flex gap / :focus-visible / clip-path。prefers-reduced-motion 下关闭过渡动画。 */
+
+/* ------------------------------------------------------------------ */
+/* Cmd+Q 长按进度条（镜像 style.css 的 .esc-progress-wrap，独立 DOM/独立状态） */
+/* ------------------------------------------------------------------ */
+
+.wtj-parent-gate-progress-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 11; /* 略高于既有 esc-progress-wrap（10），两条进度条理论上不会同时激活 */
+  pointer-events: none;
+}
+
+.wtj-parent-gate-progress-wrap.is-active {
+  opacity: 1;
+}
+
+.wtj-parent-gate-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ffb85e, #ff5e8d);
+}
+
+/* ------------------------------------------------------------------ */
+/* 安静锁屏：额度耗尽后的全屏覆盖层（验收标准 #5）                        */
+/* ------------------------------------------------------------------ */
+
+.wtj-parent-lockout {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #05070c;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  /* 默认不拦截指针（隐藏时不应该挡住任何东西）；is-active 时开启拦截，是
+     "禁用 app 交互"这条要求在指针侧的第一道防线（真正的判定门是
+     WTJ_PARENT_CONTROLS.isInputSuspended()，keyboard.js/pointer.js 据此早退，
+     这里的 pointer-events 只是双保险，防止某些不经过 window 级监听、直接绑在具体 DOM
+     元素上的原生控件残留可交互）。 */
+  pointer-events: none;
+}
+
+.wtj-parent-lockout.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-parent-lockout {
+    transition: none;
+  }
+}
+
+.wtj-parent-lockout-card {
+  text-align: center;
+  color: #f4f7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  padding: 24px;
+}
+
+.wtj-parent-lockout-title {
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.wtj-parent-lockout-sub {
+  font-size: clamp(14px, 2vw, 18px);
+  color: rgba(244, 247, 251, 0.6);
+}
+
+/* ------------------------------------------------------------------ */
+/* 家长设置面板（长按 Cmd+Q 满 5 秒后的隐藏菜单「设置…」打开）             */
+/* ------------------------------------------------------------------ */
+
+.wtj-parent-settings {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 950; /* 高于安静锁屏（900）：家长可能在锁屏状态下打开设置调整额度/reset */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 7, 12, 0.72);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.wtj-parent-settings.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wtj-parent-settings {
+    transition: none;
+  }
+}
+
+.wtj-parent-settings-card {
+  width: min(420px, 88vw);
+  max-height: 84vh;
+  overflow-y: auto;
+  background: #171d27;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px 22px;
+  color: #f4f7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.wtj-parent-settings-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 14px 0;
+}
+
+.wtj-parent-settings-section {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wtj-parent-settings-section:last-of-type {
+  border-bottom: none;
+}
+
+.wtj-parent-settings-label {
+  display: block;
+  font-size: 13px;
+  color: rgba(244, 247, 251, 0.7);
+  margin-bottom: 8px;
+}
+
+.wtj-parent-settings-row {
+  display: flex;
+  align-items: center;
+}
+
+.wtj-parent-settings-input {
+  width: 84px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #0e1117;
+  color: #f4f7fb;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.wtj-parent-settings-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 0;
+  background: #5ee7ff;
+  color: #0e1117;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wtj-parent-settings-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f7fb;
+}
+
+.wtj-parent-settings-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7fb;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.wtj-parent-settings-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(244, 247, 251, 0.55);
+  min-height: 14px;
+}
+
+.wtj-parent-settings-usage {
+  font-size: 13px;
+  color: rgba(244, 247, 251, 0.75);
+  margin-bottom: 10px;
+}
+
+.wtj-parent-settings-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.wtj-parent-settings-radio-label.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wtj-parent-settings-lang-note {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(244, 247, 251, 0.55);
+}

@@ -871,6 +871,37 @@
     },
 
     // =====================================================================
+    // parentControls —— 隐藏家长菜单 / 每日使用时长额度 / 语言设置
+    // （WTJ-20260705-018，P0 家长控制卡）
+    // =====================================================================
+    parentControls: {
+      // 家长入口主通道由 Esc 长按改为 Cmd+Q 长按（Esc 长按口令退出保留为兜底，见上方
+      // exit 域，未删除、未改行为）。cmdQHoldSec 与 shell/main.swift 的 kCmdQHoldSeconds
+      // 常量是镜像关系——与 exit.escHoldSec 同款约定（改一处务必同步改另一处），018 卡的
+      // web 层进度条（parent-controls.js 的 wtjParentGateProgress）用它算百分比。
+      cmdQHoldSec: 5,
+      // 每日允许使用时长默认值（分钟）——与 shell/main.swift 的 kDailyLimitDefaultMinutes
+      // 镜像。家长在设置面板里可调，持久化在 shell 侧 UserDefaults（权威来源），本字段只是
+      // web 层展示"默认值应该是多少"用，不是运行时权威状态（权威状态经
+      // window.wtjApplyShellState/wtjShowSettingsPanel 由 shell 下发，见 parent-controls.js）。
+      dailyLimitMinutesDefault: 30,
+      dailyLimitMinutesRange: { min: 5, max: 180 },
+      // 语言/任务语音模式：中文 / 英文 / 跟随素材可用性（voice-language.js 消费，验收标准
+      // #4）。当前磁盘交付状态——中文 24/24 完整，英文仅 8/24（见 voice-language.js 顶部
+      // 注释与 audio/missing-audio.json 的 taskVoice/taskVoiceZh 两段）。noSilentFallback:
+      // true 是本域的硬约束标注（供 QA 对照验收标准 #4 原文核查，非运行时读取的开关）。
+      voiceLanguage: {
+        defaultMode: 'zh',
+        modes: ['zh', 'en', 'auto'],
+        zhTaskVoiceTotal: 24,
+        zhTaskVoiceDelivered: 24,
+        enTaskVoiceTotal: 24,
+        enTaskVoiceDelivered: 8,
+        noSilentFallback: true
+      }
+    },
+
+    // =====================================================================
     // assets —— 对应 docs/index.html #assets（域码 AST，REQ-AST-01 ~ 12）
     // =====================================================================
     assets: {

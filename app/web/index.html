@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="task-templates.css" />
   <link rel="stylesheet" href="status-rewards.css" />
   <link rel="stylesheet" href="reward-chest.css" />
+  <link rel="stylesheet" href="parent-controls.css" />
 </head>
 <body>
   <canvas id="stage"></canvas>
@@ -31,6 +32,17 @@
   </div>
 
   <script src="manifest.js"></script>
+  <!-- voice-language.js（018 家长控制卡：语言/任务语音模式切换，window.WTJ_VOICE_LANG）——
+       只需 manifest.js 先加载（读取 MANIFEST.parentControls 的默认值展示用，判定本身用内置
+       静态清单，不依赖 manifest）；需在 task.js 之前——task.js 的 playTaskVoiceDefensive()
+       消费本文件的 resolveTaskVoicePath()。见 app/web/voice-language.js 顶部注释。 -->
+  <script src="voice-language.js"></script>
+  <!-- parent-controls.js（018 家长控制卡：隐藏家长菜单 web 层配套——Cmd+Q 长按进度条 / 安静
+       锁屏叠层 / 设置面板，window.WTJ_PARENT_CONTROLS）——需在 manifest.js/voice-language.js
+       之后（读取二者暴露的配置与可用性数据）、keyboard.js/pointer.js 之前——两者的 window
+       级事件监听消费本文件暴露的 isInputSuspended() 做输入抑制判定（额度耗尽安静锁屏/设置
+       面板打开期间不再触发游戏奖励/音效）。见 app/web/parent-controls.js 顶部注释。 -->
+  <script src="parent-controls.js"></script>
   <!-- letter-motion.js（086 主界面视觉 polish：字母字形/motion 的 token + 纯函数模块，
        window.WTJ_LETTER_MOTION）——不依赖 document/canvas，只需 manifest.js 先加载（本文件
        自带一份不依赖 manifest 的 081 token 镜像，与 manifest.js 无强依赖，放在这里只是遵循
