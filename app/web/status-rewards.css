@@ -173,6 +173,65 @@
 /* 视觉运动本身；三个元素改为"直接以动画终点附近的样态短暂静态出现"。       */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* WTJ-20260705-008：键盘自由探索里程碑奖励叠层（keyboard-spark medallion）。 */
+/* 与「今日工作完成」叠层（.wtj-sr-root，z-index:9）分开的一套容器：             */
+/*   - 位置：屏幕底部居中，恰在 footer 发现槽（刚被点亮的那一格）上方，视觉上把     */
+/*     "里程碑 → 点亮槽"这条因果链连起来；刻意避开屏幕正中心（秘密词命中             */
+/*     .wtj-secret-sprite，top:50%）与右侧问号入口（.wtj-hud-question），不遮挡它们。 */
+/*   - z-index:7：高于 HUD（5）与任务叠层（6，可见），低于秘密词命中叠层（8）、       */
+/*     「今日工作完成」奖励（9）与 debug/esc 叠层（10）——即便偶发同时出现，秘密词      */
+/*     命中与更大的工作完成奖励始终盖在其上、不被本叠层遮挡（满足验收「不遮挡秘密词/     */
+/*     问号任务奖励」）。                                                            */
+/*   - 尺寸/淡入淡出与 footer 卡槽贴纸及秘密词命中一次性表现同量级（~1.6s pop）。       */
+/* pointer-events:none，永不拦截鼠标；由 status-rewards.js 可注入时钟定时移除，不堆积。 */
+/* ------------------------------------------------------------------ */
+
+.wtj-sr-milestone-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 7;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wtj-sr-milestone-sticker {
+  position: absolute;
+  left: 50%;
+  bottom: 20%;
+  width: clamp(96px, 14vw, 168px);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.42));
+  opacity: 0;
+  transform: translate(-50%, 8px) scale(0.6);
+  will-change: transform, opacity;
+}
+
+.wtj-sr-milestone-sticker.wtj-sr-milestone-anim {
+  -webkit-animation: wtj-sr-milestone-pop 1.6s ease-out forwards;
+  animation: wtj-sr-milestone-pop 1.6s ease-out forwards;
+}
+
+@-webkit-keyframes wtj-sr-milestone-pop {
+  0%   { opacity: 0; -webkit-transform: translate(-50%, 8px) scale(0.6); transform: translate(-50%, 8px) scale(0.6); }
+  16%  { opacity: 1; -webkit-transform: translate(-50%, 0) scale(1.08); transform: translate(-50%, 0) scale(1.08); }
+  30%  { opacity: 1; -webkit-transform: translate(-50%, -4px) scale(1); transform: translate(-50%, -4px) scale(1); }
+  78%  { opacity: 1; -webkit-transform: translate(-50%, -10px) scale(1); transform: translate(-50%, -10px) scale(1); }
+  100% { opacity: 0; -webkit-transform: translate(-50%, -20px) scale(0.94); transform: translate(-50%, -20px) scale(0.94); }
+}
+
+@keyframes wtj-sr-milestone-pop {
+  0%   { opacity: 0; transform: translate(-50%, 8px) scale(0.6); }
+  16%  { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+  30%  { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+  78%  { opacity: 1; transform: translate(-50%, -10px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -20px) scale(0.94); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wtj-sr-rocket,
   .wtj-sr-sparkle,
@@ -192,5 +251,14 @@
 
   .wtj-sr-star {
     transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+  }
+
+  /* WTJ-20260705-008：里程碑奖励叠层在 reduced-motion 下同样冻结为静态完成态（不弹不动），
+     JS 定时展示/移除窗口不变（见 status-rewards.js prefersReducedMotion 说明）。 */
+  .wtj-sr-milestone-sticker {
+    -webkit-animation: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, -6px) scale(1) !important;
   }
 }

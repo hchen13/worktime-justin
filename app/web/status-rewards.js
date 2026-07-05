@@ -139,6 +139,31 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-008：键盘自由探索里程碑奖励（REQ-SLOT-03 关联）。
+  // 累计有效键达到 keyboard.effectiveKeyMilestones（[100, 200]）之一时，008（keyboard.js）
+  // emit WTJ_KEYBOARD.onMilestone(milestoneValue) + 点亮一个发现槽（槽内贴纸 keyboard-star，由
+  // hud.js 落地）。本文件订阅 onMilestone，额外弹出一次性「键盘主题奖励」叠层做正反馈——用
+  // DESIGN-007 discovery-icons 的 keyboard-spark（键盘星火迸发 medallion）一次性淡入→停留→淡出，
+  // 不常驻屏幕（与 rewards.chest.oneTimePresentation 同一「一次性表现，不长期占屏」原则）。
+  // 素材路径 config 驱动：读 manifest.rewards.keyboardMilestone.rewardSticker（已是 app/web/
+  // 相对完整路径 assets/discovery-icons/...，不走 REWARD_ASSET_BASE 前缀）。缺配置时降级为空叠层
+  // 不抛错。此奖励**独立**于「今日工作完成」连续奖励：不改 streak、不与 celebrating 互斥
+  // （键盘探索里程碑与任务连击是两条独立进度线，各自可触发，互不吞并）。
+  //
+  // 与 010（completion-stamp 接入）的边界：本段全部走**独立的** milestoneOverlay* 状态
+  // （独立 root / children / timer），不复用「今日工作完成」的 overlayRoot/overlayChildren/
+  // overlayTimerId，两套奖励叠层互不干扰——降低本卡与 010 在 status-rewards.js 上的合并冲突面。
+  // ---------------------------------------------------------------------
+  var KEYBOARD_MILESTONE_CFG = (MANIFEST && MANIFEST.rewards && MANIFEST.rewards.keyboardMilestone) ? MANIFEST.rewards.keyboardMilestone : null;
+
+  function getMilestoneRewardSticker() {
+    if (KEYBOARD_MILESTONE_CFG && typeof KEYBOARD_MILESTONE_CFG.rewardSticker === 'string' && KEYBOARD_MILESTONE_CFG.rewardSticker) {
+      return KEYBOARD_MILESTONE_CFG.rewardSticker;
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------------
   // 订阅者管理（本文件对外的 onWorkComplete 事件）：与 task.js/pointer.js/keyboard.js/
   // task-templates.js 完全同款多订阅者 + 逐个 try/catch 模式。
   // ---------------------------------------------------------------------
@@ -402,6 +427,105 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-008：键盘里程碑奖励叠层（独立于「今日工作完成」叠层的一套 root/children/timer，
+  // 见上方 KEYBOARD_MILESTONE 段说明）。懒创建单一 root，一次性淡入→停留→淡出后由可注入时钟
+  // 定时移除子元素（与 showRewardOverlay() 同款：JS 定时移除，CSS 只管视觉；reduced-motion 由
+  // status-rewards.css 的媒体查询冻结为静态）。快速连达两个里程碑时，同一时刻只保留最新一批
+  // 叠层子元素（不堆积）。
+  // ---------------------------------------------------------------------
+  var MILESTONE_OVERLAY_MS = 1600; // 一次性可见窗口，落在 secretword/宝箱一次性表现同量级（~1.5-2s）。
+  var milestoneOverlayRoot = null;
+  var milestoneOverlayChildren = [];
+  var milestoneOverlayTimerId = null;
+
+  function ensureMilestoneOverlayRoot() {
+    if (milestoneOverlayRoot) {
+      return milestoneOverlayRoot;
+    }
+    if (typeof document === 'undefined' || !document || typeof document.createElement !== 'function' || !document.body) {
+      return null;
+    }
+    try {
+      var root = document.createElement('div');
+      root.className = 'wtj-sr-milestone-root';
+      if (typeof root.setAttribute === 'function') {
+        root.setAttribute('aria-hidden', 'true');
+      }
+      document.body.appendChild(root);
+      milestoneOverlayRoot = root;
+      return milestoneOverlayRoot;
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 创建里程碑奖励叠层容器失败，已捕获：', err);
+      return null;
+    }
+  }
+
+  function clearMilestoneOverlayChildren() {
+    var i;
+    for (i = 0; i < milestoneOverlayChildren.length; i++) {
+      removeElementDefensive(milestoneOverlayChildren[i]);
+    }
+    milestoneOverlayChildren = [];
+  }
+
+  function createMilestoneOverlayChild(tag, className) {
+    var root = ensureMilestoneOverlayRoot();
+    if (!root) {
+      return null;
+    }
+    try {
+      var el = document.createElement(tag);
+      el.className = className;
+      if (typeof el.setAttribute === 'function') {
+        el.setAttribute('aria-hidden', 'true');
+      }
+      root.appendChild(el);
+      milestoneOverlayChildren.push(el);
+      return el;
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 创建里程碑奖励叠层子元素失败，已捕获：', err);
+      return null;
+    }
+  }
+
+  function cancelMilestoneOverlayTimer() {
+    if (milestoneOverlayTimerId !== null) {
+      clockRef.clearTimeout(milestoneOverlayTimerId);
+      milestoneOverlayTimerId = null;
+    }
+  }
+
+  function showMilestoneReward(milestoneValue) {
+    var root = ensureMilestoneOverlayRoot();
+    if (!root) {
+      return; // 无 document（如非浏览器测试沙箱不提供 document）：静默跳过，不影响 onMilestone 其它下游。
+    }
+    // 同一时刻只保留最新一批里程碑叠层：先收尾上一批（若还在可见窗口内），再放新的。
+    cancelMilestoneOverlayTimer();
+    clearMilestoneOverlayChildren();
+
+    var sticker = getMilestoneRewardSticker();
+    var stickerEl = createMilestoneOverlayChild('img', 'wtj-sr-milestone-sticker wtj-sr-milestone-anim');
+    if (stickerEl) {
+      if (sticker) {
+        stickerEl.src = sticker; // manifest.rewards.keyboardMilestone.rewardSticker，已是完整相对路径。
+      } else {
+        console.warn('[WTJ_STATUS_REWARDS] manifest.rewards.keyboardMilestone.rewardSticker 缺失，里程碑奖励叠层无贴纸可显示（降级为空叠层，不抛错）。');
+      }
+      stickerEl.alt = '';
+    }
+
+    milestoneOverlayTimerId = clockRef.setTimeout(function () {
+      milestoneOverlayTimerId = null;
+      clearMilestoneOverlayChildren();
+    }, MILESTONE_OVERLAY_MS);
+  }
+
+  function handleKeyboardMilestone(milestoneValue) {
+    showMilestoneReward(milestoneValue);
+  }
+
+  // ---------------------------------------------------------------------
   // streak 状态机
   // ---------------------------------------------------------------------
   var streak = 0;
@@ -469,6 +593,21 @@
     }
   })();
 
+  // WTJ-20260705-008：订阅 008（keyboard.js）的 onMilestone（防御式：缺失时降级为 console.warn，
+  // 键盘里程碑奖励叠层不可用，但本文件其余 API 与「今日工作完成」奖励仍正常）。index.html 加载
+  // 顺序中 keyboard.js 排在 status-rewards.js 之前，故此处订阅时 WTJ_KEYBOARD 通常已就绪。
+  (function wireKeyboardMilestone() {
+    try {
+      if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onMilestone === 'function') {
+        window.WTJ_KEYBOARD.onMilestone(handleKeyboardMilestone);
+      } else {
+        console.warn('[WTJ_STATUS_REWARDS] window.WTJ_KEYBOARD.onMilestone 未找到（008 未加载或加载失败），键盘里程碑奖励叠层不可用（防御式降级）。');
+      }
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 订阅 window.WTJ_KEYBOARD.onMilestone 失败，已捕获：', err);
+    }
+  })();
+
   // ---------------------------------------------------------------------
   // 对外 API
   // ---------------------------------------------------------------------
@@ -484,6 +623,10 @@
     cancelFlash();
     cancelOverlayTimer();
     clearOverlayChildren();
+    // WTJ-20260705-008：外部重置（家长退出/新会话）也立即收起进行中的键盘里程碑奖励叠层，
+    // 与「今日工作完成」叠层一并清空，不留残影。
+    cancelMilestoneOverlayTimer();
+    clearMilestoneOverlayChildren();
     setAllLightsDefensive(false);
     streak = 0;
     celebrating = false;
