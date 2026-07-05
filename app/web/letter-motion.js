@@ -60,6 +60,27 @@
 //                               帧应该怎么画。081 Letter Motion Spec 的 birth pop / settle /
 //                               drift / fade 四阶段状态机与 reduced-motion 简化路径都在这里。
 //   prefersReducedMotion()     与 frame-anim.js/reward-chest.js 同款 matchMedia 检测。
+//
+//   —— 以下三项为 WTJ-20260705-002（键盘字母流星拖尾 + 符号显示规则）新增，均为纯函数，
+//      不依赖 document/canvas；数值来源见各自旁边注释（均为本卡本地防御式占位值，非 081
+//      motion-token-sheet.json 给出的精确数值，同款 keyboard.js FUNCTION_KEY_DECAY_SPAN 的
+//      "占位常量"处理方式）：
+//   randomizeLetterCase(ch)     -> ch 的大写或小写之一（50/50 随机，不改变字符本身，只改变
+//                               大小写展示）。非字母字符（如误传入数字/符号）原样返回，防御式
+//                               ——调用方（app.js spawnLetter()）已用 DIGIT_RE 分流，正常不会
+//                               传入非字母字符，这里只是双保险。
+//   randomizeDigitDisplay(digit) -> digit 原样数字，或按 US 键盘 shift 层映射后的符号（如
+//                               '1'->'!'，见 DIGIT_SHIFT_MAP），60% 概率原样数字 / 40% 概率
+//                               符号。非 0-9 字符原样返回，防御式。
+//   randomSparkles()            -> [{ t, sizeFrac, phaseRad, twinkleHz }, ...]：字母流星拖尾上
+//                               散落的星点/闪点纯参数生成器（2~4 个，见 SPARKLE_PARAMS），与
+//                               randomDrift() 并列——只产生"这一次拖尾该有几个星点、分别在拖尾
+//                               哪个位置比例(t)、多大(sizeFrac)、闪烁相位/频率(phaseRad/
+//                               twinkleHz)"这组静态参数，不产生任何绘制副作用。真正把这些参数
+//                               渲染成可见星点的贴图预渲染 + drawImage 在 app/web/sparkles.js
+//                               （window.WTJ_SPARKLES.drawSparkles()）——该文件是与后续 003 卡
+//                               （指针拖尾）共享的绘制层，见其文件头 "SHARED: consumed by card
+//                               003 pointer trail" 注释。
 // -----------------------------------------------------------------------
 
 (function () {
@@ -259,6 +280,68 @@
     };
   }
 
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-002 — 字母大小写随机化（50/50）：调用方（app.js spawnLetter()）在字母 spawn
+  // 时调用一次，绝不逐帧调用（一旦字母诞生，展示的大小写在其整个生命周期内保持不变，只是
+  // "这一次弹出用哪个大小写"是随机的，不是"这一帧用哪个"）。
+  // ---------------------------------------------------------------------
+  var ALPHA_RE = /^[a-zA-Z]$/;
+
+  function randomizeLetterCase(ch) {
+    if (!ALPHA_RE.test(ch)) return ch; // 防御式：非字母字符原样返回（数字/符号不受影响）
+    return Math.random() < 0.5 ? String(ch).toUpperCase() : String(ch).toLowerCase();
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-002 — 数字键 60/40 展示规则：60% 概率原样数字，40% 概率替换为 US 键盘 shift
+  // 层对应符号（如 1 键的 shift 层是 '!'）。DIGIT_SHIFT_MAP 逐字段抄录标准 US QWERTY 数字行
+  // shift 映射（非 081 token 来源，US 键盘布局本身即是不会变的既定事实）。调用方
+  // （app.js spawnLetter()）必须先用真实发射字符算好 isDigit（决定尺寸上限/拖尾倍率），
+  // 再调用本函数只替换渲染用的 ch 字段，不影响已经算好的 size/trail 数值。
+  // ---------------------------------------------------------------------
+  var DIGIT_SHIFT_MAP = {
+    '0': ')', '1': '!', '2': '@', '3': '#', '4': '$',
+    '5': '%', '6': '^', '7': '&', '8': '*', '9': '('
+  };
+  if (Object.freeze) Object.freeze(DIGIT_SHIFT_MAP);
+
+  var DIGIT_SHIFT_PROBABILITY = 0.4; // "数字 60/40"：60% 原样数字 / 40% shift 符号
+
+  function randomizeDigitDisplay(digit) {
+    var symbol = DIGIT_SHIFT_MAP[digit];
+    if (!symbol) return digit; // 防御式兜底：非 0-9 字符原样返回（理论上调用方已用 DIGIT_RE 过滤）
+    return Math.random() < DIGIT_SHIFT_PROBABILITY ? symbol : digit;
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-002 — 拖尾星点/闪点纯参数生成器（与 randomDrift() 并列，spawnLetter() 时
+  // 调用一次，结果存在 letter 记录上，逐帧复用，不逐帧重新生成）。SPARKLE_PARAMS 是本卡本地
+  // 占位数值（非 081 motion-token-sheet.json 来源），一并冻结导出，供消费方/单测直接读取
+  // 边界值，避免手工镜像数值漂移（与本文件其余 081 token 的处理哲学一致）。
+  // ---------------------------------------------------------------------
+  var SPARKLE_PARAMS = {
+    countRange: [2, 4],           // 每条拖尾上的星点数量区间（"几个同色星星/闪点"）
+    sizeFracRange: [0.32, 0.8],   // 相对字母渲染尺寸（size）的比例
+    twinkleHzRange: [0.6, 1.6]    // 闪烁频率区间（Hz），供消费方按 now 算出逐帧 twinkle alpha
+  };
+  deepFreeze(SPARKLE_PARAMS);
+
+  function randomSparkles() {
+    var span = SPARKLE_PARAMS.countRange[1] - SPARKLE_PARAMS.countRange[0];
+    var count = SPARKLE_PARAMS.countRange[0] + Math.floor(Math.random() * (span + 1));
+    var list = [];
+    var i;
+    for (i = 0; i < count; i++) {
+      list.push({
+        t: Math.random(), // 沿拖尾方向的位置比例：0=贴近字母本体，1=拖尾末端
+        sizeFrac: rand(SPARKLE_PARAMS.sizeFracRange[0], SPARKLE_PARAMS.sizeFracRange[1]),
+        phaseRad: Math.random() * Math.PI * 2, // 闪烁相位偏移，让多个星点不同步闪烁
+        twinkleHz: rand(SPARKLE_PARAMS.twinkleHzRange[0], SPARKLE_PARAMS.twinkleHzRange[1])
+      });
+    }
+    return list;
+  }
+
   function computeSafeArea(width, height) {
     var minX = TOKENS.letters.safeAreaPx.sides;
     var maxX = Math.max(minX, width - TOKENS.letters.safeAreaPx.sides);
@@ -430,7 +513,13 @@
     popEase: popEase,
     settleEase: settleEase,
     computeLetterFrame: computeLetterFrame,
-    prefersReducedMotion: prefersReducedMotion
+    prefersReducedMotion: prefersReducedMotion,
+    // WTJ-20260705-002 新增（见文件头「对外 API」一节最后三条 + 各自实现旁注释）：
+    randomizeLetterCase: randomizeLetterCase,
+    DIGIT_SHIFT_MAP: DIGIT_SHIFT_MAP,
+    randomizeDigitDisplay: randomizeDigitDisplay,
+    SPARKLE_PARAMS: SPARKLE_PARAMS,
+    randomSparkles: randomSparkles
   };
 
   if (Object.freeze) {

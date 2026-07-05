@@ -38,6 +38,12 @@
        spawnLetter()/drawLetters() 消费本文件暴露的字体串/尺寸/缓动/逐帧状态纯函数。见
        app/web/letter-motion.js 顶部注释。 -->
   <script src="letter-motion.js"></script>
+  <!-- sparkles.js（002 键盘字母流星拖尾，window.WTJ_SPARKLES）——SHARED: 与后续 003 卡（指针
+       拖尾）共用的星点贴图预渲染 + 绘制层，见该文件顶部 "SHARED: consumed by card 003 pointer
+       trail" 注释。不依赖 letter-motion.js/keyboard.js，只需 document 可用；需在 app.js 之前
+       ——app.js 的 drawLetterTrail() 消费本文件的 getSparkleSprite()/drawSparkles()。放在
+       letter-motion.js 之后只是沿用"基础 token/绘制层类模块尽早加载"的既有顺序习惯，无强依赖。 -->
+  <script src="sparkles.js"></script>
   <!-- audio.js（016 音频/TTS/SFX manager，window.WTJ_AUDIO）——承接 077，消除 QA076 发现的
        缺口："index.html 从未加载 audio.js"，导致 secretword.js/task.js/task-templates.js/
        reward-chest.js/status-rewards.js 里早已写好的防御式调用

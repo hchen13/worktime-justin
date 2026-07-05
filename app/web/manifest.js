@@ -68,7 +68,15 @@
       functionKeys: {
         reqIds: ['REQ-KB-05'],
         lightFeedback: ['Space', 'Enter'],
-        weakOrNoReward: ['Meta', 'Alt', 'Control', 'Shift'] // KeyboardEvent.key 命名，Meta = Command
+        // KeyboardEvent.key 命名，Meta = Command。WTJ-20260705-002 追加 Escape/Tab/F1~F12——
+        // 这些同样是"操作性"而非"探索性"按键，理应与 Meta/Alt/Control/Shift 一样归入弱反馈/
+        // 不计奖励，而不是落进未分类的 'other'（此前会被当作标点/方向键同款中性反馈处理，
+        // 强度偏高且会被计入 002 卡新增的标点弹出通道——见 keyboard.js handleFunctionKey()）。
+        weakOrNoReward: [
+          'Meta', 'Alt', 'Control', 'Shift',
+          'Escape', 'Tab',
+          'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'
+        ]
       },
 
       // REQ-KB-06：连续乱按功能键，反馈快速衰减到几乎没有。

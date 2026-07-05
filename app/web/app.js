@@ -73,6 +73,11 @@
     randomLetterSize: function () { return 48 + Math.random() * (140 - 48); },
     randomRotationRad: function () { return -0.35 + Math.random() * 0.7; },
     randomDrift: function () { return { angleRad: 0, dx: 0, dy: 0 }; },
+    // WTJ-20260705-002 回退桩：letter-motion.js 缺失时，字母大小写/数字符号/拖尾星点这三项
+    // 新增效果直接跳过（原样返回/空数组），不阻断字母仍能弹出这一 086 既有底线。
+    randomizeLetterCase: function (ch) { return ch; },
+    randomizeDigitDisplay: function (digit) { return digit; },
+    randomSparkles: function () { return []; },
     computeSafeArea: function (width, height) {
       var pad = Math.min(60, Math.min(width, height) / 4);
       return { minX: pad, maxX: Math.max(pad, width - pad), minY: pad, maxY: Math.max(pad, height - pad) };
@@ -184,6 +189,16 @@
   var trail = [];   // { x, y, born, life }（鼠标尾迹，WTJ_POINTER 驱动，与字母无关，见下方订阅）
   var rings = [];   // { x, y, born, life }（鼠标点击圆环，同上）
 
+  // WTJ-20260705-002：标点/符号弹出 token 列表，与 letters 分开维护（不同的尺寸区间/寿命/无
+  // 拖尾/无 motion 状态机，见 spawnSymbolPop()/drawSymbolPops()）。
+  // symbolPops: { ch, x, y, size, color, born, life, intensity }。
+  var symbolPops = [];
+  // 002 卡本地占位数值（非 081 token 来源，081 未定义标点弹出的字形规格）：明显小于字母尺寸
+  // 区间 [56,148]（且小于 MacBook 封顶 132 / 数字封顶 118），呼应 brief "更小"的要求；寿命也
+  // 明显短于字母的 800~1500ms，纯线性淡出、无拖尾。
+  var SYMBOL_POP_SIZE_RANGE = [26, 42];
+  var SYMBOL_POP_LIFE_MS = 450;
+
   function pick(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
   }
@@ -216,8 +231,14 @@
       trailLenPx *= (digitCfg && typeof digitCfg.trailMultiplier === 'number') ? digitCfg.trailMultiplier : 1;
     }
 
+    // WTJ-20260705-002：size/trailLenPx 已经用真实发射字符的 isDigit 算好（数字键的尺寸上限/
+    // 拖尾倍率不受下面的展示替换影响）——这里才只替换渲染用的 ch 字段：数字键 60/40（原样数字/
+    // US-shift 符号），字母键 50/50（大小写）。见 letter-motion.js randomizeDigitDisplay()/
+    // randomizeLetterCase() 旁注释。
+    var renderCh = isDigit ? LM.randomizeDigitDisplay(ch) : LM.randomizeLetterCase(ch);
+
     letters.push({
-      ch: ch,
+      ch: renderCh,
       x: rand(area.minX, area.maxX),
       y: rand(area.minY, area.maxY),
       size: size,
@@ -228,11 +249,34 @@
       driftDx: drift.dx,
       driftDy: drift.dy,
       trailLenPx: trailLenPx,
+      // WTJ-20260705-002：拖尾星点的静态参数（位置比例/尺寸/闪烁相位与频率），spawn 时生成
+      // 一次，逐帧复用，不逐帧重新生成——见 letter-motion.js randomSparkles() 旁注释。
+      sparkles: LM.randomSparkles(),
       born: performance.now(),
       life: life,
       reducedMotion: reducedMotion
     });
     if (letters.length > 40) letters.shift();
+  }
+
+  // WTJ-20260705-002 — 标点/符号弹出：keyboard.js onSymbol(char, intensity) 驱动，见上方订阅。
+  // 复用 drawLetterGlyph() 做实际绘制（发光贴图/描边/高光/主体三层），但走独立列表、无拖尾、
+  // 无 081 字母那套 birth-pop/settle/drift/fade 四阶段状态机——只是简单线性淡出。
+  function spawnSymbolPop(ch, intensity) {
+    var area = LM.computeSafeArea(width, height);
+    var inten = (typeof intensity === 'number') ? intensity : 1;
+    symbolPops.push({
+      ch: ch,
+      x: rand(area.minX, area.maxX),
+      y: rand(area.minY, area.maxY),
+      size: rand(SYMBOL_POP_SIZE_RANGE[0], SYMBOL_POP_SIZE_RANGE[1]),
+      color: pick(PALETTE),
+      born: performance.now(),
+      life: SYMBOL_POP_LIFE_MS,
+      intensity: Math.max(0, Math.min(1, inten))
+    });
+    // 与字母数组同款上限封顶（PERFORMANCE.md「最多 40 字母」红线同理适用于标点弹出）。
+    if (symbolPops.length > 40) symbolPops.shift();
   }
 
   // -----------------------------------------------------------------------
@@ -430,6 +474,22 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-002 — 标点/符号弹出通道：keyboard.js 新增的 onSymbol(char, intensity) 与既有
+  // onFunctionKey 并行 DUAL-EMIT（互不替代，见 keyboard.js handleFunctionKey() 顶部注释）。
+  // 单个可打印非字母数字键（如 , [ ] = ? /）在这里弹出一个更小、无拖尾的字形 token——复用
+  // drawLetterGlyph() 的 081 三层绘制（发光/描边+高光/主体），但走独立的 symbolPops 列表，
+  // 不进 letters 数组，避免污染 40 字母上限计数或字母专属的 motion 状态机字段。
+  // ---------------------------------------------------------------------
+  if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onSymbol === 'function') {
+    window.WTJ_KEYBOARD.onSymbol(function (ch, intensity) {
+      spawnSymbolPop(ch, intensity);
+      poke();
+    });
+  } else {
+    console.warn('[WTJ] window.WTJ_KEYBOARD.onSymbol 未找到（keyboard.js 未加载或版本过旧），标点/符号弹出功能不可用。');
+  }
+
+  // ---------------------------------------------------------------------
   // WTJ-20260704-086 — 非字母键视觉反馈引擎（keyvisual.js）接入：只读一次是否可用
   // （而不是每帧都判断+warn，避免 draw() 60fps 下控制台被刷屏），draw() 里按 hasKeyVisual
   // 决定是否调用。keyvisual.js 自己订阅 window.WTJ_KEYBOARD.onFunctionKey（见该文件），
@@ -438,6 +498,16 @@
   var hasKeyVisual = !!(window.WTJ_KEYVISUAL && typeof window.WTJ_KEYVISUAL.draw === 'function');
   if (!hasKeyVisual) {
     console.warn('[WTJ] window.WTJ_KEYVISUAL 未找到（keyvisual.js 未加载或加载失败），非字母键视觉反馈不可用。');
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-002 — 共享星点绘制层（sparkles.js）接入：只读一次是否可用（同 hasKeyVisual
+  // 的做法，避免 60fps 下控制台被刷屏）。缺失时字母拖尾本体（锥形填充）仍正常绘制，只是跳过
+  // 星点这一层装饰——见 drawLetterTrail()。
+  // ---------------------------------------------------------------------
+  var hasSparkles = !!(window.WTJ_SPARKLES && typeof window.WTJ_SPARKLES.drawSparkles === 'function');
+  if (!hasSparkles) {
+    console.warn('[WTJ] window.WTJ_SPARKLES 未找到（sparkles.js 未加载或加载失败），拖尾星点效果不可用（拖尾锥形本体仍会正常绘制）。');
   }
 
   // ---------------------------------------------------------------------
@@ -567,17 +637,30 @@
     }
   }
 
-  // WTJ-20260704-086 — 拖尾"smear"：081 要求"a horizontal trailing smear behind moving
-  // letters, never in front of the glyph"。用单层纯 alpha 矩形（沿字母漂移反方向），不用
-  // ctx.createLinearGradient()（同样是为了避免逐帧渐变重建，见 rebuildBackgroundGradients()
-  // 顶部注释引用的 PERFORMANCE.md 红线；小矩形本身面积很小，用纯色 alpha 已经足够表达"拖尾"
-  // 观感，不需要渐变过渡）。"clipped to canvas only, not to a square sprite box"——本实现
-  // 直接画在主 canvas 上、不调用 ctx.clip()，天然满足。
-  function drawLetterTrail(l, cx, cy, size, frame) {
+  // WTJ-20260705-002 — 拖尾分段数：锥形拖尾用一个多段收窄的填充路径来表达"流星"观感（越靠近
+  // 拖尾末端越窄，最终收尖到一点），仍是单次 ctx.fill()（只是比旧版矩形多了几个 lineTo 分段
+  // 点），不引入 ctx.createLinearGradient()/ctx.shadowBlur（PERFORMANCE.md 红线，理由同
+  // rebuildBackgroundGradients() 顶部注释引用的出处）。4 段足够呈现锥形观感，每帧路径点数
+  // 2*4+3=11 个，相比旧版矩形的 4 个顶点，成本仍然可忽略（最多 40 字母）。
+  var TRAIL_TAPER_SEGMENTS = 4;
+
+  // 单行开关：如需临时降级为"只保留干净弹出"（不画拖尾锥形本体、也不画星点），把下面这个
+  // 常量改为 false 即可——不需要改动 drawLetterTrail() 本体或 computeLetterFrame() 的拖尾
+  // 数据计算，调用点见 drawLetters()。
+  var ENABLE_LETTER_TRAIL = true;
+
+  // WTJ-20260704-086 / WTJ-20260705-002 — 拖尾"smear"：081 要求"a horizontal trailing smear
+  // behind moving letters, never in front of the glyph"。086 原实现用单层纯 alpha 矩形；002 卡
+  // 改为"锥形多段拖尾 + 几个同色星星/闪点"——锥形本体仍是纯色 fill path（无渐变），星点用共享的
+  // window.WTJ_SPARKLES.drawSparkles()（见 app/web/sparkles.js，缓存 offscreen 贴图分桶复用
+  // drawImage，同样不触碰 gradient/shadowBlur 红线）。"clipped to canvas only, not to a square
+  // sprite box"——本实现直接画在主 canvas 上、不调用 ctx.clip()，天然满足。
+  function drawLetterTrail(l, cx, cy, size, frame, now) {
     var length = l.trailLenPx * frame.trailGrowth;
     if (length < 1 || frame.trailAlpha <= 0.004) return;
     var halfWidth = Math.max(2, size * 0.08);
     var backAngle = l.driftAngle + Math.PI;
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(backAngle);
@@ -585,12 +668,39 @@
     ctx.fillStyle = l.color;
     ctx.beginPath();
     ctx.moveTo(0, -halfWidth);
-    ctx.lineTo(length, -halfWidth);
-    ctx.lineTo(length, halfWidth);
+    var seg, segFrac;
+    for (seg = 1; seg <= TRAIL_TAPER_SEGMENTS; seg++) {
+      segFrac = seg / TRAIL_TAPER_SEGMENTS;
+      ctx.lineTo(length * segFrac, -halfWidth * (1 - segFrac));
+    }
+    ctx.lineTo(length, 0); // 拖尾末端收尖成一点
+    for (seg = TRAIL_TAPER_SEGMENTS; seg >= 1; seg--) {
+      segFrac = seg / TRAIL_TAPER_SEGMENTS;
+      ctx.lineTo(length * segFrac, halfWidth * (1 - segFrac));
+    }
     ctx.lineTo(0, halfWidth);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+
+    // 拖尾上的几个同色星星/闪点：l.sparkles 是 spawnLetter() 时用 letter-motion.js 的
+    // randomSparkles() 生成的一次性静态参数（位置比例/尺寸/闪烁相位与频率），本函数每帧只是
+    // 把它们连同当前锥形拖尾的长度/方向/整体强度一起喂给共享的 drawSparkles()。
+    if (hasSparkles && l.sparkles && l.sparkles.length) {
+      try {
+        window.WTJ_SPARKLES.drawSparkles(ctx, cx, cy, {
+          color: l.color,
+          sparkles: l.sparkles,
+          angleRad: backAngle,
+          lengthPx: length,
+          baseSizePx: size,
+          alpha: frame.trailAlpha,
+          now: now
+        });
+      } catch (e) {
+        console.error('[WTJ] window.WTJ_SPARKLES.drawSparkles 调用失败，已捕获：', e);
+      }
+    }
   }
 
   // 081 Letter Rendering Spec 逐层顺序：发光（贴图预渲染，见 getGlowSprite） → 深色描边
@@ -653,10 +763,29 @@
       var cy = l.y + frame.dy;
       var renderSize = l.size * frame.scale;
 
-      if (frame.trailAlpha > 0) {
-        drawLetterTrail(l, cx, cy, renderSize, frame);
+      if (ENABLE_LETTER_TRAIL && frame.trailAlpha > 0) {
+        drawLetterTrail(l, cx, cy, renderSize, frame, now);
       }
       drawLetterGlyph(l, cx, cy, renderSize, frame.rotRad, frame.opacity, frame.blurPx);
+    }
+  }
+
+  // WTJ-20260705-002 — 标点/符号弹出渲染：复用 drawLetterGlyph()（081 三层：发光贴图/深色描边/
+  // 高光/主体），rotRad 固定 0（标点弹出无旋转动效），无拖尾、无 birth-pop/settle/drift 状态
+  // 机，只是简单线性淡出——呼应 brief "更小、无拖尾"的要求。
+  function drawSymbolPops(now) {
+    for (var i = symbolPops.length - 1; i >= 0; i--) {
+      var s = symbolPops[i];
+      var age = now - s.born;
+      if (age > s.life) {
+        symbolPops.splice(i, 1);
+        continue;
+      }
+      var t = s.life > 0 ? age / s.life : 1;
+      // intensity 越低弹出越淡（与功能键连打衰减的整体哲学一致），但设一个下限，避免"衰减到
+      // 几乎不可见"时看起来像是漏画了一次按键反馈。
+      var opacity = (1 - t) * Math.max(0.35, s.intensity);
+      drawLetterGlyph(s, s.x, s.y, s.size, 0, opacity, 0);
     }
   }
 
@@ -701,6 +830,7 @@
     drawTrail(now);
     drawRings(now);
     drawLetters(now);
+    drawSymbolPops(now);
     if (hasKeyVisual) {
       try {
         window.WTJ_KEYVISUAL.draw(ctx, now);

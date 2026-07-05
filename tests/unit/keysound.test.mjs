@@ -154,6 +154,21 @@ test('1f. 未分类功能键（category=other，如方向键）首次按下 -> p
   assert.deepEqual(sb.playSfxCalls, ['key-punct']);
 });
 
+test('1f-2. WTJ-20260705-002 复核：标点符号键（真正会同时触发新增 onSymbol 的那类键）仍经 onFunctionKey 触发 key-punct，未被 onSymbol 分流/改变路由', function () {
+  // 002 卡在 keyboard.js 给标点键新增了一条并行的 onSymbol(char, intensity) 通道（DUAL-EMIT，
+  // 供 app.js 渲染视觉弹出），但明确要求"不改路由"——keysound.js 完全不知道 onSymbol 的存在，
+  // 仍然只订阅 onLetter/onFunctionKey。本用例用真实标点字符（而不是 1f 用的方向键）驱动一次
+  // 完整的 keyboard.js -> keysound.js 流程，确认这批"现在会额外触发 onSymbol"的按键，
+  // key-punct 音效路径丝毫未受影响。
+  var sb = createSandbox();
+  [',', '[', ']', '=', '?', '/'].forEach(function (ch) { sb.fire(ch); });
+  assert.deepEqual(
+    sb.playSfxCalls,
+    [',', '[', ']', '=', '?', '/'].map(function () { return 'key-punct'; }),
+    '每个标点字符都应仍然各触发一次 playSfx("key-punct")，与 002 卡新增的 onSymbol 无关'
+  );
+});
+
 test('1g. intensity 递减到阈值以下时跳过播放（"不鼓励乱按"，REQ-KB-06）—— weak 类连续同键第 4 次起静音', function () {
   var sb = createSandbox();
   // keyboard.js 衰减曲线：FUNCTION_KEY_BASE_INTENSITY.weak=0.3，FUNCTION_KEY_DECAY_SPAN=4，
