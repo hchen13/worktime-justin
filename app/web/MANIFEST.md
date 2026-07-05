@@ -137,6 +137,21 @@ manifest 对应哪个需求文档版本。
 - `interceptedShortcuts` / `escDoesNotDirectlyExit` / `childSideExitEntryExists` 等：行为性
   开关，供退出流程相关的 QA 断言或未来的配置化实现参考。
 
+### `parentControls` —— WTJ-20260705-018 隐藏家长菜单 / 每日额度 / 语言设置卡消费
+- `cmdQHoldSec`（5）：与上面 `exit.escHoldSec` 同一镜像约定，但对应的是 `shell/main.swift`
+  的 `kCmdQHoldSeconds`（Cmd+Q 长按弹隐藏家长菜单的秒数，见 `SECURITY.md` 1.2 节），不是 Esc
+  那条。`app/web/parent-controls.js` 的 `window.wtjParentGateProgress` 用它换算进度条百分比。
+- `dailyLimitMinutesDefault`（30）/`dailyLimitMinutesRange`（`{min:5, max:180}`）：与
+  `shell/main.swift` 的 `kDailyLimitDefaultMinutes`/`kDailyLimitMinMinutes`/
+  `kDailyLimitMaxMinutes` 镜像；家长在设置面板里可调，**权威状态与持久化都在 shell 侧
+  UserDefaults**（`WTJDailyLimitMinutes`），这里只是 web 层展示默认值用，不是运行时权威来源。
+- `voiceLanguage`：中文/英文两种任务语音的交付计数快照（`zhTaskVoiceDelivered`/
+  `enTaskVoiceDelivered` 等），供人工核对；运行时真正的可用性判定与 no-silent-fallback 门禁
+  逻辑在 `app/web/voice-language.js` 里维护独立的静态清单（`ALL_TASK_IDS`/
+  `EN_AVAILABLE_TASK_IDS`/`ZH_AVAILABLE_TASK_IDS`，与磁盘 `audio/tasks/` 目录同步），不读取
+  这里的数字做判定——修改任一处都应同步核对另一处，`tests/unit/voice-language.test.mjs` 有
+  用例核对 `voice-language.js` 清单与 `manifest.js` 24 条 example 的一致性。
+
 ### `assets` —— 所有素材消费方共用的路径契约
 - `runtimeDirs`：运行时素材目录约定（`sprites/`、`states/`、`audio/`），相对 `app/web/`；
   未来打包后对应 `Resources/web/` 下同名目录（见 `app/README.md` 构建产物结构）。
