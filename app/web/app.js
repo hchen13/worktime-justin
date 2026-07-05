@@ -326,13 +326,35 @@
     return sprite;
   }
 
+  // WTJ-20260705-003：鼠标尾迹星星化——本卡本地占位常量，非 DESIGN-012「pointer trail 星光
+  // 尾迹视觉令牌」精确数值（该令牌截至本卡仍 in progress，见 pointer-trail.js 顶部注释与本卡
+  // 完成回报）。TRAIL_BASE_SIZE_PX 明显小于字母尺寸区间 [56,148]（081 desktopSizeRangePx），
+  // 呼应需求3"低透明度、小尺寸，不抢中心奖励/任务目标视觉焦点"。TIER_LIFE_MS 按 tier 给不同
+  // 存活时长：move 沿用旧版 500ms；clickHit/dragSuccess 的"更明显"额外给到 650ms，让这次
+  // 星点爆发有足够时间被孩子看清，仍远短于字母 800~1500ms 生命周期。
+  var TRAIL_BASE_SIZE_PX = 22;
+  var TRAIL_TIER_LIFE_MS = { move: 500, clickHit: 650, dragSuccess: 650 };
+
   // intensity ∈ [0,1]（可选，缺省 1）：WTJ-20260704-012 起，鼠标尾迹/点击圆环的浓度由
   // window.WTJ_POINTER（pointer.js）算出的强度驱动，详见下方"指针引擎订阅"一节。intensity
   // 存在每个 dot/ring 自己身上（而不是全局一个值），因为衰减中的尾迹和刚触发的尾迹可能同时
   // 共存在 trail 数组里，各自要按各自诞生时的强度淡出，不能共用一个正在变化的全局值。
-  function spawnTrailDot(x, y, intensity) {
+  //
+  // WTJ-20260705-003：tier 参数（'move'/'clickHit'/'dragSuccess'，缺省 'move'）决定这一个
+  // 尾迹点该生成几颗星点、多大范围、多亮——具体参数由 window.WTJ_POINTER_TRAIL.
+  // buildTrailSparkles(tier)/computeTierAlphaCap(tier) 给出（见该文件顶部注释，需求2"移动轻、
+  // 命中有效对象/拖拽成功更明显"的落地点）。颜色直接复用 app.js 已有的 PALETTE（与键盘流星/
+  // 符号弹出同一份 081 调色板，需求3"颜色统一"）。sparkles 字段缺省 null（WTJ_POINTER_TRAIL
+  // 未加载时的防御式降级，见 drawTrail() 的回退分支——退回旧版扁平蓝点，不空白）。
+  function spawnTrailDot(x, y, intensity, tier) {
     var inten = (typeof intensity === 'number') ? intensity : 1;
-    trail.push({ x: x, y: y, born: performance.now(), life: 500, intensity: inten });
+    var t = tier || 'move';
+    var life = TRAIL_TIER_LIFE_MS[t] || TRAIL_TIER_LIFE_MS.move;
+    var sparkles = hasPointerTrail ? window.WTJ_POINTER_TRAIL.buildTrailSparkles(t) : null;
+    trail.push({
+      x: x, y: y, born: performance.now(), life: life, intensity: inten,
+      tier: t, color: pick(PALETTE), sparkles: sparkles
+    });
     if (trail.length > 80) trail.shift();
   }
 
@@ -511,6 +533,16 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-003 — 鼠标尾迹星光化参数生成器（pointer-trail.js）接入：只读一次是否可用
+  // （同 hasSparkles 的做法）。缺失时 spawnTrailDot() 退化为不生成 sparkles 描述数组，
+  // drawTrail() 走文件末尾保留的旧版扁平蓝点回退分支，不空白、不抛错。
+  // ---------------------------------------------------------------------
+  var hasPointerTrail = !!(window.WTJ_POINTER_TRAIL && typeof window.WTJ_POINTER_TRAIL.buildTrailSparkles === 'function');
+  if (!hasPointerTrail) {
+    console.warn('[WTJ] window.WTJ_POINTER_TRAIL 未找到（pointer-trail.js 未加载或加载失败），鼠标尾迹回退为旧版扁平圆点。');
+  }
+
+  // ---------------------------------------------------------------------
   // 指针引擎订阅（WTJ-20260704-012）：鼠标尾迹/点击圆环的"要不要出、出多浓"改由
   // window.WTJ_POINTER（pointer.js，index.html 中在 app.js 之前加载）算出的强度驱动——
   // pointer.js 是唯一权威的 mousemove/mousedown/mouseup/click 逻辑监听方（判定尾迹强度/
@@ -543,9 +575,36 @@
       // （既是无意义的绘制开销，也避免 rings 数组被一堆隐形环占满挤掉真正可见的环）。
       if (intensity <= 0.02) return;
       spawnRing(x, y, intensity);
+
+      // WTJ-20260705-003（需求2"点击有效对象...更明显"）：既有点击圆环（上面的 spawnRing）
+      // 保持不变，命中一个已注册的有效 target（feedback.targetId 非空）时额外叠加一次更亮/
+      // 更多星点的爆发，用 window.WTJ_POINTER_TRAIL.classifyClickTier() 判定（该函数只读
+      // feedback.targetId，不重新实现 pointer.js 的命中测试）。
+      if (hasPointerTrail && window.WTJ_POINTER_TRAIL.classifyClickTier(feedback) === window.WTJ_POINTER_TRAIL.TIERS.CLICK_HIT) {
+        spawnTrailDot(x, y, 1, window.WTJ_POINTER_TRAIL.TIERS.CLICK_HIT);
+      }
     });
   } else {
     console.warn('[WTJ] window.WTJ_POINTER 未找到（pointer.js 未加载或加载失败），点击圆环功能不可用。');
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-003（需求2"拖拽成功...更明显"）：拖拽成功放下时在落点叠加一次更亮/更多星点的
+  // 爆发。014（task-templates.js）已经独立订阅了 WTJ_POINTER.onDrop 渲染"跟随/拖错弹回"视觉
+  // ——onDrop 是多订阅者事件（见 pointer.js emit()/addSubscriber()），本文件在此新增一个订阅
+  // 互不冲突、互不替代，只负责"成功时加一份星光"这一件事，不重复任何拖拽状态判定。dropCancel
+  // （success:false）不生成额外星点——"拖错不惩罚"，classifyDropTier() 对非成功态返回 null。
+  // ---------------------------------------------------------------------
+  if (window.WTJ_POINTER && typeof window.WTJ_POINTER.onDrop === 'function') {
+    window.WTJ_POINTER.onDrop(function (info) {
+      if (!hasPointerTrail || !info) return;
+      var tier = window.WTJ_POINTER_TRAIL.classifyDropTier(info);
+      if (tier === window.WTJ_POINTER_TRAIL.TIERS.DRAG_SUCCESS) {
+        spawnTrailDot(info.x, info.y, 1, tier);
+      }
+    });
+  } else {
+    console.warn('[WTJ] window.WTJ_POINTER 未找到（pointer.js 未加载或加载失败），拖拽成功星光反馈不可用。');
   }
 
   // ---------------------------------------------------------------------
@@ -595,7 +654,49 @@
   var fps = 0;
   var IDLE_TIMEOUT_MS = IDLE_STOP_SEC * 1000; // manifest: performance.idleStopSec
 
+  // WTJ-20260705-003（需求5）：拖拽中查询当前 drop target（.wtj-tt-drag-target，
+  // task-templates.js/014 渲染放置目标时打的 class，见 task-templates.js renderDragTask()）
+  // 的 viewport 边界，供 drawTrail() 做避让判定。只在 dragging 时才调用（drawTrail() 调用点已
+  // 做了 dragging 短路，见下方），避免平时鼠标移动时每帧多一次 querySelectorAll 开销。这是本卡
+  // 与 014 之间唯一的耦合点——直接按稳定 class 名查询 DOM，不经过 pointer.js 私有的 target
+  // 注册表（该注册表未对外暴露"当前有哪些 target"的查询 API，见 pointer.js 文件头「设计说明」
+  // 关于"大反馈条件"的同类取舍：消费方自己知道 bounds 就不需要问引擎要）。若未来 014 改了这个
+  // class 名，需要同步这里——非正式契约，已记录在本卡完成回报的"偏离/软阻塞"一节。
+  var EMPTY_DROP_RECTS = [];
+
+  function queryDropTargetRects() {
+    if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') {
+      return EMPTY_DROP_RECTS;
+    }
+    try {
+      var els = document.querySelectorAll('.wtj-tt-drag-target');
+      if (!els || !els.length) return EMPTY_DROP_RECTS;
+      var rects = [];
+      var i;
+      for (i = 0; i < els.length; i++) {
+        var r = els[i].getBoundingClientRect();
+        rects.push({ x: r.left, y: r.top, w: r.width, h: r.height });
+      }
+      return rects;
+    } catch (e) {
+      console.error('[WTJ] 查询 .wtj-tt-drag-target 边界失败，已捕获，本帧尾迹跳过避让判定：', e);
+      return EMPTY_DROP_RECTS;
+    }
+  }
+
   function drawTrail(now) {
+    // 需求5：只在真的处于拖拽状态时才查询 drop target 边界（getPointerState() 与
+    // querySelectorAll 都只在 dragging 时才付出这次开销，平时鼠标移动零额外成本）。
+    var dragging = false;
+    if (window.WTJ_POINTER && typeof window.WTJ_POINTER.getPointerState === 'function') {
+      try {
+        dragging = !!window.WTJ_POINTER.getPointerState().dragging;
+      } catch (e) {
+        dragging = false;
+      }
+    }
+    var dropTargetRects = dragging ? queryDropTargetRects() : EMPTY_DROP_RECTS;
+
     for (var i = trail.length - 1; i >= 0; i--) {
       var p = trail[i];
       var age = now - p.born;
@@ -604,13 +705,47 @@
         continue;
       }
       var t = 1 - age / p.life;
-      // REQ-PTR-01：浓度受 pointer.js 给出的强度控制（p.intensity，衰减期间明显更淡），
-      // 半径也随强度轻微收缩，subtle 上限本身已经由引擎强度封顶，这里只是再乘一层。
-      var trailAlpha = t * 0.5 * p.intensity;
-      ctx.beginPath();
-      ctx.fillStyle = 'rgba(94, 231, 255, ' + trailAlpha + ')';
-      ctx.arc(p.x, p.y, 3 + t * 3 * Math.max(0.4, p.intensity), 0, Math.PI * 2);
-      ctx.fill();
+
+      // REQ-PTR-01：浓度受 pointer.js 给出的强度控制（p.intensity，衰减期间明显更淡）。
+      // WTJ-20260705-003：再乘一层 tier alphaCap（需求3"低透明度，不抢焦点"）与避让因子
+      // （需求5，只对 tier==='move' 生效——clickHit/dragSuccess 是本来就"想被看见"的一次性
+      // 反馈，dragSuccess 更是特意画在刚成功放下的位置庆祝成功，不应该被自己压低）。
+      var tierCap = hasPointerTrail ? window.WTJ_POINTER_TRAIL.computeTierAlphaCap(p.tier) : 0.5;
+      var avoidFactor = 1;
+      if (p.tier === 'move' && dragging && hasPointerTrail && dropTargetRects.length) {
+        avoidFactor = window.WTJ_POINTER_TRAIL.computeDropAvoidanceFactor(p.x, p.y, dropTargetRects, { dragging: true });
+      }
+      var trailAlpha = t * p.intensity * tierCap * avoidFactor;
+      if (trailAlpha <= 0.02) continue;
+
+      if (hasSparkles && p.sparkles && p.sparkles.length) {
+        // 需求1：Canvas 风格星星/闪光替代旧版纯色圆点——每颗星点各自一个 angleRad（围绕锚点
+        // 全向散开，见 pointer-trail.js buildTrailSparkles() 顶部注释），逐颗调用共享的
+        // window.WTJ_SPARKLES.drawSparkles()（sparkles 数组只放这一颗，让它独占自己的
+        // angleRad/lengthPx），不重新实现贴图预渲染/缓存——直接复用 002 已交付、已验证的
+        // 离屏 sprite + drawImage 路径，不在本卡热路径新增 gradient/shadowBlur（PERFORMANCE.md
+        // 红线）。
+        var k;
+        for (k = 0; k < p.sparkles.length; k++) {
+          var sp = p.sparkles[k];
+          window.WTJ_SPARKLES.drawSparkles(ctx, p.x, p.y, {
+            color: p.color,
+            sparkles: [sp],
+            angleRad: sp.angleRad,
+            lengthPx: sp.spreadPx,
+            baseSizePx: TRAIL_BASE_SIZE_PX,
+            alpha: trailAlpha,
+            now: now
+          });
+        }
+      } else {
+        // 降级：sparkles.js/pointer-trail.js 缺失、或本次尾迹点未生成星点描述数组时，退回
+        // 旧版扁平圆点，保底不空白（同款 hasKeyVisual/hasSparkles 的防御式降级契约）。
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(94, 231, 255, ' + trailAlpha + ')';
+        ctx.arc(p.x, p.y, 3 + t * 3 * Math.max(0.4, p.intensity), 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 

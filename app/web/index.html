@@ -73,6 +73,13 @@
   <!-- pointer.js 需在 keyboard.js 之后、app.js 之前——app.js 初始化时要读
        window.WTJ_POINTER.onMove/onClickFeedback 完成订阅。见 app/web/pointer.js 顶部注释。 -->
   <script src="pointer.js"></script>
+  <!-- pointer-trail.js（003 鼠标尾迹星光化，window.WTJ_POINTER_TRAIL）——纯参数生成器，不依赖
+       document/canvas/WTJ_POINTER 本身，对加载顺序无强依赖，只需在 app.js 之前（app.js 的
+       spawnTrailPoint()/drawTrail() 消费本文件的 classifyClickTier()/classifyDropTier()/
+       buildTrailSparkles()/computeTierAlphaCap()/computeDropAvoidanceFactor()）。放在
+       pointer.js 之后只是沿用"同主题模块相邻"的既有顺序习惯。见 app/web/pointer-trail.js
+       顶部注释。 -->
+  <script src="pointer-trail.js"></script>
   <script src="app.js"></script>
   <script src="hud.js"></script>
   <!-- secretword.js 需在 keyboard.js 之后（订阅 WTJ_KEYBOARD.onLetter）；放在 hud.js 之后
