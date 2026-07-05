@@ -51,6 +51,13 @@
 //                        单测把三灯连闪与一次性大奖励叠层的可见窗口快进掉，不是给其余生产代码
 //                        调用的稳定契约。
 //
+// WTJ-20260705-015（任务成功即时视觉反馈 + 三灯 cheer/yay 音效加强，详见「三、任务成功即时
+// 视觉反馈」一节代码前的大段说明）：Ethan 现场反馈 press 类任务完成时只有小提示音 + 状态灯，
+// 缺视觉成功反馈。本卡新增第三路——每次 014 判定一个具体任务完成都触发一个短促（~450ms）的
+// canvas sparkle burst + 成功环，复用 002（sparkles.js）的共享绘制层；三灯「今日工作完成」的
+// streak-reward-fanfare 音效同步加强为合成琶音 + 真实人群欢呼采样分层混音（音频文件本身的
+// 修订，见 audio/SOURCE-LICENSES.md，本文件调用点未变）。
+//
 // -----------------------------------------------------------------------
 // REQ-RWD-04~06 逐条落地位置索引（供 PM/QA 对照）：
 //   REQ-RWD-04（完成一个任务点亮一个灯）：由 014 落地，本文件不重复，仅在文件头注释与
@@ -539,6 +546,258 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-015：任务成功即时视觉反馈（第三路，与上方 008 里程碑弹层、010 completion-
+  // stamp-v3 并列——014（task-templates.js）每次判定一个具体问号任务完成时 emit
+  // onTaskComplete，本节独立消费同一个事件，只做"这一次任务本身"的即时视觉反馈，不碰 streak/
+  // celebrating 状态机，与是否触发「今日工作完成」无关，每一次任务完成都会播放）。
+  //
+  // 背景（Ethan 现场验收反馈）：press 类任务（如"按下字母 A"）完成时此前只有一个很小的提示音 +
+  // 左下角状态灯点亮，没有任何"视觉爆点"——三岁小孩容易错过这个反馈。本节新增一个短促
+  // （约 450ms，明显但不会挡住画面太久）的 sparkle burst + 成功环，出现在"这次任务完成的地方"：
+  // drag/click/find 三类任务用 014 传来的 anchor（{leftPercent, topPercent}，见 task-templates.js
+  // presetAt()/anchorFromPos() 一节，与该任务道具渲染时实际使用的百分比位置完全一致）换算成像素
+  // 锚点；press 类任务没有任何 DOM（anchor 恒为 null，任务本身就没有一个"在屏幕上的位置"），
+  // 回退到 FALLBACK_ANCHOR_PCT 这个画布安全区（屏幕偏上方居中，避开顶栏/底部五槽托盘/左下角
+  // 状态灯这几个 HUD 固定区域，与 task-templates.js POSITION_PRESETS 的避让逻辑同一思路，只是
+  // 本节独立维护一份常量，不新增对 task-templates.js 内部实现细节的依赖）。
+  //
+  // 视觉构成 — 复用 002（sparkles.js）的共享绘制层，不新增粒子系统：
+  //   1) 一个从小到大扩散、alpha 逐步淡出的成功环（纯 ctx.arc()+ctx.stroke()，同 app.js
+  //      drawRings() 一样不使用渐变/shadowBlur）；
+  //   2) 围绕锚点向 FX_SPARKLE_DIRECTIONS 个方向"炸开"的星点——每个方向调用一次
+  //      window.WTJ_SPARKLES.drawSparkles()（002 卡的共享离屏贴图缓存 + drawImage 复用，
+  //      本节不重新实现星点绘制本身），方向角度均匀分布 + 一次性随机整体旋转偏移
+  //      （baseAngleOffset，只在 burst 开始时算一次，不逐帧重算），像烟花一样从锚点向四周炸开。
+  // 金色（FX_COLOR）呼应 010 completion-stamp-v3 素材本身的"金色印章"配色，让"单次任务的小奖励"
+  // 与"连续 3 次的大奖励"在色彩语言上是同一套体系的两个强度级别，不是各自随意选色。
+  //
+  // 渲染方式——与 flashLightsSequence() 同款"用 clockRef.setTimeout 驱动的分步动画"，不用
+  // requestAnimationFrame：一是本节和文件其余部分一样需要被 _setClock() 注入的假时钟完整接管
+  // （测试用 env.clock.advance() 快进，不需要真的等待或 mock rAF）；二是这个视觉本来就短促、
+  // 步数不多（FX_BURST_STEP_COUNT 步），不需要真正 60fps 的连续性。渲染面是一个懒创建的单一全屏
+  // <canvas>（.wtj-sr-taskfx-canvas，见 status-rewards.css），每次 burst 开始时清空重画，
+  // 不常驻可见内容、也不与 008/010 的 DOM 叠层共享同一个 root（各自独立生命周期，互不干扰）。
+  //
+  // 与 010 completion-stamp 的协调：第 3 个任务完成时，本节的 sparkle burst 与 010 的三灯连闪 +
+  // completion-stamp-v3 大奖励叠层是同一个 handleTaskComplete() 里先后发起的两件独立视觉——
+  // 本节先播放"这一次任务本身"的小 burst（不因为 celebrating 而跳过，见 handleTaskComplete()
+  // 改动），随后如果 streak 达标，triggerWorkComplete() 才会叠加播放三灯连闪与大奖励印章。
+  // 两者色彩体系相关但不是同一个渲染对象，不会互相打断/覆盖（各自独立的 canvas / DOM root）。
+  // ---------------------------------------------------------------------
+
+  // 002（sparkles.js）在本文件加载时是否已就绪——只在文件加载时判定一次，不逐帧/逐次 burst
+  // 重新判定（与 app.js 顶部 `hasSparkles` 变量完全同款写法，见 app/web/app.js 「hasSparkles」
+  // 一节）。缺失时星点炸开效果不可用，但成功环本身（不依赖 sparkles.js）仍会正常绘制——"至少有
+  // 一部分视觉反馈"优于"因为一个可选依赖缺失就整体跳过"。
+  var hasSparkles = !!(window.WTJ_SPARKLES && typeof window.WTJ_SPARKLES.drawSparkles === 'function');
+  if (!hasSparkles) {
+    console.warn('[WTJ_STATUS_REWARDS] window.WTJ_SPARKLES 未找到（sparkles.js 未加载或加载失败），任务成功视觉反馈的星点炸开效果不可用（成功环本体仍会正常绘制）。');
+  }
+
+  var FX_COLOR = '#ffd76b'; // 暖金色，呼应 completion-stamp-v3「金色印章」配色（见文件头说明）。
+  var FX_BURST_STEP_MS = 45;
+  var FX_BURST_STEP_COUNT = 10; // 约 450ms（FX_BURST_STEP_MS * FX_BURST_STEP_COUNT），短促不过载。
+  var FX_STATIC_HOLD_MS = 420; // reduced-motion 静态单帧展示时长，同一量级。
+  var FX_RING_BASE_PX = 16;
+  var FX_RING_GROWTH_PX = 64;
+  var FX_RING_LINE_WIDTH_PX = 4;
+  var FX_SPARKLE_DIRECTIONS = 8; // 均匀分布的炸开方向数（像烟花），见文件头说明。
+  var FX_SPARKLE_LENGTH_PX = 58; // 每个方向星点分布的长度（drawSparkles 的 lengthPx）。
+  var FX_SPARKLE_BASE_SIZE_PX = 26;
+  var FX_SPARKLE_POINT_COUNT = 3; // 每个方向上的星点个数（drawSparkles 的 sparkles 数组长度）。
+
+  // press 类任务没有任何 DOM（见 task-templates.js「四、按键任务」一节），anchor 恒为 null 时的
+  // 画布安全区兜底位置：屏幕偏上方居中（避开顶栏、底部五槽托盘、左下角状态灯），与
+  // task-templates.js POSITION_PRESETS 的避让思路一致，但本节独立维护，不引入对该文件内部实现
+  // 细节的依赖（同一避让原则的两份独立数值，不是共享同一个常量）。
+  var FALLBACK_ANCHOR_PCT = { leftPercent: 50, topPercent: 40 };
+
+  // 环境没有真实 window.innerWidth/innerHeight（理论上不会在真实浏览器发生，纯防御式兜底，
+  // 与本文件其余"缺失时不阻断"的取舍一致）时的画布尺寸兜底值。
+  var FX_FALLBACK_CANVAS_WIDTH = 1024;
+  var FX_FALLBACK_CANVAS_HEIGHT = 768;
+
+  var fxCanvasEl = null; // 懒创建的单一全屏 canvas，与 overlayRoot/milestoneOverlayRoot 同款单例模式。
+  var fxBurstTimerId = null;
+
+  function ensureFxCanvas() {
+    if (fxCanvasEl) {
+      return fxCanvasEl;
+    }
+    if (typeof document === 'undefined' || !document || typeof document.createElement !== 'function' || !document.body) {
+      return null;
+    }
+    try {
+      var canvas = document.createElement('canvas');
+      canvas.className = 'wtj-sr-taskfx-canvas';
+      if (typeof canvas.setAttribute === 'function') {
+        canvas.setAttribute('aria-hidden', 'true');
+      }
+      document.body.appendChild(canvas);
+      fxCanvasEl = canvas;
+      return fxCanvasEl;
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 创建任务成功视觉反馈画布失败，已捕获：', err);
+      return null;
+    }
+  }
+
+  // 防御式取 2D 上下文：单测用的 fake DOM（无真实 canvas 支持时）没有 getContext，
+  // 这里静默返回 null——调用方据此整体跳过绘制，不影响 streak/音效等其余流程。
+  function getFxCtx(canvasEl) {
+    if (!canvasEl || typeof canvasEl.getContext !== 'function') {
+      return null;
+    }
+    try {
+      return canvasEl.getContext('2d');
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 获取任务成功视觉反馈画布 2D 上下文失败，已捕获：', err);
+      return null;
+    }
+  }
+
+  function cancelFxBurst() {
+    if (fxBurstTimerId !== null) {
+      clockRef.clearTimeout(fxBurstTimerId);
+      fxBurstTimerId = null;
+    }
+  }
+
+  function clearFxCanvas(ctx, canvasEl) {
+    try {
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 清空任务成功视觉反馈画布失败，已捕获：', err);
+    }
+  }
+
+  // anchor 缺失（press 类任务，或字段类型不对的防御式兜底）时退化到 FALLBACK_ANCHOR_PCT。
+  function resolveAnchorPct(anchor) {
+    if (anchor && typeof anchor.leftPercent === 'number' && typeof anchor.topPercent === 'number') {
+      return anchor;
+    }
+    return FALLBACK_ANCHOR_PCT;
+  }
+
+  // 每个方向上的星点参数——形状与 letter-motion.js randomSparkles() 完全一致（{t, sizeFrac,
+  // phaseRad, twinkleHz}，drawSparkles() 的输入契约），但本节独立生成（不依赖 WTJ_LETTER_MOTION，
+  // 与 sparkles.js 文件头"本文件不应该要求消费方必须先加载 letter-motion.js"一节的取舍一致）。
+  // t 偏向线段外侧（0.55~1.0）：burst 是"向外炸开"，星点应该集中在锚点之外，不是贴着锚点本身。
+  // 只在 burst 开始时生成一次，8 个方向共用同一组点（每个方向各自的角度不同，视觉上仍是向四面
+  // 八方炸开），不逐帧/逐方向重新随机——短促的一次性效果，这样简化不影响观感，换来更少的计算。
+  function genBurstSparklePoints() {
+    var list = [];
+    var i;
+    for (i = 0; i < FX_SPARKLE_POINT_COUNT; i++) {
+      list.push({
+        t: 0.55 + Math.random() * 0.45,
+        sizeFrac: 0.4 + Math.random() * 0.5,
+        phaseRad: Math.random() * Math.PI * 2,
+        twinkleHz: 0.8 + Math.random() * 1.4
+      });
+    }
+    return list;
+  }
+
+  // 画一帧：成功环（半径随 progress 增长，alpha 随 alpha 参数淡出）+ 8 个方向的星点炸开
+  // （仅当 hasSparkles 时；成功环本身不依赖 sparkles.js，缺失时仍有部分视觉反馈，见文件头）。
+  function drawFxFrame(ctx, x, y, alpha, progress, sparklePoints, baseAngleOffset, now) {
+    try {
+      var radius = FX_RING_BASE_PX + progress * FX_RING_GROWTH_PX;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.9));
+      ctx.strokeStyle = FX_COLOR;
+      ctx.lineWidth = FX_RING_LINE_WIDTH_PX;
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(1, radius), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 绘制任务成功环失败，已捕获：', err);
+    }
+
+    if (!hasSparkles || !sparklePoints || !sparklePoints.length) {
+      return;
+    }
+    var i;
+    for (i = 0; i < FX_SPARKLE_DIRECTIONS; i++) {
+      var angle = baseAngleOffset + i * ((Math.PI * 2) / FX_SPARKLE_DIRECTIONS);
+      try {
+        window.WTJ_SPARKLES.drawSparkles(ctx, x, y, {
+          color: FX_COLOR,
+          sparkles: sparklePoints,
+          angleRad: angle,
+          lengthPx: FX_SPARKLE_LENGTH_PX,
+          baseSizePx: FX_SPARKLE_BASE_SIZE_PX,
+          alpha: alpha,
+          now: now
+        });
+      } catch (err) {
+        console.error('[WTJ_STATUS_REWARDS] window.WTJ_SPARKLES.drawSparkles 调用失败，已捕获：', err);
+      }
+    }
+  }
+
+  // 对外触发入口：014 每次 onTaskComplete 都调用一次（见 handleTaskComplete() 改动），与
+  // streak/celebrating 完全无关——每一次任务完成都会播放，不因为正在庆祝三连奖励而跳过。
+  function triggerTaskSuccessFx(payload) {
+    var canvasEl = ensureFxCanvas();
+    if (!canvasEl) {
+      return; // 无 document（如非浏览器测试沙箱不提供 document）：静默跳过，不影响其余流程。
+    }
+    var ctx = getFxCtx(canvasEl);
+    if (!ctx) {
+      return; // 环境不支持 canvas 2D（如单测的最小 fake DOM 没有 getContext）：静默跳过绘制本身。
+    }
+
+    cancelFxBurst(); // 保险：理论上 013 保证同一时刻只有一个进行中任务，不应该有上一次 burst 还在播。
+
+    var w = (typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth > 0) ? window.innerWidth : FX_FALLBACK_CANVAS_WIDTH;
+    var h = (typeof window !== 'undefined' && typeof window.innerHeight === 'number' && window.innerHeight > 0) ? window.innerHeight : FX_FALLBACK_CANVAS_HEIGHT;
+    try {
+      canvasEl.width = w;
+      canvasEl.height = h; // 顺带清空上一次 burst 的残留内容（canvas 尺寸赋值本身会清空画布）。
+    } catch (err) {
+      console.error('[WTJ_STATUS_REWARDS] 设置任务成功视觉反馈画布尺寸失败，已捕获：', err);
+    }
+
+    var anchorPct = resolveAnchorPct(payload && payload.anchor);
+    var x = (anchorPct.leftPercent / 100) * w;
+    var y = (anchorPct.topPercent / 100) * h;
+
+    var sparklePoints = genBurstSparklePoints();
+    var baseAngleOffset = Math.random() * Math.PI * 2; // 一次性整体旋转偏移，见 genBurstSparklePoints() 说明。
+
+    if (prefersReducedMotion()) {
+      // 静态完成态：不做逐步位移/缩放动画，直接画一帧接近"炸开末段"的成功环+星点（progress 较大、
+      // alpha 中等），短暂展示后一次性清空——JS 侧展示时长不变，只是不做分步动画（与 008/010 两路
+      // CSS 动画在 reduced-motion 下的处理原则一致，只是这里是 canvas，没有 CSS 媒体查询可用，
+      // 只能在 JS 侧直接分支）。
+      drawFxFrame(ctx, x, y, 0.85, 0.7, sparklePoints, baseAngleOffset, clockRef.now());
+      fxBurstTimerId = clockRef.setTimeout(function () {
+        fxBurstTimerId = null;
+        clearFxCanvas(ctx, canvasEl);
+      }, FX_STATIC_HOLD_MS);
+      return;
+    }
+
+    var step = 0;
+    function tick() {
+      fxBurstTimerId = null;
+      clearFxCanvas(ctx, canvasEl);
+      if (step >= FX_BURST_STEP_COUNT) {
+        return; // 已清空，burst 结束。
+      }
+      var progress = step / (FX_BURST_STEP_COUNT - 1);
+      var alpha = 1 - progress; // 线性淡出：第一步 alpha=1（最明显），最后一步 alpha=0（几乎消失）。
+      drawFxFrame(ctx, x, y, alpha, progress, sparklePoints, baseAngleOffset, clockRef.now());
+      step++;
+      fxBurstTimerId = clockRef.setTimeout(tick, FX_BURST_STEP_MS);
+    }
+    tick();
+  }
+
+  // ---------------------------------------------------------------------
   // streak 状态机
   // ---------------------------------------------------------------------
   var streak = 0;
@@ -578,7 +837,14 @@
     showRewardOverlay();
   }
 
-  function handleTaskComplete() {
+  function handleTaskComplete(payload) {
+    // WTJ-20260705-015：第三路即时视觉反馈——无条件触发，不受下方 celebrating 并发守卫影响。
+    // 每一次任务完成都应该有这个小 burst，即使这一次恰好是"正在庆祝三连奖励期间被吞掉的
+    // streak"（见下方 if (celebrating) return），孩子这一次任务本身仍然真实完成了、仍然应该
+    // 看到反馈——这与 streak 计数（服务于「今日工作完成」这个更高层的连续奖励判定）是两件独立
+    // 的事，不应该共用同一个并发守卫。
+    triggerTaskSuccessFx(payload);
+
     if (celebrating) {
       // 奖励播放期间收到的任务完成事件不计入下一轮 streak（避免奖励叠层/快闪与新一轮计数
       // 互相踩踏）。与 013/014 里"同一时刻只允许一个进行中任务"同一类并发保护思路。
@@ -640,6 +906,15 @@
     // 与「今日工作完成」叠层一并清空，不留残影。
     cancelMilestoneOverlayTimer();
     clearMilestoneOverlayChildren();
+    // WTJ-20260705-015：同样立即中止进行中的任务成功即时视觉反馈 burst 并清空画布，不留下
+    // 冻结在半途的 sparkle/成功环残影。
+    cancelFxBurst();
+    if (fxCanvasEl) {
+      var fxCtx = getFxCtx(fxCanvasEl);
+      if (fxCtx) {
+        clearFxCanvas(fxCtx, fxCanvasEl);
+      }
+    }
     setAllLightsDefensive(false);
     streak = 0;
     celebrating = false;
