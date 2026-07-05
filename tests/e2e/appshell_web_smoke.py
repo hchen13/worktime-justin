@@ -80,7 +80,18 @@ def main() -> int:
         # 且 audio-runtime 套件经 HTTP 已实证全部音频真实可加载。故仅排除这一类"本地 .m4a 在
         # file:// 下不可 fetch"的良性错误，其余 console/page 错误照常计入（真实 JS 错误仍会失败）。
         def _benign_file_scheme_audio_err(text: str) -> bool:
-            return ('scheme "file" is not supported' in text) and ('.m4a' in text or '/audio/' in text)
+            audio = ('.m4a' in text) or ('audio/' in text)
+            if not audio:
+                return False
+            # (1) 浏览器原生对 file:// 下本地音频 fetch 的报错。
+            if 'scheme "file" is not supported' in text:
+                return True
+            # (2) 017 diag.js 对同一 file:// 音频 fetch 失败的镜像日志（console.error
+            #     '[WTJ_DIAG] fetch-error: {url: audio/..., phase: rejected, message: Failed to fetch}'）——
+            #     同一良性根因(file:// 本地音频不可 fetch)被 diag 二次 surface，生产 wtjres:// 下不发生。
+            if ('[WTJ_DIAG] fetch-error' in text) and ('Failed to fetch' in text):
+                return True
+            return False
 
         page.on("console", lambda m: console_errors.append(m.text)
                 if m.type == "error" and not _benign_file_scheme_audio_err(m.text) else None)
