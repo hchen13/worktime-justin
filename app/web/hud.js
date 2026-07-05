@@ -224,6 +224,33 @@
     console.log('[WTJ_HUD] question mark clicked（默认占位回调，尚未被后续卡片接管）。');
   };
 
+  // -----------------------------------------------------------------------
+  // WTJ-20260705-019b：可注入时钟（默认真实 setTimeout/clearTimeout；测试用 _setClock 整体或
+  // 部分替换），与 task.js/pointer.js/task-templates.js/status-rewards.js 的 _setClock 同款
+  // 模式。terminal 的两个一次性展示窗口（140ms 按键活跃微亮 / 秘密词完成态拼写展示）都改走
+  // clockRef，供单测用假时钟 advance(ms) 快进虚拟时间断言"展示后会自动清空"，不需要真的等待。
+  // 注意：hud.js 顶层执行时立即调用的 wireTerminalSecretWordDeferred() 里那个跨脚本加载顺序
+  // 用的 setTimeout(fn, 0)（diag.js 同款宏任务延后手法）不走这条 clockRef——那是一次性的模块
+  // 加载时序基础设施，不是"用户可见的展示时长"，测试只需要真的等一次 0ms 宏任务，不需要快进。
+  // -----------------------------------------------------------------------
+  var clockRef = {
+    setTimeout: function (fn, ms) { return setTimeout(fn, ms); },
+    clearTimeout: function (id) { clearTimeout(id); }
+  };
+
+  function _setClock(clock) {
+    if (!clock || typeof clock !== 'object') {
+      console.warn('[WTJ_HUD] _setClock: 参数必须是对象，已忽略。');
+      return;
+    }
+    if (typeof clock.setTimeout === 'function') {
+      clockRef.setTimeout = clock.setTimeout;
+    }
+    if (typeof clock.clearTimeout === 'function') {
+      clockRef.clearTimeout = clock.clearTimeout;
+    }
+  }
+
   (function initState() {
     var i;
     for (i = 0; i < SLOT_COUNT; i++) {
@@ -513,9 +540,9 @@
     }
     terminalEl.classList.add('is-key-pulse');
     if (terminalKeyPulseTimer) {
-      clearTimeout(terminalKeyPulseTimer);
+      clockRef.clearTimeout(terminalKeyPulseTimer);
     }
-    terminalKeyPulseTimer = setTimeout(function () {
+    terminalKeyPulseTimer = clockRef.setTimeout(function () {
       terminalEl.classList.remove('is-key-pulse');
       terminalKeyPulseTimer = null;
     }, TERMINAL_KEY_PULSE_MS);
@@ -543,9 +570,9 @@
       terminalEl.classList.add('is-word-pulse');
     }
     if (terminalWordClearTimer) {
-      clearTimeout(terminalWordClearTimer);
+      clockRef.clearTimeout(terminalWordClearTimer);
     }
-    terminalWordClearTimer = setTimeout(function () {
+    terminalWordClearTimer = clockRef.setTimeout(function () {
       terminalWordEl.textContent = '';
       terminalWordEl.classList.remove('is-visible');
       if (terminalEl) {
@@ -861,6 +888,7 @@
     setStatusLight: setStatusLight,
     onQuestionClick: onQuestionClick,
     setChestOpen: setChestOpen, // WTJ-20260704-083 返工：011（reward-chest.js）开箱序列开始/结束时调用
-    getState: getState
+    getState: getState,
+    _setClock: _setClock // WTJ-20260705-019b：测试专用，注入假时钟以快进 terminal 两个一次性展示窗口
   });
 })();
