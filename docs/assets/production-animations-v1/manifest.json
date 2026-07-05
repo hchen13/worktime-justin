@@ -82,7 +82,8 @@
             "docs/assets/production-animations-v1/faucet/closing/faucet_closing_001.png",
             "docs/assets/production-animations-v1/faucet/closing/faucet_closing_002.png",
             "docs/assets/production-animations-v1/faucet/closing/faucet_closing_003.png",
-            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_004.png"
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_004.png",
+            "docs/assets/production-animations-v1/faucet/closing/faucet_closing_005.png"
           ],
           "frame_sheet": "docs/assets/production-animations-v1/faucet/sheets/closing-sheet.png"
         },
@@ -281,5 +282,6 @@
     ],
     "reason": "P0 acceptance required faucet and horse first; deferred props need separate pose-specific generation to avoid low-quality flattened distortions."
   },
-  "updated_at_cst": "2026-07-04 03:40"
+  "updated_at_cst": "2026-07-05 11:00",
+  "update_note": "WTJ-20260705-009: synced faucet.closing.frames with DESIGN-005 rework (docs/assets/production-animations-v1/faucet/manifest.json) — closing strip sheet has 6 cells (faucet_closing_000..005.png) but this top-level frames[] only listed 5, tripping build-anim-assets.sh's frame-count-mismatch WARNING. Added the missing faucet_closing_005.png entry so the declared frame count matches the actual sheet/rework asset; no other fields changed in this pass."
 }
