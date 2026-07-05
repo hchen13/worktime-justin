@@ -598,7 +598,20 @@
     emit(dropSubscribers, [{ success: false, type: 'dropCancel', draggedId: draggedId, targetId: null, x: x, y: y }]);
   }
 
+  // WTJ-20260705-018：额度耗尽安静锁屏 / 家长设置面板打开期间，普通鼠标/触控板不应再触发
+  // 任何游戏奖励/音效（验收标准 #5）——四个 window 级监听（onMouseDown/onMouseUp/onMouseMove/
+  // onClickEvent）共用这一处判断。window.WTJ_PARENT_CONTROLS 缺失（模块未加载/单独测试本
+  // 文件）时短路为 false，行为与本卡改动前完全一致。设置面板自己的 <input>/<button> 走浏览器
+  // 原生 DOM 事件分发（直接绑在对应元素上），不经过这里的 window 级监听，因此早退不影响设置
+  // 面板自身可用性（见 app/web/parent-controls.js 顶部"isInputSuspended()"一节说明）。
+  function isInputSuspendedByParentControls() {
+    return !!(window.WTJ_PARENT_CONTROLS &&
+      typeof window.WTJ_PARENT_CONTROLS.isInputSuspended === 'function' &&
+      window.WTJ_PARENT_CONTROLS.isInputSuspended());
+  }
+
   function onMouseDown(e) {
+    if (isInputSuspendedByParentControls()) return;
     if (e && typeof e.button === 'number' && e.button !== 0) {
       return; // 只处理主键（左键/触控板单指点按），忽略右键等。
     }
@@ -641,6 +654,7 @@
   }
 
   function onMouseUp(e) {
+    if (isInputSuspendedByParentControls()) return;
     // P1-1（Fable 对抗评审，切目标用户）：与 onMouseDown 对称的主键守卫——3 岁幼儿拖拽中右键/
     // 双指点按会派发 mouseup(button!==0)，若不过滤就会被当成"松手"提前判定 drop、物体脱手。
     // 只有主键（button===0）的 mouseup 才终结拖拽；非主键 mouseup 一律忽略，拖拽继续。
@@ -678,6 +692,7 @@
   // 事件监听（单一权威指针监听：window 上一套 mousemove/mousedown/mouseup/click）
   // ---------------------------------------------------------------------
   function onMouseMove(e) {
+    if (isInputSuspendedByParentControls()) return;
     var x = numOrDefault(e && e.clientX, 0);
     var y = numOrDefault(e && e.clientY, 0);
     var now = clockRef.now();
@@ -698,6 +713,7 @@
   }
 
   function onClickEvent(e) {
+    if (isInputSuspendedByParentControls()) return;
     var x = numOrDefault(e && e.clientX, 0);
     var y = numOrDefault(e && e.clientY, 0);
     var now = clockRef.now();

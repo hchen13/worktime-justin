@@ -389,6 +389,16 @@
 
   function onKeyDown(e) {
     if (!e || typeof e.key !== 'string') return;
+    // WTJ-20260705-018：额度耗尽安静锁屏 / 家长设置面板打开期间，普通键盘不应再触发任何
+    // 游戏奖励/音效（验收标准 #5）——window.WTJ_PARENT_CONTROLS 缺失（模块未加载/单独测试
+    // 本文件）时整段判断短路为 false，行为与本卡改动前完全一致，不构成回归。真实设置面板的
+    // <input>/<button> 走浏览器原生 DOM 事件分发（直接绑在对应元素上），不经过这里的
+    // window 级 keydown 监听，因此这里的早退不会影响设置面板自身的可用性
+    // （见 app/web/parent-controls.js 顶部"isInputSuspended()"一节说明）。
+    if (window.WTJ_PARENT_CONTROLS && typeof window.WTJ_PARENT_CONTROLS.isInputSuspended === 'function' &&
+        window.WTJ_PARENT_CONTROLS.isInputSuspended()) {
+      return;
+    }
     if (isAlnumKey(e.key)) {
       handleAlnumKey(e);
     } else {

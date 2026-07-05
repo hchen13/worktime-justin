@@ -4,13 +4,22 @@
 //  基础壳：WTJ-20260704-002；家长退出/快捷键拦截/安全边界完整实现：WTJ-20260704-017
 //  wtjres:// 自定义 scheme 资源加载层（修复 file:// 下音频 fetch() 被 CORS 拦截的
 //  架构死穴）：WTJ-20260704-019
+//  CGEventTap 系统级快捷键拦截（Cmd+Tab/Cmd+Space/Cmd+Option+Esc，需辅助功能授权，
+//  no-silent-fallback）+ 全屏进入时序加固：WTJ-20260705-013（P0 真机返工卡）
+//  隐藏家长菜单（长按 Cmd+Q 5 秒，取代 Esc 成为主入口）+ 每日使用时长额度/安静锁屏 +
+//  语言/任务语音模式设置面板（web 层渲染，shell 经 UserDefaults 持有权威计时）：
+//  WTJ-20260705-018（P0 家长控制卡）。Esc 长按口令退出（013/017）保留为兜底，不删除。
 //
 //  目标机：2014 MacBook Air（Intel x86_64，macOS Big Sur 11，4GB RAM，HD5000）
 //  硬约束：
 //   1) 禁用一切 Swift Concurrency（async/await/Task/actor）——Big Sur 缺 _Concurrency
 //      回退库，编译能过但目标机启动即崩。全文件只用 Timer / 回调 / GCD 风格 API。
+//      CGEventTap 的回调是 C 函数指针（`@convention(c)`），不是并发 API，符合约束。
 //   2) API 限定 macOS 11.0 可用集合；更新的 API 一律 `if #available` 守卫并提供
-//      11.0 路径（本文件未使用任何 11.0 之后新增的 API，故无需守卫分支）。
+//      11.0 路径（本文件未使用任何 11.0 之后新增的 API，故无需守卫分支；
+//      `CGEvent.tapCreate`/`AXIsProcessTrusted`/`AXIsProcessTrustedWithOptions` 均为
+//      远早于 11.0 就存在的 API，已用 arm64 + x86_64 双 target 交叉编译验证可编译、
+//      不引入并发符号，见 013 卡交接记录）。
 //   3) 需兼容 -target x86_64-apple-macosx11.0 交叉编译，由 build.sh 验证。
 //
 //  无 storyboard / xib，纯代码 AppKit。文件名 main.swift，用顶层语句作为入口，
@@ -22,11 +31,51 @@
 
 import Cocoa
 import WebKit
+import ApplicationServices // AXIsProcessTrusted / AXIsProcessTrustedWithOptions（WTJ-20260705-013）
 
 // MARK: - 常量
 
 /// Esc 需要长按的秒数才会弹出退出口令框。
 private let kEscHoldSeconds: TimeInterval = 5.0
+
+// MARK: - 家长控制常量（WTJ-20260705-018）
+//
+// 验收标准 #1：家长入口主通道由 Esc 改为 Cmd+Q 长按（Esc 长按口令退出保留为兜底，见上方
+// kEscHoldSeconds 与既有 handleEscKeyDown 状态机，本卡不删除、不改行为）。Cmd+Q 长按满
+// kCmdQHoldSeconds 秒后弹出隐藏家长菜单（showParentMenu()），不再是"退出口令框"。
+
+/// Cmd+Q 需要长按的秒数才会弹出隐藏家长菜单。与 kEscHoldSeconds 取同一数值（5 秒），
+/// 两条长按状态机各自独立计时，互不干扰（一个是物理 Esc 键，一个是 Cmd+Q 组合键）。
+private let kCmdQHoldSeconds: TimeInterval = 5.0
+
+/// 每日允许使用时长默认值（分钟），验收标准 #3 明确要求默认 30 分钟。
+private let kDailyLimitDefaultMinutes: Int = 30
+/// 家长可调节额度的合理范围下限/上限（分钟）——防止家长误输入 0 或超大数值把 kiosk
+/// 变成"永久锁死"或"形同虚设"。
+private let kDailyLimitMinMinutes: Int = 5
+private let kDailyLimitMaxMinutes: Int = 180
+
+/// 使用时长/额度状态落盘用的 UserDefaults key（本机持久化，验收标准 #3）。
+private let kDailyLimitMinutesDefaultsKey = "WTJDailyLimitMinutes"
+private let kUsedSecondsTodayDefaultsKey = "WTJUsedSecondsToday"
+private let kUsageDateStringDefaultsKey = "WTJUsageDateString"
+
+/// 使用时长计时 tick 间隔（秒）。Timer 累计当日使用秒数，按本地日期跨日重置
+/// （验收标准 #5：每日额度按系统本地日期计算）。
+private let kUsageTickInterval: TimeInterval = 1.0
+
+/// 计算"今天"的本地日期字符串（yyyy-MM-dd，固定 en_US_POSIX locale + 当前系统时区）。
+/// 用固定 locale 而非系统 locale，避免不同语言环境下 DateFormatter 对 "yyyy-MM-dd" 这类
+/// 纯数字模板产生的极小概率怪异行为（POSIX locale 是 Apple 文档推荐的"格式化用固定模板"
+/// 惯例）；时区用 TimeZone.current（家长实际所在时区），这样"跨日"判定贴合真实生活作息，
+/// 不是 UTC 日期。
+private func wtjCurrentLocalDateString() -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone.current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: Date())
+}
 
 /// 窗口化调试模式判定：环境变量 WTJ_WINDOWED=1 或启动参数 --windowed。
 private let kIsWindowedMode: Bool = {
@@ -42,6 +91,35 @@ private let kIsWindowedMode: Bool = {
 /// （不因模式不同而切换加载方式），避免两套加载路径分叉出不同的 bug 面。
 private let kResourceScheme = "wtjres"
 private let kResourceSchemeHost = "app"
+
+// MARK: - CGEventTap 系统级快捷键拦截常量（WTJ-20260705-013）
+//
+// 背景：REQ-DESK-04/05 与 SECURITY.md 第 2 节记录的诚实边界——Cmd+Space/Cmd+Tab/
+// Cmd+Option+Esc 是在 WindowServer/Carbon 全局热键层处理的，本地/全局 NSEvent monitor
+// （见 handleKeyDown 顶部注释）架构上拦不到。CGEventTap（`.cgSessionEventTap` +
+// `.headInsertEventTap`）是绕开这层限制的标准 kiosk 手法：在事件送达 WindowServer 自身
+// 的全局热键处理逻辑*之前*、以会话级 tap 的身份先拿到事件并可选择吞掉。代价是必须获得
+// 一次性辅助功能（Accessibility）系统级授权，未授权时 `CGEvent.tapCreate` 会返回 nil
+// （这是本文件判断"是否已获得实际生效的拦截能力"的唯一真实信号，见
+// `attemptEnableSystemHotkeyTap()`；不是仅凭 `AXIsProcessTrusted()` 的返回值就假设一定
+// 能创建成功）。
+
+/// 键盘扫描码（virtual keyCode，与 HID/AppKit 通用，和文件里已使用的 `event.keyCode == 53`
+/// 是同一套编码）。Tab/Space 在 main.swift 其余位置未定义过常量，这里首次定义，供
+/// CGEventTap 回调按数值比较使用（回调是无捕获的顶层函数，不适合引用局部变量，直接用
+/// 具名的文件作用域常量）。
+private let kKeyCodeTab: Int64 = 48
+private let kKeyCodeSpace: Int64 = 49
+private let kKeyCodeEscape: Int64 = 53 // 与 handleKeyDown 里的 53 是同一个键
+
+/// 首次启动、且辅助功能未授权时，是否已经用 NSAlert 提示过家长——只提示一次，不在每次
+/// kiosk 启动都弹一次打断家长（"首启提示"，13 卡需求原文）；此后每次仍未授权只在
+/// NSLog/Console.app 里提醒（`resolveAndLogAccessibilityTrust()`），不再弹窗打断。
+private let kAXPromptShownDefaultsKey = "WTJAccessibilityPromptShown"
+
+/// 未获得辅助功能授权时，重试创建 CGEventTap 的轮询间隔——家长可能是在 App 已经跑起来
+/// 之后才去系统偏好设置里勾选授权，这种情况下不要求家长必须重启 App 才能生效。
+private let kAXTrustRetryInterval: TimeInterval = 5.0
 
 // MARK: - 家长退出口令管理（REQ-EXIT-03 / REQ-EXIT-04，WTJ-20260704-017）
 //
@@ -312,6 +390,33 @@ final class WTJResourceSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
+// MARK: - CGEventTap C 回调（WTJ-20260705-013）
+//
+// `CGEventTapCallBack` 的类型是 `@convention(c) (CGEventTapProxy, CGEventType, CGEvent,
+// UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>?`——必须是不捕获任何上下文的顶层函数
+// （Swift 允许把无捕获的顶层/静态函数隐式转换成 C 函数指针，闭包若捕获了变量则不行）。
+// 因此这里不能写成 AppDelegate 的实例方法或闭包，只能是这样一个自由函数，通过
+// `userInfo`/`refcon` 这个不透明指针把 AppDelegate 实例传进来（对应
+// `attemptEnableSystemHotkeyTap()` 里 `Unmanaged.passUnretained(self).toOpaque()` 那次
+// 转换）；真正的按键判断逻辑都委托给 `AppDelegate.handleTappedSystemEvent`，本函数只做
+// 指针解包与转发，保持这层"C ABI 边界"尽量薄。
+//
+// 内存所有权（fable 评审修正）：CGEventTap 回调对"放行原事件"这个动作的正确返回是
+// `Unmanaged.passUnretained(event)`——系统把 event 以 +0（不转移所有权）传进回调，回调
+// 透传时也不应改变其引用计数。之前误用 `passRetained` 会给每个放行的 keyDown 多加一个
+// 永不释放的 retain，在 4GB 旧机、长时间打字的 kiosk 上是慢性内存泄漏。只有回调*自己新建*
+// 一个 CGEvent（本实现没有这种情况）时才用 `passRetained` 把新建对象的所有权交还系统。
+private func wtjSystemHotkeyTapCallback(
+    proxy: CGEventTapProxy,
+    type: CGEventType,
+    event: CGEvent,
+    refcon: UnsafeMutableRawPointer?
+) -> Unmanaged<CGEvent>? {
+    guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
+    let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
+    return appDelegate.handleTappedSystemEvent(proxy: proxy, type: type, event: event)
+}
+
 // MARK: - AppDelegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler {
@@ -332,6 +437,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var escProgressTimer: Timer?
     private var alertShowing = false
 
+    // MARK: 家长控制状态（WTJ-20260705-018）
+
+    // Cmd+Q 长按状态（家长菜单主入口，独立于上面的 Esc 状态机）。
+    private var cmdQTiming = false
+    private var cmdQStartDate: Date?
+    private var cmdQProgressTimer: Timer?
+    /// 家长菜单（NSMenu）展示期间为 true：与 alertShowing 同理，抑制重复触发/新的长按计时。
+    private var parentMenuShowing = false
+
+    /// 每日使用时长额度 tick 计时器（1Hz，累计当日已用秒数，见 kUsageTickInterval）。
+    private var usageTickTimer: Timer?
+    /// 当前生效的每日额度（分钟），来自 UserDefaults，默认 kDailyLimitDefaultMinutes。
+    private var dailyLimitMinutes: Int = kDailyLimitDefaultMinutes
+    /// 今日已使用秒数（本地日期口径，跨日归零）。
+    private var usedSecondsToday: Int = 0
+    /// usedSecondsToday 所属的本地日期字符串（yyyy-MM-dd）；与 wtjCurrentLocalDateString() 不
+    /// 一致即视为"新的一天"，触发归零 + 解锁。
+    private var usageDateString: String = ""
+    /// 当前是否处于"额度耗尽安静锁屏"状态（验收标准 #5/#6）。
+    private var isLockedOut = false
+
+    // MARK: CGEventTap 系统级快捷键拦截状态（WTJ-20260705-013）
+
+    /// CGEventTap 句柄；非 nil 表示 tap 已创建（不代表一定仍 enabled，可能被系统因超时
+    /// 暂停，见 `handleTappedSystemEvent` 里的 `.tapDisabledByTimeout` 分支）。
+    private var systemHotkeyTap: CFMachPort?
+    /// tap 挂到 run loop 上用的 source；`applicationWillTerminate` 释放时需要一并移除。
+    private var systemHotkeyRunLoopSource: CFRunLoopSource?
+    /// 未获得辅助功能授权时的轮询重试计时器；一旦成功创建 tap 就失效并置 nil。
+    private var axTrustRetryTimer: Timer?
+    /// 当前这次运行期间，CGEventTap 是否已经实际创建成功（而不仅仅是"尝试过"）。
+    /// `SECURITY.md`/日志文案根据这个值决定说"已启用"还是"未生效，回退层 2"。
+    private var systemHotkeyTapActive = false
+
     // MARK: NSApplicationDelegate
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -344,10 +483,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         setupWebView()
         if !kIsWindowedMode {
             setupKioskPresentation()
+            // CGEventTap 系统级快捷键拦截（WTJ-20260705-013）：只在 kiosk 生产模式启用，
+            // 窗口化调试模式刻意不启用——道理与 setupKioskPresentation() 一致（见其注释），
+            // 调试时不应该让 Cmd+Tab/Cmd+Space 也变得拦不住，否则开发者没法方便地切出去看
+            // 文档/查日志。
+            setupSystemHotkeyBlocker()
         }
         setupKeyMonitor()
-        window.makeKeyAndOrderFront(nil)
+
+        // 每日使用时长额度（WTJ-20260705-018，验收标准 #3/#5）：无论 kiosk 生产模式还是
+        // WTJ_WINDOWED 窗口化调试模式都启用——调试时也应能观察/验证额度耗尽锁屏行为，与
+        // W/H/M/` 快捷键拦截"两种模式都拦"的既有惯例一致（见 handleKeyDown 顶部注释）。
+        loadUsageStateFromDefaults()
+        _ = refreshUsageStateForNewDayIfNeeded()
+        startUsageTickTimer()
+
+        // 全屏进入可靠性加固（层 3，WTJ-20260705-013）：顺序调整为"先 activate 进程，再让
+        // 窗口成为 key + front，kiosk 模式下最后再 orderFrontRegardless 兜底一次"。
+        // 之前的顺序是 makeKeyAndOrderFront 在前、activate 在后；查阅 AppKit 行为，
+        // `NSApp.activate` 负责把*进程*带到前台（激活菜单栏/输入焦点归属），
+        // `makeKeyAndOrderFront` 负责把*这个窗口*设为 key + 排到最前——如果进程还没被
+        // activate，"这个窗口"在系统眼里可能还不是"当前活跃 App 的窗口"，排序结果在不同
+        // macOS 版本上可能不一致（这正是 Ethan 在 Big Sur 上可能观察到"偶发没进全屏/菜单栏
+        // 短暂露出"的候选原因之一——构建机 macOS 26 上顺序颠倒不容易复现问题，不代表 Big
+        // Sur 11 上时序行为完全一致，这也是本节改动**仍需真机验证**、不是"改了就一定解决"
+        // 的原因）。调整后先 activate、再 makeKeyAndOrderFront，kiosk 模式再加一次
+        // orderFrontRegardless（忽略"当前是否已是 front"这一判断，无条件把窗口排到最前，
+        // 兜住"某些系统对话框/前一个进程的残留窗口在 activate 之后仍短暂盖在上面"这种情况）。
+        // webView(_:didFinish:) 里 didFinish 后还会再交一次 first responder，覆盖"WKWebView
+        // 首帧渲染完成时机早于/晚于这里的窗口排序"这一时序分支。
         NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        if !kIsWindowedMode {
+            window.orderFrontRegardless()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -367,6 +536,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         }
         escProgressTimer?.invalidate()
         escProgressTimer = nil
+        cmdQProgressTimer?.invalidate()
+        cmdQProgressTimer = nil
+        usageTickTimer?.invalidate()
+        usageTickTimer = nil
+        tearDownSystemHotkeyBlocker()
     }
 
     // MARK: 菜单 / 键盘
@@ -390,13 +564,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     private func setupKeyMonitor() {
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+        // WTJ-20260705-018：新增 .flagsChanged——Cmd+Q 长按状态机要求 Cmd 与 Q 全程同时按住，
+        // 若计时期间 Cmd 先于 Q 被释放，keyUp 只会在 Q 真正抬起时触发，中途不会收到通知；
+        // .flagsChanged 是 AppKit 里修饰键按下/释放的独立事件通道，用它监测"Cmd 提前释放"这一
+        // 分支并及时复位计时（见 handleFlagsChanged）。.keyDown/.keyUp 行为不变。
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { [weak self] event in
             guard let self = self else { return event }
-            if event.type == .keyDown {
+            switch event.type {
+            case .keyDown:
                 return self.handleKeyDown(event)
+            case .keyUp:
+                self.handleKeyUp(event)
+                return event
+            case .flagsChanged:
+                self.handleFlagsChanged(event)
+                return event
+            default:
+                return event
             }
-            self.handleKeyUp(event)
-            return event
         }
     }
 
@@ -452,8 +637,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         if event.modifierFlags.contains(.command) {
             let chars = event.charactersIgnoringModifiers?.lowercased() ?? ""
             if chars == "q" {
-                // 窗口化调试模式特意放行 Cmd+Q（见上方函数注释）；kiosk 模式吞掉。
-                return kIsWindowedMode ? event : nil
+                // WTJ-20260705-018：Cmd+Q 从 013 的"直接吞掉"改为"长按 5 秒 -> 弹隐藏家长菜单"
+                // 状态机（验收标准 #1），与下方 handleCmdQKeyDown/handleKeyUp/handleFlagsChanged
+                // 三处配合。窗口化调试模式特意放行 Cmd+Q（不进入长按状态机，直接交给系统默认
+                // 处理——配合 setupMenu() 里绑定给菜单项的 terminate(_:)，保留"开发时随时能退出
+                // 调试窗口"的既有手段，与 013 行为一致，未受本卡改动）。
+                if kIsWindowedMode {
+                    return event
+                }
+                handleCmdQKeyDown()
+                return nil
             }
             if chars == "w" || chars == "h" || chars == "m" || chars == "`" {
                 return nil // 吞掉 Cmd+W / Cmd+H / Cmd+M / Cmd+`（kiosk 与窗口化模式均拦）
@@ -465,6 +658,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private func handleKeyUp(_ event: NSEvent) {
         if event.keyCode == 53 { // Esc
             handleEscKeyUp()
+            return
+        }
+        // kIsWindowedMode 下 Cmd+Q 从未进入长按状态机（见 handleKeyDown），cmdQTiming 恒为
+        // false，这里的调用是安全的 no-op（不会误触发 evaluateJavaScript 刷屏）；仍加判断只是
+        // 避免窗口化调试模式下对每次 Q 键松开都做一次无意义的字符串比较。
+        if !kIsWindowedMode {
+            let chars = event.charactersIgnoringModifiers?.lowercased() ?? ""
+            if chars == "q" {
+                handleCmdQKeyUp()
+            }
+        }
+    }
+
+    /// Cmd 修饰键状态变化（按下/释放）时触发，与 keyDown/keyUp 是独立的事件通道（见
+    /// setupKeyMonitor() 顶部注释）。Cmd+Q 长按判定要求 Cmd 与 Q 全程同时按住——若计时期间
+    /// Cmd 先于 Q 被释放（物理上很常见：先松大拇指、Q 手指还没抬），必须在这里及时复位，
+    /// 否则残留的 keyDown 重复事件不会再来、计时器会一直数到 5 秒后弹出菜单，但家长此刻已经
+    /// 松开了 Cmd，体感上是"没有继续长按却仍然弹出了菜单"的错觉/时序 bug。
+    private func handleFlagsChanged(_ event: NSEvent) {
+        if cmdQTiming && !event.modifierFlags.contains(.command) {
+            handleCmdQKeyUp()
         }
     }
 
@@ -554,6 +768,258 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window.makeFirstResponder(webView)
     }
 
+    // MARK: Cmd+Q 长按 -> 隐藏家长菜单（WTJ-20260705-018，验收标准 #1/#2）
+    //
+    // 与上面的 Esc 长按状态机结构对称（handleEscKeyDown/handleEscKeyUp/checkEscProgress/
+    // notifyEscProgress），但完全独立的一套状态（cmdQTiming/cmdQStartDate/cmdQProgressTimer），
+    // 驱动的是家长菜单（showParentMenu()，NSMenu），不是退出口令框；进度条通知走独立的
+    // web 钩子 window.wtjParentGateProgress（而非复用 wtjEscProgress，避免两条长按状态机共用
+    // 同一进度条 DOM/回调时相互踩踏——web 层 app.js/parent-controls.js 各自订阅、各自的进度条
+    // 元素，见 app/web/parent-controls.js）。
+
+    private func handleCmdQKeyDown() {
+        if parentMenuShowing || alertShowing { return }
+        // 长按期间 macOS 键盘重复会连续发送 keyDown，已在计时则忽略（与 handleEscKeyDown 同）。
+        if cmdQTiming { return }
+        cmdQTiming = true
+        cmdQStartDate = Date()
+        cmdQProgressTimer?.invalidate()
+        cmdQProgressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
+            self?.checkCmdQProgress(timer)
+        }
+    }
+
+    private func handleCmdQKeyUp() {
+        cmdQTiming = false
+        cmdQStartDate = nil
+        cmdQProgressTimer?.invalidate()
+        cmdQProgressTimer = nil
+        notifyCmdQProgress(0)
+    }
+
+    private func checkCmdQProgress(_ timer: Timer) {
+        guard let start = cmdQStartDate else {
+            timer.invalidate()
+            return
+        }
+        let elapsed = Date().timeIntervalSince(start)
+        notifyCmdQProgress(elapsed)
+        if elapsed >= kCmdQHoldSeconds {
+            timer.invalidate()
+            cmdQProgressTimer = nil
+            cmdQTiming = false
+            cmdQStartDate = nil
+            notifyCmdQProgress(0)
+            showParentMenu()
+        }
+    }
+
+    private func notifyCmdQProgress(_ seconds: TimeInterval) {
+        webView?.evaluateJavaScript(
+            "window.wtjParentGateProgress && window.wtjParentGateProgress(\(seconds));",
+            completionHandler: nil
+        )
+    }
+
+    /// 弹出隐藏家长菜单（原生 NSMenu——不依赖 web 层渲染，即使额度耗尽安静锁屏、web 内容被
+    /// isInputSuspended() 冻结交互，本菜单仍能弹出，满足验收标准 #6"锁屏状态下仍可 Cmd+Q
+    /// 长按打开家长菜单"）。menu.popUp(...) 与 alert.runModal() 一样是同步阻塞调用（有自己的
+    /// 事件跟踪循环），不涉及 Swift Concurrency。
+    private func showParentMenu() {
+        parentMenuShowing = true
+
+        let menu = NSMenu(title: "家长菜单")
+        menu.autoenablesItems = false
+
+        let exitItem = NSMenuItem(title: "退出 WorkTime Justin", action: #selector(parentMenuExit), keyEquivalent: "")
+        exitItem.target = self
+        menu.addItem(exitItem)
+
+        let settingsItem = NSMenuItem(title: "设置…", action: #selector(parentMenuOpenSettings), keyEquivalent: "")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let resetTitle = "重置今日使用时长（当前已用 \(usedSecondsToday / 60) 分钟 / 限额 \(dailyLimitMinutes) 分钟）"
+        let resetItem = NSMenuItem(title: resetTitle, action: #selector(parentMenuResetUsage), keyEquivalent: "")
+        resetItem.target = self
+        menu.addItem(resetItem)
+
+        // 弹出位置：内容视图（webView）的中心点，用视图本地坐标系（而非屏幕坐标），是
+        // NSMenu.popUp(positioning:at:in:) 文档化的标准用法——borderless 全屏 kiosk 窗口没有
+        // 菜单栏/固定锚点，屏幕中心保证家长无论此刻 web 内容渲染到哪都能看到菜单弹出。
+        let view = window.contentView
+        let location = NSPoint(x: (view?.bounds.midX) ?? 0, y: (view?.bounds.midY) ?? 0)
+        menu.popUp(positioning: nil, at: location, in: view)
+
+        parentMenuShowing = false
+    }
+
+    /// 家长菜单「退出」：与 handleEscKeyDown 那条"长按 Esc 满 5 秒 + 输入口令"的退出路径是
+    /// 两条并存、互不替代的合法退出通道——这一条**不再要求输入口令**（验收标准 #2 原文：
+    /// "点「退出」直接退出 app,不再要求输入口令"）。长按 Cmd+Q 满 5 秒这个物理动作本身已经是
+    /// 对"家长意图"的确认，口令是 Esc 通道刻意保留的兜底强度，二者并存不冲突。
+    @objc private func parentMenuExit() {
+        NSApp.terminate(nil)
+    }
+
+    /// 家长菜单「设置…」：设置面板本身用 web 层渲染（更灵活的表单 UI，见
+    /// app/web/parent-controls.js 的 showSettingsPanel()），这里只负责把当前权威状态
+    /// （额度/已用/是否锁定）经 evaluateJavaScript 推给 web 并触发它显示面板。
+    @objc private func parentMenuOpenSettings() {
+        notifySettingsPanelOpen()
+    }
+
+    /// 家长菜单「重置今日使用时长」：验收标准 #6 的 reset 今日额度，菜单里可直接一键完成，
+    /// 不需要先进设置面板（安静锁屏状态下家长最常见的诉求就是"立刻解锁"，菜单直达更快）。
+    @objc private func parentMenuResetUsage() {
+        resetUsageToday()
+    }
+
+    // MARK: 每日使用时长额度 / 安静锁屏（WTJ-20260705-018，验收标准 #3/#5/#6）
+    //
+    // 权威状态完全由 shell 持有（UserDefaults 持久化），web 层只是"被通知的展示层"——
+    // web 从不自行判断是否锁定，只响应 window.wtjSetLockout(locked, remainingSeconds) /
+    // window.wtjApplyShellState(json) 这两个 shell 下发的调用（见 app/web/parent-controls.js）。
+    // 这样即使 web 页面被家长/开发者用浏览器 devtools 之类手段篡改，锁定判定本身不受影响
+    // （web 侧最多是"看起来没锁"，但 shell 仍会在下一次 tick/menu 操作时以权威状态覆盖它）。
+
+    /// 每日额度合法范围裁剪（kDailyLimitMinMinutes ~ kDailyLimitMaxMinutes）。
+    private func clampDailyLimit(_ minutes: Int) -> Int {
+        return max(kDailyLimitMinMinutes, min(kDailyLimitMaxMinutes, minutes))
+    }
+
+    /// 启动期从 UserDefaults 读取额度/已用秒数/所属日期；首次启动（无存档）则写一次默认值
+    /// 落盘（家长/QA 可用 `defaults read com.worktime.justin` 核实当前生效值）。
+    private func loadUsageStateFromDefaults() {
+        let d = UserDefaults.standard
+        let hasStoredLimit = d.object(forKey: kDailyLimitMinutesDefaultsKey) != nil
+        let storedLimit = d.integer(forKey: kDailyLimitMinutesDefaultsKey)
+        dailyLimitMinutes = hasStoredLimit ? clampDailyLimit(storedLimit) : kDailyLimitDefaultMinutes
+        usedSecondsToday = max(0, d.integer(forKey: kUsedSecondsTodayDefaultsKey))
+        usageDateString = d.string(forKey: kUsageDateStringDefaultsKey) ?? wtjCurrentLocalDateString()
+        isLockedOut = usedSecondsToday >= dailyLimitMinutes * 60
+        if !hasStoredLimit {
+            persistUsageState()
+        }
+    }
+
+    private func persistUsageState() {
+        let d = UserDefaults.standard
+        d.set(dailyLimitMinutes, forKey: kDailyLimitMinutesDefaultsKey)
+        d.set(usedSecondsToday, forKey: kUsedSecondsTodayDefaultsKey)
+        d.set(usageDateString, forKey: kUsageDateStringDefaultsKey)
+    }
+
+    /// 跨日检测（验收标准 #5："每日额度按系统本地日期计算"）：本地日期与存档不同即视为新的
+    /// 一天——归零已用秒数、若此前处于锁定则解锁并通知 web。返回 true 表示确实发生了跨日
+    /// （调用方可据此决定是否需要额外同步一次 web 状态）。
+    @discardableResult
+    private func refreshUsageStateForNewDayIfNeeded() -> Bool {
+        let today = wtjCurrentLocalDateString()
+        guard usageDateString != today else { return false }
+        usageDateString = today
+        usedSecondsToday = 0
+        let wasLocked = isLockedOut
+        isLockedOut = false
+        persistUsageState()
+        if wasLocked {
+            notifyLockout(false)
+        }
+        NSLog("WTJ: 检测到本地日期变更（%@），今日使用时长已归零%@。", today, wasLocked ? "并自动解锁" : "")
+        return true
+    }
+
+    private func startUsageTickTimer() {
+        usageTickTimer?.invalidate()
+        usageTickTimer = Timer.scheduledTimer(withTimeInterval: kUsageTickInterval, repeats: true) { [weak self] _ in
+            self?.tickUsage()
+        }
+    }
+
+    private func tickUsage() {
+        let dayChanged = refreshUsageStateForNewDayIfNeeded()
+        guard !isLockedOut else { return }
+        usedSecondsToday += Int(kUsageTickInterval)
+        if usedSecondsToday >= dailyLimitMinutes * 60 {
+            enterLockout()
+            return
+        }
+        persistUsageState()
+        // 平时不需要每秒都 evaluateJavaScript 推送状态（web 层不展示倒计时 UI，避免在 4GB
+        // 旧机上无意义地每秒唤醒 JS 引擎）；仅在刚发生跨日归零时补一次同步，确保 web 侧持有的
+        // "已用/锁定"展示（若设置面板恰好开着）不会因为没收到 wtjSetLockout(false) 之外的字段
+        // 更新而显得过期。
+        if dayChanged {
+            notifyShellStateToWeb()
+        }
+    }
+
+    private func enterLockout() {
+        guard !isLockedOut else { return }
+        isLockedOut = true
+        persistUsageState()
+        notifyLockout(true)
+        NSLog("WTJ: 今日使用时长额度已用完（限额 %d 分钟），已进入安静锁屏。", dailyLimitMinutes)
+    }
+
+    /// 家长菜单/设置面板触发的"立即重置今日额度"：归零已用秒数、若处于锁定则解锁。
+    private func resetUsageToday() {
+        usedSecondsToday = 0
+        let wasLocked = isLockedOut
+        isLockedOut = false
+        persistUsageState()
+        if wasLocked {
+            notifyLockout(false)
+        } else {
+            notifyShellStateToWeb()
+        }
+        NSLog("WTJ: 家长已手动重置今日使用时长。")
+    }
+
+    private func remainingSecondsToday() -> Int {
+        return max(0, dailyLimitMinutes * 60 - usedSecondsToday)
+    }
+
+    /// 通知 web 层锁定状态变化（进入/解除安静锁屏）。web 层 parent-controls.js 据此显示/隐藏
+    /// 全屏锁屏叠层，并把 isInputSuspended() 置为 true/false（keyboard.js/pointer.js 据此
+    /// 停止触发游戏奖励/音效，验收标准 #5）。
+    private func notifyLockout(_ locked: Bool) {
+        webView?.evaluateJavaScript(
+            "window.wtjSetLockout && window.wtjSetLockout(\(locked ? "true" : "false"), \(remainingSecondsToday()));",
+            completionHandler: nil
+        )
+    }
+
+    /// 把当前权威状态整体推给 web（初次加载 hydrate、设置变更后的确认回显等场景）。
+    private func notifyShellStateToWeb() {
+        let json = buildShellStateJSON()
+        webView?.evaluateJavaScript(
+            "window.wtjApplyShellState && window.wtjApplyShellState(\(json));",
+            completionHandler: nil
+        )
+    }
+
+    /// 打开设置面板：与 notifyShellStateToWeb 内容相同，但调用的是 wtjShowSettingsPanel
+    /// （会主动弹出/显示面板 DOM），而不是静默同步用的 wtjApplyShellState（不应该每次锁定状态
+    /// tick 都意外弹出设置面板）。两者字段格式一致，web 层可共用同一份解析逻辑。
+    private func notifySettingsPanelOpen() {
+        let json = buildShellStateJSON()
+        webView?.evaluateJavaScript(
+            "window.wtjShowSettingsPanel && window.wtjShowSettingsPanel(\(json));",
+            completionHandler: nil
+        )
+    }
+
+    /// 构造推给 web 的状态 JSON 字面量。字段全部是数值/布尔，手工拼接足够安全，无需 JSONSerialization
+    /// （没有字符串字段，不存在转义/注入问题）。
+    private func buildShellStateJSON() -> String {
+        return "{\"dailyLimitMinutes\":\(dailyLimitMinutes),\"usedSecondsToday\":\(usedSecondsToday)," +
+            "\"remainingSecondsToday\":\(remainingSecondsToday()),\"locked\":\(isLockedOut ? "true" : "false")," +
+            "\"dailyLimitMinMinutes\":\(kDailyLimitMinMinutes),\"dailyLimitMaxMinutes\":\(kDailyLimitMaxMinutes)}"
+    }
+
     // MARK: 窗口
 
     private func setupWindow() {
@@ -574,7 +1040,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                                  backing: .buffered,
                                  defer: false)
             w.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 1)
-            w.collectionBehavior = [.fullScreenPrimary]
+            // collectionBehavior 修正（层 3，WTJ-20260705-013）：原先是 `.fullScreenPrimary`，
+            // 但那个标志位语义是"这个窗口可以参与系统原生全屏空间（NSWindow.toggleFullScreen
+            // 那一套、配合 titled 窗口右上角的绿色按钮）"——本窗口从来不调用
+            // `toggleFullScreen`，是纯手工用 borderless + 屏幕尺寸 frame + 高 window level
+            // 模拟出来的"伪全屏"，`.fullScreenPrimary` 对这种窗口大概率是无效标志位，也可能是
+            // 多余的干扰项（不同 macOS 版本对"borderless 窗口挂 fullScreenPrimary"的处理是否
+            // 一致未经验证，是"偶发没进全屏/层级异常"的候选原因之一）。改为
+            // `[.canJoinAllSpaces, .stationary]`：`.canJoinAllSpaces` 让这个窗口在任何
+            // Space 切换后依然可见（不会被摁在原来那个 Space 里）；`.stationary` 让它在
+            // Mission Control / Exposé 触发时不参与窗口重排动画、保持原地——这两个标志位才是
+            // "伪全屏、恒驻顶层"这个真实架构需要的语义，`.fullScreenPrimary` 不是。
+            w.collectionBehavior = [.canJoinAllSpaces, .stationary]
             w.isOpaque = true
             w.hasShadow = false
             w.backgroundColor = NSColor.black
@@ -635,12 +1112,201 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     //
     // presentationOptions 是系统级"给 WindowServer 的建议标志位"，不是本 app 拦截按键
     // 那种确定性的事件消费；它们能显著提高干扰门槛（隐藏 Dock/菜单栏、抑制强制退出面板/
-    // 注销关机/隐藏窗口/大部分 App 切换手势），但不构成对 Cmd+Space/Cmd+Tab 等系统级
-    // 全局快捷键的保证屏蔽——这些快捷键的处理点在事件送达 app 之前，任何普通（非辅助功能
-    // 特权）app 都拦不住。诚实边界与家长可选的补强方式见 app/SECURITY.md。
+    // 注销关机/隐藏窗口/大部分 App 切换手势），但**本身**不构成对 Cmd+Space/Cmd+Tab 等
+    // 系统级全局快捷键的保证屏蔽——这些快捷键的处理点在事件送达普通 app 之前，普通（未获
+    // 辅助功能特权）app 都拦不住。13 卡新增的 `setupSystemHotkeyBlocker()`
+    // （CGEventTap，见下方 MARK）是这一诚实边界的分层升级：拿到辅助功能授权后才能真正
+    // 兜住 Cmd+Tab/Cmd+Space；未授权时仍然只有这里的 best-effort 标志位 + 层 2 机器级
+    // `symbolichotkeys` 脚本（`app/scripts/kiosk-setup.sh`）兜底。诚实边界与家长可选的
+    // 补强方式见 app/SECURITY.md。
     private func setupKioskPresentation() {
         NSApp.presentationOptions = [.hideDock, .hideMenuBar, .disableProcessSwitching,
                                       .disableForceQuit, .disableSessionTermination, .disableHideApplication]
+    }
+
+    // MARK: CGEventTap 系统级快捷键拦截（层 1，WTJ-20260705-013）
+    //
+    // 目标：吞掉 Cmd+Tab（App 切换）、Cmd+Space / Cmd+Option+Space（Spotlight / Finder
+    // 搜索窗口）、Cmd+Option+Esc（强制退出面板）这几个 setupKeyMonitor() 的本地 NSEvent
+    // monitor 架构上拦不到的系统级组合键（见该函数顶部"诚实边界"注释）。
+    //
+    // 原理：`.cgSessionEventTap` + `.headInsertEventTap` + `.defaultTap` 三个参数的组合
+    // 意味着——在当前登录 session 范围内（不只是本 app 的事件流）、以"最先看到事件"的优先级
+    // （headInsert）、以"可读可改可吞"的模式（defaultTap，相对的 `.listenOnly` 只能观察不能
+    // 吞）插入一个事件 tap。回调里对匹配的组合键返回 nil 即可让事件到此为止，不再往下传给
+    // WindowServer 自己的全局热键分发逻辑（也就不会触发 Cmd+Tab 切出去的界面）。
+    //
+    // 代价：`CGEvent.tapCreate` 需要本进程已获得"辅助功能"（Accessibility）系统级授权
+    // （系统偏好设置 → 安全性与隐私 → 隐私 → 辅助功能），未授权时直接返回 nil、不会抛异常
+    // 也不会崩溃，只是拿不到 tap。**no-silent-fallback 硬要求**：未拿到 tap 时必须显式
+    // 让家长/维护者知道"系统快捷键拦截未生效"，绝不能因为拿不到就悄悄退化成"看起来和拦住了
+    // 一样"——见 `attemptEnableSystemHotkeyTap()` 与 `promptAccessibilityTrustIfNeeded()`。
+    private func setupSystemHotkeyBlocker() {
+        if attemptEnableSystemHotkeyTap() {
+            return
+        }
+        // 首次尝试即失败：说明还没有辅助功能授权（或授权判断与实际创建结果不一致——
+        // 这里以 tapCreate 的真实返回值为准，而不是仅信 AXIsProcessTrusted() 的布尔值）。
+        promptAccessibilityTrustIfNeeded()
+        // 家长很可能是在 App 已经跑起来之后才去系统偏好设置里勾选授权；用一个不依赖并发的
+        // 轮询 Timer（而非一次性判断）持续重试，一旦成功就自动切换到"已拦截"状态，不强制
+        // 要求家长重启 App。
+        axTrustRetryTimer?.invalidate()
+        axTrustRetryTimer = Timer.scheduledTimer(withTimeInterval: kAXTrustRetryInterval, repeats: true) { [weak self] timer in
+            guard let self = self else { timer.invalidate(); return }
+            if self.attemptEnableSystemHotkeyTap() {
+                timer.invalidate()
+                self.axTrustRetryTimer = nil
+                NSLog("WTJ: 辅助功能授权已在运行期间生效，CGEventTap 系统级快捷键拦截现已启用" +
+                      "（Cmd+Tab/Cmd+Space/Cmd+Option+Esc）。")
+            }
+        }
+    }
+
+    /// 尝试创建并启用 CGEventTap；成功返回 true 并把状态记到 `systemHotkeyTapActive`，
+    /// 失败（通常是未授权辅助功能）返回 false、不做任何静默假装成功的事。可重复调用
+    /// （轮询重试场景），已启用时直接返回 true 不重复创建。
+    @discardableResult
+    private func attemptEnableSystemHotkeyTap() -> Bool {
+        if systemHotkeyTapActive, let tap = systemHotkeyTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+            return true
+        }
+
+        let eventMask: CGEventMask = 1 << CGEventType.keyDown.rawValue
+        let refcon = Unmanaged.passUnretained(self).toOpaque()
+        guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap,
+                                           place: .headInsertEventTap,
+                                           options: .defaultTap,
+                                           eventsOfInterest: eventMask,
+                                           callback: wtjSystemHotkeyTapCallback,
+                                           userInfo: refcon) else {
+            // tapCreate 返回 nil：绝大多数情况就是辅助功能未授权。这里不重复弹窗（弹窗只在
+            // promptAccessibilityTrustIfNeeded() 的首启逻辑里做一次），但每次尝试失败都要有
+            // 客观可查的日志，供家长/QA 在 Console.app 里核实"现在到底有没有拦住"。
+            NSLog("WTJ: CGEventTap 创建失败（通常因为辅助功能未授权）。Cmd+Tab/Cmd+Space/" +
+                  "Cmd+Option+Esc 当前**未被**本层拦截；回退到层 2（机器级 symbolichotkeys，" +
+                  "见 app/scripts/kiosk-setup.sh，若已运行则 Cmd+Space 仍会被系统层面挡住）" +
+                  "与既有 presentationOptions best-effort 抑制。")
+            systemHotkeyTapActive = false
+            return false
+        }
+
+        systemHotkeyTap = tap
+        systemHotkeyRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), systemHotkeyRunLoopSource, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        systemHotkeyTapActive = true
+        NSLog("WTJ: CGEventTap 已创建并启用，Cmd+Tab/Cmd+Space/Cmd+Option+Space/" +
+              "Cmd+Option+Esc 现由本层确定性拦截（辅助功能已授权）。")
+        return true
+    }
+
+    /// CGEventTap 回调的实际处理逻辑（由文件顶层的 `wtjSystemHotkeyTapCallback` 转发过来）。
+    /// 返回 nil 表示吞掉事件；返回 `Unmanaged.passUnretained(event)` 表示原样放行（不改变
+    /// 引用计数，见 `wtjSystemHotkeyTapCallback` 上方的内存所有权注释）——语义上与
+    /// `handleKeyDown` 的"放行/吞掉"一致，但这里操作的是 `CGEvent`（更底层），不是 `NSEvent`。
+    fileprivate func handleTappedSystemEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        // 系统在 tap 处理耗时过久或用户输入压力大时可能单方面关闭 tap（这两种情况都不是
+        // 我们主动调用 tapEnable(false)），需要立刻重新启用，否则会静默永久失效而不自知。
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let tap = systemHotkeyTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+                NSLog("WTJ: CGEventTap 被系统暂停（type=%@），已重新启用。", String(describing: type))
+            }
+            return Unmanaged.passUnretained(event)
+        }
+        guard type == .keyDown else {
+            return Unmanaged.passUnretained(event)
+        }
+
+        let flags = event.flags
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let cmd = flags.contains(.maskCommand)
+        let opt = flags.contains(.maskAlternate)
+
+        // Cmd+Tab（含 Cmd+Shift+Tab 反向循环，Shift 是否按下不影响判断——都属于 App 切换）。
+        if cmd && keyCode == kKeyCodeTab {
+            return nil
+        }
+        // Cmd+Space（Spotlight）与 Cmd+Option+Space（Finder 搜索窗口）：只要按住 Cmd 且是
+        // 空格键就吞掉，不细分是否同时按了 Option，两者都属于 Spotlight 家族的逃逸入口。
+        if cmd && keyCode == kKeyCodeSpace {
+            return nil
+        }
+        // Cmd+Option+Esc（强制退出面板）：注意这里要求 Cmd**且**Option 同时按住才拦截，
+        // 单纯的 Esc（无修饰键）必须原样放行——它要继续流向本 app 自己的 NSEvent 本地
+        // monitor，走 handleKeyDown 里长按 5 秒 + 口令的既有状态机（REQ-EXIT-02/03）。
+        // CGEventTap 只在这一个组合键分支上与长按 Esc 状态机产生"同一物理按键"的交集，且
+        // 判断条件（要求同时有 Cmd+Option）与长按状态机（不要求任何修饰键）互斥，不会误吞
+        // 家长长按退出用的那个 Esc。
+        if cmd && opt && keyCode == kKeyCodeEscape {
+            return nil
+        }
+        return Unmanaged.passUnretained(event)
+    }
+
+    /// no-silent-fallback：辅助功能未授权时，首次启动用 NSAlert 主动告知家长（而不是只写
+    /// 一条 Console.app 才看得到的 NSLog），并调用 `AXIsProcessTrustedWithOptions` 触发
+    /// 系统自带的"申请辅助功能权限"注册流程（把本 app 加进"辅助功能"列表，初始为未勾选，
+    /// 家长手动勾选后即可生效，见 axTrustRetryTimer 的轮询逻辑）。只提示一次（用
+    /// `kAXPromptShownDefaultsKey` 记录），避免家长每次开机都被打断；但每次未授权仍会有
+    /// NSLog（见 `attemptEnableSystemHotkeyTap()`），不会彻底沉默。
+    private func promptAccessibilityTrustIfNeeded() {
+        // 调用一次 WithOptions(prompt: false)：只查询信任状态、不弹系统自己的授权对话框。
+        // 注意（fable 评审 fix 5）：prompt:false 等价于 AXIsProcessTrusted，通常**不会**把本
+        // app 注册进「辅助功能」列表——注册多半发生在 CGEventTap 实际创建失败时的 TCC 记录，
+        // 或家长手动"+"添加；因此下面的 NSAlert 指引家长手动到列表里勾选/添加，不依赖此调用
+        // 把 app 送进列表。另需真机核实 Big Sur 键盘事件 tap 归"辅助功能"还是"输入监控"面板
+        // 管辖（见 app/SECURITY.md 的 QA-055 真机核查项）。
+        let promptOptionKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        _ = AXIsProcessTrustedWithOptions([promptOptionKey: false] as CFDictionary)
+
+        let alreadyPrompted = UserDefaults.standard.bool(forKey: kAXPromptShownDefaultsKey)
+        if alreadyPrompted {
+            return
+        }
+        UserDefaults.standard.set(true, forKey: kAXPromptShownDefaultsKey)
+        UserDefaults.standard.synchronize()
+
+        let alert = NSAlert()
+        alert.messageText = "需要「辅助功能」权限才能锁住 Cmd+Tab / Cmd+Space"
+        alert.informativeText = """
+        WorkTime Justin 尚未获得「辅助功能」授权，Cmd+Tab（切换应用）和 Cmd+Space \
+        （Spotlight 搜索）目前还**拦不住**，孩子可能借这两个组合键切出全屏界面。
+
+        由于本 App 全屏 kiosk 运行会盖住系统设置窗口（本窗口层级在菜单栏之上），\
+        请按以下顺序授权：① 长按 Esc 键 5 秒 → 输入家长口令退出 App；② 打开 系统偏好设置 \
+        → 安全性与隐私 → 隐私 → 辅助功能 → 勾选（或用左下"+"添加）WorkTime Justin；\
+        ③ 重新启动 App，Cmd+Tab / Cmd+Space 即被拦截。（若你在别的非全屏时机授权且 App 仍在\
+        运行，勾选后本 App 也会在几秒内自动生效、无需重启——但全屏 kiosk 下通常需要先退出。）
+
+        在授权之前，仍可运行 app/scripts/kiosk-setup.sh 在系统层面单独关闭 Spotlight（Cmd+Space）
+        作为过渡兜底，但 Cmd+Tab 目前没有等效的系统设置可以关闭，只能靠这里的辅助功能授权。
+        """
+        // fable 评审 fix 4：kiosk 窗口在 mainMenu+1 层且置顶，NSWorkspace.open 打开的系统设置窗
+        // 会被本窗口完全盖死、家长看不到反应，故不再提供"打开系统设置"按钮误导；改为单一确认，
+        // 由上面的文案明确指引"先长按 Esc + 口令退出 App 再授权"（退出走既有合法路径）。
+        alert.addButton(withTitle: "知道了（先退出 App 再授权）")
+        alert.window.level = window.level
+        _ = alert.runModal()
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(webView)
+    }
+
+    /// 释放 CGEventTap 相关资源；在 `applicationWillTerminate` 里调用。
+    private func tearDownSystemHotkeyBlocker() {
+        axTrustRetryTimer?.invalidate()
+        axTrustRetryTimer = nil
+        if let tap = systemHotkeyTap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
+        if let source = systemHotkeyRunLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
+        }
+        systemHotkeyRunLoopSource = nil
+        systemHotkeyTap = nil
+        systemHotkeyTapActive = false
     }
 
     // MARK: WKNavigationDelegate
@@ -649,6 +1315,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.evaluateJavaScript("window.__shellReady = true;", completionHandler: nil)
         // 确保 DOM 能收到键盘事件（P0-1；local monitor 仍是兜底通道）。
         window.makeFirstResponder(webView)
+        // WTJ-20260705-018：首次加载即把当前权威额度/锁定状态推给 web——覆盖"app 上次运行
+        // 时已锁定，本次冷启动直接就应该显示安静锁屏，而不是先短暂闪一下游戏画面"的时序。
+        notifyShellStateToWeb()
     }
 
     // MARK: WKScriptMessageHandler
@@ -656,6 +1325,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     func userContentController(_ userContentController: WKUserContentController,
                                 didReceive message: WKScriptMessage) {
         NSLog("WTJ shell message: %@", String(describing: message.body))
+        handleParentControlsMessage(message.body)
+    }
+
+    /// 解析 web -> shell 的家长控制消息（设置面板发起）。message.body 是 WKScriptMessage 对
+    /// JS 端 postMessage(obj) 传来的普通对象/数组/标量值的桥接结果——JS 对象字面量会桥接成
+    /// [String: Any]（数值经 NSNumber）。未知/畸形消息一律安全忽略，不抛错、不影响其余
+    /// shell<->web 通道（本卡新增消息与既有的 NSLog 诊断打印并存，不替代它）。
+    private func handleParentControlsMessage(_ body: Any) {
+        guard let dict = body as? [String: Any], let type = dict["type"] as? String else { return }
+        switch type {
+        case "wtjSetDailyLimit":
+            if let minutes = dict["minutes"] as? Int {
+                applyDailyLimitChange(minutes)
+            } else if let minutesNumber = dict["minutes"] as? NSNumber {
+                applyDailyLimitChange(minutesNumber.intValue)
+            }
+        case "wtjResetUsageToday":
+            resetUsageToday()
+        default:
+            break // 未识别的 type：忽略，不当作错误处理（前向兼容未来卡片新增的消息类型）。
+        }
+    }
+
+    /// 设置面板调整每日额度：裁剪到合法范围后落盘，并按新额度重新判定锁定状态——新额度可能
+    /// 已经覆盖今日已用秒数（应解锁），也可能比已用秒数还小（应立即锁定），两个方向都要处理，
+    /// 不能假设"调整额度"只会发生在未锁定场景下（家长完全可能在锁屏状态里把额度调大以解锁）。
+    private func applyDailyLimitChange(_ minutes: Int) {
+        dailyLimitMinutes = clampDailyLimit(minutes)
+        let shouldBeLocked = usedSecondsToday >= dailyLimitMinutes * 60
+        if shouldBeLocked {
+            if isLockedOut {
+                persistUsageState()
+                notifyShellStateToWeb()
+            } else {
+                enterLockout()
+            }
+        } else {
+            let wasLocked = isLockedOut
+            isLockedOut = false
+            persistUsageState()
+            if wasLocked {
+                notifyLockout(false)
+            } else {
+                notifyShellStateToWeb()
+            }
+        }
+        NSLog("WTJ: 家长已通过设置面板将每日额度调整为 %d 分钟。", dailyLimitMinutes)
     }
 }
 

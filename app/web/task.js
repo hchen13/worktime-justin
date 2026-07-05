@@ -277,6 +277,22 @@
     try {
       if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playTaskVoice === 'function') {
         var voiceArg = (taskDef && taskDef.voicePrompt) ? taskDef.voicePrompt : taskDef;
+        // WTJ-20260705-018：语言/任务语音模式切换（设置面板，验收标准 #4）——若
+        // voice-language.js 已加载，按家长选择的语言（或"跟随素材可用性"）重新解析出实际
+        // 应播放的路径，覆盖上面按老约定取到的 taskDef.voicePrompt（该字段目前恒指向中文
+        // .zh.m4a，是历史上 Phase B/004 卡接线时定下的默认值，不代表家长本次会话的语言选择）。
+        // resolveTaskVoicePath() 返回 null 表示"no-silent-fallback 判定当前语言在这条任务上
+        // 没有素材，明确不播放"——此时保持沉默，不再退回 voiceArg 播放另一种语言的语音
+        // （那样会制造出一次新的静默语言顶替，正是验收标准 #4 明确禁止的行为）。
+        // window.WTJ_VOICE_LANG 缺失（模块未加载/单独测试 task.js）时整段跳过，voiceArg 保持
+        // 原值，行为与本卡改动前完全一致，不构成回归。
+        if (window.WTJ_VOICE_LANG && typeof window.WTJ_VOICE_LANG.resolveTaskVoicePath === 'function') {
+          var resolvedPath = window.WTJ_VOICE_LANG.resolveTaskVoicePath(taskDef);
+          if (!resolvedPath) {
+            return;
+          }
+          voiceArg = resolvedPath;
+        }
         var p = window.WTJ_AUDIO.playTaskVoice(voiceArg);
         // P2 防御（Fable 对抗评审）：AUDIO-API 契约承诺 playTaskVoice 返回的 Promise「永不
         // reject」，但为了对不守约的替身/未来实现也稳健，给它挂一个 rejection handler，
