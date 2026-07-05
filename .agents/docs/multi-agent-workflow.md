@@ -249,6 +249,7 @@ Additional rules:
 - When PM wants parallel work despite an upstream card still being active, PM must write that permission directly in `依赖`, `下一步动作`, or `最新进展`. Role agents should not infer this permission silently.
 - An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
 - For implementation cards, branch hygiene is a handoff gate. When TL moves work to `review`, `分支` and `产物/证据` must include the final branch, final commit, verification evidence, known risks, and the recommended PM route.
+- For documentation-preview, visual-review, or design-gallery handoffs, `产物/证据` and `下一步动作` must name the exact reviewer-openable entry point for the review target. If the entry exists only on a feature branch or worktree, TL must provide the absolute local path such as `/private/tmp/<worktree>/docs/index.html` and must not describe it as if it were visible from the current `main` checkout. If Ethan should review it from the normal project entry point, TL must first route/complete `stage` integration and name the `stage` commit or package.
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
 - A blocked card cannot be used as storage for vague uncertainty. If the next step is obvious, assign it and move the card back to `todo` or `in progress`.
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
@@ -373,6 +374,7 @@ TL handoff must include:
 
 - final branch name
 - final commit hash
+- exact reviewer entry point: branch/worktree/stage plus the absolute file or app/package path to open
 - passing `.agents/tools/tl_handoff_check.py` output
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card
