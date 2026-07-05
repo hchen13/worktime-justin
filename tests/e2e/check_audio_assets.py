@@ -96,10 +96,19 @@ def scan_file(path: Path):
 
 
 def collect_inventory(missing_json: dict):
-    """Flatten missing-audio.json into [{category, key, path, status}]."""
+    """Flatten missing-audio.json into [{category, key, path, status}].
+
+    taskVoiceZh (WTJ-20260704-084, added alongside this comment): 24 complete Chinese
+    task sentences (Kokoro zf_xiaoxiao). Not yet runtime-referenced by manifest.js/audio.js
+    (that wiring is 004 Phase B's job) so it is scanned for present+valid like the other
+    categories but marked NOT required — a missing/defective ZH file must still show up in
+    this report, but it must not flip this script's overall pass/fail for the pre-existing
+    EN-only runtime (avoids a false regression on 004 Phase B's still-pending wiring).
+    """
     items = []
     for cat, keyfield in [("secretWords", "word"), ("sfx", "sfxKey"),
-                          ("taskVoice", "taskId"), ("compositePhrases", "phraseKey")]:
+                          ("taskVoice", "taskId"), ("compositePhrases", "phraseKey"),
+                          ("taskVoiceZh", "taskId")]:
         for it in (missing_json.get(cat) or []):
             path = it.get("path") or it.get("voicePromptPath")
             if not path:

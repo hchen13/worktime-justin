@@ -37,7 +37,11 @@
     "compositePhrases": {
       "totalNotDelivered": 0
     },
-    "grandTotalNotDelivered": 0
+    "grandTotalNotDelivered": 0,
+    "taskVoiceZh": {
+      "totalNotDelivered": 0,
+      "note": "WTJ-20260704-084 全量新生成：24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P），见 taskVoiceZh[] 与 TTS-PROVENANCE.md「ZH 中文任务语音」一节。未被 app/web/manifest.js 引用（Phase B/004 接线范围），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 101/8/10 + 新增 24 ZH 断言, task-voice-path.test.mjs ===8）。"
+    }
   },
   "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
   "secretWords": [
@@ -1345,6 +1349,224 @@
       "note": "同上：id 'press-digit-3' 与文件名 'press-3' 不一致。"
     }
   ],
+  "taskVoiceZh": [
+    {
+      "taskId": "drag-apple-to-basket",
+      "textZh": "把苹果放进篮子里！",
+      "phonemes": "pa↓ pʰi↗ŋkwo↓ fa↘ŋʨi↘n la↗nʦɨ li↓!",
+      "voicePromptPath": "audio/tasks/drag-apple-to-basket.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.728,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "drag-dog-home",
+      "textZh": "把小狗带回家！",
+      "phonemes": "pa↓ ɕjau↓kou↓ tai↘xwei↗ʨja→!",
+      "voicePromptPath": "audio/tasks/drag-dog-home.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.408,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "click-lamp-on",
+      "textZh": "点亮小台灯！",
+      "phonemes": "tjɛ↓nlja↘ŋ ɕjau↓ tʰai↗tə→ŋ!",
+      "voicePromptPath": "audio/tasks/click-lamp-on.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.237,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "click-faucet-on",
+      "textZh": "打开水龙头！",
+      "phonemes": "ta↓kʰai→ ʂwei↓lʊ↗ŋtʰou↗!",
+      "voicePromptPath": "audio/tasks/click-faucet-on.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.216,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "click-horse-run",
+      "textZh": "让小马跑起来！",
+      "phonemes": "ɻa↘ŋ ɕjau↓ma↓ pʰau↓ ʨʰi↓lai↗!",
+      "voicePromptPath": "audio/tasks/click-horse-run.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.344,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-dog",
+      "textZh": "找到小狗！",
+      "phonemes": "ꭧau↓tau↘ ɕjau↓kou↓!",
+      "voicePromptPath": "audio/tasks/find-the-dog.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.109,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-cat",
+      "textZh": "找到小猫！",
+      "phonemes": "ꭧau↓tau↘ ɕjau↓mau→!",
+      "voicePromptPath": "audio/tasks/find-the-cat.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.088,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-apple",
+      "textZh": "找到苹果！",
+      "phonemes": "ꭧau↓tau↘ pʰi↗ŋkwo↓!",
+      "voicePromptPath": "audio/tasks/find-the-apple.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.067,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-star",
+      "textZh": "找到星星！",
+      "phonemes": "ꭧau↓tau↘ ɕi→ŋɕi→ŋ!",
+      "voicePromptPath": "audio/tasks/find-the-star.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.045,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-fish",
+      "textZh": "找到小鱼！",
+      "phonemes": "ꭧau↓tau↘ ɕjau↓y↗!",
+      "voicePromptPath": "audio/tasks/find-the-fish.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.045,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-elephant",
+      "textZh": "找到大象！",
+      "phonemes": "ꭧau↓tau↘ ta↘ɕja↘ŋ!",
+      "voicePromptPath": "audio/tasks/find-the-elephant.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.024,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-pig",
+      "textZh": "找到小猪！",
+      "phonemes": "ꭧau↓tau↘ ɕjau↓ꭧu→!",
+      "voicePromptPath": "audio/tasks/find-the-pig.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.109,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-rocket",
+      "textZh": "找到火箭！",
+      "phonemes": "ꭧau↓tau↘ xwo↓ʨjɛ↘n!",
+      "voicePromptPath": "audio/tasks/find-the-rocket.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.067,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-turtle",
+      "textZh": "找到小乌龟！",
+      "phonemes": "ꭧau↓tau↘ ɕjau↓ u→kwei→!",
+      "voicePromptPath": "audio/tasks/find-the-turtle.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.195,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-unicorn",
+      "textZh": "找到独角兽！",
+      "phonemes": "ꭧau↓tau↘ tu↗ʨjau↓ʂou↘!",
+      "voicePromptPath": "audio/tasks/find-the-unicorn.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.301,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-whale",
+      "textZh": "找到鲸鱼！",
+      "phonemes": "ꭧau↓tau↘ ʨi→ŋy↗!",
+      "voicePromptPath": "audio/tasks/find-the-whale.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.045,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "find-the-zebra",
+      "textZh": "找到斑马！",
+      "phonemes": "ꭧau↓tau↘ pa→nma↓!",
+      "voicePromptPath": "audio/tasks/find-the-zebra.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.067,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-letter-a",
+      "textZh": "按下字母 A！",
+      "phonemes": "a↘nɕja↘ ʦɨ↘mu↓ A!",
+      "voicePromptPath": "audio/tasks/press-a.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.131,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-digit-3",
+      "textZh": "按下数字 3！",
+      "phonemes": "a↘nɕja↘ ʂu↘ʦɨ↘ sa→n!",
+      "voicePromptPath": "audio/tasks/press-3.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.216,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-letter-b",
+      "textZh": "按下字母 B！",
+      "phonemes": "a↘nɕja↘ ʦɨ↘mu↓ B!",
+      "voicePromptPath": "audio/tasks/press-b.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.003,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-letter-s",
+      "textZh": "按下字母 S！",
+      "phonemes": "a↘nɕja↘ ʦɨ↘mu↓ S!",
+      "voicePromptPath": "audio/tasks/press-s.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.152,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-letter-m",
+      "textZh": "按下字母 M！",
+      "phonemes": "a↘nɕja↘ ʦɨ↘mu↓ M!",
+      "voicePromptPath": "audio/tasks/press-m.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.003,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-digit-5",
+      "textZh": "按下数字 5！",
+      "phonemes": "a↘nɕja↘ ʂu↘ʦɨ↘ u↓!",
+      "voicePromptPath": "audio/tasks/press-5.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.173,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "press-digit-7",
+      "textZh": "按下数字 7！",
+      "phonemes": "a↘nɕja↘ ʂu↘ʦɨ↘ ʨʰi→!",
+      "voicePromptPath": "audio/tasks/press-7.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.237,
+      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    }
+  ],
   "compositePhrases": [
     {
       "phraseKey": "find",
@@ -1461,5 +1683,31 @@
     "subjectiveNote": "TL/音频工程师均无法试听，动物叫声是否自然、是否符合儿童友好基调、开箱/铃铛/水声的情绪匹配度均未验证，需 QA076/Ethan 主观验收。",
     "delivered": 20,
     "gapsResolved": "duck-quack/frog-croak/elephant-trumpet sourced from Wikimedia Commons by TL (Mixkit had none)"
+  },
+  "ttsDeliveryZh": {
+    "cardId": "WTJ-20260704-084",
+    "model": "Kokoro-82M ONNX (kokoro-v1.0.onnx + voices-v1.0.bin) — same weights as EN ttsDelivery",
+    "modelLicense": "Apache-2.0",
+    "modelSource": "https://github.com/thewh1teagle/kokoro-onnx (release model-files-v1.0)",
+    "modelWeightsSha256": {
+      "kokoro-v1.0.onnx": "7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5",
+      "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+    },
+    "voice": "zf_xiaoxiao (zh female)",
+    "g2p": "misaki 0.9.4 [zh] (MIT; jieba 0.42.1 + pypinyin 0.55.0 + cn2an, verified: correctly reads Arabic digits 3/5/7 as 三/五/七)",
+    "phonemizerNote": "EN uses espeak-ng 1.52 (build-time tool, not shipped); ZH bypasses espeak-ng entirely — misaki's own zh G2P feeds Kokoro.create(text, is_phonemes=True) directly.",
+    "determinism": "Fixed voice, no sampling/seed — reproducible byte-for-byte on re-run (verified for EN in this same card; not re-verified byte-for-byte for ZH since these are first-generation files, but same code path/engine).",
+    "params": {
+      "speed": "default (no override; matches spike-validated samples, tight 1.0-1.7s durations)"
+    },
+    "encoding": "ffmpeg loudnorm I=-16 LUFS + alimiter limit=0.794 level=false; 24kHz mono AAC 64k .m4a (identical chain to EN ttsDelivery)",
+    "redLine": "每条 taskId 是一整条独立预生成的完整句；无 phrases/composite 拼接表；运行时禁止用 audio.js playComposite() 拼接中文片段（CN-TASK-DRAFT.md #0 红线，TL 综合裁定）。",
+    "coverage": {
+      "taskVoiceZh": 24
+    },
+    "reproScript": "app/scripts/generate-tts-zh.py (+ app/scripts/tts-text-manifest.zh.json)",
+    "provenanceDoc": "app/web/audio/TTS-PROVENANCE.md",
+    "objectiveQC": "24/24 generated OK, 0 failures (no-silent-fallback: RMS>1e-4 + duration-band check applied pre-encode); post-encode ffprobe/volumedetect: all aac/24000Hz/mono; duration 1.00-1.73s; mean -15.6~-17.1dB (non-silent); peak -1.9~-4.7dB (no clipping, consistent with EN's alimiter target)",
+    "subjectiveNote": "TL 无法试听；发音自然度、多音字实际听感、儿童友好度均未验证，交 Ethan/QA-076 主观验收。24 条 misaki 音素串已逐条列于 TTS-PROVENANCE.md 供人工核对多音字（行/长/为/得/地等常见多音字均未出现在本批 24 句中，逐句核对结论见该文档）。"
   }
 }

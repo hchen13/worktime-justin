@@ -4,6 +4,13 @@
 // on disk at the declared path. This is the "静态检查" gate (acceptance criterion 7):
 // it fails loudly if a delivered path is missing/empty or a count regresses, so a
 // packaging step or a future edit can't silently drop audio the app expects to play.
+//
+// WTJ-20260704-084 update: added the same static delivery gate for the new ZH task-voice
+// category (taskVoiceZh, 24 complete Chinese sentences — Kokoro zf_xiaoxiao). This is a
+// distinct, additive count: the existing 101/8/10 EN gate is untouched (regenerated 084's
+// EN audio byte-for-byte identical to the 074/075 delivery — see TTS-PROVENANCE.md), so
+// this file still separately asserts the original EN counts to catch any future regression,
+// plus the new 24-count ZH gate below.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, statSync } from 'node:fs';
@@ -21,11 +28,16 @@ function deliveredPaths(entries, pathKey) {
 const words = deliveredPaths(manifest.secretWords, 'path');
 const tasks = deliveredPaths(manifest.taskVoice, 'voicePromptPath');
 const phrases = deliveredPaths(manifest.compositePhrases, 'path');
+const tasksZh = deliveredPaths(manifest.taskVoiceZh, 'voicePromptPath');
 
 test('074: expected delivered TTS counts (101 words / 8 tasks / 10 phrases)', () => {
   assert.equal(words.length, 101, 'all 101 secret words delivered');
   assert.equal(tasks.length, 8, 'all 8 task prompts delivered');
   assert.equal(phrases.length, 10, 'all 10 composite phrases delivered');
+});
+
+test('084: expected delivered ZH task-voice count (24 complete sentences)', () => {
+  assert.equal(tasksZh.length, 24, 'all 24 ZH task sentences delivered');
 });
 
 test('074: every delivered TTS .m4a exists on disk and is non-empty', () => {
@@ -40,8 +52,28 @@ test('074: every delivered TTS .m4a exists on disk and is non-empty', () => {
   assert.deepEqual(empty, [], `empty (0-byte) audio files: ${empty.join(', ')}`);
 });
 
+test('084: every delivered ZH .m4a exists on disk and is non-empty', () => {
+  const missing = [];
+  const empty = [];
+  for (const rel of tasksZh) {
+    const abs = join(APP_WEB, rel);
+    if (!existsSync(abs)) { missing.push(rel); continue; }
+    if (statSync(abs).size === 0) empty.push(rel);
+  }
+  assert.deepEqual(missing, [], `missing ZH audio files: ${missing.join(', ')}`);
+  assert.deepEqual(empty, [], `empty (0-byte) ZH audio files: ${empty.join(', ')}`);
+});
+
 test('074: delivered paths follow the audio/{words,tasks,phrases}/<name>.m4a convention', () => {
   for (const rel of words) assert.match(rel, /^audio\/words\/[^/]+\.m4a$/, rel);
   for (const rel of tasks) assert.match(rel, /^audio\/tasks\/[^/]+\.m4a$/, rel);
   for (const rel of phrases) assert.match(rel, /^audio\/phrases\/[^/]+\.m4a$/, rel);
+});
+
+test('084: delivered ZH paths follow the audio/tasks/<id>.zh.m4a convention (no collision with EN)', () => {
+  const enTaskPaths = new Set(tasks);
+  for (const rel of tasksZh) {
+    assert.match(rel, /^audio\/tasks\/[^/]+\.zh\.m4a$/, rel);
+    assert.equal(enTaskPaths.has(rel), false, `ZH path must not collide with an EN taskVoice path: ${rel}`);
+  }
 });
