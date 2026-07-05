@@ -1,0 +1,32 @@
+{
+  "_note": "WTJ-20260705-004 Phase A — 中文任务语音骨架（DRAFT，未接线）。镜像 tts-text-manifest.json（074 卡英文任务语音脚本输入）同一 schema：taskId -> {text, out}，供未来 Phase B 的 TTS 生成脚本消费。**红线：每个 task id 必须是一整条独立预生成的完整中文句子**——绝不允许运行时用 audio.js 的 playComposite() 把「找到」这类片段与词条拼接播放（'找到 dog' 这种中英混拼/机械拼接是明确反模式，被 TL 综合裁定禁止；074 英文版的 phrases 段落是英文语境下的合成片段设计，中文语境不能照搬同一模式，因此本文件**没有** phrases 段落，只有 tasks 段落，每条都是完整句）。\n\n状态：DRAFT，待 Ethan 批准文案后才能进入 Phase B 实际接线（生成真实 .m4a、把 manifest.js 对应 example 的 voicePrompt 改指向这里的 out 路径、missing-audio.json 补登记）。本文件当前只是结构 + 文案草稿，**没有**任何一条被生成音频，也**没有**被 app/web/manifest.js 的 voicePrompt 字段引用，不影响 task-voice-path.test.mjs（===8）/ tts-audio-delivery.test.mjs（101/8/10）两个硬编码计数门——那两个门读的是 app/web/audio/missing-audio.json 与磁盘上已交付的英文 .m4a，本文件完全在它们的读取路径之外。\n\nout 路径约定（本卡的一个记录在案的偏离，见 WTJ-20260705-004 回报「偏离/阻塞」一节）：卡片原文示例写的是 'audio/tasks/<id>.m4a'，但这个路径当前已经是对应 taskId 的**英文**语音（如 audio/tasks/drag-apple-to-basket.m4a 是 074/078 已交付的英文 'Put the apple in the basket!'）——中文版直接复用同一路径会覆盖/冲突英文交付物。这里改用 'audio/tasks/<id>.zh.m4a'（同目录、加 .zh 语言后缀）来避免二者冲突，最终采用哪种目录/命名约定仍需 Ethan/TL 在 Phase B 正式定案（例如改成 audio/tasks-zh/ 独立目录），本文件的 out 值届时可能需要跟着调整，不代表最终路径已经拍板。\n\n覆盖范围：镜像 app/web/manifest.js tasks.templates 四类共 24 条 example（drag=2/click=3/find=12(pt2 新增)/press=7(pt3 新增)），逐条一一对应；每条 find 任务的 text 只念 target，绝不念 distractorSprites（与 REQ-TASK-09 既有约束一致，找的过程本身才是任务，语音不能替孩子提前排除干扰项）。完整提案文案的设计说明、扩展词库、distractor 组合、press 字母/数字集见与本文件同一次改动提交的 CN-TASK-DRAFT.md（不进 app 运行时目录，只供 TL/Ethan 审阅）。",
+  "tasks": {
+    "drag-apple-to-basket": { "text": "把苹果放进篮子里！", "out": "audio/tasks/drag-apple-to-basket.zh.m4a" },
+    "drag-dog-home": { "text": "把小狗带回家！", "out": "audio/tasks/drag-dog-home.zh.m4a" },
+
+    "click-lamp-on": { "text": "点亮小台灯！", "out": "audio/tasks/click-lamp-on.zh.m4a" },
+    "click-faucet-on": { "text": "打开水龙头！", "out": "audio/tasks/click-faucet-on.zh.m4a" },
+    "click-horse-run": { "text": "让小马跑起来！", "out": "audio/tasks/click-horse-run.zh.m4a" },
+
+    "find-the-dog": { "text": "找到小狗！", "out": "audio/tasks/find-the-dog.zh.m4a" },
+    "find-the-cat": { "text": "找到小猫！", "out": "audio/tasks/find-the-cat.zh.m4a" },
+    "find-the-apple": { "text": "找到苹果！", "out": "audio/tasks/find-the-apple.zh.m4a" },
+    "find-the-star": { "text": "找到星星！", "out": "audio/tasks/find-the-star.zh.m4a" },
+    "find-the-fish": { "text": "找到小鱼！", "out": "audio/tasks/find-the-fish.zh.m4a" },
+    "find-the-elephant": { "text": "找到大象！", "out": "audio/tasks/find-the-elephant.zh.m4a" },
+    "find-the-pig": { "text": "找到小猪！", "out": "audio/tasks/find-the-pig.zh.m4a" },
+    "find-the-rocket": { "text": "找到火箭！", "out": "audio/tasks/find-the-rocket.zh.m4a" },
+    "find-the-turtle": { "text": "找到小乌龟！", "out": "audio/tasks/find-the-turtle.zh.m4a" },
+    "find-the-unicorn": { "text": "找到独角兽！", "out": "audio/tasks/find-the-unicorn.zh.m4a" },
+    "find-the-whale": { "text": "找到鲸鱼！", "out": "audio/tasks/find-the-whale.zh.m4a" },
+    "find-the-zebra": { "text": "找到斑马！", "out": "audio/tasks/find-the-zebra.zh.m4a" },
+
+    "press-letter-a": { "text": "按下字母 A！", "out": "audio/tasks/press-a.zh.m4a" },
+    "press-digit-3": { "text": "按下数字 3！", "out": "audio/tasks/press-3.zh.m4a" },
+    "press-letter-b": { "text": "按下字母 B！", "out": "audio/tasks/press-b.zh.m4a" },
+    "press-letter-s": { "text": "按下字母 S！", "out": "audio/tasks/press-s.zh.m4a" },
+    "press-letter-m": { "text": "按下字母 M！", "out": "audio/tasks/press-m.zh.m4a" },
+    "press-digit-5": { "text": "按下数字 5！", "out": "audio/tasks/press-5.zh.m4a" },
+    "press-digit-7": { "text": "按下数字 7！", "out": "audio/tasks/press-7.zh.m4a" }
+  }
+}

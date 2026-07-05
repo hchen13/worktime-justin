@@ -27,3 +27,8 @@ tests/reports/*
 
 # Rejected sprite exploration archives stay local; only accepted production samples are versioned.
 docs/assets/sprites/exploration-*/
+
+# WTJ-20260704-084 TTS full regen: local Kokoro-only repro env + downloaded model weights
+# stay local (large; not committed) — only the produced .m4a + manifest/provenance ship.
+/ttsenv/
+/kokoro_models/

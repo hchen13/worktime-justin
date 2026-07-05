@@ -392,24 +392,43 @@
             targetSprite: 'string，放置目标 sprite 路径',
             voicePrompt: 'string，语音任务提示音频路径',
             successAudio: 'string，成功音效路径',
-            successAnimation: 'string（可选），成功动画标识'
+            successAnimation: 'string（可选），成功动画标识',
+            // WTJ-20260705-004 Phase A（pt1）：可选装饰性干扰物体列表，纯视觉散落在场景里
+            // （不注册 pointer target，不参与任何拖拽判定），渲染方式见 task-templates.js
+            // renderDragTask()「仿 renderFindTask() distractor 循环」一节。
+            distractorSprites: 'string[]（可选），纯装饰干扰物 sprite 路径列表，不参与判定',
+            // WTJ-20260705-004 Phase A（pt5）：可选英文单词字面量，必须能在 secretWords.pool
+            // 里找到同名词条（零新增音频约束）；任务判定完成后防御式再念一遍这个词强化学习，
+            // 见 task-templates.js playLearningWordDefensive()。
+            learningWord: 'string（可选），须命中 secretWords.pool[].word 的英文单词，完成后防御式重播强化'
           },
           examples: [
             {
               id: 'drag-apple-to-basket',
               objectSprite: 'sprites/apple.png',
               targetSprite: 'sprites/basket.png',
-              voicePrompt: 'audio/tasks/drag-apple-to-basket.m4a', // stub，待 016 卡供给
+              // WTJ-20260705-004 Phase B：接线 084 交付的中文完整句任务语音（Kokoro
+              // zf_xiaoxiao，整句预生成，禁止运行时拼接，见 tts-text-manifest.zh.json）。
+              // 原 EN audio/tasks/drag-apple-to-basket.m4a 仍在磁盘上（074/078 交付），
+              // 未被删除，只是本 example 不再引用它。
+              voicePrompt: 'audio/tasks/drag-apple-to-basket.zh.m4a', // 已交付（084），完整句"把苹果放进篮子里！"
               successAudio: 'audio/sfx/task-success.m4a', // stub，待 016 卡供给
-              successAnimation: 'bounce-in'
+              successAnimation: 'bounce-in',
+              // pt1：篮子旁边散落几个装饰性水果（复用 secretWords.pool 已交付 sprite，零新增
+              // 美术），不影响判定——孩子仍然只需要把苹果拖进篮子。
+              distractorSprites: ['sprites/banana.png', 'sprites/orange.png'],
+              learningWord: 'apple' // pt5：命中 secretWords.pool 的 'apple' 词条。
             },
             {
               id: 'drag-dog-home',
               objectSprite: 'sprites/dog.png',
               targetSprite: 'sprites/doghouse.png', // stub，狗窝素材未到位（REQ-AST-05），待素材卡供给
-              voicePrompt: 'audio/tasks/drag-dog-home.m4a', // stub
+              voicePrompt: 'audio/tasks/drag-dog-home.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"把小狗带回家！"
               successAudio: 'audio/sfx/task-success.m4a', // stub
-              successAnimation: 'bounce-in'
+              successAnimation: 'bounce-in',
+              // pt1：窝旁边有一只装饰性的猫，不影响判定。
+              distractorSprites: ['sprites/cat.png'],
+              learningWord: 'dog' // pt5：命中 secretWords.pool 的 'dog' 词条。
             }
           ]
         },
@@ -423,7 +442,9 @@
             targetSpriteActive: 'string（可选），命中后的状态 sprite（如灯亮）',
             voicePrompt: 'string',
             successAudio: 'string',
-            successAnimation: 'string（可选）'
+            successAnimation: 'string（可选）',
+            // WTJ-20260705-004 Phase A（pt5）：见 drag.schema.learningWord 同一说明。
+            learningWord: 'string（可选），须命中 secretWords.pool[].word 的英文单词，完成后防御式重播强化'
           },
           examples: [
             {
@@ -433,9 +454,10 @@
               // （PROP_ANIM_STATE_MAP: off→turning-on）驱动，不依赖 targetSprite 切图。
               targetSprite: 'sprites/lamp.png',
               targetSpriteActive: 'sprites/lamp.png',
-              voicePrompt: 'audio/tasks/click-lamp-on.m4a', // stub，语音素材未到位
+              voicePrompt: 'audio/tasks/click-lamp-on.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"点亮小台灯！"
               successAudio: 'audio/sfx/task-success.m4a', // stub
-              successAnimation: 'glow-pulse'
+              successAnimation: 'glow-pulse',
+              learningWord: 'lamp' // pt5：命中 secretWords.pool 的 'lamp' 词条。
             },
             {
               id: 'click-faucet-on',
@@ -443,10 +465,11 @@
               // 两态都指向同一张真实 faucet.png，态变化完全由帧动画驱动，不依赖静态切图。
               targetSprite: 'sprites/faucet.png',
               targetSpriteActive: 'sprites/faucet.png',
-              // voicePrompt 走 audio/tasks/<id>.m4a 约定，文件暂缺（audio/tasks/ 目录为空，
-              // 057 音频决策未决）——静默兜底是既定常态，非本卡回归。
-              voicePrompt: 'audio/tasks/click-faucet-on.m4a',
-              successAudio: 'audio/sfx/task-success.m4a'
+              // WTJ-20260705-004 Phase B：接线 084 中文完整句"打开水龙头！"，
+              // 消解此前"文件暂缺静默兜底"的旧状态。
+              voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a',
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'faucet' // pt5：命中 secretWords.pool 的 'faucet' 词条。
             },
             {
               id: 'click-horse-run',
@@ -454,8 +477,9 @@
               // （一次性"成功"收尾动作）；两态都指向同一张真实 horse.png。
               targetSprite: 'sprites/horse.png',
               targetSpriteActive: 'sprites/horse.png',
-              voicePrompt: 'audio/tasks/click-horse-run.m4a', // 暂缺，同上静默兜底
-              successAudio: 'audio/sfx/task-success.m4a'
+              voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"让小马跑起来！"
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'horse' // pt5：命中 secretWords.pool 的 'horse' 词条。
             }
           ]
         },
@@ -470,17 +494,142 @@
             voicePrompt: 'string',
             hoverSec: 'number，命中判定悬停秒数（见 tasks.timing.findHoverSec）',
             pressOrHoverAlsoCompletes: 'boolean，命中判定是否接受"悬停未满但点击一下"提前完成',
-            successAudio: 'string'
+            successAudio: 'string',
+            // WTJ-20260705-004 Phase A（pt5）：见 drag.schema.learningWord 同一说明。
+            learningWord: 'string（可选），须命中 secretWords.pool[].word 的英文单词，完成后防御式重播强化'
           },
+          // WTJ-20260705-004 Phase A（pt2）：此前本类型只有 'find-the-dog' 一条写死示例
+          // （TL 综合裁定：孩子应该能见到多样化的寻找目标，不是永远只找小狗）。这里手写 12 条
+          // 精选 example（保持 Phase B 中文语音句子数可控——每条 find example 未来对应且仅对应
+          // 一条预生成中文句，见 app/scripts/tts-text-manifest.zh.json 骨架与 CN-TASK-DRAFT.md），
+          // target/distractor 全部复用 secretWords.pool 已交付的 101 词英文 sprite（103 张真实
+          // 素材，零新增美术，见 task-templates.js SPRITES_FILENAMES 白名单同步扩展）。voicePrompt
+          // WTJ-20260705-004 Phase B 更新：此前"除 find-the-dog 首条外，新增 11 条暂无预生成
+          // 语音、静默兜底"的状态已结束——084 交付了全部 12 条 find example 对应的中文完整句
+          // 语音，本节 12 条 voicePrompt 现全部指向 084 的 audio/tasks/<id>.zh.m4a（见
+          // app/scripts/tts-text-manifest.zh.json 的 out 字段）。learningWord 恒等于 targetSprite
+          // 对应的英文词本身（找到即再学一遍这个词）。distractorSprites 只提供视觉干扰，
+          // voicePrompt 只会念 target，不会念 distractor（REQ-TASK-09 既有约束不变）。
           examples: [
             {
               id: 'find-the-dog',
               targetSprite: 'sprites/dog.png',
               distractorSprites: ['sprites/cat.png', 'sprites/ball.png'],
-              voicePrompt: 'audio/tasks/find-the-dog.m4a', // stub
+              voicePrompt: 'audio/tasks/find-the-dog.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小狗！"（原 EN find-the-dog.m4a 074/078 交付仍在磁盘，不再被引用）
               hoverSec: 1,
               pressOrHoverAlsoCompletes: true,
-              successAudio: 'audio/sfx/task-success.m4a' // stub
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'dog'
+            },
+            {
+              id: 'find-the-cat',
+              targetSprite: 'sprites/cat.png',
+              distractorSprites: ['sprites/dog.png', 'sprites/duck.png'],
+              voicePrompt: 'audio/tasks/find-the-cat.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小猫！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'cat'
+            },
+            {
+              id: 'find-the-apple',
+              targetSprite: 'sprites/apple.png',
+              distractorSprites: ['sprites/banana.png', 'sprites/orange.png'],
+              voicePrompt: 'audio/tasks/find-the-apple.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到苹果！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'apple'
+            },
+            {
+              id: 'find-the-star',
+              targetSprite: 'sprites/star.png',
+              distractorSprites: ['sprites/moon.png', 'sprites/sun.png'],
+              voicePrompt: 'audio/tasks/find-the-star.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到星星！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'star'
+            },
+            {
+              id: 'find-the-fish',
+              targetSprite: 'sprites/fish.png',
+              distractorSprites: ['sprites/frog.png', 'sprites/duck.png'],
+              voicePrompt: 'audio/tasks/find-the-fish.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小鱼！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'fish'
+            },
+            {
+              id: 'find-the-elephant',
+              targetSprite: 'sprites/elephant.png',
+              distractorSprites: ['sprites/lion.png', 'sprites/monkey.png'],
+              voicePrompt: 'audio/tasks/find-the-elephant.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到大象！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'elephant'
+            },
+            {
+              id: 'find-the-pig',
+              targetSprite: 'sprites/pig.png',
+              distractorSprites: ['sprites/goat.png', 'sprites/koala.png'],
+              voicePrompt: 'audio/tasks/find-the-pig.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小猪！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'pig'
+            },
+            {
+              id: 'find-the-rocket',
+              targetSprite: 'sprites/rocket.png',
+              distractorSprites: ['sprites/robot.png', 'sprites/rainbow.png'],
+              voicePrompt: 'audio/tasks/find-the-rocket.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到火箭！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'rocket'
+            },
+            {
+              id: 'find-the-turtle',
+              targetSprite: 'sprites/turtle.png',
+              distractorSprites: ['sprites/duck.png', 'sprites/frog.png'],
+              voicePrompt: 'audio/tasks/find-the-turtle.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到小乌龟！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'turtle'
+            },
+            {
+              id: 'find-the-unicorn',
+              targetSprite: 'sprites/unicorn.png',
+              distractorSprites: ['sprites/horse.png', 'sprites/zebra.png'],
+              voicePrompt: 'audio/tasks/find-the-unicorn.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到独角兽！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'unicorn'
+            },
+            {
+              id: 'find-the-whale',
+              targetSprite: 'sprites/whale.png',
+              distractorSprites: ['sprites/fish.png', 'sprites/octopus.png'],
+              voicePrompt: 'audio/tasks/find-the-whale.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到鲸鱼！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'whale'
+            },
+            {
+              id: 'find-the-zebra',
+              targetSprite: 'sprites/zebra.png',
+              distractorSprites: ['sprites/horse.png', 'sprites/unicorn.png'],
+              voicePrompt: 'audio/tasks/find-the-zebra.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"找到斑马！"
+              hoverSec: 1,
+              pressOrHoverAlsoCompletes: true,
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'zebra'
             }
           ]
         },
@@ -494,18 +643,59 @@
             voicePrompt: 'string',
             successAudio: 'string'
           },
+          // WTJ-20260705-004 Phase A（pt3）：纯追加——examples[0]/[1]（press-letter-a /
+          // press-digit-3）与下方 5 条新追加按键覆盖，扩大"孩子可能被要求按哪个键"的多样性，
+          // 不改动字段结构。
+          // WTJ-20260705-004 Phase B 更新：全部 7 条 voicePrompt 已从 EN audio/tasks/<key>.m4a
+          // 改接 084 交付的中文完整句 audio/tasks/<key>.zh.m4a（examples[0]/[1] 的 EN 路径不再
+          // 是 task-voice-path.test.mjs 用例 2 的断言对象——该用例已同步改为断言 ZH 路径，见该
+          // 文件）。
           examples: [
             {
               id: 'press-letter-a',
               targetKey: 'A',
-              voicePrompt: 'audio/tasks/press-a.m4a', // stub
-              successAudio: 'audio/sfx/task-success.m4a' // stub
+              // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 A！"。注意 id 与
+              // 语音文件名 stem 本就不同（press-letter-a vs press-a），这正是
+              // task-voice-path.test.mjs 用例 2 专门覆盖的刁钻样本——084 的 zh 版沿用同一
+              // stem 约定（见 tts-text-manifest.zh.json out 字段），未改变这个既有落差。
+              voicePrompt: 'audio/tasks/press-a.zh.m4a', // 已交付（084）
+              successAudio: 'audio/sfx/task-success.m4a'
             },
             {
               id: 'press-digit-3',
               targetKey: '3',
-              voicePrompt: 'audio/tasks/press-3.m4a', // stub
-              successAudio: 'audio/sfx/task-success.m4a' // stub
+              voicePrompt: 'audio/tasks/press-3.zh.m4a', // 已交付（084），完整句"按下数字 3！"
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'press-letter-b',
+              targetKey: 'B',
+              voicePrompt: 'audio/tasks/press-b.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 B！"
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'press-letter-s',
+              targetKey: 'S',
+              voicePrompt: 'audio/tasks/press-s.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 S！"
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'press-letter-m',
+              targetKey: 'M',
+              voicePrompt: 'audio/tasks/press-m.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下字母 M！"
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'press-digit-5',
+              targetKey: '5',
+              voicePrompt: 'audio/tasks/press-5.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 5！"
+              successAudio: 'audio/sfx/task-success.m4a'
+            },
+            {
+              id: 'press-digit-7',
+              targetKey: '7',
+              voicePrompt: 'audio/tasks/press-7.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 7！"
+              successAudio: 'audio/sfx/task-success.m4a'
             }
           ]
         }

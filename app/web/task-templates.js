@@ -199,20 +199,22 @@
   // 内置默认示例：镜像 manifest.js 里 tasks.templates.*.examples[0] 的真实产品数据，仅在
   // manifest 缺失/对应字段非法时作为兜底，不是本文件自造的另一套数据（与 keyboard.js/task.js/
   // pointer.js 的 DEFAULT_MANIFEST 兜底常量同一工程取舍）。
+  // WTJ-20260705-004 Phase B：voicePrompt 随 manifest.js 同步改指向 084 交付的中文完整句
+  // .zh.m4a（这份兜底本就承诺"镜像 manifest.js 真实产品数据"，见上方注释）。
   var DEFAULT_EXAMPLES = {
     drag: [
-      { id: 'drag-apple-to-basket', objectSprite: 'sprites/apple.png', targetSprite: 'sprites/basket.png', voicePrompt: 'audio/tasks/drag-apple-to-basket.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'drag-apple-to-basket', objectSprite: 'sprites/apple.png', targetSprite: 'sprites/basket.png', voicePrompt: 'audio/tasks/drag-apple-to-basket.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     click: [
-      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
-      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.m4a', successAudio: 'audio/sfx/task-success.m4a' },
-      { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     find: [
-      { id: 'find-the-dog', targetSprite: 'sprites/dog.png', distractorSprites: ['sprites/cat.png', 'sprites/ball.png'], voicePrompt: 'audio/tasks/find-the-dog.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'find-the-dog', targetSprite: 'sprites/dog.png', distractorSprites: ['sprites/cat.png', 'sprites/ball.png'], voicePrompt: 'audio/tasks/find-the-dog.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     press: [
-      { id: 'press-letter-a', targetKey: 'A', voicePrompt: 'audio/tasks/press-a.m4a', successAudio: 'audio/sfx/task-success.m4a' }
+      { id: 'press-letter-a', targetKey: 'A', voicePrompt: 'audio/tasks/press-a.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ]
   };
 
@@ -249,7 +251,20 @@
   // 一张任务道具专属的文件名 → 实际子目录映射表，不改动只读的 manifest.js。
   // ---------------------------------------------------------------------
   var TASK_PROPS_FILENAMES = ['apple.png', 'basket.png', 'bell.png', 'doghouse.png', 'door.png', 'faucet.png', 'horse.png', 'lamp.png'];
-  var SPRITES_FILENAMES = ['dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png'];
+  // WTJ-20260705-004 Phase A（pt2）：find.examples[] 从"写死 dog/cat/ball 单条"扩展到 12 条
+  // 精选 example（见 manifest.js tasks.templates.find.examples 与该处行内注释），target/
+  // distractor 全部复用 secretWords.pool 已交付的英文词 sprite（103 张真实素材覆盖 101 词，
+  // 零新增美术）。这里同步把新用到的 sprite 文件名加入白名单，避免 resolveSpritePath() 走到
+  // "未知文件名，assets/ 前缀兜底可能 404"的兜底分支噪声警告——路径本身其实仍会拼对（因为
+  // manifest 传入的 spriteFile 原就带 'sprites/' 前缀），加入白名单只是消除噪声、保持与既有
+  // TASK_PROPS_FILENAMES/SPRITES_FILENAMES"已知文件名清单"的工程约定一致。
+  var SPRITES_FILENAMES = [
+    'dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png',
+    'banana.png', 'orange.png', 'moon.png', 'sun.png', 'fish.png', 'frog.png', 'duck.png',
+    'elephant.png', 'lion.png', 'monkey.png', 'pig.png', 'goat.png', 'koala.png',
+    'rocket.png', 'robot.png', 'rainbow.png', 'turtle.png', 'unicorn.png', 'zebra.png',
+    'whale.png', 'octopus.png'
+  ];
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
 
@@ -737,6 +752,51 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260705-004 Phase A（pt5）：英文 learning 反馈——任务判定完成后，若该 example 带了
+  // 可选 example.learningWord 字段（一个英文单词字面量，如 'dog'/'apple'），防御式地再用
+  // WTJ_AUDIO.playWord() 念一遍这个词，强化"任务目标 = 一个可以学习的英文单词"这条产品意图。
+  //
+  // 零新增音频约束：learningWord 必须能在 MANIFEST.secretWords.pool 里找到同名词条，直接复用
+  // 该词条已经交付的 audioFile（101 词均已有真实 .m4a，见 manifest.js secretWords.pool 与
+  // audio/words/ 目录），不新造任何音频路径约定、不新增任何音频文件依赖。找不到对应词条时
+  // （拼写不在 pool 内，或 pool 缺失）静默跳过并 warn 一次，不阻断任务完成流程——与本文件其余
+  // WTJ_AUDIO/WTJ_HUD/WTJ_POINTER 调用一贯的防御式降级契约一致。
+  // ---------------------------------------------------------------------
+  function findSecretWordPoolEntry(word) {
+    try {
+      if (MANIFEST && MANIFEST.secretWords && Array.isArray(MANIFEST.secretWords.pool)) {
+        var pool = MANIFEST.secretWords.pool;
+        for (var i = 0; i < pool.length; i++) {
+          if (pool[i] && pool[i].word === word) {
+            return pool[i];
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 MANIFEST.secretWords.pool 失败，已捕获：', err);
+    }
+    return null;
+  }
+
+  function playLearningWordDefensive(example) {
+    try {
+      if (!example || typeof example.learningWord !== 'string' || !example.learningWord) {
+        return; // learningWord 是可选字段，未提供时是完全正常的 no-op（如 press 任务当前不填）。
+      }
+      var entry = findSecretWordPoolEntry(example.learningWord);
+      if (!entry) {
+        console.warn('[WTJ_TASK_TEMPLATES] example.learningWord "' + example.learningWord + '" 未在 MANIFEST.secretWords.pool 找到对应词条，已跳过播放（零新增音频约束：只能引用池内已交付词）。');
+        return;
+      }
+      if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWord === 'function') {
+        window.WTJ_AUDIO.playWord({ word: entry.word, audioFile: entry.audioFile });
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] window.WTJ_AUDIO.playWord（learningWord）调用失败，已捕获：', err);
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // 当前进行中任务的运行时状态（同一时刻只有一个，与 013 的"同一时刻只允许一个进行中任务"
   // 不变式保持一致——本文件不需要自己再做一次并发保护，013 的 startTask() 已经保证了这点）。
   // ---------------------------------------------------------------------
@@ -796,6 +856,7 @@
 
     setStatusLightDefensive(lightIndex, true);
     playSuccessAudioDefensive(example);
+    playLearningWordDefensive(example); // pt5：可选 learningWord 英文单词强化播放。
 
     try {
       if (window.WTJ_TASK && typeof window.WTJ_TASK.completeTask === 'function') {
@@ -843,8 +904,26 @@
       }
     });
 
+    // WTJ-20260705-004 Phase A（pt1）：可选 example.distractorSprites——纯装饰性的干扰物体
+    // 散落在场景里（例如苹果任务旁边放一根香蕉/橘子），仿 renderFindTask() 的干扰项循环：
+    // 只 createPropEl() + push 进 elements（供完成后统一清理/移除），不 registerTarget（不
+    // 参与任何拖拽/点击判定），不占用 objPos（presetAt(0)）/targetPos（presetAt(2)）这两个
+    // 已用的布局位——从 presetAt(3) 起顺延，与 renderFindTask() 从 presetAt(1) 起顺延同一手法
+    // （避免与 find 任务的目标位 presetAt(0) 冲突，这里避免与 drag 的物体/目标位冲突）。
+    var elements = [objEl, targetEl];
+    var distractorEls = [];
+    var distractors = Array.isArray(example.distractorSprites) ? example.distractorSprites : [];
+    var i;
+    for (i = 0; i < distractors.length; i++) {
+      var dEl = createPropEl(distractors[i], presetAt(3 + i), 'wtj-tt-drag-distractor');
+      if (dEl) {
+        elements.push(dEl);
+        distractorEls.push(dEl);
+      }
+    }
+
     return {
-      elements: [objEl, targetEl],
+      elements: elements,
       pointerIds: [objId, targetId],
       // P1-2（Fable 对抗评审）：拖拽跟随视觉需要知道"哪个元素是被拖物体"+ 它的初始 preset
       // 位置（拖错弹回要复位到这里），见下方 handleDragMove()/handleDragDropGlobal()。
@@ -853,7 +932,12 @@
       dragObjectInitialPos: objPos,
       // WTJ-20260705-015：拖拽成功的"落点"是放置目标的位置（物体被拖过去、命中判定也在这里
       // 发生），任务成功即时视觉反馈锚定在这里，而不是物体的出发点。
-      completionAnchor: anchorFromPos(targetPos)
+      completionAnchor: anchorFromPos(targetPos),
+      // pt1（004b）：与 renderFindTask() 的 P2-4 修法保持同一风格——emphasize（30s 目标增强提示）
+      // 只应该强调"任务本身涉及的元素"（可拖物体 + 放置目标），装饰性干扰物不应该被一起放大/
+      // 发光（虽然不像 find 那样构成"泄漏答案"，但会让强调阶段的视觉焦点被无关装饰稀释，
+      // 与 find 保持一致的设计意图：干扰项恒不参与 emphasize）。
+      emphasizeElements: [objEl, targetEl]
     };
   }
 
