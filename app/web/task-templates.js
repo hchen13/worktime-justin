@@ -147,9 +147,13 @@
 // 对外 API（window.WTJ_TASK_TEMPLATES，Object.freeze 冻结 + 绑定加固）
 // -----------------------------------------------------------------------
 //   getActiveTaskInfo()   返回当前进行中任务的快照 { type, taskId } | null（QA 用）。
-//   onTaskComplete(fn)    订阅"某个具体任务模板判定完成"事件，fn({ type, taskId, lightIndex })。
-//                          供 015 奖励/状态灯引擎卡消费（完整三连奖励/轮次重置逻辑属于 015，
-//                          本卡只负责在每次判定完成时 emit 这个事件 + 防御式点亮一个状态灯）。
+//   onTaskComplete(fn)    订阅"某个具体任务模板判定完成"事件，fn({ type, taskId, lightIndex,
+//                          anchor }）。anchor 是 WTJ-20260705-015 新增字段：drag/click/find
+//                          三类为 { leftPercent, topPercent }（判定完成时目标在屏幕上的位置，
+//                          百分比数字，供 015 换算成像素锚点画即时视觉反馈），press 类无 DOM
+//                          恒为 null。供 015 奖励/状态灯引擎卡消费（完整三连奖励/轮次重置逻辑
+//                          属于 015，本卡只负责在每次判定完成时 emit 这个事件 + 防御式点亮一个
+//                          状态灯）。
 //   _setClock(clock)      测试专用（与 task.js/pointer.js 同款模式），不是给其余生产代码调用的
 //                          稳定契约。供单测把 P1-3「完成态延迟移除」的 ~800ms 可见窗口快进掉。
 //
@@ -390,6 +394,38 @@
       idx += POSITION_PRESETS.length;
     }
     return POSITION_PRESETS[idx];
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260705-015：任务成功即时视觉反馈（第三路，见 status-rewards.js「三、任务成功即时
+  // 视觉反馈」一节）需要知道"这次判定完成的任务在屏幕上的哪个位置"，才能在正确的地方画出
+  // sparkle burst，而不是屏幕正中心或固定角落。本文件的任务道具全部用 POSITION_PRESETS 给出的
+  // 百分比字符串（如 '38%'）定位（.wtj-tt-prop 的 style.left/top，相对 .wtj-tt-root 这个
+  // 全屏 fixed 容器），因此这里只需要把渲染时实际使用的那个 preset 位置原样透传出去，换算成
+  // { leftPercent, topPercent } 两个数字，供 015 在渲染时按 window.innerWidth/innerHeight 换算
+  // 成像素锚点——不依赖 getBoundingClientRect()（沙箱测试环境的 fake DOM 元素没有这个方法，见
+  // handleDragMove() 上方注释的同一取舍），也不需要真实浏览器布局。press 类任务没有任何 DOM
+  // 元素（见「四、按键任务」一节），completionAnchor 恒为 null——015 侧对 null 有自己的
+  // 画布安全区兜底位置，不是本文件的职责。
+  // ---------------------------------------------------------------------
+  function parsePercent(str) {
+    if (typeof str !== 'string' || str.length === 0) {
+      return null;
+    }
+    var n = parseFloat(str);
+    return (typeof n === 'number' && isFinite(n)) ? n : null;
+  }
+
+  function anchorFromPos(pos) {
+    if (!pos) {
+      return null;
+    }
+    var leftPercent = parsePercent(pos.left);
+    var topPercent = parsePercent(pos.top);
+    if (leftPercent === null || topPercent === null) {
+      return null;
+    }
+    return { leftPercent: leftPercent, topPercent: topPercent };
   }
 
   // ---------------------------------------------------------------------
@@ -769,7 +805,11 @@
       console.error('[WTJ_TASK_TEMPLATES] window.WTJ_TASK.completeTask 调用失败，已捕获：', err);
     }
 
-    emit(taskCompleteSubscribers, { type: type, taskId: taskId, lightIndex: lightIndex });
+    // WTJ-20260705-015：新增 anchor 字段（drag/click/find 类型为 { leftPercent, topPercent }，
+    // press 类型恒为 null），供 015（status-rewards.js）的任务成功即时视觉反馈定位 sparkle
+    // burst——纯新增字段，不改动既有的 type/taskId/lightIndex 三个字段，向后兼容既有订阅者
+    // （010/008 两路奖励逻辑与本文件自身单测均只逐字段读取，不做整体形状断言）。
+    emit(taskCompleteSubscribers, { type: type, taskId: taskId, lightIndex: lightIndex, anchor: completedRuntime.completionAnchor || null });
   }
 
   // ---------------------------------------------------------------------
@@ -777,8 +817,9 @@
   // ---------------------------------------------------------------------
   function renderDragTask(example) {
     var objPos = presetAt(0);
+    var targetPos = presetAt(2);
     var objEl = createPropEl(example.objectSprite, objPos, 'wtj-tt-drag-object');
-    var targetEl = createPropEl(example.targetSprite, presetAt(2), 'wtj-tt-drag-target');
+    var targetEl = createPropEl(example.targetSprite, targetPos, 'wtj-tt-drag-target');
     if (!objEl || !targetEl) {
       removeElementDefensive(objEl);
       removeElementDefensive(targetEl);
@@ -809,7 +850,10 @@
       // 位置（拖错弹回要复位到这里），见下方 handleDragMove()/handleDragDropGlobal()。
       dragObjectId: objId,
       dragObjectEl: objEl,
-      dragObjectInitialPos: objPos
+      dragObjectInitialPos: objPos,
+      // WTJ-20260705-015：拖拽成功的"落点"是放置目标的位置（物体被拖过去、命中判定也在这里
+      // 发生），任务成功即时视觉反馈锚定在这里，而不是物体的出发点。
+      completionAnchor: anchorFromPos(targetPos)
     };
   }
 
@@ -887,7 +931,8 @@
   // 二、点击任务（REQ-TASK-08）
   // ---------------------------------------------------------------------
   function renderClickTask(example) {
-    var targetEl = createPropEl(example.targetSprite, presetAt(0), 'wtj-tt-click-target');
+    var targetPos = presetAt(0);
+    var targetEl = createPropEl(example.targetSprite, targetPos, 'wtj-tt-click-target');
     if (!targetEl) {
       return { elements: [], pointerIds: [] };
     }
@@ -936,7 +981,8 @@
       // 056：供 handleTemplateComplete() 的 computeVisualHoldMs() 读取；非引擎路径为 null，
       // 沿用既有 800ms 默认 hold（见该函数与文件头「COMPLETE_VISUAL_HOLD 耦合修正」一节）。
       animProp: usingEngine ? animInfo.prop : null,
-      animActiveState: usingEngine ? animInfo.activeState : null
+      animActiveState: usingEngine ? animInfo.activeState : null,
+      completionAnchor: anchorFromPos(targetPos)
     };
   }
 
@@ -947,7 +993,8 @@
     var elements = [];
     var pointerIds = [];
 
-    var targetEl = createPropEl(example.targetSprite, presetAt(0), 'wtj-tt-find-target');
+    var targetPos = presetAt(0);
+    var targetEl = createPropEl(example.targetSprite, targetPos, 'wtj-tt-find-target');
     if (!targetEl) {
       return { elements: [], pointerIds: [] };
     }
@@ -984,7 +1031,8 @@
       // 寻找任务本该有的提示效果。targetEl 恒是本函数第一个 push 进 elements 的元素，这里单独
       // 存一份引用供 handleTaskPhase() 的 emphasize 分支使用，不依赖调用方去猜 elements[0]
       // 这个隐含约定。
-      emphasizeElements: [targetEl]
+      emphasizeElements: [targetEl],
+      completionAnchor: anchorFromPos(targetPos)
     };
   }
 
@@ -1119,7 +1167,11 @@
       // 056：仅 renderClickTask() 在真正用上引擎时会填充这两项，其余类型/回退路径均为 null，
       // 见 computeVisualHoldMs() 的消费方式。
       animProp: (runtime && runtime.animProp) || null,
-      animActiveState: (runtime && runtime.animActiveState) || null
+      animActiveState: (runtime && runtime.animActiveState) || null,
+      // WTJ-20260705-015：drag/click/find 三类填充 { leftPercent, topPercent }，press 类
+      // （无 DOM）恒为 null——见 presetAt() 下方 anchorFromPos() 一节说明，供 handleTemplateComplete()
+      // 通过 onTaskComplete 事件透传给 015 的任务成功即时视觉反馈消费。
+      completionAnchor: (runtime && runtime.completionAnchor) || null
     };
 
     questionClickCounter += 1;
