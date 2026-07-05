@@ -43,6 +43,131 @@ private let kIsWindowedMode: Bool = {
 private let kResourceScheme = "wtjres"
 private let kResourceSchemeHost = "app"
 
+// MARK: - 动画诊断日志（WTJ-20260705-017）
+//
+// 背景：本卡起因是"旧 Mac（2014 MBA / Big Sur，justin.local）上动画全局不播放"的报告。排查
+// 后确认根因已在 WTJ-20260705-014 修复（app/web/frame-anim.js「帧未就绪 / 防御式降级」一节），
+// 014 已随 stage 基线合入。本卡剩余职责是补一条**持久化、旧机可取**的诊断证据链——现状是
+// 这类问题只能靠"重现 + 猜"，孩子的旧机出问题时开发者往往不在场，Console.app 的普通 NSLog
+// 会被系统日志噪音淹没、也不落盘到一个固定可打包带走的文件。
+//
+// 落盘位置：`~/Library/Logs/WorkTimeJustin/animation-diagnostics.log`（标准 macOS 应用日志
+// 惯例目录，`~/Library/Logs/<AppName>/`；家长/QA 在旧机上用"访达 -> 前往文件夹"或
+// `log show`/直接 `cat` 均可取，也可整个 `WorkTimeJustin` 目录拖进邮件/AirDrop 带走）。
+private let kDiagLogDirComponents = ["Logs", "WorkTimeJustin"]
+private let kDiagLogFileName = "animation-diagnostics.log"
+
+/// 解析并确保诊断日志目录存在（`~/Library/Logs/WorkTimeJustin/`），返回日志文件的完整路径。
+/// 目录创建失败（极少见：权限异常等）时返回 nil，调用方应放弃这次写入而不是崩溃——诊断基础
+/// 设施本身出故障不应该反过来影响 kiosk 主流程（与 web 层 diag.js 的"记录失败静默吞掉"同一
+/// 工程取舍，见该文件头注释）。
+private func resolveDiagLogFileURL() -> URL? {
+    guard let libraryDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first else {
+        return nil
+    }
+    var dir = libraryDir
+    for component in kDiagLogDirComponents {
+        dir = dir.appendingPathComponent(component)
+    }
+    do {
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    } catch {
+        NSLog("WTJ: 创建诊断日志目录失败 %@：%@", dir.path, String(describing: error))
+        return nil
+    }
+    return dir.appendingPathComponent(kDiagLogFileName)
+}
+
+/// 追加一行文本到诊断日志文件（文件不存在则先创建）。全同步实现（FileHandle 阻塞式
+/// API），不涉及 Swift Concurrency；调用频率低（心跳约 5s 一次 + 偶发错误事件），阻塞式
+/// 开合文件的开销可忽略。
+private func appendDiagLogLine(_ line: String) {
+    guard let fileURL = resolveDiagLogFileURL() else {
+        return
+    }
+    let lineWithNewline = line.hasSuffix("\n") ? line : line + "\n"
+    guard let data = lineWithNewline.data(using: .utf8) else {
+        return
+    }
+    if !FileManager.default.fileExists(atPath: fileURL.path) {
+        guard FileManager.default.createFile(atPath: fileURL.path, contents: nil) else {
+            NSLog("WTJ: 创建诊断日志文件失败：%@", fileURL.path)
+            return
+        }
+    }
+    guard let handle = FileHandle(forWritingAtPath: fileURL.path) else {
+        NSLog("WTJ: 打开诊断日志文件失败（写入）：%@", fileURL.path)
+        return
+    }
+    handle.seekToEndOfFile()
+    handle.write(data)
+    handle.closeFile()
+}
+
+/// app 版本 + 构建 commit（Info.plist，由 app/build.sh 写入的 CFBundleShortVersionString /
+/// WTJBuildCommit 键，见该脚本 WTJ-20260705-017 注释）。两者均缺失（例如未经 build.sh 构建、
+/// 直接跑 swiftc 产物）时回退 "unknown"，不崩溃。
+private func resolveAppBuildInfo() -> (version: String, commit: String) {
+    let info = Bundle.main.infoDictionary
+    let version = (info?["CFBundleShortVersionString"] as? String) ?? "unknown"
+    let commit = (info?["WTJBuildCommit"] as? String) ?? "unknown"
+    return (version, commit)
+}
+
+/// 供拼进 JS 字符串字面量前的最小转义（反斜杠 / 双引号）。本函数唯一的输入来源是本进程自己
+/// Info.plist 里的版本号/commit（受信任、非用户可控），这里转义只是防御纵深，不是应对恶意
+/// 输入的安全边界。
+private func jsStringEscape(_ s: String) -> String {
+    return s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+}
+
+/// 把 message.body（WKScriptMessage 桥接自 web 层 JS 对象，通常是 NSDictionary/NSArray/
+/// NSString/NSNumber 的某种组合）序列化成一行可落盘的 JSON 文本；不是合法 JSON 顶层对象时
+/// （理论上不应发生——app/web/diag.js 的 record() 只 post 纯对象，这里仍防御式兜底，不崩溃）
+/// 退化为 Swift 的 String(describing:)。
+private func serializeDiagMessageBody(_ body: Any) -> String {
+    if JSONSerialization.isValidJSONObject(body) {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: body, options: [])
+            if let jsonString = String(data: data, encoding: .utf8) {
+                return jsonString
+            }
+        } catch {
+            NSLog("WTJ: 诊断消息 JSON 序列化失败，已捕获，回退纯文本描述：%@", String(describing: error))
+        }
+    }
+    return String(describing: body)
+}
+
+/// 启动时写入一次日志头（app 版本/commit、macOS 版本、架构、窗口化/kiosk 模式），供旧机
+/// 拿到日志文件时第一眼就能确认"这是哪个版本、哪台机器、什么模式下跑出来的"，不需要额外
+/// 交叉核对。
+private func writeDiagLogHeader() {
+    let buildInfo = resolveAppBuildInfo()
+    let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+    let osVersionString = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
+    let arch: String
+    #if arch(x86_64)
+    arch = "x86_64"
+    #elseif arch(arm64)
+    arch = "arm64"
+    #else
+    arch = "unknown"
+    #endif
+    let header = """
+    ================================================================
+    WorkTime Justin 动画诊断日志（WTJ-20260705-017）
+    启动时间: \(ISO8601DateFormatter().string(from: Date()))
+    app version: \(buildInfo.version)  commit: \(buildInfo.commit)
+    macOS: \(osVersionString)  进程架构: \(arch)  窗口化调试模式: \(kIsWindowedMode)
+    日志格式：每行一条来自 web 层 window.WTJ_DIAG 的 JSON 记录（{ts,kind,payload}，
+    见 app/web/diag.js 顶部注释「采集哪些信号」一节）；本文件持久化追加，不随进程
+    退出清空——旧机复现问题后可直接把整份文件带走分析。
+
+    """
+    appendDiagLogLine(header)
+}
+
 // MARK: - 家长退出口令管理（REQ-EXIT-03 / REQ-EXIT-04，WTJ-20260704-017）
 //
 // 无后端、无网络：口令只落在本机 UserDefaults（明文字符串，非哈希）。这是 MVP 阶段
@@ -339,6 +464,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         // 长按 Esc 触发口令框才提示——方便家长/开发者在 Console.app 里第一时间看到。
         // 丢弃返回值：这里只是为了触发 resolveExitPasscode() 内部的 NSLog 提醒分支。
         _ = resolveExitPasscode()
+        // WTJ-20260705-017：尽早写一条日志头（app 版本/commit/macOS 版本/架构/模式），
+        // 独立于 webView 是否加载成功——即使后续 web 层因故未起来，这条头信息本身也已经
+        // 落盘，不依赖 web 层任何逻辑。
+        writeDiagLogHeader()
         setupMenu()
         setupWindow()
         setupWebView()
@@ -611,6 +740,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let contentController = WKUserContentController()
         let proxy = WeakScriptMessageHandler(target: self)
         contentController.add(proxy, name: "shell")
+        // WTJ-20260705-017：诊断消息独立 channel（与既有 "shell" channel 分开，互不干扰）。
+        // 同一个 proxy 实例可以在 WKUserContentController 上以不同 name 注册多次——
+        // userContentController(_:didReceive:) 里用 message.name 分流处理，见该方法实现。
+        contentController.add(proxy, name: "diag")
+
+        // WTJ-20260705-017：在文档解析最早期（.atDocumentStart，早于 index.html 里任何
+        // <script>——包括排在最前面的 diag.js 本身）注入构建信息，供 web 层
+        // app/web/diag.js 的 resolveBuildInfo() 同步读取 window.__WTJ_BUILD_INFO（无需等待
+        // WKNavigationDelegate 的 didFinish 回调，那时 diag.js 早已跑完自己的 header 采集）。
+        // version/commit 来自本进程自己的 Info.plist（受信任、非用户可控输入），jsStringEscape
+        // 仍做基本转义防御纵深。
+        let buildInfo = resolveAppBuildInfo()
+        let buildInfoScript = WKUserScript(
+            source: "window.__WTJ_BUILD_INFO = { version: \"\(jsStringEscape(buildInfo.version))\", " +
+                    "commit: \"\(jsStringEscape(buildInfo.commit))\" };",
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        contentController.addUserScript(buildInfoScript)
+
         config.userContentController = contentController
 
         let view = WKWebView(frame: window.contentLayoutRect, configuration: config)
@@ -655,6 +804,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func userContentController(_ userContentController: WKUserContentController,
                                 didReceive message: WKScriptMessage) {
+        // WTJ-20260705-017：按 channel name 分流——"diag" 走诊断日志落盘（高频、追加写文件，
+        // 不应该也出现在 NSLog/系统日志里制造噪音）；其余（当前只有既有的 "shell" channel）
+        // 维持原有的 NSLog 行为不变。
+        if message.name == "diag" {
+            appendDiagLogLine(serializeDiagMessageBody(message.body))
+            return
+        }
         NSLog("WTJ shell message: %@", String(describing: message.body))
     }
 }
