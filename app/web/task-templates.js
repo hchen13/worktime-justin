@@ -258,12 +258,20 @@
   // "未知文件名，assets/ 前缀兜底可能 404"的兜底分支噪声警告——路径本身其实仍会拼对（因为
   // manifest 传入的 spriteFile 原就带 'sprites/' 前缀），加入白名单只是消除噪声、保持与既有
   // TASK_PROPS_FILENAMES/SPRITES_FILENAMES"已知文件名清单"的工程约定一致。
+  //
+  // WTJ-20260705-025：drag 池扩容新增 6 条 example（egg-to-nest/flower-to-vase/
+  // orange-to-basket/fish-to-net/jam-to-jar/treasure-to-chest，见 manifest.js
+  // tasks.templates.drag.examples 行内注释），同样全部复用 secretWords.pool 已交付 sprite，
+  // 这里追加对应的新文件名（egg/nest/flower/vase/leaf/lemon/pear/net/jam/jar/treasure/key/
+  // spoon），零新增美术、零逻辑改动，只是扩充这张既有白名单。
   var SPRITES_FILENAMES = [
     'dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png',
     'banana.png', 'orange.png', 'moon.png', 'sun.png', 'fish.png', 'frog.png', 'duck.png',
     'elephant.png', 'lion.png', 'monkey.png', 'pig.png', 'goat.png', 'koala.png',
     'rocket.png', 'robot.png', 'rainbow.png', 'turtle.png', 'unicorn.png', 'zebra.png',
-    'whale.png', 'octopus.png'
+    'whale.png', 'octopus.png',
+    'egg.png', 'nest.png', 'flower.png', 'vase.png', 'leaf.png', 'lemon.png', 'pear.png',
+    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png'
   ];
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];

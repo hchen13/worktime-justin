@@ -400,8 +400,34 @@
             // WTJ-20260705-004 Phase A（pt5）：可选英文单词字面量，必须能在 secretWords.pool
             // 里找到同名词条（零新增音频约束）；任务判定完成后防御式再念一遍这个词强化学习，
             // 见 task-templates.js playLearningWordDefensive()。
+            //
+            // WTJ-20260705-025：voicePrompt 允许空字符串 ''——表示这条 example 的中文任务语音
+            // 尚未由 024/084 交付。空字符串是 falsy，task.js 的 playTaskVoiceDefensive() 与
+            // voice-language.js 的 extractVoicePrompt()/resolveTaskVoicePath() 对它的既有处理
+            // 恰好就是"直接判定无 voicePrompt，安全返回 null，不发起任何播放/fetch"（与
+            // tests/unit/voice-language.test.mjs 用例 5b「缺 voicePrompt 字段」同一条件分支）。
+            // 这是本卡刻意选择的 no-silent-fallback 落地方式：绝不把新任务的 voicePrompt 指向
+            // 一个复用自其他任务的、语义不匹配的现成语音文件（那样会"静默播错"——孩子点开门
+            // 任务却听到别的任务的提示句），也不需要为此改动 voice-language.js 的 ALL_TASK_IDS/
+            // ZH_AVAILABLE_TASK_IDS 静态清单（这些留空的 example 从未进入该清单的比对范围，见
+            // tests/unit/voice-language.test.mjs 9a 的过滤逻辑）——中文语言完整度仍如实报告
+            // 24/24（该清单覆盖的既有任务集合不受影响），不会把这些新任务的语音缺口错误折算成
+            // "中文语言本身不完整"进而让家长设置面板意外禁用中文选项。缺口台账见
+            // app/web/audio/missing-audio.json 的 taskVoiceZh 段新增 status:"not-delivered"
+            // 条目 + app/scripts/tts-text-manifest.zh.json 的文案草稿，供 024/084 后续排期。
             learningWord: 'string（可选），须命中 secretWords.pool[].word 的英文单词，完成后防御式重播强化'
           },
+          // WTJ-20260705-025：Ethan 反馈"drag-to-basket 还是太重复"——此前只有 apple-basket/
+          // dog-home 两条 example，轮转周期短，孩子很快就会看腻。这里参考 find 类"12 条精选
+          // example"的做法（见下方 find.examples 与其行内注释），把 drag 扩到 8 条：新增 6 条
+          // 全部复用 secretWords.pool 已交付的 Pack B 英文词 sprite 做"物体"与"放置目标"两端
+          // （零新增美术，见每条下方注释标注具体来源），选取/轮转逻辑完全不变——仍然是
+          // task-templates.js 的 questionClickCounter 确定性轮转（P1-1 修法：
+          // Math.floor(questionClickCounter / TASK_TYPES.length) % examples.length），不引入
+          // Math.random()。新增顺序统一"追加在数组末尾"，不调整/不重排原有两条的下标——
+          // tests/unit/task-voice-language-switch.test.mjs 用例 4 与
+          // tests/unit/task-voice-path.test.mjs 用例 2 都直接断言 `drag.examples[0]` 恒为
+          // 'drag-apple-to-basket'，追加式扩容不影响这两条既有断言。
           examples: [
             {
               id: 'drag-apple-to-basket',
@@ -422,13 +448,94 @@
             {
               id: 'drag-dog-home',
               objectSprite: 'sprites/dog.png',
-              targetSprite: 'sprites/doghouse.png', // stub，狗窝素材未到位（REQ-AST-05），待素材卡供给
+              // WTJ-20260705-025：doghouse.png 已交付（Pack A，卡 WTJ-20260704-005），非 stub——
+              // 见 app/web/assets/task-props/PROVENANCE.md「本卡已补齐，不再是 stub」一节。此处
+              // 修正上一版遗留的过期行内注释（曾误标 stub，待素材卡供给），素材路径本身未变。
+              targetSprite: 'sprites/doghouse.png',
               voicePrompt: 'audio/tasks/drag-dog-home.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"把小狗带回家！"
               successAudio: 'audio/sfx/task-success.m4a', // stub
               successAnimation: 'bounce-in',
               // pt1：窝旁边有一只装饰性的猫，不影响判定。
               distractorSprites: ['sprites/cat.png'],
               learningWord: 'dog' // pt5：命中 secretWords.pool 的 'dog' 词条。
+            },
+            {
+              id: 'drag-egg-to-nest',
+              // 物体/目标均复用 secretWords.pool 已交付 Pack B sprite（egg/nest），零新增美术。
+              objectSprite: 'sprites/egg.png',
+              targetSprite: 'sprites/nest.png',
+              // WTJ-20260705-025：024/084 尚未交付这条中文语音——留空而非指向一个语义不匹配的
+              // 现成文件，见上方 schema.voicePrompt 行内注释的 no-silent-fallback 说明。拟定
+              // 文案"把鸡蛋放进鸟窝里！"已登记到 app/scripts/tts-text-manifest.zh.json 供
+              // 024/084 后续生成，生成后把这里改成 'audio/tasks/drag-egg-to-nest.zh.m4a' 即可，
+              // 不需要改任何代码。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/duck.png'], // 鸟窝旁边一只装饰性的鸭子，不影响判定。
+              learningWord: 'egg'
+            },
+            {
+              id: 'drag-flower-to-vase',
+              objectSprite: 'sprites/flower.png',
+              targetSprite: 'sprites/vase.png',
+              // 待 024/084 交付，拟定文案"把花朵放进花瓶里！"，同上不静默复用他句。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/leaf.png'],
+              learningWord: 'flower'
+            },
+            {
+              id: 'drag-orange-to-basket',
+              objectSprite: 'sprites/orange.png',
+              // 复用 apple-to-basket 同一个放置目标 sprite（task-props/basket.png），不同物体、
+              // 不同 example，孩子看到的是"另一种水果被放进同一个篮子"，与 find 任务里同一目标
+              // sprite 被多个不同 example 复用（如 apple 既是 find-the-apple 的 target 又是
+              // drag-apple-to-basket 的物体）同一工程取舍，不是重复渲染 bug。
+              targetSprite: 'sprites/basket.png',
+              // 待 024/084 交付，拟定文案"把橙子放进篮子里！"。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/lemon.png', 'sprites/pear.png'],
+              learningWord: 'orange'
+            },
+            {
+              id: 'drag-fish-to-net',
+              objectSprite: 'sprites/fish.png',
+              targetSprite: 'sprites/net.png',
+              // 待 024/084 交付，拟定文案"把小鱼放进网里！"。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/frog.png'],
+              learningWord: 'fish'
+            },
+            {
+              id: 'drag-jam-to-jar',
+              objectSprite: 'sprites/jam.png',
+              targetSprite: 'sprites/jar.png',
+              // 待 024/084 交付，拟定文案"把果酱放进罐子里！"。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/spoon.png'],
+              learningWord: 'jam'
+            },
+            {
+              id: 'drag-treasure-to-chest',
+              objectSprite: 'sprites/treasure.png',
+              // treasure-chest.png 同时也是 rewards.chest.sprite 引用的同一张图（宝箱开箱大奖励
+              // 用图）——这里只是复用同一份已交付素材渲染一个静态放置目标，不影响/不触发宝箱
+              // 开箱逻辑本身（两处引用互相独立，见 task-templates.js resolveSpritePath()）。
+              targetSprite: 'sprites/treasure-chest.png',
+              // 待 024/084 交付，拟定文案"把宝藏放进宝箱里！"。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              successAnimation: 'bounce-in',
+              distractorSprites: ['sprites/key.png'],
+              learningWord: 'treasure'
             }
           ]
         },
@@ -480,6 +587,40 @@
               voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"让小马跑起来！"
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'horse' // pt5：命中 secretWords.pool 的 'horse' 词条。
+            },
+            // WTJ-20260705-025：接入 door/doorbell 点击任务——素材（sprites/door.png、
+            // sprites/bell.png）早已随 Pack A（WTJ-20260704-005）交付并集成到
+            // app/web/assets/task-props/（见该目录 PROVENANCE.md），但此前从未有任何
+            // manifest.tasks.templates.click.examples 条目引用它们（PROVENANCE.md「集成范围」
+            // 一节原话："资源已就位、待 manifest 补充实例"）——这正是 Ethan 点名的"资产已存在但
+            // 运行版没接"。door/bell 不在 056 的 PROP_ANIM_STATE_MAP 映射表内（v1_boundary.
+            // deferred_to_v2：只有单张静态 PNG，没有分帧/分态动效数据），resolvePropAnimInfo()
+            // 对它们恒返回 null，createPropEl() 因此走静态 <img> 回退——这是既有设计好的降级
+            // 路径，本卡不需要也不应该改 task-templates.js 的引擎判定逻辑，直接复用即可（与
+            // click-lamp-on 引擎缺失时的回退路径完全同构）。idle/active 两态复用同一张静态图，
+            // 视觉差异由 task-templates.css 通用的 `[data-anim-state="active"]` 发光过渡规则
+            // 提供（door.png/bell.png 已在 task-templates.js ANIM_STATE_FILENAMES 清单内，
+            // data-anim-state 属性会被正常创建/切换）。真正的开合/摇铃分帧动效由后续动效卡
+            // 026（门）/031（铃）接手，见 assets/task-props/PROVENANCE.md「animation state
+            // 接口预留」一节。
+            {
+              id: 'click-door-open',
+              targetSprite: 'sprites/door.png',
+              targetSpriteActive: 'sprites/door.png', // 与 lamp/faucet/horse 同一"分态未到位，同图 + data-anim-state 区分视觉"约定
+              // 待 024/084 交付，拟定文案"打开门！"——留空而非复用其他任务的语音，理由见
+              // drag.schema.learningWord 上方 WTJ-20260705-025 no-silent-fallback 说明。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'door' // 命中 secretWords.pool 的 'door' 词条（D 组，已交付）。
+            },
+            {
+              id: 'click-doorbell-ring',
+              targetSprite: 'sprites/bell.png',
+              targetSpriteActive: 'sprites/bell.png',
+              // 待 024/084 交付，拟定文案"按一下门铃！"。
+              voicePrompt: '',
+              successAudio: 'audio/sfx/task-success.m4a',
+              learningWord: 'bell' // 命中 secretWords.pool 的 'bell' 词条（B 组，已交付）。
             }
           ]
         },

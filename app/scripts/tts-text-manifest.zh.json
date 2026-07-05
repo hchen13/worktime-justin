@@ -28,5 +28,17 @@
     "press-letter-m": { "text": "按下字母 M！", "out": "audio/tasks/press-m.zh.m4a" },
     "press-digit-5": { "text": "按下数字 5！", "out": "audio/tasks/press-5.zh.m4a" },
     "press-digit-7": { "text": "按下数字 7！", "out": "audio/tasks/press-7.zh.m4a" }
+  },
+
+  "_pendingNote_WTJ-20260705-025": "以下 tasksPending 段落是 WTJ-20260705-025（drag 池扩容 + door/doorbell 点击任务接入）新增的 8 条文案草稿，**尚未生成任何音频，也尚未被 app/web/manifest.js 的 voicePrompt 引用**（对应 example 的 voicePrompt 字段现为空字符串 ''，见 manifest.js 行内注释的 no-silent-fallback 说明）。刻意与上方已交付的 24 条 tasks 分开一个段落，避免被 task-voice-path.test.mjs 用例 7 那种'遍历 tasks 全量校验磁盘文件存在'的历史断言误当成'应已交付'。out 字段是**建议的**未来落地路径（同一套 audio/tasks/<id>.zh.m4a 命名约定），供 024/084 排期生成；生成后把对应 .m4a 放到 out 指向的路径、并把 manifest.js 对应 example 的 voicePrompt 改成同一个路径字符串即可，不需要改任何代码或本文件结构。",
+  "tasksPending": {
+    "drag-egg-to-nest": { "text": "把鸡蛋放进鸟窝里！", "out": "audio/tasks/drag-egg-to-nest.zh.m4a" },
+    "drag-flower-to-vase": { "text": "把花朵放进花瓶里！", "out": "audio/tasks/drag-flower-to-vase.zh.m4a" },
+    "drag-orange-to-basket": { "text": "把橙子放进篮子里！", "out": "audio/tasks/drag-orange-to-basket.zh.m4a" },
+    "drag-fish-to-net": { "text": "把小鱼放进网里！", "out": "audio/tasks/drag-fish-to-net.zh.m4a" },
+    "drag-jam-to-jar": { "text": "把果酱放进罐子里！", "out": "audio/tasks/drag-jam-to-jar.zh.m4a" },
+    "drag-treasure-to-chest": { "text": "把宝藏放进宝箱里！", "out": "audio/tasks/drag-treasure-to-chest.zh.m4a" },
+    "click-door-open": { "text": "打开门！", "out": "audio/tasks/click-door-open.zh.m4a" },
+    "click-doorbell-ring": { "text": "按一下门铃！", "out": "audio/tasks/click-doorbell-ring.zh.m4a" }
   }
 }
