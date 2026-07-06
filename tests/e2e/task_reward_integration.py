@@ -56,8 +56,12 @@ DEFAULT_REPORT = REPO_ROOT / "tests" / "reports" / "task_reward_integration_repo
 
 # Full real-module stack in index.html order (minus app.js canvas renderer and
 # hud.js — HUD/AUDIO are stubbed so we observe cross-module calls without DOM chrome).
+# WTJ-20260706-005: reward-fireworks.js (window.WTJ_REWARD_FIREWORKS) is the shared
+# reward particle engine that both status-rewards.js (task-complete) and reward-chest.js
+# (chest-open) now delegate their fireworks to; loaded before both so the cross-module
+# reward chain exercises the REAL engine (not the defensive-degrade console.warn path).
 MODULE_ORDER = ["manifest.js", "slots.js", "keyboard.js", "pointer.js",
-                "secretword.js", "task.js", "task-templates.js",
+                "secretword.js", "task.js", "reward-fireworks.js", "task-templates.js",
                 "status-rewards.js", "reward-chest.js"]
 
 # Shared virtual clock + HUD/AUDIO stubs + spies, installed after modules load.
@@ -86,8 +90,10 @@ HARNESS_JS = r"""
     }
     vnow = target;
   };
-  // Push the shared clock into every module that exposes the _setClock hook.
-  ['WTJ_TASK','WTJ_POINTER','WTJ_TASK_TEMPLATES','WTJ_STATUS_REWARDS','WTJ_REWARD_CHEST'].forEach(function (k) {
+  // Push the shared clock into every module that exposes the _setClock hook
+  // (WTJ-20260706-005: WTJ_REWARD_FIREWORKS included so its tick chain is driven by the
+  // same virtual clock the test advances, keeping the reward chain deterministic).
+  ['WTJ_TASK','WTJ_POINTER','WTJ_TASK_TEMPLATES','WTJ_STATUS_REWARDS','WTJ_REWARD_CHEST','WTJ_REWARD_FIREWORKS'].forEach(function (k) {
     if (window[k] && typeof window[k]._setClock === 'function') {
       window[k]._setClock(window.__clock);
     }

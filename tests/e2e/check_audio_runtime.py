@@ -37,9 +37,16 @@ WORDS = ["dog", "apple", "cat", "ball", "star", "zebra", "igloo", "queen"]
 SFX = ["dog-bark", "cat-meow", "task-success", "chest-open", "water-splash", "bell-ring"]
 
 
+class _ReusableTCPServer(socketserver.TCPServer):
+    # SO_REUSEADDR so a recently-closed run's TIME_WAIT socket on this port doesn't block
+    # a rebind (matches faucet_water_ratio_webkit.py / other e2e harnesses; fixes flaky
+    # "Address already in use" when run_all cycles the http-server suites back-to-back).
+    allow_reuse_address = True
+
+
 def serve(app_web: Path, port: int):
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(app_web))
-    httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
+    httpd = _ReusableTCPServer(("127.0.0.1", port), handler)
     httpd.RequestHandlerClass.log_message = lambda *a, **k: None  # quiet
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     return httpd

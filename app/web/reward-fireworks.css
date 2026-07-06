@@ -1,0 +1,31 @@
+/* WTJ-20260706-005 — 可复用奖励烟花/粒子系统：模块单例 overlay canvas 样式
+ * ------------------------------------------------------------------------
+ * .wtj-fw-canvas 是 window.WTJ_REWARD_FIREWORKS（app/web/reward-fireworks.js）在调用方未
+ * 显式传入 opts.canvas 时懒创建的默认单例全屏 canvas（目前只有 task-complete 入口——
+ * status-rewards.js 的 handleTaskComplete() 会用到；chest-open 入口把自己已有的
+ * .wtj-rc-canvas 传进去，不使用这张默认画布，也不受这份样式影响）。
+ *
+ * position 四个属性拆开写（top/right/bottom/left），延续本项目既有 CSS 的写法惯例（如
+ * reward-chest.css 的 .wtj-rc-root、status-rewards.css 的 .wtj-sr-root），不用 inset 简写。
+ *
+ * pointer-events:none：不参与 012（pointer.js）的命中判定，避免这张铺满全屏的 canvas 挡住
+ * 任务道具的点击/拖拽命中。
+ *
+ * z-index：低于任务/道具叠层（.wtj-tt-root，task-templates.css，z-index:6）——烟花是"这一次
+ * 任务完成"的即时反馈，不应该视觉上盖住刚刚完成、可能仍在收尾展示中的任务道具本体；与 HUD
+ * 主叠层（.wtj-hud-root，hud.css，z-index:5）同层，两者都是"背景装饰性质"的常驻/半常驻元素，
+ * 不需要互相抢层级。宝箱自己的 .wtj-rc-canvas（不受本文件影响）仍走 reward-chest.css 既有的
+ * z-index:9（继承自 .wtj-rc-root），因为那是"一次性大奖励高潮"级别的表现，应该盖在几乎所有
+ * 内容之上。
+ */
+.wtj-fw-canvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}

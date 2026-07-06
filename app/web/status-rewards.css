@@ -140,29 +140,12 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* WTJ-20260705-015：任务成功即时视觉反馈（第三路，见 status-rewards.js 「三、任务成功即时  */
-/* 视觉反馈」一节大段说明）。sparkle burst + 成功环画在这个懒创建的单一全屏 <canvas> 上，     */
-/* 不是 DOM 叠层——CSS 这里只负责定位/层级/事件穿透，实际每一帧的绘制内容完全由 JS 侧的      */
-/* drawFxFrame() 决定（ctx.arc/stroke + window.WTJ_SPARKLES.drawSparkles()，无渐变/          */
-/* shadowBlur，见 app/PERFORMANCE.md 红线）。reduced-motion 在这里没有对应的 CSS 覆盖规则——   */
-/* 因为动画本身是 canvas 逐步重绘而非 CSS transition/@keyframes，JS 侧的                      */
-/* prefersReducedMotion() 分支直接决定画一帧静态终态还是走分步 burst，见 triggerTaskSuccessFx()。 */
-/* ------------------------------------------------------------------ */
-
-.wtj-sr-taskfx-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  /* 高于任务叠层（6）——sparkle burst 需要能"炸"在刚完成的任务道具周围/之上，短暂的庆祝性
-     视觉叠加在道具上是预期效果（详见 status-rewards.js 文件头 015 一节的"不遮挡"讨论），不是
-     结构性禁止；低于秘密词命中叠层（8）与「今日工作完成」大奖励（9），保证即便偶发同时出现，
-     更高优先级的反馈始终盖在其上、不被这个小 burst 遮挡。与 008 里程碑弹层同层（7），二者是
-     两个独立的 DOM/canvas 节点，互不干扰。 */
-  z-index: 7;
-  pointer-events: none;
-  width: 100vw;
-  height: 100vh;
-}
+/* WTJ-20260706-005：任务成功即时视觉反馈（第三路）此前是画在懒创建的单一全屏
+   .wtj-sr-taskfx-canvas 上的 sparkle burst + 成功环（015 首次交付）；005 卡改用可复用的
+   window.WTJ_REWARD_FIREWORKS 引擎（starburst/round-bloom 交替），渲染面是该引擎自己的单例
+   overlay canvas（.wtj-fw-canvas，见 app/web/reward-fireworks.css），不再是本文件的职责，
+   .wtj-sr-taskfx-canvas 规则已随之移除（回归护栏见 tests/unit/status-rewards.test.mjs 对应
+   用例）。 */
 
 @media (prefers-reduced-motion: reduce) {
   /* WTJ-20260705-010：completion-stamp-v3 在 reduced-motion 下同样冻结为静态完成态

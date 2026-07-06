@@ -1091,6 +1091,12 @@
       maxParticles: 300, // 与 rewards.chest.fireworks.maxParticles 一致，此处为全局引用值
       idleStopSec: 5, // app.js 现有实现值（原字面量 IDLE_TIMEOUT_MS = 5000），本卡起改由此处驱动
       disallowShadowBlur: true,
+      // WTJ-20260706-005：可复用奖励烟花/粒子系统（app/web/reward-fireworks.js）的性能分档，
+      // 三来源之一（另两个是模块内自适应单向降级 + _setTier() 测试钩子，见该文件文件头「性能
+      // 红线」一节）。'old_mac' | 'normal' | 'burst'，默认 'normal'；不做 UA/机型嗅探（真实
+      // WKWebView 上不可靠也不可测），与 idleStopSec/maxParticles 同处收拢，供 QA/未来配置面板
+      // 统一调整。'burst' 档目前只有 chest-open（molten-fountain）会用到。
+      particleTier: 'normal',
       targetMachine: {
         model: '2014 MacBook Air',
         ramGB: 4,
