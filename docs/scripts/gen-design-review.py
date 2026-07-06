@@ -480,8 +480,9 @@ CLIPS_008 = [
      "before": "app/web/audio/words/yoyo.m4a"},
     {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
      "before": "app/web/audio/tasks/click-faucet-on.m4a"},
-    {"id": "press-m.zh", "kind": "中文任务", "text": "按下字母 M！",
-     "before": "app/web/audio/tasks/press-m.zh.m4a"},
+    {"id": "press-m.zh", "kind": "中文任务（第三版·4 候选待 Ethan 挑）", "text": "按下字母 M！",
+     "before": "app/web/audio/tasks/press-m.zh.m4a",
+     "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"]},
     {"id": "fox", "kind": "秘密词（WTJ-20260706-015 新词）", "text": "fox",
      "before_missing": True},
 ]
@@ -529,6 +530,20 @@ def render_008_audio_fix_section() -> str:
                 f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
                 f'<code class="path">{esc(before_rel)}</code></div>'
             )
+        alts_block = ''
+        if c.get("after_alts"):
+            alt_ctrls = ''.join(
+                '<div class="ab-col"><span class="ab-label">候选 ' + str(i + 2) + '</span>'
+                '<audio controls preload="none" src="' + esc(rel_href(AFTER_DIR_008 + "/" + a)) + '">您的浏览器不支持音频播放。</audio>'
+                '<code class="path">' + esc(AFTER_DIR_008 + "/" + a) + '</code></div>'
+                for i, a in enumerate(c["after_alts"])
+            )
+            alts_block = (
+                '<p class="ab-q"><strong>press-m.zh 第三版返工：上方 AFTER 是 TL 按清晰度（whisper 置信度）选的候选 #1'
+                '（~2.1s 适中语速，避开前两版 1.28s 太赶 / 3.2s 拖沓）；下面 3 个内容相同、音色略不同。'
+                '请 Ethan 挑最干净的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2 / #3 / #4），TL 即定为正式版。</strong></p>'
+                '<div class="ab-cols">' + alt_ctrls + '</div>'
+            )
         items.append(
             '<div class="ab-item">'
             f'<div class="ab-head"><code class="task-id">{esc(cid)}</code>'
@@ -538,6 +553,7 @@ def render_008_audio_fix_section() -> str:
             f'{before_block}'
             f'{after_block}'
             '</div>'
+            f'{alts_block}'
             '</div>'
         )
     parts.append(f'<div class="ab-list">{"".join(items)}</div>')
