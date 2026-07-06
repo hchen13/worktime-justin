@@ -1,0 +1,190 @@
+{
+  "card_id": "WTJ-20260706-003",
+  "executor": "Designer 1",
+  "identity": "CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "method": "deterministic derived bitmap frames from accepted idle bell sprite; widened alternating rotation/offset and stronger crisp sound arcs; no new generative model output",
+  "frame_count": 6,
+  "source_frame": "docs/assets/production-animations-v1/bell/idle/bell_idle_000.png",
+  "angles_deg": [
+    -18,
+    17,
+    -16,
+    19,
+    -13,
+    12
+  ],
+  "offsets_px": [
+    [
+      -36,
+      0
+    ],
+    [
+      34,
+      -3
+    ],
+    [
+      -30,
+      2
+    ],
+    [
+      38,
+      -4
+    ],
+    [
+      -22,
+      1
+    ],
+    [
+      24,
+      -2
+    ]
+  ],
+  "outputs": {
+    "frames": "docs/assets/production-animations-v1/bell/ring/bell_ring_000.png..005.png",
+    "source_sheet": "docs/assets/production-animations-v1/bell/sheets/ring-sheet.png",
+    "runtime_sheet": "app/web/assets/anim/bell/ring-sheet.png",
+    "contact_sheet": "docs/assets/production-animations-v1/bell/bell-contact-sheet.png",
+    "preview_gif": "docs/assets/production-animations-v1/previews/bell-ring-preview.gif",
+    "local_preview_gif": "docs/assets/production-animations-v1/bell/previews/bell-ring-preview.gif",
+    "before_after": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-before-after-contact-sheet.png",
+    "small_size": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-small-size-readability.png",
+    "alpha_checker": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-alpha-checker-preview.png"
+  },
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "angle_deg": -18,
+      "offset_px": [
+        -36,
+        0
+      ],
+      "bbox": [
+        114,
+        117,
+        911,
+        868
+      ]
+    },
+    {
+      "frame": 1,
+      "angle_deg": 17,
+      "offset_px": [
+        34,
+        -3
+      ],
+      "bbox": [
+        114,
+        120,
+        911,
+        820
+      ]
+    },
+    {
+      "frame": 2,
+      "angle_deg": -16,
+      "offset_px": [
+        -30,
+        2
+      ],
+      "bbox": [
+        114,
+        94,
+        911,
+        869
+      ]
+    },
+    {
+      "frame": 3,
+      "angle_deg": 19,
+      "offset_px": [
+        38,
+        -4
+      ],
+      "bbox": [
+        114,
+        122,
+        911,
+        818
+      ]
+    },
+    {
+      "frame": 4,
+      "angle_deg": -13,
+      "offset_px": [
+        -22,
+        1
+      ],
+      "bbox": [
+        114,
+        148,
+        911,
+        865
+      ]
+    },
+    {
+      "frame": 5,
+      "angle_deg": 12,
+      "offset_px": [
+        24,
+        -2
+      ],
+      "bbox": [
+        114,
+        108,
+        911,
+        828
+      ]
+    }
+  ],
+  "corner_alpha": [
+    {
+      "frame": 0,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 1,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 2,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 3,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 4,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 5,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    }
+  ],
+  "self_check": [
+    "All ring frames are 1024x1024 RGBA.",
+    "All four corner alpha values are 0 for every new ring frame.",
+    "Runtime strip remains 6 cells at 256px each, so app/web/anim-manifest.js frameCount remains compatible.",
+    "No shadowBlur or external assets were introduced; ring waves are crisp vector strokes baked into PNG frames."
+  ],
+  "residual_risk": "This is still a flattened sprite swing, not a separated clapper/body rig; it prioritizes small-size readability while preserving the accepted Pack A bell material."
+}

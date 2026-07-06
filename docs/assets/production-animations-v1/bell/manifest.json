@@ -2,7 +2,9 @@
   "pack_id": "production-animations-v1-bell",
   "card_id": "WTJ-20260704-031",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 03:31",
+  "updated_at_cst": "2026-07-06 10:40",
+  "revision_card_id": "WTJ-20260706-003",
+  "revision_executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
   "source": "docs/assets/production-animations-v1/source/bell-base.png",
   "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
   "asset_spec": {
@@ -13,7 +15,15 @@
   },
   "contact_sheet": "docs/assets/production-animations-v1/bell/bell-contact-sheet.png",
   "previews": {
-    "ring": "docs/assets/production-animations-v1/previews/bell-ring-preview.gif"
+    "ring": "docs/assets/production-animations-v1/previews/bell-ring-preview.gif",
+    "ring_local_copy": "docs/assets/production-animations-v1/bell/previews/bell-ring-preview.gif"
+  },
+  "evidence": {
+    "prompt_and_rationale": "docs/assets/production-animations-v1/bell/prompt-and-rationale.md",
+    "before_after": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-before-after-contact-sheet.png",
+    "small_size_readability": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-small-size-readability.png",
+    "alpha_checker": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-alpha-checker-preview.png",
+    "validation_json": "docs/assets/production-animations-v1/bell/evidence/wtj-20260706-003/bell-ring-validation.json"
   },
   "animations": {
     "idle": {
@@ -79,5 +89,6 @@
       ]
     }
   },
-  "scope_note": "This card intentionally covers bell only. The v1 animation preserves the Pack A bell material and simulates ringing with subtle rotation, squash, sound arcs, and glints."
+  "scope_note": "This card intentionally covers bell only. WTJ-20260706-003 widens the ring motion while preserving the accepted Pack A bell material: 6-cell runtime compatibility is retained, body rotation alternates more strongly, and crisp baked sound arcs/glints make the ringing readable on the dark app canvas at small size.",
+  "validation_summary": "All new ring frames are 1024x1024 RGBA with transparent corners. The runtime sheet remains 6 cells at 256px each, so app/web/anim-manifest.js frameCount stays compatible. No shadowBlur, external sprite, watermark, or new generated bell body was introduced."
 }
