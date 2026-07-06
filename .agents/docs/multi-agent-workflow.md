@@ -376,6 +376,8 @@ TL must not merge directly to `main`. TL may merge to `stage` only when PM has a
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
+`review` does not always mean the card belongs to PM. If PM keeps a card in `review` but sets `负责人 = TL`, TL owns the next action. This is the handoff-correction queue, used for missing or inconsistent final branch, final commit, `stage` commit, shared-checkout evidence, package path, or other delivery metadata. TL must pick these cards during its normal board scan, write a TL session claim in `最新进展`, perform only the requested correction unless PM identified a real defect, and return the card to `review` with `负责人 = PM` when the correction is complete. TL should not move these cards to `in progress` merely to acknowledge ownership; `review/TL` already means active TL correction is required.
+
 TL handoff must include:
 
 - final branch name

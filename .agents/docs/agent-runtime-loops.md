@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. Take one actionable card at a time, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
 ```
 
 Example QA start prompt:
@@ -151,12 +151,14 @@ Whole-board completion notification:
 TL loop:
 
 - works only cards assigned to TL
+- treats `review` cards assigned to TL as actionable TL work, not PM-owned review; these cards normally require handoff metadata or `stage`/shared-checkout evidence correction
 - owns implementation branches and TL-routed `stage` integration work
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
 - resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit plus clean-stage-checkout build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
+- when correcting a `review/TL` card, keeps the card in `review` unless PM explicitly routed real rework; writes a TL session claim in `最新进展`, fixes the requested metadata/evidence, then sets `负责人 = PM` for PM review
 - returns finished work to PM review
 
 DESIGN loop:
