@@ -102,9 +102,11 @@ PM then decides the next state and owner.
 
 `stage` is Ethan's runnable integration-acceptance branch. Ethan should be able to run one build from `stage` and see the combined state of all PM-accepted feature work that has not yet been promoted to `main`.
 
+Ethan's only accepted validation surface is the shared project directory `/Users/claire/Documents/worktime-justin`. Requirement HTML, design review HTML, app bundles, DMGs, and any other stakeholder-facing artifact must be opened from that directory or be explicitly built/copied from that directory at the recorded `stage` commit. Auxiliary paths such as `/Users/claire/Documents/wtj-stage`, `/private/tmp/...`, feature worktrees, temporary integration worktrees, and role-local build folders are internal evidence only; they are not acceptable stakeholder validation paths.
+
 QA does not have to test on `stage`. QA may run focused target tests from a named implementation branch, package, or independent worktree when the card names the exact target and scope. Those QA results prove the named target, not the integrated app state shown to Ethan on `stage`.
 
-PM review and QA test results are not the same thing as Ethan-visible completion. For any user-facing runtime, visual, audio, packaging, production asset, or docs-preview card, `done` means the accepted work is visible in the reviewer-runnable `stage` state or in a package/docs preview built from `stage`. A branch-only pass, worktree-only preview, or target-specific QA pass may move a card through `review` or `testing`, but must not become `done` until the card records the `stage` commit/package that Ethan can run or open. If a change is not meant to appear in `stage`, PM must record why it is non-user-facing before marking it done.
+PM review and QA test results are not the same thing as Ethan-visible completion. For any user-facing runtime, visual, audio, packaging, production asset, or docs-preview card, `done` means the accepted work is visible from `/Users/claire/Documents/worktime-justin` at the reviewer-runnable `stage` state or in a package/docs preview built from that same directory. A branch-only pass, worktree-only preview, target-specific QA pass, or artifact under another checkout may move a card through `review` or `testing`, but must not become `done` until the card records the `stage` commit/package that Ethan can run or open from `/Users/claire/Documents/worktime-justin`. If a change is not meant to appear in that validation surface, PM must record why it is non-user-facing before marking it done.
 
 Branch ownership:
 
@@ -116,20 +118,20 @@ Branch ownership:
 Integration rule:
 
 - When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must route TL to merge the accepted delivery branch into `stage` promptly.
-- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, builds from a clean checkout of the `stage` branch, and records the `stage` commit plus package or run evidence on the card.
+- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, updates `/Users/claire/Documents/worktime-justin` to the integrated `stage` commit, builds or verifies the stakeholder-facing docs/app/DMG artifacts from that directory, and records the `stage` commit plus package or run evidence on the card.
 - If a `stage` conflict requires product, requirement, or design judgment, TL routes the card to PM with the exact files, conflicting choices, and recommended technical options. PM decides or routes to Ethan, then TL completes the technical merge.
 - If a conflict is only in PM-owned process docs, requirement wording, or collaboration protocol, PM may resolve that documentation conflict directly or give TL exact text to apply.
 - A user-facing card may not be marked `done` before `stage` integration. The only exceptions are changes that do not affect the runnable validation surface; PM must state that explicitly in `最新进展` or `产物/证据`. Do not use `stage integration deferred` to close a user-facing card; keep it active and route TL until Ethan can see it in `stage`.
 - A one-off integration branch may be used for emergency builds, but TL must either promote/sync it into `stage` after PM accepts that route, or PM must record why it is intentionally temporary. Ethan should not have to switch between unrelated feature branches to inspect normal integrated progress.
-- A package built from a temporary feature branch, throwaway integration branch, or local worktree is not a `stage` package. Even if the commit later matches `stage`, the Ethan-facing artifact must either be rebuilt from a clean checkout of the recorded `stage` commit or have an explicit TL verification that the artifact was produced from that exact `stage` checkout. Otherwise it is only PM preliminary evidence.
+- A package built from a temporary feature branch, throwaway integration branch, or local worktree is not a `stage` package. Even if the commit later matches `stage`, the Ethan-facing artifact must either be rebuilt from `/Users/claire/Documents/worktime-justin` at the recorded `stage` commit or have explicit TL verification that the artifact was produced from that exact directory and commit. Otherwise it is only PM preliminary evidence.
 
 Evidence rule:
 
-- After TL merges to `stage`, TL records the `stage` commit, the clean `stage` checkout path or command used for the build, and any build/package path in `产物/证据`, then returns the card to PM review.
-- Ethan integration-acceptance cards should point to a `stage` commit or a package built from a clean checkout of that `stage` commit.
+- After TL merges to `stage`, TL must update `/Users/claire/Documents/worktime-justin` to the recorded `stage` commit when it is safe to do so, rebuild or verify stakeholder-facing docs/app/DMG artifacts in that directory, record the `stage` commit and exact validation paths in `产物/证据`, then return the card to PM review.
+- Ethan integration-acceptance cards must point to `/Users/claire/Documents/worktime-justin` on a recorded `stage` commit, or to a package built/copied from that exact directory and commit.
 - QA cards may point to `stage`, but may also point to a named branch, package, or independent worktree for targeted validation. The card must explicitly say whether the result is `stage` integration validation or branch/worktree-specific target testing.
 - If `stage` is behind accepted work, PM must surface that in `最新进展` and either route TL to integrate it before the next validation request or explain the blocker.
-- Before PM tells Ethan "you can run/open it now", PM must verify the named path is actually the `stage` checkout or a package/docs preview built from a clean checkout of the recorded `stage` commit. If the shared project checkout is dirty or cannot safely switch to `stage`, PM must not ask Ethan to validate through that checkout; route TL to provide a stage-built package or first resolve the checkout state.
+- Before PM tells Ethan "you can run/open it now", PM must verify `/Users/claire/Documents/worktime-justin` is on the intended `stage` commit and that the named docs/app/DMG path lives under that directory or was explicitly built/copied from that directory. If the shared project checkout is dirty in a way that affects validation, on another branch, or cannot safely switch to `stage`, PM must not ask Ethan to validate through another checkout; route TL to resolve the shared checkout state first.
 
 Promotion rule:
 
@@ -253,7 +255,7 @@ Additional rules:
 - When PM wants parallel work despite an upstream card still being active, PM must write that permission directly in `依赖`, `下一步动作`, or `最新进展`. Role agents should not infer this permission silently.
 - An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
 - For implementation cards, branch hygiene is a handoff gate. When TL moves work to `review`, `分支` and `产物/证据` must include the final branch, final commit, verification evidence, known risks, and the recommended PM route.
-- For documentation-preview, visual-review, or design-gallery handoffs, `产物/证据` and `下一步动作` must name the exact reviewer-openable entry point for the review target. A feature-branch or worktree path may be used only for PM preliminary review. Ethan-facing validation must use `stage` or a package/docs preview built from `stage`; TL must first complete `stage` integration and name the `stage` commit/package, and must not describe branch-only content as if it were visible from the shared checkout.
+- For documentation-preview, visual-review, or design-gallery handoffs, `产物/证据` and `下一步动作` must name the exact reviewer-openable entry point for the review target. A feature-branch or worktree path may be used only for PM preliminary review. Ethan-facing validation must use `/Users/claire/Documents/worktime-justin` on `stage` or a package/docs preview built from that directory; TL must first complete `stage` integration, update or verify the shared directory, and name the `stage` commit/package. Branch-only or auxiliary-worktree content must not be described as visible to Ethan.
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
 - A blocked card cannot be used as storage for vague uncertainty. If the next step is obvious, assign it and move the card back to `todo` or `in progress`.
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
@@ -374,11 +376,13 @@ TL must not merge directly to `main`. TL may merge to `stage` only when PM has a
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
+`review` does not always mean the card belongs to PM. If PM keeps a card in `review` but sets `负责人 = TL`, TL owns the next action. This is the handoff-correction queue, used for missing or inconsistent final branch, final commit, `stage` commit, shared-checkout evidence, package path, or other delivery metadata. TL must pick these cards during its normal board scan, write a TL session claim in `最新进展`, perform only the requested correction unless PM identified a real defect, and return the card to `review` with `负责人 = PM` when the correction is complete. TL should not move these cards to `in progress` merely to acknowledge ownership; `review/TL` already means active TL correction is required.
+
 TL handoff must include:
 
 - final branch name
 - final commit hash
-- exact reviewer entry point: PM preliminary review may use branch/worktree plus an absolute path; Ethan-facing validation must name `stage` plus the absolute file/app/package path or package built from a clean checkout of that `stage` commit
+- exact reviewer entry point: PM preliminary review may use branch/worktree plus an absolute path; Ethan-facing validation must name `/Users/claire/Documents/worktime-justin` on the recorded `stage` commit, plus the absolute docs/app/package path under that directory or an app/DMG copied from that directory
 - passing `.agents/tools/tl_handoff_check.py` output
 - build/run or smoke evidence
 - known risks and whether they require a follow-up card

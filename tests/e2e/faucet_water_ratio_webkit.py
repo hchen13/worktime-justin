@@ -53,15 +53,24 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_APP_WEB = REPO_ROOT / "app" / "web"
 DEFAULT_REPORT = REPO_ROOT / "tests" / "reports" / "faucet_water_ratio_webkit_report.json"
 
-# Reasonable-thickness gate: the reworked docs source (WTJ-20260705-005) and the
-# downsampled runtime sheet both measure the running-state water column at ~65-69%
-# of the outlet ring's width (136/204px @1024 source-frame scale, 35/52px @256
-# runtime-cell scale — see this card's handoff notes for the full three-tier
-# measurement). A genuine "thin water line" regression (the exact defect this test
-# exists to catch) would produce a ratio well under half that. 0.45 sits safely
-# below the healthy ~0.67 measurement (comfortable margin for anti-aliasing/rounding
-# noise across engines) while still failing hard on anything that reads as "a thin
-# line, not a voluminous column."
+# Reasonable-thickness gate: after WTJ-20260705-020 swapped in the thicker-water
+# runtime sheet (DESIGN scale_x 1.48 — running-state source water column widened to
+# 212-226px @~1024 source-frame scale, up from the ~147-157px "thin line" Ethan
+# rejected), the live 256px-cell canvas measures the running water column at ~0.70 of
+# the outlet ring's width (water 36px / outlet 51px — this file's own before/after
+# measurement; the old rejected sheet measured 34/51 = 0.662, the new one 36/51 =
+# 0.703; see WTJ-020 handoff). A genuine "thin water line" regression (the defect
+# this test exists to catch — a silent swap back to a truly thin pre-005 line, or
+# wrong cell/frame index math / canvas scaling) would produce a ratio well under half
+# that. 0.45 sits safely below the healthy ~0.70 measurement (comfortable margin for
+# anti-aliasing/rounding noise across engines) while still failing hard on anything
+# that reads as "a thin line, not a voluminous column."
+# NOTE: 0.45 is deliberately a LOOSE floor. It is intentionally NOT tightened to e.g.
+# 0.68 to distinguish the old-rejected 0.662 from the new-accepted 0.703 — that 0.02
+# gap is within cross-engine AA/rounding noise and such a floor would flake. Whether
+# the new water reads as "thick enough" vs the old is a subjective DESIGN/Ethan call
+# (see dist-stage/020-faucet/before-after-runtime-256.png + after-live-running.png),
+# not this runtime regression lock's job.
 MIN_WATER_TO_OUTLET_RATIO = 0.45
 
 # Absolute floor in the 256px-cell backing store: guards the degenerate case where

@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL, take one actionable card at a time, claim work by writing `执行者：TL-A；身份ID：ClaudeSession:<session-id>` in 最新进展, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. Take one actionable card at a time, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
 ```
 
 Example QA start prompt:
@@ -108,8 +108,8 @@ Recommended PM cron responsibilities:
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
 - keep `stage` current by routing PM-accepted runtime/docs-preview work to TL, or write a concrete `stage` integration deferral onto the card
-- ensure Ethan validation requests name a `stage` commit or a package/docs preview built from a clean checkout of that `stage` commit; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is `stage` integration validation or target-specific testing
-- before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names a `stage` commit/package from a clean `stage` checkout where Ethan can immediately see the accepted change; branch-only review or target-specific QA pass is not enough
+- ensure Ethan validation requests name `/Users/claire/Documents/worktime-justin` on the recorded `stage` commit, or an app/DMG/docs artifact built or copied from that exact directory and commit; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is stakeholder-visible `stage` integration validation or target-specific testing
+- before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names `/Users/claire/Documents/worktime-justin` on the recorded `stage` commit, or a package built/copied from that directory, where Ethan can immediately see the accepted change; branch-only review, auxiliary-worktree preview, or target-specific QA pass is not enough
 - groom `backlog` proposals into official cards or `_deprecated`
 - run `.agents/tools/pm_completion_notify.py` after each scan; if every official card is `done` or `_deprecated`, it sends Ethan a one-time Feishu DM using PM app credentials
 - summarize board health and urgent decisions
@@ -135,7 +135,7 @@ Automation should be bounded:
 - do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
 - do not merge code into `stage` as PM; route PM-accepted runtime/docs-preview work to TL for `stage` integration when Ethan should see it in the integrated app/docs
 - if a `stage` or `stage` to `main` conflict is code/build/test/package related, write the exact conflict/blocker back to the card and assign TL; PM may resolve only PM-owned docs/protocol conflicts
-- do not ask Ethan to validate the shared project checkout unless it is actually on the named `stage` state or points to a package/docs preview built from a clean checkout of that `stage` commit; if the checkout is dirty or on another branch, keep the card active and route a stage/package handoff
+- do not ask Ethan to validate anything outside `/Users/claire/Documents/worktime-justin`. The shared project checkout must be on the named `stage` state, and app/DMG/docs artifacts must be built or copied from that directory and commit. If the checkout is dirty in a validation-relevant way or on another branch, keep the card active and route a shared-checkout/package handoff.
 - do not create duplicate cards when an existing card can be updated
 - stop and mark `blocking` when Ethan clarification is genuinely required
 
@@ -151,12 +151,14 @@ Whole-board completion notification:
 TL loop:
 
 - works only cards assigned to TL
+- treats `review` cards assigned to TL as actionable TL work, not PM-owned review; these cards normally require handoff metadata or `stage`/shared-checkout evidence correction
 - owns implementation branches and TL-routed `stage` integration work
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
 - resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit plus clean-stage-checkout build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
+- when correcting a `review/TL` card, keeps the card in `review` unless PM explicitly routed real rework; writes a TL session claim in `最新进展`, fixes the requested metadata/evidence, then sets `负责人 = PM` for PM review
 - returns finished work to PM review
 
 DESIGN loop:

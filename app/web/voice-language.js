@@ -44,14 +44,17 @@
   var VALID_MODES = ['zh', 'en', 'auto'];
 
   // 全部任务 id（与 app/web/manifest.js 的 tasks.templates.{drag,click,find,press}.examples
-  // 及 task-templates.js 内置兜底样例并集一致，24 条）。
+  // 及 task-templates.js 内置兜底样例并集一致，32 条：原 24 + 025 新增 8 条 ZH-only）。
   var ALL_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
     'click-lamp-on', 'click-faucet-on', 'click-horse-run',
     'find-the-dog', 'find-the-cat', 'find-the-apple', 'find-the-star',
     'find-the-fish', 'find-the-elephant', 'find-the-pig', 'find-the-rocket',
     'find-the-turtle', 'find-the-unicorn', 'find-the-whale', 'find-the-zebra',
-    'press-a', 'press-3', 'press-b', 'press-s', 'press-m', 'press-5', 'press-7'
+    'press-a', 'press-3', 'press-b', 'press-s', 'press-m', 'press-5', 'press-7',
+    // WTJ-20260705-024：025 新增 8 条任务的中文语音已由 CosyVoice3 交付（ZH-only，无 EN 版本，
+    // 故不进 EN_AVAILABLE_TASK_IDS）。stem 即 example id（.zh.m4a 无 id/stem 错位）。
+    'drag-egg-to-nest', 'drag-flower-to-vase', 'drag-orange-to-basket', 'drag-fish-to-net', 'drag-jam-to-jar', 'drag-treasure-to-chest', 'click-door-open', 'click-doorbell-ring'
   ];
 
   // 已交付英文 .m4a 的任务 id（8 条，见 audio/missing-audio.json 的 taskVoice 段落 + 磁盘

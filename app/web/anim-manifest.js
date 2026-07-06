@@ -6,13 +6,13 @@
 // 与 docs/assets/production-animations-v1/treasure-chest/manifest.json（顶层 manifest
 // 未收录 treasure-chest，见该卡自身 manifest.json 的 scope_note）。
 //
-// 只包含 v1_boundary.included 的道具（当前 faucet/horse/lamp/treasure-chest）；door/bell 属于
-// v1_boundary.deferred_to_v2（DESIGN 验收未通过，质量问题），本文件不包含它们的任何条目——
-// frame-anim.js 对未出现在这里的 prop 一律走防御式回退（调用方 task-templates.js 对 door/bell
-// 应回退静态 img 占位）。**prop 列表由构建脚本数据驱动**（从顶层 manifest 的 assets 键 + 各
-// 独立子目录 manifest.json 自动发现，唯一门禁是 v1_boundary.deferred_to_v2）：DESIGN 完成
-// door/bell 的 v2 质量返工验收、把它们从 deferred_to_v2 移除后，重跑本脚本即可自动纳入，
-// **无需改脚本任何逻辑**。
+// prop 列表由构建脚本数据驱动：从顶层 manifest 的 assets 键 + 各独立子目录 manifest.json
+// 自动发现，唯一门禁是顶层 manifest 的 v1_boundary.deferred_to_v2（命中的 prop 跳过、不写入
+// 本文件）。当前 deferred_to_v2 为空 —— WTJ-20260705-025 把 door/bell 的 v1 动画（各自
+// 已 DESIGN 验收，卡 WTJ-20260704-030 门 / -031 铃）从 deferred_to_v2 移入 included 并接入
+// 运行时引擎，故本文件现含 faucet/horse/lamp/treasure-chest/door/bell 全部 6 个 prop。
+// frame-anim.js 对未出现在这里的 prop 仍走防御式回退（静态 img 占位）；若未来再暂缓某 prop，
+// 把它加回 deferred_to_v2 重跑本脚本即可，**无需改脚本任何逻辑**。
 //
 // 每个 state 的字段：
 //   sheetPath   相对 app/web/ 的运行时路径（256px cell 降采后的 strip sheet）。
@@ -44,6 +44,76 @@
   }
 
   var DATA = {
+  "bell": {
+    "idle": {
+      "sheetPath": "assets/anim/bell/idle-sheet.png",
+      "frameCount": 1,
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "cellSize": 256
+    },
+    "ring": {
+      "sheetPath": "assets/anim/bell/ring-sheet.png",
+      "frameCount": 6,
+      "fps": 14,
+      "loop": true,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "cellSize": 256
+    },
+    "settle": {
+      "sheetPath": "assets/anim/bell/settle-sheet.png",
+      "frameCount": 4,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "cellSize": 256
+    }
+  },
+  "door": {
+    "closed": {
+      "sheetPath": "assets/anim/door/closed-sheet.png",
+      "frameCount": 1,
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "cellSize": 256
+    },
+    "open": {
+      "sheetPath": "assets/anim/door/open-sheet.png",
+      "frameCount": 1,
+      "fps": 1,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "cellSize": 256
+    },
+    "opening": {
+      "sheetPath": "assets/anim/door/opening-sheet.png",
+      "frameCount": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": [
+        0.5,
+        0.86
+      ],
+      "cellSize": 256
+    }
+  },
   "faucet": {
     "closed": {
       "sheetPath": "assets/anim/faucet/closed-sheet.png",

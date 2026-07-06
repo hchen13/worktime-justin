@@ -37,9 +37,16 @@ WORDS = ["dog", "apple", "cat", "ball", "star", "zebra", "igloo", "queen"]
 SFX = ["dog-bark", "cat-meow", "task-success", "chest-open", "water-splash", "bell-ring"]
 
 
+class _ReusableTCPServer(socketserver.TCPServer):
+    # SO_REUSEADDR so a recently-closed run's TIME_WAIT socket on this port doesn't block
+    # a rebind (matches faucet_water_ratio_webkit.py / other e2e harnesses; fixes flaky
+    # "Address already in use" when run_all cycles the http-server suites back-to-back).
+    allow_reuse_address = True
+
+
 def serve(app_web: Path, port: int):
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(app_web))
-    httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
+    httpd = _ReusableTCPServer(("127.0.0.1", port), handler)
     httpd.RequestHandlerClass.log_message = lambda *a, **k: None  # quiet
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     return httpd
@@ -89,7 +96,11 @@ def main() -> int:
               var m = window.WTJ_MANIFEST, tpl = (m.tasks&&m.tasks.templates)||{}, defs=[];
               for (var k in tpl){ (tpl[k].examples||[]).forEach(function(e){ if(e.id) defs.push(e); }); }
               for (var d of defs){
-                var voiceArg = (d && d.voicePrompt) ? d.voicePrompt : d;  // mirrors task.js
+                // WTJ-20260705-025：voicePrompt 为空=有意静音(door/bell/drag 新任务待 024/084
+                // 补中文语音),与 task.js 一致——空 voicePrompt 时 task.js 直接跳过播放(不 fetch、
+                // 不算 missing),测试也应跳过,不能拿"未交付的语音"当运行时缺陷。
+                if (!(d && d.voicePrompt)) continue;
+                var voiceArg = d.voicePrompt;  // mirrors task.js: 有 voicePrompt 就用路径字符串
                 out.tasks.push([d.id, await play((function(v){return function(){return api.playTaskVoice(v);};})(voiceArg))]);
               }
               await new Promise(function(r){setTimeout(r,700);});

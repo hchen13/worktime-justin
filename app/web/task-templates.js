@@ -56,27 +56,65 @@
 //     'A'/'3' 这类已是大写/数字的写法）是否相等，相等则判定任务完成。
 //
 // -----------------------------------------------------------------------
-// 任务生成：问号点击 → 随机挑一个任务模板类型 + 具体示例（REQ-TASK-01/02 入口，013 接线点）
+// 任务生成：问号点击 → 洗牌袋（shuffle bag）真随机挑一个任务模板类型 + 具体示例
+// （REQ-TASK-01/02 入口，013 接线点；WTJ-20260706-002 part1）
 // -----------------------------------------------------------------------
-// "随机"选择不依赖 Math.random()：用一个从 0 开始的递增计数器 questionClickCounter，每次问号
-// 点击（即 WTJ_TASK.onQuestionClicked 的回调触发）取模选出任务类型（在 ['drag','click','find',
-// 'press'] 四个类型间轮转，type = questionClickCounter % TASK_TYPES.length）。轮转不是"真随机"，
-// 但满足"每次点问号出现不同任务"的产品意图，且是完全确定性的，对单元测试更友好（不需要 mock
-// Math.random 就能精确断言第 N 次点击出现的任务类型），与 013/012 里"手动指定占位常量、注明不是
-// 文档给出的精确随机分布"是同一种工程取舍。
+// 014 首次交付时"随机"选择刻意不依赖 Math.random()，改用一个从 0 开始的递增计数器
+// questionClickCounter 取模轮转 TASK_TYPES/examples（详见下方「历史记录」小节，保留供追溯）。
+// Ethan 开发机验收反馈：这种轮转"太可预测/太重复"，孩子很快就能猜到下一次问号出现什么任务，
+// 产品体验上不可接受。002 卡起改成洗牌袋（shuffle bag）真随机调度，设计如下：
+//
+//   1. 可注入 RNG（taskRandom，见下方"可注入随机数生成器"一节的 _setRandom()）：生产默认走
+//      真实 Math.random()（Ethan 要的是真随机，不是确定性轮转）；测试可以把 taskRandom 整体
+//      替换成确定性 RNG（如 mulberry32/LCG 或固定序列桩），从而精确断言/复现洗牌袋的抽取序列，
+//      不需要真的依赖不可控的 Math.random 输出。Math.random 本身在本代码库从来不是禁用项
+//      （app.js randomLetterSize()/randomRotationRad()/随机取元素、pointer-trail.js 都在用），
+//      014 当初避开它单纯是为了"测试确定性"这一个理由——这条理由现在被"可注入 RNG"结构性满足，
+//      不再需要靠"完全放弃随机性"去换取。
+//   2. type 洗牌袋（drawTaskType()）：维护一个 TASK_TYPES 的洗牌袋，袋空时用 Fisher-Yates
+//      （fisherYatesShuffle()，基于 taskRandom）重新装满并打乱，之后无放回逐个抽取——保证
+//      "四个类型各出现一次后才可能重复"，不再是死板的固定顺序轮转，但仍然结构性避免"连续好几次
+//      同一类型"这种真随机偶尔会出现、体验上很差的极端情况。
+//   3. example 洗牌袋（drawExampleIndex()）：每个 type 各自维护一个 example 下标的洗牌袋，
+//      逻辑与 type 洗牌袋相同（无放回、袋空重洗）。这就是 P1-1（Fable 对抗评审，原文见下方
+//      「历史记录」小节）"该类型下每个 example 都必须可达、不能有永不可达的下标"这条硬要求
+//      现在的满足方式：不再依赖"计数器取模的奇偶是否与 examples.length 互质"这种容易踩坑的
+//      数论巧合，而是结构性保证——无放回抽取，数学上不可能在一整袋内漏掉任何一个候选（drag 的
+//      dog-home、press 的 letter-a 这些当年因为奇偶巧合永不可达的 example，现在必然会在每一轮
+//      examples.length 次抽取内出现一次）。example 袋按**当前** getExamplesForType(type).length
+//      构建，这个长度变化时（如 manifest 热更新）会自动重建，不尝试续用语义已经不对的旧下标。
+//   4. 跨袋边界避免相邻重复：无论是 type 袋还是 example 袋，重新装袋后如果袋首（下一次将被抽到
+//      的值）恰好等于上一次抽到的值，就把袋首与袋内另一个随机位置交换——避免"上一袋最后一个"和
+//      "下一袋第一个"连续抽到同一个候选，产生视觉上的"连续两次一样"。
+//
+// questionClickCounter 变量仍然保留，但职责收窄为纯粹驱动布局位置轮转（presetAt()，见下方
+// 「递增计数器」一节），不再参与 type/example 的选择——两件事在设计意图上从来就不同：布局位置
+// 只需要"不要连续挤在同一屏幕位置"（固定轮转就够），任务类型/示例需要"不可预测"（洗牌袋更合适）。
+//
+// 测试：tests/unit/task-templates.test.mjs 用 _setRandom() 注入确定性 RNG 复现/断言洗牌袋的
+// 抽取序列，断言契约属性（一个完整周期内每个候选恰好出现一次、跨周期边界不相邻重复、同一 RNG
+// 种子两次注入产生一致序列），而不是像旧版那样断言"第 N 次点击必然是某个具体 type/example"这种
+// 绑定在确定性计数器实现细节上的脆弱断言。
+//
+// -----------------------------------------------------------------------
+// 历史记录（014 首次交付 + P1-1 对抗评审的旧设计，002 卡已废弃，保留供追溯"为什么当初这么做"）
+// -----------------------------------------------------------------------
+// 014 首次交付的原始设计：type = questionClickCounter % TASK_TYPES.length（四个类型间固定顺序
+// 轮转）。轮转不是"真随机"，但满足"每次点问号出现不同任务"的产品意图，且是完全确定性的，对
+// 单元测试更友好（不需要 mock Math.random 就能精确断言第 N 次点击出现的任务类型），与 013/012
+// 里"手动指定占位常量、注明不是文档给出的精确随机分布"是同一种工程取舍。
 //
 // P1-1（Fable 对抗评审）：该类型下具体 example 的选择**不能**复用同一个 questionClickCounter
 // 对 TASK_TYPES.length 取模的结果再去对 examples.length 取模——TASK_TYPES.length 固定为 4，
-// 与 drag/press 两个类型的 examples.length（均为 2）同奇偶，会导致"同一类型每次轮到时，
+// 当时与 drag/press 两个类型的 examples.length（均为 2）同奇偶，会导致"同一类型每次轮到时，
 // questionClickCounter % examples.length 的余数恒定不变"（比如 drag 恒在 counter=0,4,8,...
 // 被轮到，这些数 % 2 恒为 0），于是 drag 恒选中 examples[0]="apple-basket"（"狗回家"
 // dog-home=examples[1] 永不可达）、press 恒选中 examples[1]="digit-3"（letter-a=examples[0]
-// 永不可达），直接违反验收标准"孩子应该能见到‘把狗狗带回家’"。
-// 修法：example 的选择改用"这个类型第几次被轮到"（questionClickCounter 整除 TASK_TYPES.length
-// 的商，typeRotationIndex）再对 examples.length 取模，与 type 的选择（同一个 counter 取余数）
-// 解耦成两个独立递增的轮转序列，保证同一类型多次轮到时 examples 的每个下标都能轮到（见
-// handleQuestionClicked() 里 `Math.floor(questionClickCounter / TASK_TYPES.length) %
-// examples.length` 这一行）。
+// 永不可达），直接违反验收标准"孩子应该能见到‘把狗狗带回家’"。当时的修法：example 的选择改用
+// "这个类型第几次被轮到"（questionClickCounter 整除 TASK_TYPES.length 的商，typeRotationIndex）
+// 再对 examples.length 取模，与 type 的选择（同一个 counter 取余数）解耦成两个独立递增的轮转
+// 序列。002 卡的洗牌袋方案继承了这条修法背后的产品要求（每个 example 都必须可达），换了一种
+// 结构性更强、不依赖数论巧合的实现方式（见上方新设计说明）。
 //
 // -----------------------------------------------------------------------
 // animation state 接口预留（硬要求，见卡片原文；faucet/horse/door/bell/lamp 五个道具）
@@ -91,8 +129,9 @@
 // 接口预留」一节。
 //
 // 上面这段是 014 首次交付时的记录，**056 卡起，faucet/horse/lamp 三个道具的"真正的动效实现"
-// 已经接上**（door/bell 因 DESIGN v1_boundary.deferred_to_v2 素材未验收，继续走本节描述的
-// 静态占位，见下方「五、动效引擎接入」一节），data-anim-state 属性本身的读写时机完全不变
+// 已经接上**；**WTJ-20260705-025 起 door/bell 的 v1 动画（卡 -030/-031 已 DESIGN 验收 done）
+// 也已从 v1_boundary.deferred_to_v2 移入 included 并接入引擎**，五个预留道具至此全部走真实分帧
+// 动画（见下方「五、动效引擎接入」一节），data-anim-state 属性本身的读写时机完全不变
 // （创建时 idle，onClick 命中后切 active），只是 idle→active 现在真的驱动了一段
 // WTJ_FRAME_ANIM 播放的分帧动画，而不再只是一段 CSS transition。
 //
@@ -117,11 +156,13 @@
 //   | faucet | 'off'（水龙头关，单帧静止）      | 'running'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，见下） | 计入 v1_boundary，off 天然是"没人碰"的静息态；running 是唯一有"水在流"视觉意图的 state |
 //   | horse  | 'idle'（源数据 loop:true，马原地小动作）  | 'run'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，与 faucet 的 running 完全同构，见下） | REQ-TASK-08"点一下小马跑起来"要求 onClick 命中后**实际播放奔跑动效**；'run' 正是 anim-manifest.js 里 idle/run/stop_success 三态之一，资源可解析。faucet 已是先例：faucet.active='running' 同为 loop:true 源数据，靠 renderClickTask 传入的 {loop:false} 覆盖成"播一轮定格"，horse 'run' 走的是同一条通用路径，不是新逻辑。**不实现 run→stop_success 链**：068 的 run-sheet 正在返工、资产仍在流动中，run-only 已满足 072 验收 criterion 3（断言 click 后首先播放 run）且与 faucet 保持一致；链式收尾留作 068 定稿后的未来增强评估项，非本卡范围（PM 打回 072：旧版 active=stop_success 会让"点一下跑起来"不成立、也让 068 run-sheet 在运行态看不到，故本卡改回 run，替换掉上一轮"run 无自然终帧"的论证） |
 //   | lamp   | 'off'（灯灭，单帧静止）          | 'turning-on'（源数据 loop:false，一次性点亮过程）                    | 与卡片原文"lamp active→turning-on"完全一致 |
+//   | door   | 'closed'（门关，单帧静止）        | 'opening'（5 帧，源数据 loop:false，一次性开门过程，播完定格在开门末帧）  | WTJ-20260705-025：click-door-open 点门开门；'opening' 是 anim-manifest.js closed/opening/open 三态里唯一有"开门过程"视觉意图的 state（'open' 是开完的单帧静止终态，不用作 active 过程） |
+//   | bell   | 'idle'（铃静止，单帧）            | 'ring'（6 帧，源数据 loop:true，onClick 传 {loop:false} 播一轮定格，与 faucet.running 同构） | WTJ-20260705-025：click-doorbell-ring 点铃摇铃；'ring' 是 idle/ring/settle 三态里唯一有"摇铃发声"视觉意图的 state（'settle' 是摇完的阻尼收尾，链式收尾留作未来增强，非本卡范围，与 faucet 不接 closing 收尾同理） |
 //
-// door/bell **有意不在这张表里**：PROP_ANIM_STATE_MAP 没有它们的 key，
-// resolvePropAnimInfo() 对它们恒返回 null，createPropEl() 因此恒回退静态 <img>——这不是
-// 遗漏，是 v1_boundary.deferred_to_v2（DESIGN 素材质量未验收）在本文件的落地方式，上游依赖
-// DESIGN 补齐 v2 版本，见 FRAME-ANIM-API.md 第 7 节。
+// door/bell 由 WTJ-20260705-025 加入本表（v1 动画卡 -030 门 / -031 铃均已 DESIGN 验收 done，
+// 从 v1_boundary.deferred_to_v2 移入 included）。此前它们**有意不在表里**、resolvePropAnimInfo()
+// 恒返回 null 回退静态 <img>，那是当时 deferred_to_v2 在本文件的落地方式；现素材验收通过、已降采
+// 进 anim-manifest.js，故登记映射改走真实分帧动画。FRAME-ANIM-API.md 第 7 节已同步更新。
 //
 // **onClick 播放 activeState 时统一传 { loop:false, onComplete }**：即使某个 state 的源数据
 // 本身 loop:true（如 faucet 的 running），onClick 场景下也要求它"播完一轮后 clamp 定住"而
@@ -138,7 +179,8 @@
 // 800ms 恰≥success 时长是巧合非契约"）：computeVisualHoldMs() 在完成瞬间用
 // WTJ_FRAME_ANIM.getDuration(prop, activeState) 读出这个 state 播完一轮实际需要多少毫秒，
 // hold = Math.max(COMPLETE_VISUAL_HOLD_MS（800，既有占位下限）, duration + 缓冲)——非动效
-// 道具（door/bell/drag/find 等）没有 prop/activeState，直接沿用 800ms 不变。三个已接入道具
+// 道具（drag/find 等，door/bell 自 025 起已是动效道具）没有 prop/activeState，直接沿用 800ms
+// 不变。已接入道具
 // 里 horse.run（8 帧 @12fps ≈ 667ms + 150ms 缓冲 = 817ms；072 返工后 horse.active 由
 // stop_success 改为 run，二者巧合同为 ≈667ms，本地板分支的数值论证不变）已经在本次实现里
 // 真实触发了"实际时长超过 800ms 地板"的分支，不是纯假设场景。
@@ -156,6 +198,9 @@
 //                          状态灯）。
 //   _setClock(clock)      测试专用（与 task.js/pointer.js 同款模式），不是给其余生产代码调用的
 //                          稳定契约。供单测把 P1-3「完成态延迟移除」的 ~800ms 可见窗口快进掉。
+//   _setRandom(fn)         测试专用（与 _setClock 同款校验/忽略约定），不是给其余生产代码调用的
+//                          稳定契约。注入确定性 RNG 替换 taskRandom（默认 Math.random），供单测
+//                          精确断言/复现洗牌袋（type/example 调度，WTJ-20260706-002）的抽取序列。
 //
 // -----------------------------------------------------------------------
 // REQ-TASK-07~10 / REQ-PTR-02/03 / REQ-RWD-04 逐条落地位置索引（供 PM/QA 对照）：
@@ -258,12 +303,20 @@
   // "未知文件名，assets/ 前缀兜底可能 404"的兜底分支噪声警告——路径本身其实仍会拼对（因为
   // manifest 传入的 spriteFile 原就带 'sprites/' 前缀），加入白名单只是消除噪声、保持与既有
   // TASK_PROPS_FILENAMES/SPRITES_FILENAMES"已知文件名清单"的工程约定一致。
+  //
+  // WTJ-20260705-025：drag 池扩容新增 6 条 example（egg-to-nest/flower-to-vase/
+  // orange-to-basket/fish-to-net/jam-to-jar/treasure-to-chest，见 manifest.js
+  // tasks.templates.drag.examples 行内注释），同样全部复用 secretWords.pool 已交付 sprite，
+  // 这里追加对应的新文件名（egg/nest/flower/vase/leaf/lemon/pear/net/jam/jar/treasure/key/
+  // spoon），零新增美术、零逻辑改动，只是扩充这张既有白名单。
   var SPRITES_FILENAMES = [
     'dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png',
     'banana.png', 'orange.png', 'moon.png', 'sun.png', 'fish.png', 'frog.png', 'duck.png',
     'elephant.png', 'lion.png', 'monkey.png', 'pig.png', 'goat.png', 'koala.png',
     'rocket.png', 'robot.png', 'rainbow.png', 'turtle.png', 'unicorn.png', 'zebra.png',
-    'whale.png', 'octopus.png'
+    'whale.png', 'octopus.png',
+    'egg.png', 'nest.png', 'flower.png', 'vase.png', 'leaf.png', 'lemon.png', 'pear.png',
+    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png'
   ];
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
@@ -338,12 +391,19 @@
   var PROP_ANIM_STATE_MAP = {
     faucet: { idle: 'off', active: 'running' },
     horse: { idle: 'idle', active: 'run' },
-    lamp: { idle: 'off', active: 'turning-on' }
+    lamp: { idle: 'off', active: 'turning-on' },
+    // WTJ-20260705-025：door/bell 的 v1 动画（卡 -030 门 / -031 铃，均已 DESIGN 验收 done）
+    // 已从 v1_boundary.deferred_to_v2 移入 included 并降采进 anim-manifest.js，故在此登记映射，
+    // 由「静态 img 兜底」升级为真实帧动画。door 点击 → 'closed'→'opening'（5 帧非循环，播完停在
+    // 开门末帧）；bell 点击 → 'idle'→'ring'（6 帧循环，命中期间持续摇铃）。
+    door: { idle: 'closed', active: 'opening' },
+    bell: { idle: 'idle', active: 'ring' }
   };
 
   // 把一个 spriteFile（如 'sprites/lamp-off.png'）解析成"这个道具在 WTJ_FRAME_ANIM 引擎里
-  // 对应的 prop key + idle/active state 名"，五个 animation-state 预留道具之外的 spriteFile
-  // （apple/basket/dog/cat/ball/doghouse 等）与 door/bell 两个未接入引擎的道具都返回 null。
+  // 对应的 prop key + idle/active state 名"。五个 animation-state 道具（faucet/horse/lamp/
+  // door/bell，door/bell 由 WTJ-20260705-025 接入）都在 PROP_ANIM_STATE_MAP 里；只有非动效
+  // spriteFile（apple/basket/dog/cat/ball/doghouse 等）解析不到 prop 映射、返回 null。
   // 复用 resolvedBaseName()（而不是 baseName()）是刻意的：'lamp-off.png'/'lamp-on.png' 这两个
   // stub 文件名要先经过 SPRITE_FILENAME_ALIASES 别名解析成 'lamp.png'，再去掉扩展名得到
   // prop key 'lamp'，与 wantsAnimState() 判断"是否该有 data-anim-state 属性"用的是同一份
@@ -357,7 +417,7 @@
     var prop = dotIdx === -1 ? name : name.slice(0, dotIdx);
     var states = PROP_ANIM_STATE_MAP[prop];
     if (!states) {
-      return null; // door/bell（或未来任何尚未接入引擎的预留道具）在此回退，见上方注释。
+      return null; // 非动效道具（无 PROP_ANIM_STATE_MAP 条目）在此回退静态 img，见上方注释。
     }
     return { prop: prop, idleState: states.idle, activeState: states.active };
   }
@@ -387,8 +447,98 @@
   }
 
   // ---------------------------------------------------------------------
-  // 递增计数器：驱动任务类型/示例/布局位置的轮转选择，替代 Math.random()（见文件头「任务生成」
-  // 一节设计说明）。
+  // 可注入随机数生成器（与 _setClock 同款模式，见下方「可注入时钟」一节）：taskRandom 默认走
+  // 真实 Math.random()（Ethan 开发机验收要的是"真随机"，不是确定性轮转），返回 [0,1) 区间数字，
+  // 语义与 Math.random() 完全一致。测试用 _setRandom(fn) 整体替换成确定性 RNG（如
+  // mulberry32/LCG 或固定序列桩），从而可以精确断言/复现下方洗牌袋的抽取顺序——不需要真的
+  // 依赖 Math.random 的不可控输出。_setRandom 校验参数必须是函数，否则 warn 并忽略（与
+  // _setClock 对非法参数的处理同一套防御式约定）。
+  // ---------------------------------------------------------------------
+  var taskRandom = Math.random;
+
+  function _setRandom(fn) {
+    if (typeof fn !== 'function') {
+      console.warn('[WTJ_TASK_TEMPLATES] _setRandom: 参数必须是函数，已忽略。');
+      return;
+    }
+    taskRandom = fn;
+  }
+
+  // ---------------------------------------------------------------------
+  // 洗牌袋（shuffle bag）：问号任务的 type 与"该 type 下选哪个 example"都改用这个机制替代旧版
+  // 确定性递增计数器轮转（见文件头「任务生成」一节完整设计说明与"为什么"）。下面两个通用函数
+  // （refillShuffleBag()、drawFromShuffleBag()，消费一个字面量状态 { bag, lastPicked }）是
+  // 同一套无放回抽取逻辑，同时服务 TASK_TYPES（drawTaskType()）与每个
+  // type 各自的 example 下标（drawExampleIndex()），不是两套独立实现。
+  //
+  // 契约（详见文件头「任务生成」一节 1~4 点）：①袋空时 Fisher-Yates 重新装满打乱，无放回逐个
+  // 取出，保证一整袋内每个候选恰好出现一次；②跨袋边界若新袋首撞上上一次抽到的值，交换袋首与
+  // 袋内另一随机位置，避免连续两次同一个候选；③单元素候选池（袋子只有 1 个候选）无法避免"连续
+  // 抽到同一个"，直接放弃这条保证，是数学上唯一自洽的选择。
+  // ---------------------------------------------------------------------
+  function fisherYatesShuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(taskRandom() * (i + 1));
+      var tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function refillShuffleBag(state, items) {
+    var pool = items.slice();
+    fisherYatesShuffle(pool);
+    if (pool.length > 1 && state.lastPicked !== null && pool[0] === state.lastPicked) {
+      var swapIdx = 1 + Math.floor(taskRandom() * (pool.length - 1));
+      var tmp = pool[0];
+      pool[0] = pool[swapIdx];
+      pool[swapIdx] = tmp;
+    }
+    state.bag = pool;
+  }
+
+  function drawFromShuffleBag(state, items) {
+    if (!state.bag || state.bag.length === 0) {
+      refillShuffleBag(state, items);
+    }
+    var picked = state.bag.shift();
+    state.lastPicked = picked;
+    return picked;
+  }
+
+  // type 洗牌袋：候选池恒为 TASK_TYPES 本身（4 个类型字符串，直接按值比较/存放，不需要额外的
+  // 下标映射）。
+  var typeBagState = { bag: [], lastPicked: null };
+
+  function drawTaskType() {
+    return drawFromShuffleBag(typeBagState, TASK_TYPES);
+  }
+
+  // example 洗牌袋：每个 type 各自维护一份独立状态（exampleBagStates，键为 type 字符串）。
+  // 候选池是"下标"而不是 example 对象本身——这样"长度变化时重建"只需要比较一个数字
+  // （itemsLength），不需要对候选池做深比较。itemsLength 与当前 getExamplesForType(type).length
+  // 不一致时（如 manifest 热更新新增/减少了某个 type 的 examples），直接丢弃旧状态重新开始
+  // （不尝试续用旧袋子里还没抽完的下标，因为下标语义已经变了）。
+  var exampleBagStates = {};
+
+  function drawExampleIndex(type, examplesLength) {
+    var state = exampleBagStates[type];
+    if (!state || state.itemsLength !== examplesLength) {
+      state = { bag: [], lastPicked: null, itemsLength: examplesLength };
+      exampleBagStates[type] = state;
+    }
+    var indices = [];
+    for (var i = 0; i < examplesLength; i++) {
+      indices.push(i);
+    }
+    return drawFromShuffleBag(state, indices);
+  }
+
+  // ---------------------------------------------------------------------
+  // 递增计数器：现在只驱动布局位置轮转（presetAt()），不再参与 type/example 的选择（那部分已
+  // 改用上方洗牌袋，见文件头「任务生成」一节）。布局位置不需要"不可预测"，纯轮转即可保证连续
+  // 任务不会挤在同一屏幕位置。
   // ---------------------------------------------------------------------
   var questionClickCounter = 0;
 
@@ -1198,18 +1348,18 @@
       return;
     }
 
-    var type = TASK_TYPES[questionClickCounter % TASK_TYPES.length];
+    var type = drawTaskType();
     var examples = getExamplesForType(type);
     if (!examples.length) {
       console.warn('[WTJ_TASK_TEMPLATES] 类型 "' + type + '" 没有任何可用任务示例，已跳过本次问号点击。');
       questionClickCounter += 1;
       return;
     }
-    // P1-1（Fable 对抗评审）：example 的选择不能复用 type 的取模结果（见文件头「任务生成」一节
-    // 详细说明），改用"这个类型第几次被轮到"（questionClickCounter 整除 TASK_TYPES.length 的商）
-    // 驱动 example 的轮转，与 type 的选择解耦成两个独立递增序列。
-    var typeRotationIndex = Math.floor(questionClickCounter / TASK_TYPES.length);
-    var example = examples[typeRotationIndex % examples.length];
+    // 洗牌袋（见文件头「任务生成」一节与上方 drawExampleIndex() 详细说明）：每个 type 各自维护
+    // 一个 example 下标的洗牌袋，无放回抽取保证该 type 的每个 example 在一轮内都会被抽到——这就
+    // 是 P1-1（Fable 对抗评审）"每个 example 都必须可达"这条硬要求现在的满足方式。
+    var exampleIndex = drawExampleIndex(type, examples.length);
+    var example = examples[exampleIndex];
 
     var taskDef = { id: example.id, type: type, voicePrompt: example.voicePrompt };
 
@@ -1350,7 +1500,11 @@
 
     // 测试专用，见文件头 API 列表说明；不是给其余生产代码调用的稳定契约（与 task.js/pointer.js
     // 的 _setClock 同款模式），供单测把 P1-3 的 ~800ms 完成态延迟移除快进掉。
-    _setClock: _setClock
+    _setClock: _setClock,
+    // 测试专用，WTJ-20260706-002：注入确定性 RNG 替换 taskRandom（默认 Math.random），供单测
+    // 精确断言/复现洗牌袋（type/example 调度）的抽取序列，见文件头「任务生成」一节与
+    // drawTaskType()/drawExampleIndex() 的详细说明。同款"校验参数是函数，否则 warn 并忽略"约定。
+    _setRandom: _setRandom
   };
 
   if (Object.freeze) {

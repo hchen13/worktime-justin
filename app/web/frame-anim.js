@@ -179,11 +179,12 @@
   var ANIM_MANIFEST = getAnimManifest();
 
   // v1_boundary.deferred_to_v2（见 docs/assets/production-animations-v1/manifest.json）：
-  // 质量未验收，本卡不接入，anim-manifest.js 里也没有它们的条目。这份列表纯粹用来让
-  // console.warn 的措辞更有信息量（"这个 prop 是刻意暂缓，不是配置出错"），不参与任何
-  // 功能判断——即使不维护这份列表，getStateConfig() 在 ANIM_MANIFEST 里查不到 prop 时
-  // 同样会返回 null，调用方的防御式回退逻辑不依赖这份列表存在。
-  var DEFERRED_V2_PROPS = ['door', 'bell'];
+  // 被刻意暂缓、anim-manifest.js 里没有条目的 prop。这份列表纯粹用来让 console.warn 的措辞更
+  // 有信息量（"这个 prop 是刻意暂缓，不是配置出错"），不参与任何功能判断——即使不维护这份
+  // 列表，getStateConfig() 在 ANIM_MANIFEST 里查不到 prop 时同样返回 null，调用方的防御式回退
+  // 不依赖它存在。**WTJ-20260705-025：door/bell 已接入（移入 v1_boundary.included），当前
+  // 没有任何 deferred prop，故此列表为空；未来若再暂缓某 prop，把它加进来即可（纯提示用途）。**
+  var DEFERRED_V2_PROPS = [];
 
   function inList(list, value) {
     var i;

@@ -215,7 +215,15 @@ def main() -> int:
         print(f"秘密词 (每首字母若干, 共 {len(words)}): 抽样 " + ", ".join(words[:12]) + " …")
         print("每条判定: 英文发音清楚 / 儿童友好 / 无误读 / 音量与其它一致 / 非 Chrome 内置语音(REQ-AST-07)")
 
-    return 0 if (missing == 0 and defective == 0 and not uncovered) else 1
+    # WTJ-20260705-025：pass/fail 只看**必选**(secretWords/sfx/taskVoice)缺失/缺陷 + 运行时
+    # 引用但清单未列(uncovered)。非必选(taskVoiceZh/compositePhrases)缺失仍在上面报告里如实
+    # 列出、但不 flip 整体 pass/fail——这正是本文件顶部 collect_inventory docstring 记录的意图
+    # (taskVoiceZh 缺文件"must show up in this report, but must not flip this script's overall
+    # pass/fail")。025 给 door/bell/drag 新任务在 taskVoiceZh 记了 8 条 not-delivered 待 024/084
+    # 补中文语音(运行时 voicePrompt:'' 未引用,无 404),属已文档化的待补项而非交付失败。
+    req_missing = sum(1 for r in results if r["required"] and not r["exists"])
+    req_defective = sum(1 for r in results if r["required"] and r["exists"] and r["problems"])
+    return 0 if (req_missing == 0 and req_defective == 0 and not uncovered) else 1
 
 
 if __name__ == "__main__":

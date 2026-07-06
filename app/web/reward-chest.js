@@ -7,8 +7,29 @@
 // （读 rewards.chest / performance 配置）之后加载；也需要 056（frame-anim.js/
 // anim-manifest.js）之后——宝箱本体的 opening 分帧动效改由 WTJ_FRAME_ANIM.play() 驱动
 // （见下方「宝箱开箱动效接入」一节），调用同样走防御式包装，缺失时回退静态 <img>，不阻断。
-// 与 hud.js / audio.js 的加载顺序无强依赖（调用均走下方防御式包装，缺失时优雅降级为
-// console.warn/console.error，不阻断）。
+// 也需要 005（reward-fireworks.js）之后——烟花表现改由 WTJ_REWARD_FIREWORKS.play() 驱动
+// （见下方「烟花粒子系统」一节），同样走防御式包装，缺失时静默跳过烟花、不阻断宝箱本体/背景
+// 光晕/音效/HUD 指示器等其余表现。与 hud.js / audio.js 的加载顺序无强依赖（调用均走下方
+// 防御式包装，缺失时优雅降级为 console.warn/console.error，不阻断）。
+//
+// -----------------------------------------------------------------------
+// WTJ-20260706-005（烟花粒子引擎抽出为可复用模块，取代本文件此前自带的 BURST_SCHEDULE 五预设
+// 粒子系统）
+// -----------------------------------------------------------------------
+// 011 首次交付时自己实现了一整套烟花粒子物理（COLOR_PALETTE/spawnXBurst/updateParticles/
+// renderFrame/tick 链，五种预设 circle/starfield/sparkler/star/heart 按 BURST_SCHEDULE 错峰
+// 触发）。005 卡把"粒子物理引擎"本身抽成独立、canvas-agnostic 的可复用模块
+// window.WTJ_REWARD_FIREWORKS（app/web/reward-fireworks.js），供本文件与 status-rewards.js
+// （015 的任务成功即时反馈）共用同一套引擎、共享同一条全局粒子数硬预算。本文件不再自己维护
+// 粒子数组/物理更新/tick 循环，只在 showChest()/showBackgroundFlash() 等既有表现之外，多调用
+// 一次 playFireworksDefensive()（见该函数），把 chest-open 的高潮烟花换成引擎的
+// 'molten-fountain' 形态；宝箱本体的 Canvas 仍归本文件创建/拥有，只是借给引擎画粒子——摘除该
+// Canvas 前必须先 stopFireworksDefensive()（照抄 056 P1-1 修复的 stopFrameAnimDefensive() 同一
+// 手法，防止引擎侧 playbacks 注册表泄漏）。BURST_SCHEDULE 的五预设精确时间点单测已整体迁移到
+// tests/unit/reward-fireworks.test.mjs（molten-fountain 的分层衰减時间线断言），本文件自己的
+// 单测（tests/unit/reward-chest.test.mjs）改为对 WTJ_REWARD_FIREWORKS 用 stub（只记录
+// play()/stop() 调用参数，不重新验证引擎内部的粒子物理判定），与本文件对 WTJ_FRAME_ANIM 一贯
+// 的"消费方只测自己这一层逻辑"策略保持一致。
 //
 // -----------------------------------------------------------------------
 // 宝箱开箱动效接入（WTJ-20260704-056，三路技术评审定案：Canvas 逐帧 + 可注入时钟 + 构建期
@@ -29,14 +50,15 @@
 // 判定"的既有测试策略保持一致；frame-anim.js 自身的帧号/loop/reduced-motion/onComplete
 // 等判定逻辑由 tests/unit/frame-anim.test.mjs 独立覆盖。
 //
-// **烟花/reset/一次性/reduced-motion 逻辑全部保留不变**：BURST_SCHEDULE 错峰时间线、
-// finishSequence() 的一次性清空节奏、reset() 的外部中止入口、reduced-motion 下的静态定格帧
-// 分支——全部原样保留，本卡只换了 showChest() 内部"画什么"这一件事。烟花的触发时机**没有**
-// 改成"等 opening 播完才开始"（尽管卡片原文字面描述是这个方向），据实记录的偏离理由与详细
-// 时间线推导见 playChestOpeningAnimDefensive() 的 onComplete 回调内联注释——核心原因是现有
-// tests/unit/reward-chest.test.mjs 已经用逐时间点的粒子数量断言把 BURST_SCHEDULE 相对**序列
-// 起点**（不是相对宝箱动画播完）的精确时间线锁定为验收标准的一部分，本卡不在未与 PM/DESIGN
-// 重新确认产品意图、也不同步重写那份单测的前提下改变这条时间线。
+// **烟花/reset/一次性/reduced-motion 逻辑全部保留不变**（本卡 056 交付时的历史记录，供追溯
+// 阅读）：BURST_SCHEDULE 错峰时间线、finishSequence() 的一次性清空节奏、reset() 的外部中止
+// 入口、reduced-motion 下的静态定格帧分支——全部原样保留，056 只换了 showChest() 内部"画什么"
+// 这一件事。烟花的触发时机**没有**改成"等 opening 播完才开始"（尽管卡片原文字面描述是这个
+// 方向），据实记录的偏离理由与详细时间线推导见 playChestOpeningAnimDefensive() 的 onComplete
+// 回调内联注释。**WTJ-20260706-005 更新**：BURST_SCHEDULE 五预设那套粒子实现本身已经被整体
+// 替换为调用 window.WTJ_REWARD_FIREWORKS 的 'molten-fountain' 形态（见文件头「烟花粒子系统」
+// 一节），"烟花与宝箱开箱动画并行、各自独立按序列起点计时、不等 opening 播完"这条时序原则被
+// 完整保留下来，只是承载它的具体粒子实现换了。
 //
 // -----------------------------------------------------------------------
 // 职责边界（本卡 011，是最后一张核心功能卡：五槽满 → 宝箱 → 烟花 → 一次性大奖励 → 清屏 → 下一轮）
@@ -50,16 +72,18 @@
 // -----------------------------------------------------------------------
 // 计时驱动方式（据实记录的工程取舍）：不使用真实 requestAnimationFrame
 // -----------------------------------------------------------------------
-// manifest.rewards.chest.fireworks 的落地建议是"rAF 驱动"的 Canvas 粒子系统。本文件改用与
-// 013/014/015（task.js/task-templates.js/status-rewards.js）完全一致的「可注入时钟
-// （clockRef.setTimeout 链）+ _setClock 测试钩子」驱动整个粒子模拟的逐帧更新，而不是调用浏览器
-// 原生 requestAnimationFrame。原因：真实 rAF 的回调时间戳不受 _setClock 这类可注入时钟控制，
-// 单元测试（Node vm 沙箱，没有 rAF）没有办法确定性地"快进"一段粒子物理模拟并断言其状态（存活数、
-// 颜色、预设类型分布、"不超过 maxParticles 上限"等）——而这些正是本卡验收标准里明确要求持久化
-// 单测覆盖的点。用固定节拍（TICK_MS=16，约 60fps）的 setTimeout 链在生产环境里视觉效果与 rAF
-// 几乎无差异（本奖励序列只播放一次、约 2.6 秒，不是常驻主循环），却能让整套粒子系统在测试沙箱里
-// 与其余奖励模块（015 三灯连闪/大奖励叠层）用同一手法被确定性驱动。这是本卡在"文档建议 rAF"与
-// "QA 强制要求的可测试性"之间的工程取舍，据实记录，供 PM/TL 需要时复核。
+// 本文件改用与 013/014/015（task.js/task-templates.js/status-rewards.js）完全一致的「可注入
+// 时钟（clockRef.setTimeout 链）+ _setClock 测试钩子」驱动整段奖励序列的调度（宝箱弹出、约
+// 2.6s 后的收尾清空），而不是调用浏览器原生 requestAnimationFrame。原因：真实 rAF 的回调
+// 时间戳不受 _setClock 这类可注入时钟控制，单元测试（Node vm 沙箱，没有 rAF）没有办法确定性地
+// "快进"这段序列并断言其状态——而这正是本卡验收标准里明确要求持久化单测覆盖的点。用固定节拍
+// （TICK_MS=16，约 60fps）的 setTimeout 链在生产环境里视觉效果与 rAF 几乎无差异（本奖励序列
+// 只播放一次、约 2.6 秒，不是常驻主循环），却能让整段序列在测试沙箱里与其余奖励模块（015 三灯
+// 连闪/大奖励叠层）用同一手法被确定性驱动。这是本卡在"文档建议 rAF"与"QA 强制要求的可测试性"
+// 之间的工程取舍，据实记录，供 PM/TL 需要时复核。**WTJ-20260706-005 起**：烟花本身的逐帧粒子
+// 模拟已经抽到 window.WTJ_REWARD_FIREWORKS（该模块有自己独立的可注入时钟，通过它自己的
+// _setClock()，不是本文件 clockRef 的一部分），本文件的 clockRef 现在只驱动"序列本身的调度"
+// （宝箱/背景光晕/音效何时出现、何时整体收尾），不再驱动粒子物理。
 //
 // -----------------------------------------------------------------------
 // 表现形式选用（REQ-RWD-01，manifest.rewards.chest.formsAllowed 是产品允许的表现形式菜单，
@@ -80,39 +104,41 @@
 // 第二种表现。
 //
 // -----------------------------------------------------------------------
-// 烟花粒子系统（REQ-RWD-03 / REQ-AST-02，验收 3/4）
+// 烟花粒子系统（REQ-RWD-03 / REQ-AST-02，验收 3/4）——WTJ-20260706-005 起委托给
+// window.WTJ_REWARD_FIREWORKS
 // -----------------------------------------------------------------------
-// 单一粒子引擎（update + render 通用），manifest.rewards.chest.fireworks.presetTypes 全部
-// 落地（超过验收 3 要求的"至少 2 种"）：
-//   'circle'    圆形——从宝箱位置向 360° 均匀爆发，经典烟花环。
-//   'starfield' 满天星——散布在画面上半部，缓慢上浮 + 明暗闪烁（twinkle），不来自单一爆发点。
-//   'sparkler'  打铁花——从宝箱位置向上方锥形高速迸发，重力大、衰减快，模拟"铁花四溅"的急促感。
-//   'star'      星形——沿五角星的 5 个主方向成束迸发，形成星形轮廓。
-//   'heart'     心形（WTJ-20260704-083 新增，开发机验收反馈⑤）——沿参数化心形曲线取样方向
-//               成束迸发，形成心形轮廓，物理与渲染复用同一套粒子引擎（spawnHeartBurst() +
-//               drawHeart()），不新建独立引擎。
-// 五种预设按 BURST_SCHEDULE 错峰触发（见该常量），共用同一套物理（重力 + 阻力 + 生命衰减）与
-// 同一套配色策略，只在初始位置/速度分布/形状/衰减系数上区分「类型」。
-//
-// 颜色策略（REQ-RWD-03「少量高质量色板出发做 HSL/HSV 微调，不做完全 RGB 随机」，验收 4）：
-// 见 COLOR_PALETTE + jitterColor()——每个粒子的颜色 = 从 5 个手工挑选的高质量 HSL 基色中随机选
-// 一个，再对 h/s/l 三个通道分别做小范围随机偏移（HUE_JITTER/SAT_JITTER/LIGHT_JITTER），而不是
-// Math.random() 出三个 0-255 的 RGB 分量。
-//
-// 性能红线（manifest.performance.maxParticles=300 / disallowShadowBlur=true，技术评审结论，
-// 非 docs/index.html 直接数值）：spawnBurst() 在生成每一批粒子前用 getMaxParticles() 读到的
-// 上限裁剪本次实际生成数量，保证任意时刻 particles.length 不超过该上限（见验收 3 的性能红线）；
-// 全文档不出现 ctx.shadowBlur，"发光感"改用同心双层圆（柔光晕 + 实心核）纯 alpha 叠加实现。
+// 本文件不再自己维护粒子数组/物理更新/tick 循环/配色策略——005 起这些全部由可复用的
+// window.WTJ_REWARD_FIREWORKS 引擎负责（该引擎自己的形态/性能红线/颜色策略见
+// app/web/reward-fireworks.js 文件头）。本文件只在 runSequence() 里调用一次
+// playFireworksDefensive()，让引擎在宝箱自己的 Canvas 上播放 'molten-fountain' 形态（TL 决策
+// D2：chest-open 高潮统一采用这一形态，见 docs/design-notes/WTJ-005-reward-fireworks-plan.md
+// §5），origin 取 chestOrigin()（本文件既有的宝箱位置计算，未改动）。烟花的触发时机沿用一贯
+// 做法：与宝箱本体的开箱分帧动效（WTJ_FRAME_ANIM）并行播放，不等宝箱动效播完才开始（详见
+// playChestOpeningAnimDefensive() 的 onComplete 回调内联注释，历史沿革未变）。宝箱 Canvas 的
+// 生命周期仍归本文件（引擎只借用其 2D context 画粒子 + 借用其 tick 调度，不创建/不销毁这个
+// Canvas 元素本身）；摘除该 Canvas（clearOverlayChildren()）前必须先调用
+// stopFireworksDefensive()，防止引擎侧 playbacks 注册表因为"Canvas 已从 DOM 摘除但引擎仍在
+// 其注册表里持有对它的引用"而泄漏（与 056 P1-1 的 stopFrameAnimDefensive() 同一手法）。
+// REQ-RWD-03 五种旧预设（circle/starfield/sparkler/star/heart）+ BURST_SCHEDULE 错峰时间线 +
+// COLOR_PALETTE/jitterColor() 颜色策略的精确断言已整体迁移到
+// tests/unit/reward-fireworks.test.mjs（molten-fountain 形态的分层衰减时间线断言，见该文件），
+// 本文件自己的单测（tests/unit/reward-chest.test.mjs）改为对 WTJ_REWARD_FIREWORKS 用 stub
+// （只记录 play()/stop() 调用参数），与本文件对 WTJ_FRAME_ANIM 一贯的"消费方只测自己这一层
+// 逻辑，不重新验证被消费模块内部判定"既有测试策略保持一致。
 //
 // -----------------------------------------------------------------------
 // prefers-reduced-motion（验收里的可访问性红线，延续 009/014/015 的既有约定）
 // -----------------------------------------------------------------------
 // 宝箱本体 / 背景光晕两个 CSS 驱动的表现，沿用 status-rewards.css 同款手法：JS 始终添加
 // "-anim" 动画类，由 reward-chest.css 的 @media (prefers-reduced-motion: reduce) 统一覆盖为
-// 无动画的静态终态（不需要 JS 分支判断类名）。Canvas 烟花是 JS 逐帧驱动，CSS 管不到，因此这里
-// 由 JS 显式判断：命中时不启动 tick 循环，改为一次性画出一帧「静态定格」的粒子分布
-// （spawnStaticFrame()），仍然照常经过完整的 TOTAL_SEQUENCE_MS 展示时长后调用 WTJ_SLOTS.reset()
-// ——展示时长与移除时机不变，只是烟花本身不再逐帧运动。
+// 无动画的静态终态（不需要 JS 分支判断类名）。烟花本身的 reduced-motion 判定（TL 决策 D3：
+// 静态定格一帧，吸收 007 skip-secondary 进构图）已经内置在 WTJ_REWARD_FIREWORKS.play() 内部
+// （该引擎自己检测 prefers-reduced-motion，见其文件头），本文件不需要为烟花再做一次分支判断
+// ——playFireworksDefensive() 无条件调用一次 play()，引擎自己决定是逐帧动态还是静态定格。
+// lastReducedMotion（本文件自己的 prefersReducedMotion() 判定）仍然保留，只用于
+// onChestComplete payload 的 reducedMotion 字段与 QA 断言，与烟花引擎各自独立判定（两者读的
+// 是同一个浏览器媒体查询，结果理应一致，只是没有共享同一次判定调用）。仍然照常经过完整的
+// TOTAL_SEQUENCE_MS 展示时长后调用 WTJ_SLOTS.reset()——展示时长与移除时机不变。
 //
 // -----------------------------------------------------------------------
 // 对外 API（window.WTJ_REWARD_CHEST，Object.freeze 冻结 + 绑定加固）
@@ -120,20 +146,26 @@
 //   onChestComplete(fn)   订阅"一次宝箱奖励序列自然播完"事件（已调用 WTJ_SLOTS.reset() 之后
 //                         emit），fn({ ts, reducedMotion, forms, presetTypesFired })。多订阅 +
 //                         逐个 try/catch 隔离。外部调用 reset() 中止播放不会触发本事件（那是
-//                         "被中止"，不是"自然播完"）。
-//   getState()            返回 { playing, reducedMotion, particleCount, maxParticles,
-//                         configuredForms, implementedForms, configuredPresetTypes,
-//                         implementedPresetTypes, colorStrategy, spriteResolved }，供 QA 断言。
+//                         "被中止"，不是"自然播完"）。presetTypesFired 自 005 起恒为
+//                         ['molten-fountain']（见 IMPLEMENTED_FIREWORKS_STYLE 一节），保留
+//                         这个字段名是为了不破坏既有订阅者的字段形状。
+//   getState()            返回 { playing, reducedMotion, maxParticles, configuredForms,
+//                         implementedForms, fireworksStyle, spriteResolved }，供 QA 断言。
+//                         WTJ-20260706-005 起移除了 particleCount/configuredPresetTypes/
+//                         implementedPresetTypes/colorStrategy 四个字段——它们描述的是本文件
+//                         已不再拥有的旧粒子系统内部状态，改问
+//                         window.WTJ_REWARD_FIREWORKS.getState()（particleCount 是跨全部并发
+//                         effect 的共享值，不专属于宝箱这一个 playback）。新增 fireworksStyle
+//                         字段说明本文件目前调用引擎的哪个形态。
 //   reset()               外部中止入口（如家长退出 / 新会话）：立即停止任何进行中的奖励播放、
 //                         清空 Canvas 与 DOM 叠层子元素、取消所有挂起的定时器。**不会**级联调用
 //                         WTJ_SLOTS.reset()——这是"叫停本模块自己的播放"，不是"模拟一次自然播完"，
 //                         与 015（status-rewards.js）reset() 同一取舍（该函数也不会反过来通知
 //                         014）。
 //   _setClock(clock)      测试专用（与 task.js/pointer.js/task-templates.js/status-rewards.js
-//                         同款模式），供单测把整段奖励序列 + 逐帧粒子模拟快进掉，不是给其余生产
-//                         代码调用的稳定契约。
-//   _getParticles()       测试专用，返回当前存活粒子的浅拷贝快照数组（不影响内部状态），供单测
-//                         断言粒子数上限 / 颜色策略 / 预设类型分布，不是稳定契约。
+//                         同款模式），供单测把整段奖励序列快进掉，不是给其余生产代码调用的稳定
+//                         契约。WTJ-20260706-005 起不再驱动粒子模拟本身（那部分已经是
+//                         WTJ_REWARD_FIREWORKS 自己的 _setClock，两者是独立的时钟系统）。
 //
 // -----------------------------------------------------------------------
 // REQ-RWD-01~03 + REQ-AST-02/06 逐条落地位置索引（供 PM/QA 对照）：
@@ -143,10 +175,11 @@
 //               temporary-background-change/new-sfx）。
 //   REQ-RWD-02（宝箱开启后清五槽进入下一轮）：finishSequence() → callSlotsResetDefensive()
 //               防御式调用 window.WTJ_SLOTS.reset()。
-//   REQ-RWD-03（烟花 Canvas 生成，预设类型，颜色 HSL/HSV 微调）：BURST_SCHEDULE 五种预设全部
-//               实现；COLOR_PALETTE + jitterColor() 落地颜色策略。
-//   REQ-AST-02（烟花粒子属于代码生成类素材，不预置贴图）：全部由 Canvas2D 路径/圆弧代码生成，
-//               不引用任何烟花贴图文件。
+//   REQ-RWD-03（烟花 Canvas 生成，预设类型，颜色 HSL/HSV 微调）：WTJ-20260706-005 起委托给
+//               window.WTJ_REWARD_FIREWORKS 的 'molten-fountain' 形态落地（见该模块文件头）。
+//   REQ-AST-02（烟花粒子属于代码生成类素材，不预置贴图）：WTJ_REWARD_FIREWORKS 全部由
+//               Canvas2D 代码生成（含构建期预渲染的发光贴图，仍是代码生成而非外部美术贴图
+//               文件），不引用任何设计交付的烟花贴图文件。
 //   REQ-AST-06（宝箱贴图）：resolveSpritePath(getSpriteFile()) 引用已验收的
 //               app/web/assets/sprites/treasure-chest.png（manifest.rewards.chest.sprite）。
 // -----------------------------------------------------------------------
@@ -179,9 +212,7 @@
 
   var DEFAULT_SPRITE = 'sprites/treasure-chest.png';
   var DEFAULT_FORMS_ALLOWED = ['fireworks', 'sticker-popup-fade', 'short-animation', 'temporary-background-change', 'new-sfx'];
-  var DEFAULT_PRESET_TYPES = ['starfield', 'sparkler', 'circle', 'star', 'heart'];
   var DEFAULT_MAX_PARTICLES = 300;
-  var DEFAULT_COLOR_STRATEGY = 'small-curated-palette-hsl-hsv-jitter';
 
   function getSpriteFile() {
     if (CHEST_CFG && typeof CHEST_CFG.sprite === 'string' && CHEST_CFG.sprite.length > 0) {
@@ -197,13 +228,8 @@
     return DEFAULT_FORMS_ALLOWED;
   }
 
-  function getConfiguredPresetTypes() {
-    if (CHEST_CFG && CHEST_CFG.fireworks && Array.isArray(CHEST_CFG.fireworks.presetTypes) && CHEST_CFG.fireworks.presetTypes.length > 0) {
-      return CHEST_CFG.fireworks.presetTypes;
-    }
-    return DEFAULT_PRESET_TYPES;
-  }
-
+  // WTJ-20260706-005：仍保留（getState().maxParticles 向后兼容 QA 断言），但不再用于本文件自己
+  // 的粒子生成裁剪——那部分已经委托给 window.WTJ_REWARD_FIREWORKS 自己的同名逻辑。
   function getMaxParticles() {
     if (CHEST_CFG && CHEST_CFG.fireworks && typeof CHEST_CFG.fireworks.maxParticles === 'number' && CHEST_CFG.fireworks.maxParticles > 0) {
       return CHEST_CFG.fireworks.maxParticles;
@@ -214,16 +240,12 @@
     return DEFAULT_MAX_PARTICLES;
   }
 
-  function getColorStrategy() {
-    if (CHEST_CFG && CHEST_CFG.fireworks && typeof CHEST_CFG.fireworks.colorStrategy === 'string' && CHEST_CFG.fireworks.colorStrategy.length > 0) {
-      return CHEST_CFG.fireworks.colorStrategy;
-    }
-    return DEFAULT_COLOR_STRATEGY;
-  }
-
-  // 本文件实际落地的表现形式 / 预设类型子集（见文件头「表现形式选用」「烟花粒子系统」两节）。
+  // 本文件实际落地的表现形式子集（见文件头「表现形式选用」一节）。
   var IMPLEMENTED_FORMS = ['fireworks', 'short-animation', 'temporary-background-change', 'new-sfx'];
-  var IMPLEMENTED_PRESET_TYPES = ['circle', 'starfield', 'sparkler', 'star', 'heart'];
+
+  // WTJ-20260706-005：本文件调用 WTJ_REWARD_FIREWORKS 时使用的形态 id（TL 决策 D2），供
+  // getState().fireworksStyle 与 onChestComplete payload 的 presetTypesFired 字段引用。
+  var FIREWORKS_STYLE_ID = 'molten-fountain';
 
   // ---------------------------------------------------------------------
   // 素材路径解析：与 secretword.js 的 resolveSpritePath() 同一模式（见
@@ -422,6 +444,12 @@
   // 清空上一轮叠层子元素，保证同一时刻只有一批叠层元素在 DOM 里，不堆积（REQ-RWD-01「一次性
   // 不长期占屏」的落地方式之一）。
   function clearOverlayChildren() {
+    // WTJ-20260706-005：摘除烟花 Canvas 前必须先 stop() 掉引擎里对应的这次播放（照抄 056
+    // P1-1 修复的 stopFrameAnimDefensive() 同一手法），防止 WTJ_REWARD_FIREWORKS 内部
+    // playbacks 注册表因为"Canvas 已从 DOM 摘除但引擎仍持有引用"而泄漏。函数名未改（沿用
+    // overlayChildren 里包含 chest canvas/烟花 canvas/背景光晕等全部子元素的既有含义），
+    // 这里统一在移除任何子元素之前先做这一步。
+    stopFireworksDefensive();
     var i;
     for (i = 0; i < overlayChildren.length; i++) {
       removeElementDefensive(overlayChildren[i]);
@@ -503,387 +531,51 @@
   }
 
   // ---------------------------------------------------------------------
-  // 颜色策略（REQ-RWD-03 / REQ-AST-02，验收 4）：少量高质量 HSL 色板 + 小范围 HSL 微调，
-  // 不做完全 RGB 随机。
+  // WTJ-20260706-005：颜色策略 / 粒子物理 / 渲染 / tick 循环全部委托给
+  // window.WTJ_REWARD_FIREWORKS（见该模块文件头「三种形态」「性能红线落地」两节），本文件不再
+  // 自己维护这些——playFireworksDefensive()/stopFireworksDefensive() 两个函数（定义在下方
+  // chestOrigin() 之后）是本文件与引擎之间唯一的接口。
   // ---------------------------------------------------------------------
-  var COLOR_PALETTE = [
-    { name: 'gold', h: 45, s: 88, l: 58 },
-    { name: 'ember-red', h: 352, s: 82, l: 56 },
-    { name: 'violet', h: 275, s: 68, l: 62 },
-    { name: 'cyan', h: 189, s: 78, l: 58 },
-    { name: 'warm-white', h: 38, s: 45, l: 92 }
-  ];
-  var HUE_JITTER = 9;    // ± 度
-  var SAT_JITTER = 8;    // ± 百分点
-  var LIGHT_JITTER = 8;  // ± 百分点
 
-  function clampNum(v, min, max) {
-    if (v < min) return min;
-    if (v > max) return max;
-    return v;
-  }
+  var fireworksHandle = null; // WTJ_REWARD_FIREWORKS.play() 返回的不透明 handle，供 stop() 用。
 
-  function pickPaletteColor() {
-    var idx = Math.floor(Math.random() * COLOR_PALETTE.length);
-    if (idx >= COLOR_PALETTE.length) idx = COLOR_PALETTE.length - 1;
-    return COLOR_PALETTE[idx];
-  }
-
-  // 在挑中的色板基色上做 HSL 三通道微调，而非从零随机生成一个 RGB 三元组。
-  function jitterColor(base) {
-    var h = base.h + (Math.random() * 2 - 1) * HUE_JITTER;
-    h = ((h % 360) + 360) % 360;
-    var s = clampNum(base.s + (Math.random() * 2 - 1) * SAT_JITTER, 0, 100);
-    var l = clampNum(base.l + (Math.random() * 2 - 1) * LIGHT_JITTER, 0, 100);
-    var hr = Math.round(h);
-    var sr = Math.round(s);
-    var lr = Math.round(l);
-    return {
-      h: hr,
-      s: sr,
-      l: lr,
-      css: 'hsl(' + hr + ',' + sr + '%,' + lr + '%)'
-    };
-  }
-
-  function randomPaletteJitteredColor() {
-    return jitterColor(pickPaletteColor());
-  }
-
-  // ---------------------------------------------------------------------
-  // 粒子系统：单一物理引擎（重力 + 阻力 + 生命衰减），五种 presetType 只在初始分布/形状/衰减
-  // 系数上区分。particles 数组任意时刻长度 <= getMaxParticles()（性能红线，spawnBurst 内裁剪）。
-  // ---------------------------------------------------------------------
-  var particles = [];
-  var GRAVITY_PX_S2 = 240;
-  var DRAG_PER_SEC = 0.85;
-
-  function makeParticle(opts) {
-    return {
-      x: opts.x,
-      y: opts.y,
-      vx: opts.vx,
-      vy: opts.vy,
-      life: opts.life,
-      maxLife: opts.life,
-      age: 0,
-      size: opts.size,
-      gravityScale: (typeof opts.gravityScale === 'number') ? opts.gravityScale : 1,
-      twinkle: !!opts.twinkle,
-      shape: opts.shape,
-      preset: opts.preset,
-      color: randomPaletteJitteredColor()
-    };
-  }
-
-  // 生成 count 个粒子并入队，若会超出 getMaxParticles() 上限则裁剪本次实际生成数量
-  // （性能红线：任意时刻存活粒子数不超过上限，不是"整段序列累计生成数"不超过上限——早先批次
-  // 死亡释放的名额允许后续批次使用）。builder(i) 返回单个粒子的构造 opts。
-  function spawnBurst(count, builder) {
-    var budget = getMaxParticles() - particles.length;
-    if (budget <= 0) return;
-    var actual = Math.min(count, budget);
-    var i;
-    for (i = 0; i < actual; i++) {
-      particles.push(makeParticle(builder(i, actual)));
-    }
-  }
-
-  function spawnCircleBurst(count, origin) {
-    spawnBurst(count, function (i, total) {
-      var angle = (Math.PI * 2 * i) / total + (Math.random() - 0.5) * 0.12;
-      var speed = 140 + Math.random() * 60;
-      return {
-        x: origin.x, y: origin.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 40,
-        life: 900 + Math.random() * 400,
-        size: 2 + Math.random() * 2,
-        gravityScale: 1,
-        shape: 'dot',
-        preset: 'circle'
-      };
-    });
-  }
-
-  function spawnStarfieldBurst(count, canvasW, canvasH) {
-    spawnBurst(count, function () {
-      return {
-        x: Math.random() * canvasW,
-        y: Math.random() * canvasH * 0.55,
-        vx: (Math.random() - 0.5) * 10,
-        vy: -(10 + Math.random() * 20),
-        life: 1200 + Math.random() * 800,
-        size: 1.2 + Math.random() * 1.6,
-        gravityScale: 0.15,
-        twinkle: true,
-        shape: 'dot',
-        preset: 'starfield'
-      };
-    });
-  }
-
-  function spawnSparklerBurst(count, origin) {
-    spawnBurst(count, function () {
-      var base = -Math.PI / 2; // 向上
-      var spread = Math.PI * 0.9; // 锥形展开约 162°
-      var angle = base + (Math.random() - 0.5) * spread;
-      var speed = 220 + Math.random() * 140;
-      return {
-        x: origin.x, y: origin.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 500 + Math.random() * 300,
-        size: 1.5 + Math.random() * 1.2,
-        gravityScale: 1.6,
-        shape: 'dot',
-        preset: 'sparkler'
-      };
-    });
-  }
-
-  function spawnStarBurst(count, origin) {
-    var directions = 5; // 五角星主方向
-    spawnBurst(count, function (i, total) {
-      var dirIndex = i % directions;
-      var angle = -Math.PI / 2 + dirIndex * (Math.PI * 2 / directions) + (Math.random() - 0.5) * 0.16;
-      var speed = 110 + Math.random() * 150;
-      return {
-        x: origin.x, y: origin.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1000 + Math.random() * 500,
-        size: 1.6 + Math.random() * 1.4,
-        gravityScale: 0.8,
-        shape: 'star',
-        preset: 'star'
-      };
-    });
-  }
-
-  // WTJ-20260704-083（开发机验收反馈⑤）：心形预设。沿经典心形参数方程
-  // x = 16*sin(t)^3, y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t) 在 [0, 2π) 上按
-  // total 个采样点取方向向量（归一化后乘以随机速度），让粒子的初始飞溅方向沿心形轮廓分布，
-  // 复用同一套重力 + 阻力 + 生命衰减物理与同一套调色板（与 spawnStarBurst() 沿五角星方向
-  // 取样同一手法，只是采样曲线换成心形）。参数方程的 y 轴在数学上"向上为正"，画布坐标系
-  // "向下为正"，取 vy 时需整体取负号，才能让心形顶部两个圆润凸起朝上、底部尖角朝下（符合
-  // "心形"的直觉朝向），而不是上下颠倒的心形。
-  function spawnHeartBurst(count, origin) {
-    spawnBurst(count, function (i, total) {
-      var t = (Math.PI * 2 * i) / total;
-      var hx = 16 * Math.pow(Math.sin(t), 3);
-      var hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-      var len = Math.sqrt(hx * hx + hy * hy) || 1;
-      var speed = 120 + Math.random() * 90;
-      return {
-        x: origin.x, y: origin.y,
-        vx: (hx / len) * speed,
-        vy: -(hy / len) * speed, // 取负号：心形参数方程 y 向上为正，画布坐标 y 向下为正，见上方说明
-        life: 900 + Math.random() * 500,
-        size: 1.8 + Math.random() * 1.4,
-        gravityScale: 0.9,
-        shape: 'heart',
-        preset: 'heart'
-      };
-    });
-  }
-
-  // 错峰触发五种预设烟花（延迟单位 ms，相对序列起点）。总请求数刻意设计为超过默认
-  // maxParticles(300)（80+100+80+70+40=370），验证 spawnBurst() 的裁剪逻辑在多批叠加存活时
-  // 确实生效（见 tests/unit/reward-chest.test.mjs「粒子上限（确定性推导）」用例的逐时间点推导）。
-  var BURST_SCHEDULE = [
-    { delayMs: 0, preset: 'circle', count: 80 },
-    { delayMs: 320, preset: 'starfield', count: 100 },
-    { delayMs: 680, preset: 'sparkler', count: 80 },
-    { delayMs: 1040, preset: 'star', count: 70 },
-    { delayMs: 1360, preset: 'heart', count: 40 }
-  ];
-
-  function fireBurst(entry) {
-    var origin = chestOrigin();
-    var w = canvasEl ? canvasEl.width : 800;
-    var h = canvasEl ? canvasEl.height : 600;
-    if (entry.preset === 'circle') {
-      spawnCircleBurst(entry.count, origin);
-    } else if (entry.preset === 'starfield') {
-      spawnStarfieldBurst(entry.count, w, h);
-    } else if (entry.preset === 'sparkler') {
-      spawnSparklerBurst(entry.count, origin);
-    } else if (entry.preset === 'star') {
-      spawnStarBurst(entry.count, origin);
-    } else if (entry.preset === 'heart') {
-      spawnHeartBurst(entry.count, origin);
-    }
-    presetTypesFiredThisRound.push(entry.preset);
-  }
-
-  // 静态定格帧（prefers-reduced-motion 命中时）：一次性摆出一圈"已展开"的粒子，vx/vy=0，
-  // 不进入 tick 循环，只画一帧。仍标记 circle/star 两种预设，供 QA 观察到静态帧确实生成了内容。
-  // P2-2（Fable 对抗评审）：本函数直接 push 固定粒数，此前绕过了 spawnBurst() 的 maxParticles
-  // 预算裁剪——默认 300 上限下 24 粒安全，但当 manifest 把 maxParticles 配成 < 24 时会破红线。
-  // 这里显式取 min(24, 剩余预算)，与 spawnBurst() 走同一条性能红线，reduced-motion 分支不再是
-  // 上限的例外。
-  function spawnStaticFrame() {
-    var origin = chestOrigin();
-    var budget = getMaxParticles() - particles.length;
-    var n = Math.min(24, budget);
-    if (n < 0) n = 0;
-    var i;
-    for (i = 0; i < n; i++) {
-      var angle = (Math.PI * 2 * i) / n;
-      var radius = 60 + (i % 3) * 22;
-      particles.push({
-        x: origin.x + Math.cos(angle) * radius,
-        y: origin.y + Math.sin(angle) * radius * 0.7,
-        vx: 0, vy: 0,
-        life: 1, maxLife: 1, age: 0,
-        size: 2.5,
-        gravityScale: 0,
-        twinkle: false,
-        shape: (i % 4 === 0) ? 'star' : 'dot',
-        preset: (i % 4 === 0) ? 'star' : 'circle',
-        color: randomPaletteJitteredColor()
-      });
-    }
-    presetTypesFiredThisRound.push('circle', 'star');
-  }
-
-  function updateParticles(dtMs) {
-    var dtSec = dtMs / 1000;
-    var next = [];
-    var i;
-    for (i = 0; i < particles.length; i++) {
-      var p = particles[i];
-      p.life -= dtMs;
-      p.age += dtMs;
-      if (p.life <= 0) continue; // 生命耗尽，剔除（不放入 next）
-      p.vy += GRAVITY_PX_S2 * dtSec * p.gravityScale;
-      var dragFactor = 1 - clampNum(DRAG_PER_SEC * dtSec, 0, 1);
-      p.vx *= dragFactor;
-      p.vy *= dragFactor;
-      p.x += p.vx * dtSec;
-      p.y += p.vy * dtSec;
-      next.push(p);
-    }
-    particles = next;
-  }
-
-  function drawDot(c, p, alpha) {
-    c.globalAlpha = alpha * 0.35;
-    c.beginPath();
-    c.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
-    c.fill();
-    c.globalAlpha = alpha;
-    c.beginPath();
-    c.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    c.fill();
-  }
-
-  function drawStar(c, p, alpha) {
-    var spikes = 5;
-    var outerR = p.size * 2.4;
-    var innerR = p.size * 1.0;
-    var rot = Math.PI / 2 * 3;
-    var step = Math.PI / spikes;
-    var cx = p.x, cy = p.y;
-    c.globalAlpha = alpha;
-    c.beginPath();
-    c.moveTo(cx, cy - outerR);
-    var k;
-    for (k = 0; k < spikes; k++) {
-      var xOuter = cx + Math.cos(rot) * outerR;
-      var yOuter = cy + Math.sin(rot) * outerR;
-      c.lineTo(xOuter, yOuter);
-      rot += step;
-      var xInner = cx + Math.cos(rot) * innerR;
-      var yInner = cy + Math.sin(rot) * innerR;
-      c.lineTo(xInner, yInner);
-      rot += step;
-    }
-    c.closePath();
-    c.fill();
-  }
-
-  // WTJ-20260704-083：心形单粒渲染。只用已经在本文件其余绘制函数里出现过的 Canvas2D API
-  // （beginPath/arc/lineTo/closePath/fill，与 drawStar() 同一能力子集，不引入
-  // bezierCurveTo/quadraticCurveTo 等新 API 面），用两个圆弧拼出心形的左右两叶，再用一条
-  // lineTo 收到底部尖点，闭合出心形轮廓。
-  function drawHeart(c, p, alpha) {
-    var s = p.size * 1.6;
-    var cx = p.x, cy = p.y;
-    c.globalAlpha = alpha;
-    c.beginPath();
-    c.arc(cx - s * 0.5, cy - s * 0.35, s * 0.5, Math.PI, 0, false);
-    c.arc(cx + s * 0.5, cy - s * 0.35, s * 0.5, Math.PI, 0, false);
-    c.lineTo(cx, cy + s * 0.9);
-    c.closePath();
-    c.fill();
-  }
-
-  function renderFrame() {
-    if (!ctx || !canvasEl) return;
+  // 播放烟花（chest-open 高潮，'molten-fountain' 形态，TL 决策 D2）：防御式调用，引擎缺失/加载
+  // 失败时静默降级为 console.warn，不阻断宝箱本体/背景光晕/音效等其余表现。origin 取
+  // chestOrigin()（本文件既有的宝箱位置计算，未改动）；不传 tier，使用引擎自己的全局 tier 合成
+  // 逻辑（manifest 配置 + 自适应降级）。onComplete 只用于把本地 fireworksHandle 清回 null（引擎
+  // 自然播完后这个 handle 已经从其内部注册表移除，留着旧值没有意义，纯粹是本文件自己的记账，不
+  // 影响任何对外可见行为）。
+  function playFireworksDefensive() {
     try {
-      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-      var i;
-      for (i = 0; i < particles.length; i++) {
-        var p = particles[i];
-        var lifeAlpha = clampNum(p.life / p.maxLife, 0, 1);
-        var alpha = lifeAlpha;
-        if (p.twinkle) {
-          alpha = alpha * (0.55 + 0.45 * Math.abs(Math.sin(p.age * 0.006)));
-        }
-        ctx.fillStyle = p.color.css;
-        if (p.shape === 'star') {
-          drawStar(ctx, p, alpha);
-        } else if (p.shape === 'heart') {
-          drawHeart(ctx, p, alpha);
-        } else {
-          drawDot(ctx, p, alpha);
-        }
+      if (window.WTJ_REWARD_FIREWORKS && typeof window.WTJ_REWARD_FIREWORKS.play === 'function') {
+        fireworksHandle = window.WTJ_REWARD_FIREWORKS.play(FIREWORKS_STYLE_ID, {
+          canvas: canvasEl,
+          origin: chestOrigin(),
+          onComplete: function () {
+            fireworksHandle = null;
+          }
+        });
+      } else {
+        console.warn('[WTJ_REWARD_CHEST] window.WTJ_REWARD_FIREWORKS 未找到（reward-fireworks.js 未加载或加载失败），烟花表现不可用（防御式降级，其余奖励表现不受影响）。');
       }
-      ctx.globalAlpha = 1;
     } catch (err) {
-      console.error('[WTJ_REWARD_CHEST] Canvas 渲染帧失败，已捕获：', err);
+      console.error('[WTJ_REWARD_CHEST] window.WTJ_REWARD_FIREWORKS.play 调用失败，已捕获：', err);
     }
   }
 
-  // ---------------------------------------------------------------------
-  // tick 循环（见文件头「计时驱动方式」一节：clockRef.setTimeout 链，非真实 rAF）。
-  // ---------------------------------------------------------------------
-  var TICK_MS = 16;
-  var tickTimerId = null;
-  var lastTickAt = 0;
-
-  function scheduleNextTick() {
-    tickTimerId = clockRef.setTimeout(tick, TICK_MS);
-  }
-
-  function tick() {
-    tickTimerId = null;
-    var now = clockRef.now();
-    var dt = now - lastTickAt;
-    if (dt <= 0) dt = TICK_MS;
-    lastTickAt = now;
+  // 摘除烟花 Canvas（clearOverlayChildren()）前必须先调用本函数：与 056 P1-1 修复的
+  // stopFrameAnimDefensive() 同一手法——先叫引擎 stop() 掉这次播放（从其内部 playbacks 注册表
+  // 移除），再摘 DOM，避免"Canvas 已从 DOM 摘除但引擎仍在其注册表里持有引用"式的泄漏。对
+  // fireworksHandle 已经是 null（引擎已自然播完/从未成功 play()）的情况是安全的 no-op。
+  function stopFireworksDefensive() {
     try {
-      updateParticles(dt);
-      renderFrame();
+      if (fireworksHandle !== null && window.WTJ_REWARD_FIREWORKS && typeof window.WTJ_REWARD_FIREWORKS.stop === 'function') {
+        window.WTJ_REWARD_FIREWORKS.stop(fireworksHandle);
+      }
     } catch (err) {
-      console.error('[WTJ_REWARD_CHEST] 粒子 tick 更新失败，已捕获：', err);
-    }
-    if (playing) {
-      scheduleNextTick();
-    }
-  }
-
-  function startTicking() {
-    lastTickAt = clockRef.now();
-    scheduleNextTick();
-  }
-
-  function stopTicking() {
-    if (tickTimerId !== null) {
-      clockRef.clearTimeout(tickTimerId);
-      tickTimerId = null;
+      console.error('[WTJ_REWARD_CHEST] window.WTJ_REWARD_FIREWORKS.stop 调用失败，已捕获：', err);
+    } finally {
+      fireworksHandle = null;
     }
   }
 
@@ -928,18 +620,14 @@
         loop: false,
         onComplete: function () {
           // 据实记录的一处刻意偏离（卡片原文字面描述是"onComplete 触发现有烟花/reward-pop"）：
-          // 本文件的 BURST_SCHEDULE 五种烟花预设按相对**序列起点**（不是相对宝箱开箱动画播完）
-          // 0/320/680/1040ms 错峰触发，这条精确时间线已经被 tests/unit/reward-chest.test.mjs
-          // 的逐时间点粒子数量断言精确锁定（例如 t=50ms 时必须已有 80 个 circle 粒子存活，即
-          // circle 那批必须在 t<50ms 就已生成）。如果把 scheduleFireworkBursts() 改到"opening
-          // 播完"（约 500ms，5 帧 @10fps）之后才触发，会把全部烟花整体后移，直接打破那份逐
-          // 时间点断言，还会把尾批（star，序列相对延迟 1040ms）推到只剩约 1000ms 存活窗口
-          // 就被 TOTAL_SEQUENCE_MS=2600 的收尾截断，比现状更容易被提前打断。因此这里保留
-          // "烟花与宝箱开箱动画并行、各自独立按序列起点计时"的现状（与此前纯 CSS 占位版本
-          // 完全一致的时间线），onComplete 暂时是 no-op。若 PM/DESIGN 认定"烟花必须等宝箱
-          // 可见地打开之后才炸"是强制产品要求，需要重新设计 BURST_SCHEDULE 的相对时间点并
-          // 同步更新那份逐时间点单测，不是本卡能在不回归既有验收断言的前提下顺手做的小改动，
-          // 留作交接注记。
+          // 烟花（WTJ_REWARD_FIREWORKS 的 'molten-fountain' 形态，950ms）与宝箱开箱动画各自
+          // 独立按**序列起点**计时并行播放，不是"等宝箱开箱动画播完（约 500ms，5 帧 @10fps）
+          // 才开始炸"。这条时间线此前由 tests/unit/reward-chest.test.mjs 的逐时间点粒子数量
+          // 断言精确锁定（WTJ-20260706-005 起已整体迁移到 tests/unit/reward-fireworks.test.mjs，
+          // 断言对象换成了 molten-fountain 的分层衰减时间线，见该文件），本文件这里保留"并行、
+          // 各自独立计时"的现状不变。若 PM/DESIGN 认定"烟花必须等宝箱可见地打开之后才炸"是强制
+          // 产品要求，需要重新设计触发时机并同步更新 reward-fireworks.test.mjs 里的时间线断言，
+          // 不是本卡能顺手做的小改动，留作交接注记。onComplete 暂时是 no-op。
         }
       });
     } catch (err) {
@@ -983,17 +671,7 @@
                                 // 落在 TL 架构指令给出的"约 2-3 秒"区间内（略超，属"约"字容差）。
   var playing = false;
   var lastReducedMotion = false;
-  var presetTypesFiredThisRound = [];
   var sequenceTimerId = null;
-  var burstTimerIds = [];
-
-  function cancelBurstTimers() {
-    var i;
-    for (i = 0; i < burstTimerIds.length; i++) {
-      clockRef.clearTimeout(burstTimerIds[i]);
-    }
-    burstTimerIds = [];
-  }
 
   function cancelSequenceTimer() {
     if (sequenceTimerId !== null) {
@@ -1002,35 +680,24 @@
     }
   }
 
-  function clearCanvasAndParticles() {
-    particles = [];
+  // WTJ-20260706-005：不再清空本地 particles 数组（已不存在），只做 Canvas 像素层面的兜底
+  // 清空——正常情况下 stopFireworksDefensive()（见 clearOverlayChildren()）已经会让引擎自己的
+  // renderGroup() 清空这张 Canvas，这里是双保险（例如引擎缺失/stop() 抛错时，仍保证 Canvas
+  // 不会带着最后一帧烟花内容被摘除前露出一瞬间）。
+  function clearFireworksCanvas() {
     if (ctx && canvasEl) {
       try {
         ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
       } catch (err) {
-        console.error('[WTJ_REWARD_CHEST] 清空 Canvas 失败，已捕获：', err);
+        console.error('[WTJ_REWARD_CHEST] 清空烟花 Canvas 失败，已捕获：', err);
       }
-    }
-  }
-
-  function scheduleFireworkBursts() {
-    var i;
-    for (i = 0; i < BURST_SCHEDULE.length; i++) {
-      (function (entry) {
-        var timerId = clockRef.setTimeout(function () {
-          fireBurst(entry);
-        }, entry.delayMs);
-        burstTimerIds.push(timerId);
-      })(BURST_SCHEDULE[i]);
     }
   }
 
   function finishSequence() {
     sequenceTimerId = null;
-    stopTicking();
-    cancelBurstTimers();
-    clearCanvasAndParticles();
-    clearOverlayChildren();
+    clearFireworksCanvas();
+    clearOverlayChildren(); // 摘除烟花 Canvas 前会先 stopFireworksDefensive()，见该函数定义。
     playing = false;
     // WTJ-20260704-083 返工：序列自然播完，footer 常驻宝箱指示器退出 Open——回落到 Active 或
     // Disabled（按当前实际填槽情况，见 hud.js setChestOpen() 实现），随后 callSlotsResetDefensive()
@@ -1041,7 +708,9 @@
       ts: clockRef.now(),
       reducedMotion: lastReducedMotion,
       forms: IMPLEMENTED_FORMS.slice(),
-      presetTypesFired: presetTypesFiredThisRound.slice()
+      // WTJ-20260706-005：本文件现在只调用引擎的一个形态（molten-fountain，TL 决策 D2），
+      // 恒为单元素数组——保留这个字段名/形状是为了不破坏既有订阅者对 payload 的字段假设。
+      presetTypesFired: [FIREWORKS_STYLE_ID]
     };
 
     callSlotsResetDefensive();
@@ -1059,7 +728,6 @@
   // 恢复闭环）。finishSequence 自身也可能因坏时钟抛错，故再包一层，兜底强制 playing = false，
   // 保证下一次 onFull 一定能重新触发（不死锁）。
   function runSequence() {
-    presetTypesFiredThisRound = [];
     lastReducedMotion = prefersReducedMotion();
     // WTJ-20260704-083 返工：footer 常驻宝箱指示器切到 Open——本序列本身就是"打开"这个动作的
     // 可见表现，见上方 callHudSetChestOpenDefensive() 说明。放在 try 之外/之前也安全，该函数
@@ -1072,13 +740,10 @@
       showBackgroundFlash();
       playChestOpenSfxDefensive();
 
-      if (lastReducedMotion) {
-        spawnStaticFrame();
-        renderFrame();
-      } else {
-        scheduleFireworkBursts();
-        startTicking();
-      }
+      // WTJ-20260706-005：烟花委托给 WTJ_REWARD_FIREWORKS，该引擎内部自己判定
+      // prefers-reduced-motion 并切换到静态定格一帧（TL 决策 D3），本文件这里不再需要按
+      // lastReducedMotion 分支处理烟花本身。
+      playFireworksDefensive();
 
       sequenceTimerId = clockRef.setTimeout(finishSequence, TOTAL_SEQUENCE_MS);
     } catch (err) {
@@ -1128,10 +793,8 @@
 
   function reset() {
     cancelSequenceTimer();
-    cancelBurstTimers();
-    stopTicking();
-    clearCanvasAndParticles();
-    clearOverlayChildren();
+    clearFireworksCanvas();
+    clearOverlayChildren(); // 摘除烟花 Canvas 前会先 stopFireworksDefensive()，见该函数定义。
     playing = false;
     // WTJ-20260704-083 返工：外部中止（家长退出等）同样应该让 footer 常驻宝箱指示器退出
     // Open——不这样做的话，指示器会永久卡在"看起来在打开"，而实际 Canvas 序列已经被中止、
@@ -1144,34 +807,12 @@
     return {
       playing: playing,
       reducedMotion: lastReducedMotion,
-      particleCount: particles.length,
       maxParticles: getMaxParticles(),
       configuredForms: getConfiguredForms().slice(),
       implementedForms: IMPLEMENTED_FORMS.slice(),
-      configuredPresetTypes: getConfiguredPresetTypes().slice(),
-      implementedPresetTypes: IMPLEMENTED_PRESET_TYPES.slice(),
-      colorStrategy: getColorStrategy(),
+      fireworksStyle: FIREWORKS_STYLE_ID,
       spriteResolved: CHEST_SPRITE_PATH
     };
-  }
-
-  function snapshotParticles() {
-    var out = [];
-    var i;
-    for (i = 0; i < particles.length; i++) {
-      var p = particles[i];
-      out.push({
-        x: p.x, y: p.y, vx: p.vx, vy: p.vy,
-        life: p.life, maxLife: p.maxLife,
-        size: p.size, shape: p.shape, preset: p.preset,
-        color: { h: p.color.h, s: p.color.s, l: p.color.l, css: p.color.css }
-      });
-    }
-    return out;
-  }
-
-  function _getParticles() {
-    return snapshotParticles();
   }
 
   var API = {
@@ -1183,8 +824,7 @@
     reset: reset,
 
     // 测试专用，见文件头 API 列表说明；不是给其余生产代码调用的稳定契约。
-    _setClock: _setClock,
-    _getParticles: _getParticles
+    _setClock: _setClock
   };
 
   if (Object.freeze) {

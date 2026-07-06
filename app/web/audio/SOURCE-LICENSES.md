@@ -164,6 +164,31 @@ ffmpeg -i crowd-cheer-975-raw.mp3 -i streak-reward-fanfare-orig.m4a \
 - "Happy crowd cheer" 采样是否听感上确实像"孩子会觉得开心的欢呼"而非"体育场噪音感"过重；trim 的 0.30s-1.80s 窗口是否恰好落在该采样最有感染力的一段（本卡仅凭 `silencedetect` 定位内容边界，未做逐帧能量分析选取"最佳片段"）。
 - 4 音+sparkle 版 `task-success.m4a` 与 3 灯 cheer 版 `streak-reward-fanfare.m4a` 两者的"奖励强度阶梯感"（单次 vs 三连）是否听感上区分明显、循序渐进，不生硬跳变。
 - 二者与新增的画布视觉爆点（sparkle burst + 成功环）在真实设备上播放是否有音画不同步的观感问题（本卡未做真机录屏验证，只做了 JS 层的可注入时钟单测）。
+## WTJ-20260705-024：全量重生成为 CosyVoice 3 + Ethan 自录音色（取代下方 Kokoro 074/084）
+
+**背景**：Ethan 拒绝 Kokoro 音色，选定 CosyVoice 3 + 他本人自录参考声。本目录全部 TTS `.m4a`
+（words 101 + EN tasks 8 + phrases 10 + ZH tasks 24 + ZH 新 8 ≈ 151）已 zero-shot 全量重生成。
+下方 074/084 的 Kokoro 段为历史记录，磁盘上的 `.m4a` 现为 CosyVoice3 + Ethan 版本。
+
+**来源 / 授权**：
+
+| 项 | 值 |
+|---|---|
+| TTS 模型 | **CosyVoice 3**（`Fun-CosyVoice3-0.5B-2512`，FunAudioLLM / 阿里达摩院） |
+| 模型许可 | **Apache-2.0**（代码 + 权重均 Apache-2.0；024/084 spike 核实为所有候选中最干净——无 Chatterbox 式 Perth 水印、无 IndexTTS2 式营收/MAU 门槛） |
+| 模型来源 | HF `FunAudioLLM/Fun-CosyVoice3-0.5B-2512` + GitHub `FunAudioLLM/CosyVoice`（Apache-2.0） |
+| 音色 voice | **Ethan 本人自录参考声**（zero-shot 克隆）。个人自录、**自我授权**——不涉及第三方录音/肖像/配音授权；本项目个人非商用自用。参考声在 `dist-stage/024-cosyvoice3-reference/`（`.gitignore` 不入库） |
+| 为何合法 | CosyVoice 3 无内置固定音色、只能 zero-shot 克隆参考声，参考声带独立权利；本卡刻意**不用**模型自带 demo 声（同意范围不明），改用 Ethan 自录音，从源头消除音色授权风险 |
+| 确定性 | `set_all_random_seed(42)`（CosyVoice 采样本随机，固定 seed 复现） |
+| 生成脚本 | `app/scripts/generate-tts-cosyvoice3.py`（复用 074/084 文本源） |
+| 授权口径 | 模型 Apache-2.0 + 音色 Ethan 自录自授权 + ffmpeg（构建期工具）→ 产物 `.m4a` 可随 app 分发（个人非商用）。espeak-ng 不再参与（CosyVoice 自带 wetext 文本前端）。 |
+
+**统一处理方式**：与 074/084 完全一致——`ffmpeg loudnorm=I=-16:TP=-2.0:LRA=11,alimiter=limit=0.794:level=false` → `-ar 24000 -ac 1 -c:a aac -b:a 64k`。仅换 TTS 模型/音色，母带链不变。
+
+**主观验收（TL 不试听）**：音色 / 发音自然度 / 儿童友好 / 无爆音，交 Ethan / QA 在主目录 `docs/design-review.html` 逐条把关。
+
+---
+
 ## WTJ-20260704-084 追加：中文任务语音 TTS（24 条 `.zh.m4a`）
 
 **背景**：084 卡音频侧的 TTS 全量重生成。PM 已验收选型 spike（`tl/tts-spike-084`）并采纳默认路线

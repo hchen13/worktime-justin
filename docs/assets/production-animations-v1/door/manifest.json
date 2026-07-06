@@ -2,7 +2,9 @@
   "pack_id": "production-animations-v1-door",
   "card_id": "WTJ-20260704-030",
   "created_by": "DESIGN",
-  "updated_at_cst": "2026-07-04 03:20",
+  "updated_at_cst": "2026-07-06 10:51",
+  "revision_card_id": "WTJ-20260706-004",
+  "revision_executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
   "source": "docs/assets/production-animations-v1/source/door-base.png",
   "style_baseline": "docs/assets/production-pack-a/manifest.json and docs/assets/sprites/production-sprite-contact-sheet.png",
   "asset_spec": {
@@ -13,7 +15,16 @@
   },
   "contact_sheet": "docs/assets/production-animations-v1/door/door-contact-sheet.png",
   "previews": {
-    "opening": "docs/assets/production-animations-v1/previews/door-opening-preview.gif"
+    "opening": "docs/assets/production-animations-v1/previews/door-opening-preview.gif",
+    "opening_local_copy": "docs/assets/production-animations-v1/door/previews/door-opening-preview.gif"
+  },
+  "evidence": {
+    "prompt_and_rationale": "docs/assets/production-animations-v1/door/prompt-and-rationale.md",
+    "before_after": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-before-after-contact-sheet.png",
+    "small_size_readability": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-small-size-readability.png",
+    "aperture_crop": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-aperture-crop-before-after.png",
+    "alpha_checker": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-alpha-checker-preview.png",
+    "validation_json": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-validation.json"
   },
   "animations": {
     "closed": {
@@ -75,5 +86,6 @@
       ]
     }
   },
-  "scope_note": "This card intentionally covers door only. The v1 animation preserves the Pack A door material and simulates opening with a compressed hinge-side door leaf plus warm interior light."
+  "scope_note": "This card intentionally covers door only. WTJ-20260706-004 cleans the opening animation by replacing the previous hard horizontal seam and blocky generated interior shadows with one continuous warm aperture gradient. The accepted stone frame and wood-door material are preserved, opening remains 5 runtime cells, and the open terminal frame is synchronized with the cleaned final opening frame so review previews do not reintroduce the old dirty background.",
+  "validation_summary": "All revised opening frames are 1024x1024 RGBA with transparent corners. The runtime opening strip remains 5 cells at 256px each, so app/web/anim-manifest.js frameCount stays compatible. The open terminal sheet remains one 256px cell. No external sprite, watermark, text, magenta residue, or new generated body was introduced."
 }

@@ -37,10 +37,10 @@
     "compositePhrases": {
       "totalNotDelivered": 0
     },
-    "grandTotalNotDelivered": 0,
+    "grandTotalNotDelivered": 8,
     "taskVoiceZh": {
-      "totalNotDelivered": 0,
-      "note": "WTJ-20260704-084 全量新生成：24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P），见 taskVoiceZh[] 与 TTS-PROVENANCE.md「ZH 中文任务语音」一节。未被 app/web/manifest.js 引用（Phase B/004 接线范围），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 101/8/10 + 新增 24 ZH 断言, task-voice-path.test.mjs ===8）。"
+      "totalNotDelivered": 8,
+      "note": "WTJ-20260704-084 全量新生成的 24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P，见 taskVoiceZh[] 里 status:delivered 的 24 条与 TTS-PROVENANCE.md「ZH 中文任务语音」一节）仍然保持 24/24 完整，不受影响。WTJ-20260705-025（drag 池扩容 + door/doorbell 点击任务）新增 8 条 taskVoiceZh 条目，status 均为 not-delivered——见本数组末尾 8 条与 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落（拟定文案已就绪，待 024/084 排期生成）。这 8 条对应的 app/web/manifest.js example 目前 voicePrompt 均为空字符串 ''（no-silent-fallback：不静默复用其他任务的语音），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 的 101/8/10 EN 门与「24 条 delivered ZH」门——deliveredPaths() 按 status==='delivered' 过滤，本次新增的 8 条 not-delivered 不计入该计数；task-voice-path.test.mjs 的 ===8 EN 门同样不受影响）。"
     }
   },
   "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
@@ -1565,6 +1565,78 @@
       "status": "delivered",
       "durationSec": 1.237,
       "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+    },
+    {
+      "taskId": "drag-egg-to-nest",
+      "textZh": "把鸡蛋放进鸟窝里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-egg-to-nest.zh.m4a",
+      "status": "delivered",
+      "durationSec": 3.2,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "drag-flower-to-vase",
+      "textZh": "把花朵放进花瓶里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-flower-to-vase.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.16,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "drag-orange-to-basket",
+      "textZh": "把橙子放进篮子里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-orange-to-basket.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.6,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "drag-fish-to-net",
+      "textZh": "把小鱼放进网里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-fish-to-net.zh.m4a",
+      "status": "delivered",
+      "durationSec": 3.28,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "drag-jam-to-jar",
+      "textZh": "把果酱放进罐子里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-jam-to-jar.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.92,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "drag-treasure-to-chest",
+      "textZh": "把宝藏放进宝箱里！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/drag-treasure-to-chest.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.84,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "click-door-open",
+      "textZh": "打开门！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/click-door-open.zh.m4a",
+      "status": "delivered",
+      "durationSec": 0.92,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "click-doorbell-ring",
+      "textZh": "按一下门铃！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/click-doorbell-ring.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.2,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     }
   ],
   "compositePhrases": [

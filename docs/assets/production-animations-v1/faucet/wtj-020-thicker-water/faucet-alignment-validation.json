@@ -1,0 +1,206 @@
+{
+  "card_id": "WTJ-20260706-006",
+  "executor": "Designer 1",
+  "identity": "CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "outlet_center_px": [
+    280,
+    760
+  ],
+  "previous_water_center_px": 318,
+  "previous_offset_px": 38,
+  "metal_outlet_spans_sample_px": [
+    [
+      178,
+      381,
+      279.5,
+      744
+    ],
+    [
+      178,
+      381,
+      279.5,
+      752
+    ],
+    [
+      178,
+      381,
+      279.5,
+      760
+    ],
+    [
+      178,
+      381,
+      279.5,
+      768
+    ],
+    [
+      178,
+      381,
+      279.5,
+      776
+    ]
+  ],
+  "states": {
+    "open": [
+      {
+        "frame": 0,
+        "water_bbox_center_width": [
+          178,
+          785,
+          381,
+          986,
+          279.5,
+          204
+        ],
+        "center_delta_from_outlet_px": -0.5
+      }
+    ],
+    "running": [
+      {
+        "frame": 0,
+        "water_bbox_center_width": [
+          178,
+          785,
+          381,
+          986,
+          279.5,
+          204
+        ],
+        "center_delta_from_outlet_px": -0.5
+      },
+      {
+        "frame": 1,
+        "water_bbox_center_width": [
+          181,
+          786,
+          379,
+          994,
+          280.0,
+          199
+        ],
+        "center_delta_from_outlet_px": 0.0
+      },
+      {
+        "frame": 2,
+        "water_bbox_center_width": [
+          175,
+          783,
+          384,
+          975,
+          279.5,
+          210
+        ],
+        "center_delta_from_outlet_px": -0.5
+      },
+      {
+        "frame": 3,
+        "water_bbox_center_width": [
+          179,
+          786,
+          379,
+          1003,
+          279.0,
+          201
+        ],
+        "center_delta_from_outlet_px": -1.0
+      },
+      {
+        "frame": 4,
+        "water_bbox_center_width": [
+          177,
+          784,
+          383,
+          987,
+          280.0,
+          207
+        ],
+        "center_delta_from_outlet_px": 0.0
+      },
+      {
+        "frame": 5,
+        "water_bbox_center_width": [
+          182,
+          787,
+          377,
+          989,
+          279.5,
+          196
+        ],
+        "center_delta_from_outlet_px": -0.5
+      }
+    ],
+    "closing": [
+      {
+        "frame": 0,
+        "water_bbox_center_width": [
+          178,
+          785,
+          381,
+          986,
+          279.5,
+          204
+        ],
+        "center_delta_from_outlet_px": -0.5
+      },
+      {
+        "frame": 1,
+        "water_bbox_center_width": [
+          194,
+          793,
+          371,
+          955,
+          282.5,
+          178
+        ],
+        "center_delta_from_outlet_px": 2.5
+      },
+      {
+        "frame": 2,
+        "water_bbox_center_width": [
+          213,
+          798,
+          361,
+          924,
+          287.0,
+          149
+        ],
+        "center_delta_from_outlet_px": 7.0
+      },
+      {
+        "frame": 3,
+        "water_bbox_center_width": [
+          233,
+          803,
+          346,
+          895,
+          289.5,
+          114
+        ],
+        "center_delta_from_outlet_px": 9.5
+      },
+      {
+        "frame": 4,
+        "water_bbox_center_width": [
+          252,
+          806,
+          327,
+          858,
+          289.5,
+          76
+        ],
+        "center_delta_from_outlet_px": 9.5
+      },
+      {
+        "frame": 5,
+        "water_bbox_center_width": null,
+        "center_delta_from_outlet_px": null
+      }
+    ]
+  },
+  "self_check": [
+    "Water center is rebuilt around metal outlet center x=280 instead of previous x≈318.",
+    "Water width stays in the WTJ-020 thick-water range; no regression to thin stream.",
+    "All open/running/closing source frames keep transparent corners.",
+    "Runtime 256 running/closing sheets were regenerated from the aligned source frames."
+  ]
+}

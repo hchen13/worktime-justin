@@ -1,0 +1,63 @@
+{
+  "card": "WTJ-20260706-007",
+  "executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "implementation_intent": "Visual reference for TL runtime particle system, not fixed production sprites.",
+  "styles": [
+    {
+      "id": "molten-fountain",
+      "duration_ms": 950,
+      "particle_count": {
+        "old_mac": 120,
+        "normal": 210,
+        "burst": 280
+      },
+      "layers": [
+        "warm base spray",
+        "long gold trails",
+        "few cyan accent sparks"
+      ],
+      "density": "high at base, medium at outer arc",
+      "occlusion": "keep lower third open around reward object; fan outward from behind chest",
+      "tl_notes": "Use gravity and drag; spawn from low center with angle spread 55-125deg upward. Good for chest-open climax."
+    },
+    {
+      "id": "starburst",
+      "duration_ms": 720,
+      "particle_count": {
+        "old_mac": 70,
+        "normal": 120,
+        "burst": 160
+      },
+      "layers": [
+        "five primary rays",
+        "five short secondary rays",
+        "small center flash"
+      ],
+      "density": "medium, readable spokes",
+      "occlusion": "place behind reward object; avoid full-screen white flash",
+      "tl_notes": "Use deterministic star-angle presets plus small jitter. Good for task-complete feedback."
+    },
+    {
+      "id": "round-bloom",
+      "duration_ms": 840,
+      "particle_count": {
+        "old_mac": 90,
+        "normal": 150,
+        "burst": 210
+      },
+      "layers": [
+        "outer ring",
+        "inner ring",
+        "late falling dots"
+      ],
+      "density": "balanced ring, low center clutter",
+      "occlusion": "reserve central 34% diameter for prize/sticker readability",
+      "tl_notes": "Use ring radius easing and alpha fade; vary hue within palette, not random RGB."
+    }
+  ],
+  "accessibility": {
+    "max_fullscreen_flash_alpha": 0.35,
+    "avoid_covering_task_target": true,
+    "respect_reduce_motion": "halve particle count and skip secondary burst"
+  }
+}
