@@ -1,0 +1,44 @@
+{
+  "card": "WTJ-20260706-007",
+  "executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "background": "#10141f",
+  "styles": [
+    {
+      "id": "molten-fountain",
+      "name": "Molten Fountain",
+      "reference": "da-tie-hua inspired upward fan",
+      "colors": [
+        "#FFF1A8",
+        "#FFD35A",
+        "#FF9D3D",
+        "#FF6A2A",
+        "#8EEBFF"
+      ]
+    },
+    {
+      "id": "starburst",
+      "name": "Starburst",
+      "reference": "five-point star rays",
+      "colors": [
+        "#FFF6A6",
+        "#FF8EE8",
+        "#8EEBFF",
+        "#B7FF7A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "round-bloom",
+      "name": "Round Bloom",
+      "reference": "soft circular firework",
+      "colors": [
+        "#7AF7FF",
+        "#A78BFA",
+        "#FFE66D",
+        "#FF7A90",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "global_rule": "Choose from fixed palettes and apply small HSL/HSV jitter; do not use full random RGB."
+}

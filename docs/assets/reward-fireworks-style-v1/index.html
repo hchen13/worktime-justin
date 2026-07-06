@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reward Fireworks Style Reference v1</title>
+  <style>
+    :root { color-scheme: dark; --bg: #10141f; --panel: #171e2d; --line: rgba(255,255,255,.14); --ink: #f5f8ff; --muted: #b8c5d8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+    main { width: min(1220px, calc(100% - 36px)); margin: 0 auto; padding: 34px 0 60px; }
+    header { margin-bottom: 24px; }
+    h1 { margin: 0 0 10px; font-size: 38px; letter-spacing: 0; }
+    p { color: var(--muted); line-height: 1.55; }
+    .notice { border: 1px solid rgba(255,211,90,.45); background: rgba(255,211,90,.08); border-radius: 8px; padding: 14px 16px; color: #f4dfab; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 22px; }
+    .card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; }
+    .card h2 { margin: 0 0 4px; font-size: 24px; }
+    .sub { min-height: 48px; margin: 0 0 12px; }
+    img { width: 100%; display: block; border-radius: 6px; border: 1px solid rgba(255,255,255,.12); background: #0c1018; margin: 10px 0; }
+    .swatches { display: flex; gap: 8px; margin: 12px 0; }
+    .swatch { width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(255,255,255,.18); }
+    dl { display: grid; grid-template-columns: 94px 1fr; gap: 7px 10px; color: #dfe8f8; }
+    dt { color: #93a6bf; }
+    dd { margin: 0; }
+    a { color: #8eebff; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Reward Fireworks Style Reference v1</h1>
+      <p>Card WTJ-20260706-007. Visual reference only for runtime particles; do not ship these GIFs as fixed sprites.</p>
+      <p class="notice">Use <a href="style-params.json">style-params.json</a> and <a href="palette.json">palette.json</a> as TL-facing parameters. The central reward object should remain readable.</p>
+      <p><a href="contact-sheets/reward-fireworks-style-contact-sheet.png">Open contact sheet</a> · <a href="manifest.json">manifest</a> · <a href="README.md">README</a></p>
+    </header>
+    <section class="grid">
+
+      <article class="card">
+        <h2>Molten Fountain</h2>
+        <p class="sub">da-tie-hua inspired upward fan</p>
+        <img src="previews/molten-fountain.png" alt="Molten Fountain static preview" />
+        <img src="gifs/molten-fountain.gif" alt="Molten Fountain timing preview" />
+        <div class="swatches"><span class="swatch" style="background:#FFF1A8"></span><span class="swatch" style="background:#FFD35A"></span><span class="swatch" style="background:#FF9D3D"></span><span class="swatch" style="background:#FF6A2A"></span><span class="swatch" style="background:#8EEBFF"></span></div>
+        <dl>
+          <dt>Duration</dt><dd>950ms</dd>
+          <dt>Particles</dt><dd>120 old Mac / 210 normal / 280 burst</dd>
+          <dt>Density</dt><dd>high at base, medium at outer arc</dd>
+          <dt>Layers</dt><dd>warm base spray, long gold trails, few cyan accent sparks</dd>
+          <dt>Occlusion</dt><dd>keep lower third open around reward object; fan outward from behind chest</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h2>Starburst</h2>
+        <p class="sub">five-point star rays</p>
+        <img src="previews/starburst.png" alt="Starburst static preview" />
+        <img src="gifs/starburst.gif" alt="Starburst timing preview" />
+        <div class="swatches"><span class="swatch" style="background:#FFF6A6"></span><span class="swatch" style="background:#FF8EE8"></span><span class="swatch" style="background:#8EEBFF"></span><span class="swatch" style="background:#B7FF7A"></span><span class="swatch" style="background:#FFFFFF"></span></div>
+        <dl>
+          <dt>Duration</dt><dd>720ms</dd>
+          <dt>Particles</dt><dd>70 old Mac / 120 normal / 160 burst</dd>
+          <dt>Density</dt><dd>medium, readable spokes</dd>
+          <dt>Layers</dt><dd>five primary rays, five short secondary rays, small center flash</dd>
+          <dt>Occlusion</dt><dd>place behind reward object; avoid full-screen white flash</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h2>Round Bloom</h2>
+        <p class="sub">soft circular firework</p>
+        <img src="previews/round-bloom.png" alt="Round Bloom static preview" />
+        <img src="gifs/round-bloom.gif" alt="Round Bloom timing preview" />
+        <div class="swatches"><span class="swatch" style="background:#7AF7FF"></span><span class="swatch" style="background:#A78BFA"></span><span class="swatch" style="background:#FFE66D"></span><span class="swatch" style="background:#FF7A90"></span><span class="swatch" style="background:#FFFFFF"></span></div>
+        <dl>
+          <dt>Duration</dt><dd>840ms</dd>
+          <dt>Particles</dt><dd>90 old Mac / 150 normal / 210 burst</dd>
+          <dt>Density</dt><dd>balanced ring, low center clutter</dd>
+          <dt>Layers</dt><dd>outer ring, inner ring, late falling dots</dd>
+          <dt>Occlusion</dt><dd>reserve central 34% diameter for prize/sticker readability</dd>
+        </dl>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

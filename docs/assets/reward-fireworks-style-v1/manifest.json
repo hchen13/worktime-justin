@@ -1,0 +1,68 @@
+{
+  "card": "WTJ-20260706-007",
+  "asset_class": "design reference, not runtime implementation",
+  "executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "entrypoint": "docs/assets/reward-fireworks-style-v1/index.html",
+  "contact_sheet": "docs/assets/reward-fireworks-style-v1/contact-sheets/reward-fireworks-style-contact-sheet.png",
+  "styles": [
+    {
+      "id": "molten-fountain",
+      "preview": "docs/assets/reward-fireworks-style-v1/previews/molten-fountain.png",
+      "gif": "docs/assets/reward-fireworks-style-v1/gifs/molten-fountain.gif",
+      "palette": [
+        "#FFF1A8",
+        "#FFD35A",
+        "#FF9D3D",
+        "#FF6A2A",
+        "#8EEBFF"
+      ],
+      "duration_ms": 950,
+      "particle_count": {
+        "old_mac": 120,
+        "normal": 210,
+        "burst": 280
+      }
+    },
+    {
+      "id": "starburst",
+      "preview": "docs/assets/reward-fireworks-style-v1/previews/starburst.png",
+      "gif": "docs/assets/reward-fireworks-style-v1/gifs/starburst.gif",
+      "palette": [
+        "#FFF6A6",
+        "#FF8EE8",
+        "#8EEBFF",
+        "#B7FF7A",
+        "#FFFFFF"
+      ],
+      "duration_ms": 720,
+      "particle_count": {
+        "old_mac": 70,
+        "normal": 120,
+        "burst": 160
+      }
+    },
+    {
+      "id": "round-bloom",
+      "preview": "docs/assets/reward-fireworks-style-v1/previews/round-bloom.png",
+      "gif": "docs/assets/reward-fireworks-style-v1/gifs/round-bloom.gif",
+      "palette": [
+        "#7AF7FF",
+        "#A78BFA",
+        "#FFE66D",
+        "#FF7A90",
+        "#FFFFFF"
+      ],
+      "duration_ms": 840,
+      "particle_count": {
+        "old_mac": 90,
+        "normal": 150,
+        "burst": 210
+      }
+    }
+  ],
+  "notes": [
+    "Do not ship these GIFs as fixed animation sprites.",
+    "Use the palette and style params as runtime particle presets.",
+    "Keep central reward object readable; particles should sit behind or around it."
+  ]
+}
