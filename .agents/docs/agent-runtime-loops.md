@@ -21,6 +21,8 @@ Example TL start prompt:
 
 ```text
 You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. Take one actionable card at a time, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
+
+When doing feature work, use a TL-owned branch/worktree. Do not switch `/Users/claire/Documents/worktime-justin` away from `stage` or `main` as a scratch checkout. If the shared checkout is already on a feature/design/test branch, first preserve any dirty work and route or move it to the correct branch/worktree before using the shared checkout for stage validation.
 ```
 
 Example QA start prompt:
@@ -169,6 +171,8 @@ DESIGN loop:
 - uses image generation and project-local assets
 - records prompts, output paths, and design rationale
 - avoids folders, source prompts, sprite sheets, or output files already claimed by another DESIGN session unless PM defined the merge plan
+- uses a DESIGN-owned branch or independent worktree for production work; do not switch `/Users/claire/Documents/worktime-justin` away from `stage` or `main`
+- hands finished design work to PM review with final branch, commit, reviewer-openable HTML/path evidence, and whether TL stage integration is needed
 - returns finished work to PM review
 
 QA loop:

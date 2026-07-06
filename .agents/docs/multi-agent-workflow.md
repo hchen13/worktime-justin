@@ -113,6 +113,7 @@ Branch ownership:
 - PM owns `main`, the product acceptance gate, and the decision to promote a validated `stage` baseline to `main`.
 - TL owns implementation branches and the `stage` integration branch. `stage` is technical integration work, so TL handles code, build, test, package, and asset conflicts there.
 - DESIGN and QA do not merge to `stage` or `main`. If they produce documentation-only or test-only changes that need integration, the card must route that branch through TL for `stage` or PM for an accepted `main` promotion.
+- `/Users/claire/Documents/worktime-justin` is a shared PM/Ethan validation checkout, not a role-local scratch checkout. During normal work it must stay on `stage` or `main`; TL, DESIGN, and QA feature branches must be developed in independent worktrees or role-owned checkouts. A role must not switch the shared checkout to a feature/design/test branch to do card work. If this happens, the active role must preserve the work, move it to the correct branch or worktree, and restore the shared checkout before any Ethan-facing validation.
 - No role may rewrite, reset, or force-push `main`. No role may rewrite, reset, or force-push `stage` unless PM has routed an explicit TL recovery card and the card names the expected recovery point.
 
 Integration rule:
@@ -400,6 +401,7 @@ DESIGN responsibilities:
 3. Save selected deliverables in project paths when they are meant to be consumed by the app.
 4. Put prompt, selected output path, and design rationale in `产物/证据` or `最新进展`.
 5. Keep documentation mockups separate from production assets. Rough screenshots, emoji-like placeholders, and simplified diagrams may be acceptable for docs, but production sprites, secret-word objects, treasure chest art, stickers, and reward visuals must satisfy the production asset quality bar.
+6. Use a DESIGN-owned branch or independent worktree for design production. Do not switch `/Users/claire/Documents/worktime-justin` away from `stage` or `main` to perform DESIGN work. When a design branch should become visible in the integrated docs/app, DESIGN hands it to PM review with branch, commit, and paths; PM then routes TL for `stage` integration if needed.
 
 Design cards move to `review` with `负责人 = PM`. DESIGN may recommend TL implementation or further design iteration, but PM decides the route.
 
