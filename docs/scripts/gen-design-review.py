@@ -462,6 +462,92 @@ def render_audio_preview_section() -> str:
 
 
 # ---------------------------------------------------------------------------
+# WTJ-20260706-008：CosyVoice3 音频修复 before/after 试听专区（Ethan 主观裁决用）。
+# before = 现役 stage 音频，直接引用其 tracked 实路径（app/web/audio/**，与 dist-stage 的
+# before/ 逐字节一致）；after = 改进的短连续参考重生成候选，committed 到 tracked 的
+# docs/assets/008-audio-review/after/，使本专区自包含、可从任意 origin/stage 检出复现。
+# 纯 <audio> 相对引用，符合 docs 零 JS 约束。
+# ---------------------------------------------------------------------------
+
+AFTER_DIR_008 = "docs/assets/008-audio-review/after"
+
+CLIPS_008 = [
+    {"id": "apple", "kind": "秘密词", "text": "apple",
+     "before": "app/web/audio/words/apple.m4a",
+     "q": "after 是否比 before 更自然、发音更准？"},
+    {"id": "banana", "kind": "秘密词", "text": "banana",
+     "before": "app/web/audio/words/banana.m4a",
+     "q": "after 是否比 before 更自然、发音更准？"},
+    {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
+     "before": "app/web/audio/words/yoyo.m4a",
+     "q": "after 是否比 before 更自然、发音更准？"},
+    {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
+     "before": "app/web/audio/tasks/click-faucet-on.m4a",
+     "q": "after 是否比 before 更自然、发音更准？（本条 before 本就用 en.wav，after 用短连续片段对比）"},
+    {"id": "press-m.zh", "kind": "中文任务", "text": "按下字母 M！",
+     "before": "app/web/audio/tasks/press-m.zh.m4a", "after_missing": True,
+     "q": "after 缺失——短连续参考裁切策略对「中文 + 字母 M」混合目标会把时长截断到 ~0.68s"
+          "（before 为 3.20s），无法产出可用 after。请判断 before 的具体症状类型"
+          "（choppy 断续 / 发音错 / 音色不对 / 爆音），以便 TL 换用针对性修法。"},
+]
+
+
+def render_008_audio_fix_section() -> str:
+    parts = [
+        '<h2 id="008-audio-fix">008 音频修复 before/after 对照 '
+        '<span class="count">(P0 · Ethan 主观裁决)</span></h2>',
+        '<p class="section-note">卡片 WTJ-20260706-008：Ethan 全量试听点名的 5 条音频，TL 用<strong>改进的'
+        '参考录音裁切策略</strong>重生成 after 版供 A/B 对比。<strong>根因</strong>：024 全量生成把 Ethan '
+        '自录的 <code class="inline-code">words.wav</code>（11 个孤立单词、实测 16 段内部静音、很 choppy）'
+        '当 prompt_wav 克隆全部英文词 → 单词克隆不自然。<strong>改进</strong>：改用<strong>短的连续朗读片段</strong>'
+        '作参考（EN 用 en.wav 首句切 ~5s，内部静音 16→3；ZH 用 zh.wav 首段切 ~5s）。'
+        'TL 不试听，主观优劣以 Ethan 判断为准；确认后 TL 按此策略全量重生成并接入。</p>',
+        '<p class="section-note">before = 现役 stage 音频（引用其 tracked 实路径 '
+        '<code class="inline-code">app/web/audio/**</code>）；after = 改进连续参考重生成候选（committed '
+        '到 <code class="inline-code">docs/assets/008-audio-review/after/</code>，可从任意检出复现）。纯 '
+        '<code class="inline-code">&lt;audio controls preload="none"&gt;</code> 相对引用，符合 docs 零 JS 约束。</p>',
+    ]
+    items = []
+    for c in CLIPS_008:
+        cid = c["id"]
+        before_rel = c["before"]
+        before_href = rel_href(before_rel)
+        if c.get("after_missing"):
+            after_block = (
+                '<div class="ab-col ab-missing">'
+                '<span class="ab-label">AFTER</span>'
+                '<span class="ab-na">（无可用 after，见下方问题）</span>'
+                '</div>'
+            )
+        else:
+            after_rel = f"{AFTER_DIR_008}/{cid}.m4a"
+            after_href = rel_href(after_rel)
+            after_block = (
+                '<div class="ab-col">'
+                '<span class="ab-label">AFTER</span>'
+                f'<audio controls preload="none" src="{esc(after_href)}">您的浏览器不支持音频播放。</audio>'
+                f'<code class="path">{esc(after_rel)}</code>'
+                '</div>'
+            )
+        items.append(
+            '<div class="ab-item">'
+            f'<div class="ab-head"><code class="task-id">{esc(cid)}</code>'
+            f'<span class="task-kind">{esc(c["kind"])}</span>'
+            f'<span class="task-text">{esc(c["text"])}</span></div>'
+            '<div class="ab-cols">'
+            '<div class="ab-col"><span class="ab-label">BEFORE</span>'
+            f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
+            f'<code class="path">{esc(before_rel)}</code></div>'
+            f'{after_block}'
+            '</div>'
+            f'<p class="ab-q"><strong>请 Ethan 判断：</strong>{esc(c["q"])}</p>'
+            '</div>'
+        )
+    parts.append(f'<div class="ab-list">{"".join(items)}</div>')
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
 # 动效对比专区（验收 4）：docs 设计源 vs app/web 运行时，逐动效并排。
 # ---------------------------------------------------------------------------
 
@@ -807,6 +893,20 @@ h4 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercas
 .audio-task-item audio { width:100%; height:30px; }
 .audio-task-item .path { grid-column: 1 / -1; }
 @media (max-width: 760px) { .audio-task-item { grid-template-columns: 1fr; } }
+.ab-list { display:flex; flex-direction:column; gap:12px; margin: 6px 0 20px; }
+.ab-item { border:1px solid var(--line); border-radius:8px; padding:11px 13px; background:rgba(255,255,255,.03); }
+.ab-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; margin-bottom:9px; }
+.ab-head .task-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:#cfe3ee; }
+.ab-head .task-kind { font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
+.ab-head .task-text { font-size:14px; color:#fff; }
+.ab-cols { display:grid; grid-template-columns: 1fr 1fr; gap:10px 14px; }
+.ab-col { display:flex; flex-direction:column; gap:5px; border:1px solid var(--line); border-radius:6px; padding:8px 10px; background:rgba(255,255,255,.02); }
+.ab-col .ab-label { font-size:10.5px; font-weight:700; letter-spacing:.08em; color:#9fb3c8; }
+.ab-col audio { width:100%; height:30px; }
+.ab-missing { justify-content:center; align-items:center; color:var(--muted); border-style:dashed; }
+.ab-missing .ab-na { font-size:12px; }
+.ab-q { margin:9px 0 0; font-size:12.5px; color:#e5c07b; line-height:1.55; }
+@media (max-width: 760px) { .ab-cols { grid-template-columns: 1fr; } }
 .inline-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:rgba(255,255,255,.06); padding:1px 5px; border-radius:4px; }
 #broken ul { line-height:1.8; }
 #broken .ok { color: var(--ok); }
@@ -819,6 +919,7 @@ def build_body_sections() -> list[tuple[str, str]]:
     """只应调用一次：内部会触发 render_item，产生 STATS / ALL_REFS 的副作用。"""
     return [
         ("audio-preview", render_audio_preview_section()),
+        ("008-audio-fix", render_008_audio_fix_section()),
         ("compare", render_compare_section()),
         ("runtime", render_runtime_section()),
         ("pack-a", render_pack_a_section()),
@@ -858,6 +959,7 @@ def assemble_html(body_sections: list[tuple[str, str]], broken_html: str, stats_
 
 <nav class="pagenav" aria-label="设计总览页导航">
   <a href="#audio-preview">音频试听专区</a>
+  <a href="#008-audio-fix">008 音频修复对照</a>
   <a href="#compare">动效对比专区</a>
   <a href="#runtime">运行时已接入</a>
   <a href="#pack-a">生产素材 Pack A</a>
