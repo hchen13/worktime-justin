@@ -1,7 +1,7 @@
 # WTJ-20260705-020 Faucet Thicker Water Repair
 
-Executor: Designer 1  
-Identity: Automation:worktime-justin-design-loop  
+Executor: Designer 1
+Identity: Automation:worktime-justin-design-loop
 Date: 2026-07-05 23:05 CST
 
 ## Design Prompt
@@ -61,3 +61,40 @@ The high-resolution closing sequence changed from old `153, 131, 105, 79, 53, no
 - `runtime-256/off-sheet.png` -> `app/web/assets/anim/faucet/off-sheet.png`
 
 The app currently does not list an `open-sheet.png` in `app/web/assets/anim/faucet/`; the `open` state is included as source/reference so TL can decide whether it should remain source-only or become a runtime state.
+
+---
+
+## WTJ-20260706-006 Alignment Revision
+
+Executor: Designer 1
+Identity: CodexThread:019f2887-9de8-7b72-b53b-230a0857f710
+Date: 2026-07-06 11:07 CST
+
+### Reason
+
+PM accepted WTJ-020's thicker-water style but the water column still read as exiting from the right side of the faucet mouth. This revision keeps the accepted thicker-water treatment and corrects only the outlet alignment.
+
+### Method
+
+- Measured the metal outlet center from the accepted faucet body at approximately `x=280`, `y=760`.
+- Preserved the WTJ-020 `1.48x` widened water treatment.
+- Rebuilt the water crop around `x=280` instead of the previous water center around `x=318`.
+- Regenerated high-resolution source frames, sheets, runtime 256 sheets, manifest, dimension report, and alignment evidence.
+- Updated `app/web/assets/anim/faucet/running-sheet.png` and `app/web/assets/anim/faucet/closing-sheet.png` from the regenerated runtime candidates.
+
+### Evidence
+
+- `faucet-mouth-crop-before-after-align.png`
+- `faucet-mouth-crop-aligned-centerline.png`
+- `faucet-alignment-before-after-contact-sheet.png`
+- `faucet-water-alignment-before-after-runtime-256.png`
+- `faucet-alignment-validation.json`
+- `manifest.json`
+- `README.md`
+
+### Tradeoffs
+
+- Did not generate a new faucet image; keeping the existing body avoids style drift.
+- Did not change animation timing or frame counts.
+- Did not add an app `open` state; the current app runtime manifest already uses `running`, `closing`, `closed`, and `off`.
+- Closing frames retain a small rightward taper near shutoff because the visible stream is shrinking, but the open/running loop and first closing frame now align to the outlet center.

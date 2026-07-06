@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[5]
 SOURCE = ROOT / "docs/assets/production-animations-v1/faucet"
 OUT = SOURCE / "wtj-020-thicker-water"
 SCALE_X = 1.48
+OUTLET_CENTER_X = 280
+OUTLET_CENTER_Y = 760
 FRAME_SIZE = 1024
 RUNTIME_SIZE = 256
 DARK_BG = (17, 20, 30, 255)
@@ -92,7 +94,10 @@ def thicken_water(frame: Image.Image) -> Image.Image:
                 )
     new_w = round(crop.width * SCALE_X)
     scaled = crop.resize((new_w, crop.height), Image.Resampling.BICUBIC)
-    center_x = (x0 + x1) // 2
+    # WTJ-20260706-006: the metal outlet lip is centered around x=280.
+    # The previous widened stream kept the original water center around x=318,
+    # which made the column read as falling from the right edge of the mouth.
+    center_x = OUTLET_CENTER_X
     nx = round(center_x - new_w / 2)
     base = remove_water(frame)
     base.alpha_composite(scaled, (nx, y0))
@@ -213,12 +218,23 @@ def before_after_runtime(running_frames: list[Image.Image]) -> None:
 
 
 def dimensions_report(states: dict[str, list[Image.Image]]) -> dict[str, object]:
-    report: dict[str, object] = {"scale_x": SCALE_X, "states": {}}
+    report: dict[str, object] = {
+        "scale_x": SCALE_X,
+        "outlet_center_px": [OUTLET_CENTER_X, OUTLET_CENTER_Y],
+        "states": {},
+    }
     for label, frames in states.items():
         state_report = []
         for i, frame in enumerate(frames):
             bbox = water_bbox(frame)
-            state_report.append({"frame": i, "water_bbox": bbox, "water_width": None if bbox is None else bbox[2] - bbox[0]})
+            center_x = None if bbox is None else round((bbox[0] + bbox[2]) / 2, 1)
+            state_report.append({
+                "frame": i,
+                "water_bbox": bbox,
+                "water_width": None if bbox is None else bbox[2] - bbox[0],
+                "water_center_x": center_x,
+                "center_delta_from_outlet_px": None if center_x is None else round(center_x - OUTLET_CENTER_X, 1),
+            })
         report["states"][label] = state_report
     return report
 
@@ -250,7 +266,10 @@ def main() -> None:
         "card": "WTJ-20260705-020",
         "asset": "faucet thicker water repair",
         "source": "docs/assets/production-animations-v1/faucet",
-        "method": f"isolated existing water pixels, widened horizontally {SCALE_X}x, preserved faucet body and timing",
+        "revision_card": "WTJ-20260706-006",
+        "revision_executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+        "method": f"isolated existing water pixels, widened horizontally {SCALE_X}x, recentered stream to the metal outlet at x={OUTLET_CENTER_X}, preserved faucet body and timing",
+        "outlet_center_px": [OUTLET_CENTER_X, OUTLET_CENTER_Y],
         "frame_size": [FRAME_SIZE, FRAME_SIZE],
         "runtime_target_size": [RUNTIME_SIZE, RUNTIME_SIZE],
         "states": {

@@ -2,7 +2,13 @@
   "card": "WTJ-20260705-020",
   "asset": "faucet thicker water repair",
   "source": "docs/assets/production-animations-v1/faucet",
-  "method": "isolated existing water pixels, widened horizontally 1.48x, preserved faucet body and timing",
+  "revision_card": "WTJ-20260706-006",
+  "revision_executor": "Designer 1 / CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "method": "isolated existing water pixels, widened horizontally 1.48x, recentered stream to the metal outlet at x=280, preserved faucet body and timing",
+  "outlet_center_px": [
+    280,
+    760
+  ],
   "frame_size": [
     1024,
     1024

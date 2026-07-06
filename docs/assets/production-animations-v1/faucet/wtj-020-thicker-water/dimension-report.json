@@ -1,149 +1,183 @@
 {
   "scale_x": 1.48,
+  "outlet_center_px": [
+    280,
+    760
+  ],
   "states": {
     "open": [
       {
         "frame": 0,
         "water_bbox": [
-          208,
+          170,
           777,
-          428,
+          390,
           995
         ],
-        "water_width": 220
+        "water_width": 220,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       }
     ],
     "running": [
       {
         "frame": 0,
         "water_bbox": [
-          208,
+          170,
           777,
-          428,
+          390,
           995
         ],
-        "water_width": 220
+        "water_width": 220,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       },
       {
         "frame": 1,
         "water_bbox": [
-          211,
+          173,
           778,
-          426,
+          388,
           1003
         ],
-        "water_width": 215
+        "water_width": 215,
+        "water_center_x": 280.5,
+        "center_delta_from_outlet_px": 0.5
       },
       {
         "frame": 2,
         "water_bbox": [
-          205,
+          167,
           776,
-          431,
+          393,
           984
         ],
-        "water_width": 226
+        "water_width": 226,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       },
       {
         "frame": 3,
         "water_bbox": [
-          209,
+          171,
           778,
-          426,
+          388,
           1012
         ],
-        "water_width": 217
+        "water_width": 217,
+        "water_center_x": 279.5,
+        "center_delta_from_outlet_px": -0.5
       },
       {
         "frame": 4,
         "water_bbox": [
-          207,
+          169,
           776,
-          430,
+          392,
           996
         ],
-        "water_width": 223
+        "water_width": 223,
+        "water_center_x": 280.5,
+        "center_delta_from_outlet_px": 0.5
       },
       {
         "frame": 5,
         "water_bbox": [
-          212,
+          174,
           779,
-          424,
+          386,
           998
         ],
-        "water_width": 212
+        "water_width": 212,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       }
     ],
     "closing": [
       {
         "frame": 0,
         "water_bbox": [
-          208,
+          170,
           777,
-          428,
+          390,
           995
         ],
-        "water_width": 220
+        "water_width": 220,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       },
       {
         "frame": 1,
         "water_bbox": [
-          224,
-          784,
-          412,
+          186,
+          785,
+          374,
           964
         ],
-        "water_width": 188
+        "water_width": 188,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       },
       {
         "frame": 2,
         "water_bbox": [
-          243,
+          205,
           790,
-          392,
+          354,
           933
         ],
-        "water_width": 149
+        "water_width": 149,
+        "water_center_x": 279.5,
+        "center_delta_from_outlet_px": -0.5
       },
       {
         "frame": 3,
         "water_bbox": [
-          263,
+          225,
           795,
-          374,
+          336,
           904
         ],
-        "water_width": 111
+        "water_width": 111,
+        "water_center_x": 280.5,
+        "center_delta_from_outlet_px": 0.5
       },
       {
         "frame": 4,
         "water_bbox": [
-          282,
+          244,
           798,
-          354,
+          316,
           867
         ],
-        "water_width": 72
+        "water_width": 72,
+        "water_center_x": 280.0,
+        "center_delta_from_outlet_px": 0.0
       },
       {
         "frame": 5,
         "water_bbox": null,
-        "water_width": null
+        "water_width": null,
+        "water_center_x": null,
+        "center_delta_from_outlet_px": null
       }
     ],
     "closed": [
       {
         "frame": 0,
         "water_bbox": null,
-        "water_width": null
+        "water_width": null,
+        "water_center_x": null,
+        "center_delta_from_outlet_px": null
       }
     ],
     "off": [
       {
         "frame": 0,
         "water_bbox": null,
-        "water_width": null
+        "water_width": null,
+        "water_center_x": null,
+        "center_delta_from_outlet_px": null
       }
     ]
   }
