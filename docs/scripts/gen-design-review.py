@@ -474,15 +474,20 @@ AFTER_DIR_008 = "docs/assets/008-audio-review/after"
 CLIPS_008 = [
     {"id": "apple", "kind": "秘密词", "text": "apple",
      "before": "app/web/audio/words/apple.m4a"},
-    {"id": "banana", "kind": "秘密词", "text": "banana",
-     "before": "app/web/audio/words/banana.m4a"},
+    {"id": "banana", "kind": "秘密词（返工·6 候选待 Ethan 挑美式发音）", "text": "banana",
+     "before": "app/web/audio/words/banana.m4a",
+     "after_alts": ["banana.alt2.m4a", "banana.alt3.m4a", "banana.alt4.m4a", "banana.alt5.m4a", "banana.alt6.m4a"],
+     "after_alts_note": "banana 返工：Ethan 要美式发音。上方 AFTER = 候选 #1（清晰度最高）；下面 5 个不同参考/种子，"
+                        "发音风格略不同。请 Ethan 挑最美式的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2~#6），TL 即定为正式版。"},
     {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
      "before": "app/web/audio/words/yoyo.m4a"},
     {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
      "before": "app/web/audio/tasks/click-faucet-on.m4a"},
     {"id": "press-m.zh", "kind": "中文任务（第三版·4 候选待 Ethan 挑）", "text": "按下字母 M！",
      "before": "app/web/audio/tasks/press-m.zh.m4a",
-     "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"]},
+     "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"],
+     "after_alts_note": "press-m.zh 第三版返工：上方 AFTER = TL 按清晰度选的候选 #1（~2.1s 适中语速，避前两版 1.28s 太赶 / "
+                        "3.2s 拖沓）；下面 3 个内容相同、音色略不同。请 Ethan 挑最干净的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2~#4）。"},
     {"id": "fox", "kind": "秘密词（WTJ-20260706-015 新词）", "text": "fox",
      "before_missing": True},
 ]
@@ -539,9 +544,9 @@ def render_008_audio_fix_section() -> str:
                 for i, a in enumerate(c["after_alts"])
             )
             alts_block = (
-                '<p class="ab-q"><strong>press-m.zh 第三版返工：上方 AFTER 是 TL 按清晰度（whisper 置信度）选的候选 #1'
-                '（~2.1s 适中语速，避开前两版 1.28s 太赶 / 3.2s 拖沓）；下面 3 个内容相同、音色略不同。'
-                '请 Ethan 挑最干净的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2 / #3 / #4），TL 即定为正式版。</strong></p>'
+                '<p class="ab-q"><strong>' + esc(c.get("after_alts_note",
+                    "返工多候选：上方 AFTER = 候选 #1（TL 按清晰度选）；下面是其余候选，内容相同、音色/参数不同。"
+                    "请 Ethan 挑最合适的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2 起往下），TL 即定为正式版。")) + '</strong></p>'
                 '<div class="ab-cols">' + alt_ctrls + '</div>'
             )
         items.append(
