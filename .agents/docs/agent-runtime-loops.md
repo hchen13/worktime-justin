@@ -74,13 +74,14 @@ A nonterminal card assigned to a role is an intake obligation on that role's nex
 
 If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
 
-When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment.
+When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment. TL, DESIGN, and QA must never set `负责人 = Ethan` or `阻塞负责人 = Ethan`; if they do, the card is misrouted and PM must correct it before normal loop work continues.
 
 Ethan feedback and validation gates:
 
 - If Ethan has already approved or rejected something, the role must treat that as a decision recorded by PM, not as something to reconfirm in chat.
 - If the card still truly needs Ethan to listen, inspect, or decide, the current owner/blocker must be Ethan, or PM while PM prepares the exact artifact and question. A TL/DESIGN/QA-owned `todo`, `review`, or `blocking` card must not wait on Ethan.
 - If a role sees a card assigned to itself but believes the next action is actually Ethan validation, it must route the mismatch to PM with the exact field text that is wrong. It must not stop idle without updating the card.
+- Only PM may convert that PM-routed mismatch into an Ethan blocker. Non-PM roles may recommend stakeholder confirmation, but they may not assign it to Ethan themselves.
 
 ### 3.1 Tool Call Hygiene
 
@@ -213,7 +214,7 @@ Loop accountability:
 
 - A role loop that sees a `todo`, `review`, or `blocking` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card before stopping.
 - A role loop that previously scheduled a wakeup must still obey the latest board on wake. The wakeup text is a reminder, not a source of truth.
-- A role loop must not claim that Ethan needs to decide unless the card is routed to PM/Ethan as a blocker with the exact question and validation path. If the card owner is the role, the default assumption is that the role must act.
+- A role loop must not claim that Ethan needs to decide unless the card is routed to PM with the exact question and validation path, or PM has already routed it onward to Ethan. If the card owner is the role, the default assumption is that the role must act. Non-PM roles may not route directly to Ethan.
 
 ## 7. Stop Conditions
 

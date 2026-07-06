@@ -85,6 +85,7 @@ Rules:
 - PM creates official task cards, assigns owners, and ensures each official card has a `编号`.
 - Non-PM roles do not directly assign follow-up work to other roles.
 - Non-PM roles may propose new work through the current card's `最新进展`, `下一步动作`, `产物/证据`, and Feishu comments.
+- Non-PM roles must not assign `负责人` or `阻塞负责人` directly to Ethan/stakeholder. If TL, DESIGN, or QA believes work cannot continue without stakeholder confirmation, they route the card to PM with the exact question and evidence. PM alone decides whether to ask Ethan.
 - If a non-PM role must create a traceability card because the work would otherwise be lost, it must be created as a proposal only: `状态 = backlog`, `负责人 = PM`, and `下一步动作` must ask PM to triage it.
 - PM decides whether a proposed card becomes real work, is merged into an existing card, is blocked for Ethan clarification, or is moved to `_deprecated`.
 
@@ -454,6 +455,8 @@ Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agen
 Use `blocking` only when progress genuinely requires another role or Ethan.
 
 Non-PM roles do not assign blockers directly to Ethan, TL, DESIGN, or QA. When TL, DESIGN, or QA cannot continue, they set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact blocker. PM owns triage and may then reassign the blocker to Ethan or another role.
+
+Only PM may assign a blocker to Ethan/stakeholder. A non-PM card update that sets `负责人 = Ethan`, `阻塞负责人 = Ethan`, or equivalent stakeholder ownership is invalid routing even if the underlying question is legitimate. PM must correct the owner back to PM or write the validated Ethan blocker personally.
 
 Stakeholder blocker rules:
 
