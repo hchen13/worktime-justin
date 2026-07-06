@@ -268,11 +268,13 @@ Every role starts by checking cards where `负责人` is that role, across all a
 
 Minimum handling rules:
 
-- `todo`: accept the card by moving it to `in progress`, or return/block it with a concrete reason.
+- `todo`: the assigned `负责人` must accept the card on that role's next loop by moving it to `in progress` and writing the concrete executor, or return/block it with a concrete reason. A card may not sit in `todo` across repeated owner loops with no claim or written refusal.
 - `in progress`: keep `最新进展` and `下一步动作` current.
 - `review`: PM must accept, reject with required changes, route to QA, route to another role, block, or deprecate.
 - `testing`: QA owns execution and result reporting.
-- `blocking`: the named `阻塞负责人` owns the next answer or decision.
+- `blocking`: the named `负责人` or `阻塞负责人` owns unblocking. The owner must either do the named unblock action, route a precise blocker back to PM, or convert the card back to `todo`/`review` when it is no longer truly blocked. `blocking` is not a waiting room for vague dependency notes.
+
+Current board fields are authoritative. Session chat, older wakeup prompts, and previous local scans are only hints. If a card says the current role should act and also says not to wait for Ethan or another role, the current role must act and must not rely on an obsolete wakeup prompt to defer work.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
 

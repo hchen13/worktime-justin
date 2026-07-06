@@ -61,6 +61,15 @@ Do not process multiple cards in parallel inside one role session unless the rol
 
 Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
 
+Fresh board fields override any older wakeup prompt or session memory. If a scheduled wakeup says to wait for Ethan, PM, or another card, but the current Feishu card says `do not wait`, gives a concrete next action, or assigns the current role as `负责人`/`阻塞负责人`, the role must follow the card and record that it ignored the stale wakeup instruction. A role must never keep waiting because an older wakeup prompt encoded an obsolete blocker.
+
+A nonterminal card assigned to a role is an intake obligation on that role's next loop:
+
+- `todo` with `负责人 = <role>` means that role must claim it in the next loop by moving it to `in progress` and writing the concrete executor, or immediately return/block it with a specific reason.
+- `blocking` with `负责人 = <role>` or `阻塞负责人 = <role>` means that role owns unblocking. It must either remove the blocker by doing the named action, route a precise blocker back to PM, or explain why the blocker is impossible to resolve.
+- `review` with `负责人 = TL` is TL-owned correction work and must be processed before ordinary `todo`.
+- `in progress` with `负责人 = <role>` is valid only while the named executor in `最新进展` is actually working or expected to continue. If PM observes that no such session is active, PM must route takeover or downgrade the card to `todo` instead of leaving a fake active state.
+
 If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
 
 When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment.
@@ -187,6 +196,11 @@ QA loop:
 - returns test result cards to PM review
 - before answering any "why is this not moving" or card-ownership question, re-read the board live and quote the current `状态` and `负责人`
 - during an active sprint with nonterminal development cards, an idle QA loop should wake again within 10 minutes; use longer idle delays only when the whole board is quiet or PM has explicitly paused QA work
+
+Loop accountability:
+
+- A role loop that sees a `todo`, `review`, or `blocking` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card before stopping.
+- A role loop that previously scheduled a wakeup must still obey the latest board on wake. The wakeup text is a reminder, not a source of truth.
 
 ## 7. Stop Conditions
 
