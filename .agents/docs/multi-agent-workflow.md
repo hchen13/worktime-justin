@@ -98,6 +98,15 @@ When TL, DESIGN, or QA finishes assigned work, they hand it back to PM:
 
 PM then decides the next state and owner.
 
+Stakeholder feedback routing:
+
+- PM must classify every Ethan feedback item before routing it. Clear approval is acceptance or forward movement. Clear rejection is not a question; PM converts it into executable defects, expected behavior, exact artifact paths, and acceptance checks for TL, DESIGN, or QA.
+- Only a true unanswered product decision may wait on Ethan. In that case, set `状态 = blocking`, `负责人 = Ethan`, `阻塞负责人 = Ethan`, and write the exact question, exact validation path or artifact, and what answer unblocks the card.
+- If PM still needs to prepare the artifact, comparison, or question before Ethan can answer, the temporary owner is PM, not TL/DESIGN/QA. Once the question has been sent and the only remaining action is Ethan's answer, ownership moves to Ethan.
+- A card owned by TL, DESIGN, or QA must not say "wait for Ethan", "ask Ethan to confirm", "need user validation", or equivalent language in `下一步动作`, `阻塞问题`, or `最新进展`. That is a no-stale violation. PM must either route a real Ethan blocker to Ethan or remove the wait and write the concrete role action.
+- If Ethan has already rejected a result, PM must not create a before/after or quality-confirmation loop for the same bad result. The next card state is role rework unless PM needs a new, narrower stakeholder decision.
+- Quality validation requests must be self-contained. For audio, video, animation, sprite, or visual judgment, the card must name the local review entry point, the file list or section IDs, what should be listened to or inspected, what comparison is expected, and the exact answer needed.
+
 ## 4.1 Stage Integration Branch
 
 `stage` is Ethan's runnable integration-acceptance branch. Ethan should be able to run one build from `stage` and see the combined state of all PM-accepted feature work that has not yet been promoted to `main`.
@@ -257,6 +266,8 @@ Additional rules:
 - An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
 - For implementation cards, branch hygiene is a handoff gate. When TL moves work to `review`, `分支` and `产物/证据` must include the final branch, final commit, verification evidence, known risks, and the recommended PM route.
 - For documentation-preview, visual-review, or design-gallery handoffs, `产物/证据` and `下一步动作` must name the exact reviewer-openable entry point for the review target. A feature-branch or worktree path may be used only for PM preliminary review. Ethan-facing validation must use `/Users/claire/Documents/worktime-justin` on `stage` or a package/docs preview built from that directory; TL must first complete `stage` integration, update or verify the shared directory, and name the `stage` commit/package. Branch-only or auxiliary-worktree content must not be described as visible to Ethan.
+- Stakeholder-wait language is forbidden on cards owned by TL, DESIGN, or QA. If a card says the next action is for Ethan to listen, inspect, decide, confirm, or answer, then the owner/blocker must be Ethan, or PM while PM prepares the exact validation package. Otherwise PM must convert the feedback into concrete role work.
+- If Ethan has already given a concrete rejection, the card must name that rejection as a defect and route rework. Do not leave the card as `todo/TL` or `blocking/TL` with a hidden assumption that Ethan still needs to validate the rejected output.
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
 - A blocked card cannot be used as storage for vague uncertainty. If the next step is obvious, assign it and move the card back to `todo` or `in progress`.
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
@@ -275,6 +286,8 @@ Minimum handling rules:
 - `blocking`: the named `负责人` or `阻塞负责人` owns unblocking. The owner must either do the named unblock action, route a precise blocker back to PM, or convert the card back to `todo`/`review` when it is no longer truly blocked. `blocking` is not a waiting room for vague dependency notes.
 
 Current board fields are authoritative. Session chat, older wakeup prompts, and previous local scans are only hints. If a card says the current role should act and also says not to wait for Ethan or another role, the current role must act and must not rely on an obsolete wakeup prompt to defer work.
+
+If a role-owned card remains in `todo`, `review`, or `blocking` for one full owner loop with no claim, no refusal, and no precise blocker written back to the card, PM treats that as a role-loop failure. PM must record the observed failure, route a takeover or restart, and stop pretending the card is merely waiting normally.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
 
@@ -344,6 +357,7 @@ PM responsibilities:
 9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
 10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
 11. Keep `stage` current by routing PM-accepted runtime/docs-preview work to TL for integration when Ethan should see it in the combined app/docs, or record a concrete integration deferral on the relevant cards.
+12. Stop routine routing when the workflow invariant itself is broken. If PM finds cards parked on role owners while the real next action is Ethan validation, or role loops repeatedly ignore assigned active cards, PM must repair the protocol/routing failure before continuing ordinary PM-loop work.
 
 PM acceptance requires:
 
@@ -440,6 +454,13 @@ Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agen
 Use `blocking` only when progress genuinely requires another role or Ethan.
 
 Non-PM roles do not assign blockers directly to Ethan, TL, DESIGN, or QA. When TL, DESIGN, or QA cannot continue, they set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact blocker. PM owns triage and may then reassign the blocker to Ethan or another role.
+
+Stakeholder blocker rules:
+
+- A true Ethan blocker must have `负责人 = Ethan` and `阻塞负责人 = Ethan`, unless PM is still preparing the exact question/artifact. Do not keep the card assigned to TL, DESIGN, or QA while the next physical action belongs to Ethan.
+- The blocker must say where Ethan validates it, what he should decide, and what exact answer moves the card forward. "Quality confirmation", "listen and decide", or "see above" is not precise enough.
+- If Ethan's response is already a rejection, the blocker is resolved. PM records the rejection and routes concrete rework to the responsible role.
+- If a role says it cannot act because Ethan has not confirmed something, PM must decide whether that is a real stakeholder decision. If not, PM writes the decision and routes the role action; if yes, PM assigns the blocker to Ethan with a self-contained validation request.
 
 Blocking card requirements:
 
