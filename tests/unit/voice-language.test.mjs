@@ -61,21 +61,21 @@ function makeSandbox(opts) {
 //    的 taskVoice(8)/taskVoiceZh(24) 两段、磁盘 app/web/audio/tasks/ 现存文件一致）。
 // =====================================================================================
 
-test('1. 默认模式为 zh；getAvailability() 如实反映 zh 24/24 完整、en 8/24 不完整', function () {
+test('1. 默认模式为 zh；getAvailability() 如实反映 zh 32/32 完整、en 8/32 不完整（WTJ-20260705-024 交付 8 条新中文任务后）', function () {
   var env = makeSandbox();
   assert.equal(env.api.getMode(), 'zh', '未持久化过选择时默认模式应为 zh（与 manifest.js 当前 voicePrompt 默认值一致）');
 
   var avail = env.api.getAvailability();
-  assert.equal(avail.zh.totalCount, 24);
-  assert.equal(avail.zh.deliveredCount, 24);
+  assert.equal(avail.zh.totalCount, 32);
+  assert.equal(avail.zh.deliveredCount, 32);
   assert.equal(avail.zh.complete, true);
   assert.equal(avail.zh.missingIds.length, 0);
 
-  assert.equal(avail.en.totalCount, 24);
+  assert.equal(avail.en.totalCount, 32);
   assert.equal(avail.en.deliveredCount, 8);
   assert.equal(avail.en.complete, false);
-  assert.equal(avail.en.missingIds.length, 16);
-  console.log('PASS 1: 默认 zh，可用性快照 zh=24/24（完整）/ en=8/24（不完整）与磁盘现状一致。');
+  assert.equal(avail.en.missingIds.length, 24);
+  console.log('PASS 1: 默认 zh，可用性快照 zh=32/32（完整）/ en=8/32（不完整）与磁盘现状一致。');
 });
 
 // =====================================================================================
@@ -89,7 +89,7 @@ test('2. setMode("en") 素材不全 -> {ok:false, reason:"incomplete-assets"}，
   assert.equal(result.reason, 'incomplete-assets');
   assert.equal(env.api.getMode(), 'zh', 'setMode 失败不应改变当前生效模式');
   assert.ok(env.warnCalls.length > 0, '拒绝切换时应至少 warnOnce 一次可诊断文案');
-  console.log('PASS 2: setMode("en") 在 8/24 不完整时被拒绝，模式仍为 zh，未静默切换。');
+  console.log('PASS 2: setMode("en") 在 8/32 不完整时被拒绝，模式仍为 zh，未静默切换。');
 });
 
 test('2b. setMode("zh") 素材完整 -> {ok:true}；setMode("auto") 恒可选 -> {ok:true}', function () {
@@ -262,7 +262,7 @@ test('8. 假想英文全量交付场景：setMode("en") 放行、getEffectiveLan
 // 9. 静态清单与磁盘现状 / manifest.js 一致性核对（防漂移）
 // =====================================================================================
 
-test('9a. ALL_TASK_IDS 恰好 24 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致', function () {
+test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致（024 交付 8 条新中文任务后）', function () {
   var env = makeSandbox();
   var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
   var manifestSandbox = {};
@@ -298,7 +298,7 @@ test('9a. ALL_TASK_IDS 恰好 24 条，与 manifest.js 四类模板 example 的 
   });
 
   var allTaskIds = env.api.getAllTaskIds();
-  assert.equal(allTaskIds.length, 24);
+  assert.equal(allTaskIds.length, 32);
   // JSON.stringify 比较（而非 assert.deepEqual/deepStrictEqual 直接比较数组）：allTaskIds 是
   // vm 沙箱（另一个 realm）里创建的数组，其 Array.prototype 与本文件主 realm 的 Array.prototype
   // 不是同一个对象——assert/strict 的 deepEqual 是 deepStrictEqual 的别名，会因"同构但不同
@@ -306,14 +306,14 @@ test('9a. ALL_TASK_IDS 恰好 24 条，与 manifest.js 四类模板 example 的 
   // 数组内容逐项相同。两侧数组元素都是原始字符串（无跨 realm 引用问题），序列化成字符串比较
   // 可以安全绕开这个陷阱。
   assert.equal(JSON.stringify(allTaskIds.slice().sort()), JSON.stringify(stemIds.slice().sort()),
-    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 24 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
-  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 24 条 example 的 voicePrompt 文件 stem 集合完全一致。');
+    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
+  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致。');
 });
 
-test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（24/24）', function () {
+test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（32/32）', function () {
   var env = makeSandbox();
   var zhIds = env.api.getZhAvailableTaskIds();
-  assert.equal(zhIds.length, 24);
+  assert.equal(zhIds.length, 32);
   zhIds.forEach(function (id) {
     var p = path.join(APP_WEB, 'audio/tasks/' + id + '.zh.m4a');
     assert.equal(existsSync(p), true, id + '.zh.m4a 应在磁盘上真实存在');

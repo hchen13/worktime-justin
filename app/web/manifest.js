@@ -469,7 +469,8 @@
               // 文案"把鸡蛋放进鸟窝里！"已登记到 app/scripts/tts-text-manifest.zh.json 供
               // 024/084 后续生成，生成后把这里改成 'audio/tasks/drag-egg-to-nest.zh.m4a' 即可，
               // 不需要改任何代码。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-egg-to-nest.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/duck.png'], // 鸟窝旁边一只装饰性的鸭子，不影响判定。
@@ -479,8 +480,8 @@
               id: 'drag-flower-to-vase',
               objectSprite: 'sprites/flower.png',
               targetSprite: 'sprites/vase.png',
-              // 待 024/084 交付，拟定文案"把花朵放进花瓶里！"，同上不静默复用他句。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-flower-to-vase.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/leaf.png'],
@@ -494,8 +495,8 @@
               // sprite 被多个不同 example 复用（如 apple 既是 find-the-apple 的 target 又是
               // drag-apple-to-basket 的物体）同一工程取舍，不是重复渲染 bug。
               targetSprite: 'sprites/basket.png',
-              // 待 024/084 交付，拟定文案"把橙子放进篮子里！"。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-orange-to-basket.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/lemon.png', 'sprites/pear.png'],
@@ -505,8 +506,8 @@
               id: 'drag-fish-to-net',
               objectSprite: 'sprites/fish.png',
               targetSprite: 'sprites/net.png',
-              // 待 024/084 交付，拟定文案"把小鱼放进网里！"。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-fish-to-net.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/frog.png'],
@@ -516,8 +517,8 @@
               id: 'drag-jam-to-jar',
               objectSprite: 'sprites/jam.png',
               targetSprite: 'sprites/jar.png',
-              // 待 024/084 交付，拟定文案"把果酱放进罐子里！"。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-jam-to-jar.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/spoon.png'],
@@ -530,8 +531,8 @@
               // 用图）——这里只是复用同一份已交付素材渲染一个静态放置目标，不影响/不触发宝箱
               // 开箱逻辑本身（两处引用互相独立，见 task-templates.js resolveSpritePath()）。
               targetSprite: 'sprites/treasure-chest.png',
-              // 待 024/084 交付，拟定文案"把宝藏放进宝箱里！"。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/drag-treasure-to-chest.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               successAnimation: 'bounce-in',
               distractorSprites: ['sprites/key.png'],
@@ -607,9 +608,8 @@
               id: 'click-door-open',
               targetSprite: 'sprites/door.png',
               targetSpriteActive: 'sprites/door.png', // 与 lamp/faucet/horse 同一"分态未到位，同图 + data-anim-state 区分视觉"约定
-              // 待 024/084 交付，拟定文案"打开门！"——留空而非复用其他任务的语音，理由见
-              // drag.schema.learningWord 上方 WTJ-20260705-025 no-silent-fallback 说明。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/click-door-open.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'door' // 命中 secretWords.pool 的 'door' 词条（D 组，已交付）。
             },
@@ -617,8 +617,8 @@
               id: 'click-doorbell-ring',
               targetSprite: 'sprites/bell.png',
               targetSpriteActive: 'sprites/bell.png',
-              // 待 024/084 交付，拟定文案"按一下门铃！"。
-              voicePrompt: '',
+              // WTJ-20260705-024：CosyVoice3 + Ethan 自录音色已交付本条中文语音（见 audio/TTS-PROVENANCE.md）。
+              voicePrompt: 'audio/tasks/click-doorbell-ring.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'bell' // 命中 secretWords.pool 的 'bell' 词条（B 组，已交付）。
             }

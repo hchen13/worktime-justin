@@ -1571,72 +1571,72 @@
       "textZh": "把鸡蛋放进鸟窝里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-egg-to-nest.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增（drag 池扩容，Ethan 反馈原 2 条 drag example 太重复）。文案草稿见 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落，待 024/084 排期生成。app/web/manifest.js 对应 example 的 voicePrompt 现为空字符串 ''（no-silent-fallback：不静默复用其他任务语音），生成后把 voicePrompt 改成本条 voicePromptPath 即可，无需改代码。"
+      "status": "delivered",
+      "durationSec": 3.2,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "drag-flower-to-vase",
       "textZh": "把花朵放进花瓶里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-flower-to-vase.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增，同上说明。"
+      "status": "delivered",
+      "durationSec": 2.16,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "drag-orange-to-basket",
       "textZh": "把橙子放进篮子里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-orange-to-basket.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增，同上说明。"
+      "status": "delivered",
+      "durationSec": 2.6,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "drag-fish-to-net",
       "textZh": "把小鱼放进网里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-fish-to-net.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增，同上说明。"
+      "status": "delivered",
+      "durationSec": 3.28,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "drag-jam-to-jar",
       "textZh": "把果酱放进罐子里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-jam-to-jar.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增，同上说明。"
+      "status": "delivered",
+      "durationSec": 2.92,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "drag-treasure-to-chest",
       "textZh": "把宝藏放进宝箱里！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/drag-treasure-to-chest.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增，同上说明。"
+      "status": "delivered",
+      "durationSec": 2.84,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "click-door-open",
       "textZh": "打开门！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/click-door-open.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增（接入 door 点击任务，素材 sprites/door.png 早已随 Pack A/WTJ-20260704-005 交付，此前无 manifest example 引用）。文案草稿见 tts-text-manifest.zh.json 的 tasksPending 段落，待 024/084 排期生成。voicePrompt 现为空字符串 ''，no-silent-fallback，理由同上。"
+      "status": "delivered",
+      "durationSec": 0.92,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     },
     {
       "taskId": "click-doorbell-ring",
       "textZh": "按一下门铃！",
       "phonemes": null,
       "voicePromptPath": "audio/tasks/click-doorbell-ring.zh.m4a",
-      "status": "not-delivered",
-      "durationSec": null,
-      "note": "WTJ-20260705-025 新增（接入 doorbell 点击任务，素材 sprites/bell.png 早已随 Pack A/WTJ-20260704-005 交付，此前无 manifest example 引用）。同上说明。"
+      "status": "delivered",
+      "durationSec": 2.2,
+      "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
     }
   ],
   "compositePhrases": [

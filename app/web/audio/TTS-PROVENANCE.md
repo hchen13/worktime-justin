@@ -1,5 +1,26 @@
 # TTS 音频包 provenance（WTJ-20260704-074 EN + WTJ-20260704-084 ZH）
 
+> ## ⚑ 当前路线（WTJ-20260705-024，2026-07-06 全量重生成，取代下方 Kokoro 历史）
+>
+> Ethan 拒绝 Kokoro 音色后选定 **CosyVoice 3 + 他本人自录参考声**。本目录下全部
+> `audio/words/`、`audio/tasks/`（EN + `.zh`）、`audio/phrases/` 的 `.m4a` 已用 CosyVoice 3
+> zero-shot **全量重生成**，克隆 Ethan 自录音（自我授权、个人非商用，最干净的音色来源）。
+>
+> | 项 | 值 |
+> |---|---|
+> | TTS 模型 | **CosyVoice 3**（`Fun-CosyVoice3-0.5B-2512`，FunAudioLLM），**Apache-2.0**（代码+权重） |
+> | 音色 voice | **Ethan 自录参考声** zero-shot 克隆（`dist-stage/024-cosyvoice3-reference/`，自录·自我授权·不入库；个人非商用自用） |
+> | 参考声-目标长度匹配 | EN 词→`words.wav`；EN 任务/组合→`en.wav`；ZH 任务(24+8 新)→`zh.wav`；每条参考先裁静音成干净 prompt_wav |
+> | 确定性 | `set_all_random_seed(42)`（CosyVoice 采样本随机，固定 seed 复现） |
+> | 生成脚本 | `app/scripts/generate-tts-cosyvoice3.py`（复用 074/084 文本源 + loudnorm→alimiter→AAC 母带链，仅换模型/音色） |
+> | 母带链/格式 | **不变**：`loudnorm I=-16 LUFS` + `alimiter limit=0.794:level=false` → 24 kHz mono AAC 64k `.m4a` |
+> | 覆盖 | ≈151 条：secretWords 101 + EN taskVoice 8 + compositePhrases 10 + ZH task 24 + ZH 新增 8（025 门/铃/drag） |
+> | no-silent-fallback | 每条校验非静音(rms>1e-4)+合理时长后才编码；失败即非零退出，绝不出静音/截断文件 |
+> | 音质主观验收 | TL 不试听；Ethan/QA 在主目录 `docs/design-review.html` 逐条试听把关 |
+>
+> **下方 Kokoro（074/084）内容为历史记录**——其 af_heart/zf_xiaoxiao 产物已被本次 CosyVoice3
+> 全量重生成整体取代（磁盘上的 `.m4a` 现为 CosyVoice3 + Ethan 版本）。
+
 本文件记录 `audio/words/`、`audio/tasks/`、`audio/phrases/` 下预生成语音的来源、模型、
 许可与可复现方式，满足卡片验收标准 4/5。运行时 app 只播放这些预生成 `.m4a`，**不使用
 Chrome/系统内置实时 TTS**（REQ-AST-07 红线）。

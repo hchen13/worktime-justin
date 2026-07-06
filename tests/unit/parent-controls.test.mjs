@@ -395,8 +395,8 @@ test('7c. 选中 auto：setMode 成功，语言提示区展示两种语言的可
 
   assert.equal(sb.VOICE_LANG.getMode(), 'auto');
   var note = findAll(sb.body, function (n) { return n.className === 'wtj-parent-settings-lang-note'; })[0];
-  assert.ok(note.textContent.indexOf('24/24') !== -1, '应展示中文 24/24 完整的计数');
-  assert.ok(note.textContent.indexOf('8/24') !== -1, '应展示英文 8/24 不完整的计数');
+  assert.ok(note.textContent.indexOf('32/32') !== -1, '应展示中文 32/32 完整的计数（WTJ-024 交付 8 条新中文任务后）');
+  assert.ok(note.textContent.indexOf('8/32') !== -1, '应展示英文 8/32 不完整的计数');
   console.log('PASS 7c: 选中 auto 成功，语言提示区正确展示两种语言的可用性计数：' + note.textContent);
 });
 
