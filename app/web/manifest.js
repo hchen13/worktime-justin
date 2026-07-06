@@ -1102,7 +1102,23 @@
         ramGB: 4,
         gpu: 'Intel HD5000',
         os: 'macOS Big Sur 11'
-      }
+      },
+      // WTJ-20260706-013：kiosk 儿童 app 是否尊重 OS 的 prefers-reduced-motion（"减弱动态"）
+      // 偏好。默认 false=不尊重，核心学习动画（frame-anim 的 door/faucet/horse/lamp、
+      // letter-motion、keyvisual、reward-fireworks 等）一律照播，不因为 OS 偏好而只画静止的
+      // 首帧/末帧。根因：QA 在旧机（2014 MacBook Air / Big Sur）上确认系统"减弱动态"默认开启
+      // （com.apple.universalaccess reduceMotion=1），这是该系统版本的默认值，并非 Justin
+      // 为这台 kiosk 主动选择的偏好——对一个单一用途、儿童向的学习 kiosk 而言，让核心反馈动画
+      // 因系统默认值而失效是不可接受的（非崩溃非死循环，但等于"核心学习动画不动"）。将来若要
+      // 支持家长在设置面板里主动选择"减弱动态"，把这里改回 true 即可恢复尊重 OS 偏好——四个
+      // 动画模块（frame-anim.js/letter-motion.js/keyvisual.js/reward-fireworks.js）各自的
+      // prefersReducedMotion() 都以此字段为唯一开关（见各文件同名函数顶部的守卫），CSS 侧则由
+      // index.html 内联启动脚本按此字段给 <html> 打 data-wtj-motion-forced 属性、6 份 CSS 的
+      // @media (prefers-reduced-motion: reduce) 规则相应加 html:not([data-wtj-motion-forced])
+      // 门（见 hud.css/parent-controls.css/reward-chest.css/task-templates.css/
+      // status-rewards.css/secretword.css）。diag.js 的 prefersReducedMotionProbe() 不受此
+      // 字段影响，继续如实上报 OS 原始状态供诊断。
+      honorReducedMotion: false
     }
 
   };

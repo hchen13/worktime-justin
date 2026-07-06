@@ -71,8 +71,10 @@
   pointer-events: auto;
 }
 
+/* WTJ-20260706-013：html:not([data-wtj-motion-forced]) 门——kiosk 默认无视 OS 减弱动态，
+   见 hud.css 顶部同名注释与 index.html 内联启动脚本。 */
 @media (prefers-reduced-motion: reduce) {
-  .wtj-parent-lockout {
+  html:not([data-wtj-motion-forced]) .wtj-parent-lockout {
     transition: none;
   }
 }
@@ -125,7 +127,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wtj-parent-settings {
+  html:not([data-wtj-motion-forced]) .wtj-parent-settings {
     transition: none;
   }
 }

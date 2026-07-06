@@ -271,6 +271,13 @@
   // prefers-reduced-motion 检测：与 reward-chest.js/status-rewards.js 同款实现。
   // ---------------------------------------------------------------------
   function prefersReducedMotion() {
+    // WTJ-20260706-013：kiosk 儿童 app 默认无视 OS「减弱动态」偏好，核心学习动画照播——
+    // 旧 Mac（2014 MBA/Big Sur）等机型的系统「减弱动态」常默认开启，且并非 Justin 为这台
+    // kiosk 主动选择的偏好。只有 manifest.js 的 performance.honorReducedMotion 显式为
+    // true（未来家长设置钩子）时才回头尊重 OS matchMedia；缺省/非 true 一律当作"不尊重"。
+    if (!(window.WTJ_MANIFEST && window.WTJ_MANIFEST.performance && window.WTJ_MANIFEST.performance.honorReducedMotion === true)) {
+      return false;
+    }
     try {
       if (typeof window.matchMedia === 'function') {
         var mql = window.matchMedia('(prefers-reduced-motion: reduce)');

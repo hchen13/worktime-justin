@@ -202,9 +202,34 @@ function makeMatchMediaStub(initialReduced) {
   };
 }
 
+// WTJ-20260706-013：真实 manifest.js 默认 performance.honorReducedMotion=false（kiosk 默认无视
+// OS 减弱动态，prefersReducedMotion() 恒 false），要测"honorReducedMotion=true 时委托
+// matchMedia"这条路径，需要在加载完真实 manifest.js 之后把 window.WTJ_MANIFEST 换成一份浅拷贝
+// （覆盖 performance.honorReducedMotion 字段，其余字段原样保留）——frame-anim.js 的
+// prefersReducedMotion() 每次调用都动态读 window.WTJ_MANIFEST（不是加载时缓存的引用），因此在
+// 模块加载完之后再替换这个引用是安全的。
+function applyHonorReducedMotion(fakeWindow, value) {
+  var orig = fakeWindow.WTJ_MANIFEST || {};
+  var origPerf = orig.performance || {};
+  var perf = {};
+  var k;
+  for (k in origPerf) {
+    if (Object.prototype.hasOwnProperty.call(origPerf, k)) { perf[k] = origPerf[k]; }
+  }
+  perf.honorReducedMotion = value;
+  var patched = {};
+  for (k in orig) {
+    if (Object.prototype.hasOwnProperty.call(orig, k)) { patched[k] = orig[k]; }
+  }
+  patched.performance = perf;
+  fakeWindow.WTJ_MANIFEST = patched;
+}
+
 // --- sandbox builder ---------------------------------------------------------------------
 // opts.reducedMotion: true 时 matchMedia('(prefers-reduced-motion: reduce)').matches 恒为 true。
 // opts.includeAnimManifest / includeManifest: false 时不加载对应真实源码（模拟未加载场景）。
+// opts.honorReducedMotion: boolean 时覆盖 window.WTJ_MANIFEST.performance.honorReducedMotion
+// （WTJ-20260706-013 kiosk 默认无视 OS 偏好开关，见 applyHonorReducedMotion()）。
 function createSandbox(opts) {
   opts = opts || {};
   var warnCalls = [];
@@ -242,6 +267,9 @@ function createSandbox(opts) {
   }
   if (opts.includeManifest !== false) {
     vm.runInContext(MANIFEST_SRC, sandbox, { filename: 'manifest.js' });
+  }
+  if (typeof opts.honorReducedMotion === 'boolean') {
+    applyHonorReducedMotion(fakeWindow, opts.honorReducedMotion);
   }
   vm.runInContext(FRAME_ANIM_SRC, sandbox, { filename: 'frame-anim.js' });
 
@@ -373,7 +401,11 @@ test('opts.loop 覆盖 anim-manifest 默认值：faucet.running 源数据 loop=t
 // =============================================================================================
 
 test('reduced-motion + loop（horse.idle）：只画第 0 帧一次，不进入 tick 循环，最终无残留定时器', function () {
-  var env = createSandbox({ reducedMotion: true });
+  // WTJ-20260706-013：kiosk 默认 honorReducedMotion=false 时 prefersReducedMotion() 恒 false
+  // （见下方新增的"默认无视 OS reduce-motion"正向用例）；这条用例要测的是 honorReducedMotion
+  // 显式为 true（家长设置钩子）时仍应尊重 OS matchMedia 命中 reduce 的既有回归行为，因此显式
+  // 传 honorReducedMotion:true。
+  var env = createSandbox({ reducedMotion: true, honorReducedMotion: true });
   var canvas = makeCanvas();
 
   env.FA.play(canvas, 'horse', 'idle');
@@ -392,7 +424,9 @@ test('reduced-motion + loop（horse.idle）：只画第 0 帧一次，不进入 
 });
 
 test('reduced-motion + one-shot（lamp.turning-on）：立即画最后一帧，timing 仍按 getDuration() 正常触发 onComplete', function () {
-  var env = createSandbox({ reducedMotion: true });
+  // WTJ-20260706-013：同上——本用例测的是 honorReducedMotion=true（家长设置钩子）时尊重 OS
+  // matchMedia 的既有回归行为，因此显式打开 honorReducedMotion。
+  var env = createSandbox({ reducedMotion: true, honorReducedMotion: true });
   var canvas = makeCanvas();
   var completeCount = 0;
 
@@ -411,6 +445,46 @@ test('reduced-motion + one-shot（lamp.turning-on）：立即画最后一帧，t
   var fired = env.clock.fireAt(500); // getDuration('lamp','turning-on') = 500ms
   assert.equal(fired, true);
   assert.equal(completeCount, 1, '到达 getDuration() 对应的时间点，onComplete 应该照常触发一次');
+});
+
+// WTJ-20260706-013（本卡核心修复，正向断言）：manifest.performance.honorReducedMotion 缺省/
+// false（真实 manifest.js 的默认值，本用例不传 opts.honorReducedMotion，走真实默认）时，即使
+// OS matchMedia 命中 prefers-reduced-motion: reduce，prefersReducedMotion() 也应恒返回
+// false——horse.idle 应像完全没有 reduced-motion 这回事一样正常推进帧号（不再"只画第 0 帧就
+// 停住"），且 getState().activePlaybacks[].reducedMotion 这个 QA 复验字段应为 false（标志
+// 消失），playback 应持续排队 tick（不是 reduced-motion 分支那种"重试一次画完就清空定时器"）。
+test('reduced-motion 默认（honorReducedMotion 缺省/false）：无视 OS matchMedia reduce=true，horse.idle 正常推进帧号、reducedMotion 标志消失', function () {
+  var env = createSandbox({ reducedMotion: true }); // 未传 honorReducedMotion -> 真实 manifest 默认 false
+  var canvas = makeCanvas();
+
+  env.FA.play(canvas, 'horse', 'idle');
+  env.imgEnv.markReady(env.imgEnv.lastCreated());
+  env.clock.fireAt(16); // 首次 tick：就绪后立即画出（起点仍是第 0 帧，这本身不代表"卡住"）。
+
+  var draw0 = canvas.ctx2d.lastDrawImage();
+  assert.equal(draw0.sx, 0, '起点仍是第 0 帧');
+  assert.equal(
+    env.FA.getState().activePlaybacks[0].reducedMotion,
+    false,
+    'QA 复验关键信号：即使 OS matchMedia 命中 reduce，playback 日志的 reducedMotion 字段也应为 false（标志消失）'
+  );
+
+  // 持续推进 tick，跨过第 1 帧的时间点（fps=6 -> 每帧约 166.67ms），验证帧号真的在推进——
+  // 与上面 reduced-motion（honorReducedMotion:true）用例"永远停在第 0 帧"形成直接对照。
+  var t = 16;
+  var advanced = false;
+  while (t <= 400 && !advanced) {
+    t += 16;
+    env.clock.fireAt(t);
+    if (canvas.ctx2d.lastDrawImage().sx !== 0) {
+      advanced = true;
+    }
+  }
+  assert.ok(advanced, 'kiosk 默认无视 OS reduce-motion：horse.idle 应正常推进帧号，不应该永远停在第 0 帧');
+  assert.ok(
+    env.clock.pendingCount() > 0,
+    '非 reduced-motion 的 loop 播放应持续排队下一次 tick（与 reduced-motion 分支"重试完就清零定时器"形成对照）'
+  );
 });
 
 // =============================================================================================

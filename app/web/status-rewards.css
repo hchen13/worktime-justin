@@ -147,11 +147,13 @@
    .wtj-sr-taskfx-canvas 规则已随之移除（回归护栏见 tests/unit/status-rewards.test.mjs 对应
    用例）。 */
 
+/* WTJ-20260706-013：html:not([data-wtj-motion-forced]) 门——kiosk 默认无视 OS 减弱动态，
+   见 hud.css 顶部同名注释与 index.html 内联启动脚本。 */
 @media (prefers-reduced-motion: reduce) {
   /* WTJ-20260705-010：completion-stamp-v3 在 reduced-motion 下同样冻结为静态完成态
      （不 pop/不缩放/不淡出动效），JS 定时展示/移除窗口不变——直接以静止终态短暂出现
      再被移除，不是"完全不显示"。 */
-  .wtj-sr-stamp {
+  html:not([data-wtj-motion-forced]) .wtj-sr-stamp {
     -webkit-animation: none !important;
     animation: none !important;
     opacity: 1 !important;
@@ -160,7 +162,7 @@
 
   /* WTJ-20260705-008：里程碑奖励叠层在 reduced-motion 下同样冻结为静态完成态（不弹不动），
      JS 定时展示/移除窗口不变（见 status-rewards.js prefersReducedMotion 说明）。 */
-  .wtj-sr-milestone-sticker {
+  html:not([data-wtj-motion-forced]) .wtj-sr-milestone-sticker {
     -webkit-animation: none !important;
     animation: none !important;
     opacity: 1 !important;
