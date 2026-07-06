@@ -25,16 +25,19 @@ IMPORTANT: the warning compares the prompt_text *character length*, not audio du
 So a multi-item `words` clip (transcript ~55 chars) still trips it for a 3-char target
 like "cat"/"tea". For the hardest short targets — cat, tea, and the single letters A / P —
 the only truly length-matched reference is a per-item MICRO-CLIP whose transcript is just
-that one item:  --profile custom --text "Cat." --duration 4 --name cat-ref  (single
-letters A/P are CosyVoice's inherent short-text corner; if the warning still shows at
-regen it is a soft quality note, not a failure — the TL can also synthesize letters via a
-short carrier phrase). The `words`/`letters` profiles still give a good short-utterance
-voice reference for the bulk of short words.
+that one item:  --profile custom --text "Cat." --name cat-ref  (single letters A/P are
+CosyVoice's inherent short-text corner; if the warning still shows at regen it is a soft
+quality note, not a failure — the TL can also synthesize letters via a short carrier
+phrase). The `words`/`letters` profiles still give a good short-utterance voice reference
+for the bulk of short words.
 
 WHAT IT DOES
 ------------
-Prints the exact text Ethan should read, counts down, records from the mic, and writes
-per-clip:  <name>.wav  +  <name>.prompt.txt (the transcript)  +  appends to manifest.json.
+Prints the exact text Ethan should read, starts recording after the first Enter, and stops
+when Ethan presses Enter again. A 30s safety cap stops recording automatically if the second
+Enter is missed. `--duration SEC` is available only when a fixed-length timed take is wanted.
+The script writes per-clip:  <name>.wav  +  <name>.prompt.txt (the transcript)  +  appends
+to manifest.json.
 Recording backend defaults to ffmpeg + AVFoundation (macOS-native, no pip install needed —
 ffmpeg already drives this project's audio pipeline). `--backend sounddevice` is available
 if preferred (needs `pip install sounddevice soundfile`).
@@ -55,7 +58,9 @@ USAGE (see also --help)
   python3 app/scripts/capture-cosyvoice3-reference.py --profile letters     # 单字母
   python3 app/scripts/capture-cosyvoice3-reference.py --profile custom --text "任意要读的内容"
 
-  # options: --device N   --duration SEC   --out-dir DIR   --sample-rate HZ
+  # default: press Enter to start, press Enter again to stop; --max-duration 30 safety cap
+  # options: --device N   --duration SEC(fixed timed mode)   --max-duration SEC
+  #          --out-dir DIR   --sample-rate HZ
   #          --backend {ffmpeg,sounddevice}   --name LABEL
 
 Exit: 0 recorded ok · 1 usage/record error · 2 backend/tooling unavailable.
@@ -65,6 +70,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import select
 import re
 import shutil
 import subprocess
@@ -205,6 +211,23 @@ def _countdown_then_go():
     print("  ▶ 开始朗读！（录音中）\n", flush=True)
 
 
+def _wait_for_enter_or_timeout(max_seconds: int) -> str:
+    """Wait for a second Enter while recording; return 'enter' or 'timeout'."""
+    print(f"朗读完成后按回车结束；若忘记按，{max_seconds}s 后自动停止。", flush=True)
+    if not sys.stdin.isatty():
+        time.sleep(max_seconds)
+        return "timeout"
+    deadline = time.monotonic() + max_seconds
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return "timeout"
+        readable, _, _ = select.select([sys.stdin], [], [], min(remaining, 0.25))
+        if readable:
+            sys.stdin.readline()
+            return "enter"
+
+
 def _mic_permission_hint(err: str, returncode: int) -> str:
     low = (err or "").lower()
     if ("operation not permitted" in low or "denied" in low or returncode < 0
@@ -214,21 +237,29 @@ def _mic_permission_hint(err: str, returncode: int) -> str:
     return ""
 
 
-def record_ffmpeg(out_wav: Path, device: str, duration: int, sample_rate: int):
+def record_ffmpeg(out_wav: Path, device: str, duration: int | None, max_duration: int, sample_rate: int):
     """Start AVFoundation capture FIRST (Popen), run the countdown while it warms up
     (that head is silent lead-in), cue the reader only once truly capturing, then finish.
-    Records LEAD_IN_SEC + duration seconds total."""
-    total = LEAD_IN_SEC + duration
+    If duration is None, stop on the user's second Enter with max_duration as safety cap."""
+    speak_limit = duration if duration is not None else max_duration
+    total = LEAD_IN_SEC + speak_limit
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
            "-f", "avfoundation", "-i", f":{device}",
            "-t", f"{total:.2f}", "-ar", str(sample_rate), "-ac", "1", str(out_wav)]
     try:
-        proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, text=True)
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except FileNotFoundError:
         die("找不到 ffmpeg（brew install ffmpeg）", 2)
     _countdown_then_go()  # ~3s ≈ LEAD_IN_SEC: ffmpeg warms up + records the lead silence
+    stop_input = None
+    if duration is None:
+        stop_reason = _wait_for_enter_or_timeout(max_duration)
+        if stop_reason == "enter":
+            stop_input = "q\n"
+        else:
+            print(f"\n已到 {max_duration}s 兜底上限，自动停止。", flush=True)
     try:
-        _, err = proc.communicate(timeout=total + 20)
+        _, err = proc.communicate(input=stop_input, timeout=total + 20)
     except subprocess.TimeoutExpired:
         proc.kill()
         _, err = proc.communicate()
@@ -238,20 +269,36 @@ def record_ffmpeg(out_wav: Path, device: str, duration: int, sample_rate: int):
             + _mic_permission_hint(err, proc.returncode))
 
 
-def record_sounddevice(out_wav: Path, device, duration: int, sample_rate: int):
+def record_sounddevice(out_wav: Path, device, duration: int | None, max_duration: int, sample_rate: int):
     try:
         import sounddevice as sd
         import soundfile as sf
     except ImportError:
         die("--backend sounddevice 需要 `pip install sounddevice soundfile`", 2)
+    import queue
     import sounddevice as sd
     import soundfile as sf
+    import numpy as np
     dev = int(device) if str(device).isdigit() else None
-    total = LEAD_IN_SEC + duration
-    frames = int(total * sample_rate)
-    audio = sd.rec(frames, samplerate=sample_rate, channels=1, dtype="float32", device=dev)
-    _countdown_then_go()  # sd.rec is already capturing in the background during the count
-    sd.wait()
+    chunks: queue.Queue = queue.Queue()
+
+    def callback(indata, frames, time_info, status):
+        chunks.put(indata.copy())
+
+    with sd.InputStream(samplerate=sample_rate, channels=1, dtype="float32", device=dev, callback=callback):
+        _countdown_then_go()
+        if duration is None:
+            stop_reason = _wait_for_enter_or_timeout(max_duration)
+            if stop_reason == "timeout":
+                print(f"\n已到 {max_duration}s 兜底上限，自动停止。", flush=True)
+        else:
+            time.sleep(duration)
+    audio_chunks = []
+    while not chunks.empty():
+        audio_chunks.append(chunks.get())
+    if not audio_chunks:
+        die("sounddevice 录音未采到音频块")
+    audio = np.concatenate(audio_chunks, axis=0)
     sf.write(str(out_wav), audio, sample_rate, subtype="PCM_16")
     if not out_wav.is_file():
         die("sounddevice 录音未产出文件")
@@ -315,7 +362,10 @@ def main() -> int:
     ap.add_argument("--profile", choices=list(PROFILES.keys()),
                     help="预设朗读脚本（zh/en/mixed/words/letters/custom）")
     ap.add_argument("--text", help="自定义朗读文本（--profile custom 必填；也可覆盖任何 profile 的文本）")
-    ap.add_argument("--duration", type=int, help="录音时长（秒）；不填用 profile 默认")
+    ap.add_argument("--duration", type=int,
+                    help="固定时长录音（秒）；不填则默认按第二次回车结束")
+    ap.add_argument("--max-duration", type=int, default=30,
+                    help="手动结束模式的兜底最长朗读秒数（默认 30；不含约 3s 麦克风预热）")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help=f"输出目录（默认 {DEFAULT_OUT_DIR}）")
     ap.add_argument("--sample-rate", type=int, default=24000, help="采样率 Hz（默认 24000，单声道；CosyVoice 会自行重采样）")
     ap.add_argument("--device", default="0", help="录音设备索引（见 --list-devices；默认 0=第一个枚举到的音频输入，不一定是内建麦克风）")
@@ -337,7 +387,13 @@ def main() -> int:
     prompt_text = args.text if args.text is not None else prof["text"]
     if not prompt_text:
         ap.error("--profile custom 需要同时给 --text \"要读的内容\"")
-    duration = args.duration or prof["duration"]
+    if args.duration is not None and args.duration <= 0:
+        ap.error("--duration 必须大于 0")
+    if args.max_duration <= 0:
+        ap.error("--max-duration 必须大于 0")
+    duration = args.duration
+    suggested_duration = prof["duration"]
+    max_duration = args.max_duration
     lang = prof["lang"] if args.text is None else "custom"
 
     out_dir = Path(args.out_dir).resolve()
@@ -355,12 +411,16 @@ def main() -> int:
     print(f"CosyVoice3 参考声采集 · profile = {args.profile}  （语言：{lang}）")
     print(f"用途：{prof['target_hint']}")
     print("=" * 70)
-    print("\n请清晰、自然、以正常语速朗读下面这段（读完在时长内即可，不必填满）：\n")
+    print("\n请清晰、自然、以正常语速朗读下面这段：\n")
     print("  ┌" + "─" * 66)
     for line in _wrap(prompt_text, 62):
         print("  │  " + line)
     print("  └" + "─" * 66)
-    print(f"\n录音时长：{duration}s   设备：{args.device}   采样率：{args.sample_rate}Hz   后端：{args.backend}")
+    if duration is None:
+        print(f"\n录音方式：回车开始，再按回车结束（兜底上限 {max_duration}s；建议约 {suggested_duration}s 内读完）"
+              f"   设备：{args.device}   采样率：{args.sample_rate}Hz   后端：{args.backend}")
+    else:
+        print(f"\n录音方式：固定 {duration}s   设备：{args.device}   采样率：{args.sample_rate}Hz   后端：{args.backend}")
     print(f"输出：{out_wav.name}")
     if not args.yes:
         try:
@@ -370,13 +430,13 @@ def main() -> int:
             return 1
 
     if args.backend == "sounddevice":
-        record_sounddevice(out_wav, args.device, duration, args.sample_rate)
+        record_sounddevice(out_wav, args.device, duration, max_duration, args.sample_rate)
     else:
         if sys.platform != "darwin":
             die("ffmpeg/AVFoundation 后端仅支持 macOS；非 mac 请用 --backend sounddevice", 2)
         if not have("ffmpeg"):
             die("找不到 ffmpeg（brew install ffmpeg）", 2)
-        record_ffmpeg(out_wav, args.device, duration, args.sample_rate)
+        record_ffmpeg(out_wav, args.device, duration, max_duration, args.sample_rate)
 
     actual = probe_duration(out_wav)
     mean_db = mean_volume_db(out_wav)
@@ -390,7 +450,10 @@ def main() -> int:
         "prompt_text": prompt_text,
         "path": out_wav.name,
         "prompt_txt": f"{label}.prompt.txt",
+        "mode": "fixed_duration" if duration is not None else "manual_enter_stop",
         "requested_duration_sec": duration,
+        "max_duration_sec": max_duration if duration is None else None,
+        "suggested_duration_sec": suggested_duration,
         "actual_duration_sec": actual,
         "sample_rate": args.sample_rate,
         "channels": 1,
@@ -413,7 +476,7 @@ def main() -> int:
     print("\n请回放确认：整段读全了、开头没被切、声音清晰。不满意就重跑同一 profile 覆盖重录。")
     print("建议至少各录一条 zh / en / words / letters（mixed 可选）。")
     print("对最难的短目标（cat / tea / A / P），另各录一条 micro 参考（transcript 只放这一项），例如：")
-    print(f"  python3 {Path(__file__).name} --profile custom --text \"Cat.\" --duration 4 --name cat-ref")
+    print(f"  python3 {Path(__file__).name} --profile custom --text \"Cat.\" --name cat-ref")
     print("录完把目录 dist-stage/024-cosyvoice3-reference/ 告诉 TL（无需自己入库，目录已 .gitignore），"
           "TL 会用它们做 CosyVoice3 全量重生成。")
     return 0
