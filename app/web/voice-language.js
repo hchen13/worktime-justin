@@ -132,7 +132,23 @@
   // 这里是空的，secretword.js 的语言感知分支就恒定判定"这个词的中文不可用"，天然、无条件地
   // 回退到英文，效果与改动前逐字节相同（见 tests/unit/secretword-engine.test.mjs 新增用例
   // 与本文件 10. 号用例）。
-  var ZH_AVAILABLE_WORD = [];
+  var ZH_AVAILABLE_WORD = [
+    'apple', 'ant', 'airplane', 'alligator', 'ball', 'basket',
+    'bell', 'banana', 'cat', 'car', 'cup', 'cake',
+    'dog', 'door', 'duck', 'drum', 'egg', 'elephant',
+    'eye', 'envelope', 'flower', 'frog', 'faucet', 'goat',
+    'grapes', 'gift', 'guitar', 'hat', 'heart', 'house',
+    'icecream', 'igloo', 'insect', 'juice', 'jam', 'jar',
+    'jellyfish', 'key', 'kite', 'koala', 'kettle', 'lamp',
+    'leaf', 'lion', 'lemon', 'moon', 'mouse', 'milk',
+    'monkey', 'nest', 'nose', 'noodle', 'orange', 'owl',
+    'octopus', 'oven', 'pencil', 'pizza', 'queen', 'quilt',
+    'quarter', 'rocket', 'robot', 'rainbow', 'ring', 'star',
+    'sun', 'shoe', 'spoon', 'treasure', 'train', 'turtle',
+    'uniform', 'van', 'vase', 'violin', 'volcano', 'whale',
+    'watch', 'window', 'wagon', 'fox', 'yoyo', 'yarn',
+    'zebra'
+  ];
 
   var ZH_AVAILABLE_WORD_SET = idSetFrom(ZH_AVAILABLE_WORD);
 

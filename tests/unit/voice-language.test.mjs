@@ -338,7 +338,8 @@ test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件
 });
 
 // =====================================================================================
-// 10. 秘密词（words）语言可用性台账——WTJ-20260706-011（ZH 秘密词二期脚手架，dormant）
+// 10. 秘密词（words）语言可用性台账——WTJ-20260706-011（ZH 秘密词二期：85/100 已交付，
+//     15 条仍 not-delivered，见 app/web/audio/missing-audio.json secretWordsZh[]）
 // =====================================================================================
 
 test('10a. getAllWordIds() 恰好 100 条，与 app/web/manifest.js secretWords.pool 的 word 字段集合完全一致（顺序也一致）', function () {
@@ -359,40 +360,61 @@ test('10a. getAllWordIds() 恰好 100 条，与 app/web/manifest.js secretWords.
   console.log('PASS 10a: ALL_WORD_IDS 与 manifest.js secretWords.pool 100 词完全一致（顺序 + 内容）。');
 });
 
-test('10b. getZhAvailableWordIds() 当前应为空数组（ZH 秘密词音频尚未生成，本卡不生成任何音频，台账 dormant）', function () {
+// WTJ-20260706-011 交付了 85/100 ZH 秘密词音频（008 ASR-gated CosyVoice3 pipeline）；
+// 剩余 15 词（single-char/超短标签，too-short 不稳）仍 not-delivered，见
+// app/web/audio/missing-audio.json secretWordsZh[] 与本文件顶部大段注释。
+var NOT_DELIVERED_ZH_WORDS = [
+  'fish', 'horse', 'island', 'net', 'pear', 'pig', 'quail', 'treasurechest',
+  'tree', 'ukulele', 'umbrella', 'unicorn', 'yak', 'zipper', 'zucchini'
+];
+
+test('10b. getZhAvailableWordIds() 当前应为 85 条（100 词池减去 15 条仍 not-delivered 的词，见 missing-audio.json secretWordsZh）', function () {
   var env = makeSandbox();
   var zhWordIds = env.api.getZhAvailableWordIds();
+  var allWordIds = env.api.getAllWordIds();
+  var expected = allWordIds.filter(function (w) { return NOT_DELIVERED_ZH_WORDS.indexOf(w) === -1; });
+  assert.equal(zhWordIds.length, 85, 'ZH_AVAILABLE_WORD 台账应为 85 条（WTJ-20260706-011 交付 85/100 ZH 词音）');
+  assert.equal(expected.length, 85, '100 词池减去 15 条 not-delivered 词应恰好剩 85');
   // JSON.stringify 比较：见 9a 注释——vm 沙箱数组与主 realm 数组原型不同，deepEqual 会误判。
-  assert.equal(zhWordIds.length, 0, 'ZH_AVAILABLE_WORD 台账当前必须是空数组——这是 011 切片"零用户可见变化"的核心保证');
-  assert.equal(JSON.stringify(zhWordIds), JSON.stringify([]));
-  console.log('PASS 10b: getZhAvailableWordIds() 当前为空数组，秘密词 ZH 语音全部 not-delivered。');
+  assert.equal(JSON.stringify(zhWordIds.slice().sort()), JSON.stringify(expected.slice().sort()),
+    'ZH_AVAILABLE_WORD 台账必须恰好等于"全部词 - 15 条 not-delivered 词"，否则台账与 missing-audio.json 的交付状态脱节');
+  NOT_DELIVERED_ZH_WORDS.forEach(function (w) {
+    assert.equal(zhWordIds.indexOf(w) === -1, true, w + ' 仍 not-delivered，不应出现在 ZH_AVAILABLE_WORD 台账里');
+  });
+  console.log('PASS 10b: getZhAvailableWordIds() 为 85 条，与 15 条 not-delivered 词互补，秘密词 ZH 语音按真实交付状态登记。');
 });
 
-test('10c. isWordZhAvailable() 对全部 100 个真实词、以及非字符串/非法输入均返回 false（当前台账为空）', function () {
+test('10c. isWordZhAvailable() 对已交付的 85 个词返回 true、对仍 not-delivered 的 15 个词与非法输入均返回 false（与 missing-audio.json secretWordsZh 状态一致）', function () {
   var env = makeSandbox();
   var allWordIds = env.api.getAllWordIds();
   allWordIds.forEach(function (word) {
-    assert.equal(env.api.isWordZhAvailable(word), false, 'isWordZhAvailable("' + word + '") 当前台账为空，应恒返回 false');
+    var expected = NOT_DELIVERED_ZH_WORDS.indexOf(word) === -1;
+    assert.equal(env.api.isWordZhAvailable(word), expected,
+      'isWordZhAvailable("' + word + '") 应为 ' + expected + '（' + (expected ? '已交付' : '仍 not-delivered') + '）');
   });
   assert.equal(env.api.isWordZhAvailable('not-a-real-word'), false, '未登记的陌生词也应返回 false（不是抛错或 undefined）');
   assert.equal(env.api.isWordZhAvailable(null), false, 'null 入参安全返回 false，不抛错');
   assert.equal(env.api.isWordZhAvailable(undefined), false, 'undefined 入参安全返回 false，不抛错');
   assert.equal(env.api.isWordZhAvailable(123), false, '非字符串入参安全返回 false，不抛错');
-  console.log('PASS 10c: isWordZhAvailable() 对全部真实词与各类非法输入均安全返回 false（当前台账为空）。');
+  console.log('PASS 10c: isWordZhAvailable() 对 85 个已交付词返回 true、15 个 not-delivered 词与各类非法输入均返回 false。');
 });
 
-test('10d. 假想未来场景：把某个词临时补进 ZH_AVAILABLE_WORD 后，isWordZhAvailable() 应正确识别该词、且不影响其它词', function () {
+test('10d. 假想未来场景：把当前仍 not-delivered 的一个词（net）临时补进 ZH_AVAILABLE_WORD 后，isWordZhAvailable() 应正确识别该词新交付、且不影响已交付/仍缺口的其它词', function () {
   // 与 8. 号用例同一手法：只在内存字符串上替换，不触碰磁盘上的真实 voice-language.js。
+  // WTJ-20260706-011 交付后 ZH_AVAILABLE_WORD 已是 85 项的真实数组（不再是空数组字面量），
+  // 用捕获组把 'net'（当前 15 条 not-delivered 之一）追加进数组末尾，模拟"下一批补齐 net"。
   var patched = VOICE_LANG_SRC.replace(
-    /var ZH_AVAILABLE_WORD = \[\];/,
-    "var ZH_AVAILABLE_WORD = ['apple'];"
+    /var ZH_AVAILABLE_WORD = \[([\s\S]*?)\];/,
+    function (match, inner) {
+      return "var ZH_AVAILABLE_WORD = [" + inner + ", 'net'];";
+    }
   );
   assert.notEqual(patched, VOICE_LANG_SRC, '替换应当命中（否则说明源码结构变了，这条测试需要同步更新正则）');
 
   var env = makeSandbox({ sourceOverride: patched });
-  assert.equal(env.api.isWordZhAvailable('apple'), true, '假想补齐后，台账里的词应正确识别为已交付');
-  assert.equal(env.api.isWordZhAvailable('dog'), false, '未补齐的其它词应仍不受影响，继续判定为未交付');
-  // JSON.stringify 比较：见 9a 注释——vm 沙箱数组与主 realm 数组原型不同，deepEqual 会误判。
-  assert.equal(JSON.stringify(env.api.getZhAvailableWordIds()), JSON.stringify(['apple']));
-  console.log('PASS 10d: 假想台账补齐单个词后，isWordZhAvailable() 正确区分"已交付"与"未交付"，互不干扰。');
+  assert.equal(env.api.isWordZhAvailable('net'), true, '假想补齐 net 后，该词应正确识别为已交付');
+  assert.equal(env.api.isWordZhAvailable('apple'), true, '本已交付的词（apple）不受这次假想补齐影响，仍是已交付');
+  assert.equal(env.api.isWordZhAvailable('fish'), false, '其余仍 not-delivered 的词（fish）不受影响，继续判定为未交付');
+  assert.equal(env.api.getZhAvailableWordIds().length, 86, '假想补齐后台账应从 85 条变为 86 条');
+  console.log('PASS 10d: 假想台账补齐一个此前 not-delivered 的词（net）后，isWordZhAvailable() 正确识别新交付、且不影响其它已交付/仍缺口的词。');
 });
