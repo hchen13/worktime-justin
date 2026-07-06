@@ -103,7 +103,9 @@ manifest 对应哪个需求文档版本。
 - `entry` / `timing`：问号任务的入口行为和时序阈值（15s 轻提示、30s 强化、45-60s 自动收起、
   20 个有效键转移判定、寻找类 1s 悬停判定）。013/014 卡的任务状态机应该是一个读这些时长驱动
   的定时器/状态转换，而不是把秒数写死在状态机代码里。
-- `pressTask`：按键任务的按键类型限制（仅字母/数字）。
+- `pressTask`：按键任务的按键类型说明（纯文档字段，task-templates.js 不读取；WTJ-20260706-010
+  起运行时判定范围是字母/数字/符号/`Space`/`Enter`/方向键，`allowedKeyTypes` 同步扩到
+  `['alpha', 'digit', 'symbol', 'whitespace', 'arrow']`）。
 - `templates.{drag,click,find,press}`：四类任务模板，每类有 `schema`（字段说明，供任务作者/
   后续任务配置工具参照）和 `examples`（当前可直接使用的任务实例，未到位素材用 stub 路径 +
   行内注释）。013/014 卡实现任务加载器时，应该能读任意符合某个模板 `schema` 的任务配置对象

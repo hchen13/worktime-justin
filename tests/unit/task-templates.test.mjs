@@ -276,20 +276,46 @@ function makePointerStub() {
   };
 }
 
-// --- WTJ_KEYBOARD stub (onLetter 是多订阅者，镜像 keyboard.js 的 addSubscriber 模式) --------
+// --- WTJ_KEYBOARD stub (onLetter/onSymbol/onFunctionKey 都是多订阅者，镜像 keyboard.js 的
+// addSubscriber 模式) -------------------------------------------------------------------------
+// WTJ-20260706-010：补齐 onSymbol/onFunctionKey 两路订阅 + emitSymbol/emitFunctionKey 两个驱动
+// 方法，镜像真实 keyboard.js 的两个真实调用约定（见该文件文件头设计说明第 26~33 / 23~25 行）：
+// onSymbol(fn) 是 fn(char, intensity) 两个位置参数；onFunctionKey(fn) 是 fn({key, category,
+// intensity}) 单一 payload 对象，key 已经过 normalizeFunctionKeyName() 归一化（Space 统一是
+// 'Space'，其余原样透传 e.key，如 'Enter'/'ArrowUp'）。
 function makeKeyboardStub() {
   var letterHandlers = [];
+  var symbolHandlers = [];
+  var functionKeyHandlers = [];
   return {
     api: {
       onLetter: function (fn) {
         letterHandlers.push(fn);
+      },
+      onSymbol: function (fn) {
+        symbolHandlers.push(fn);
+      },
+      onFunctionKey: function (fn) {
+        functionKeyHandlers.push(fn);
       }
     },
     pressLetter: function (ch) {
       letterHandlers.forEach(function (fn) { fn(ch); });
     },
+    emitSymbol: function (ch, intensity) {
+      symbolHandlers.forEach(function (fn) { fn(ch, intensity); });
+    },
+    emitFunctionKey: function (payload) {
+      functionKeyHandlers.forEach(function (fn) { fn(payload); });
+    },
     hasHandler: function () {
       return letterHandlers.length > 0;
+    },
+    hasSymbolHandler: function () {
+      return symbolHandlers.length > 0;
+    },
+    hasFunctionKeyHandler: function () {
+      return functionKeyHandlers.length > 0;
     }
   };
 }
@@ -1384,6 +1410,91 @@ test('按键任务：不渲染任何 DOM / 不注册任何 pointer target；WTJ_
 
   assert.equal(env.pointerStub.registerCalls.length, registerCallsBeforePress, '按键任务全程不应新增任何 pointer target 注册');
   assert.equal(root.children.length, 0, '按键任务完成后 overlay root 下仍不应有任何子节点');
+});
+
+// WTJ-20260706-010：缺口修复——此前按键任务只接线了 WTJ_KEYBOARD.onLetter，targetKey 是符号 /
+// 'Space' / 'Enter' / 方向键时永远无法完成（onSymbol/onFunctionKey 从未接线）。下面用最小自定义
+// manifest（单条 press example，targetKey 分别取符号/'Space'/'Enter'/'ArrowUp'）逐条验证新接线，
+// 与上面「不命中不完成」的既有断言风格一致：先喂一个不匹配的键确认不完成，再喂匹配的键确认完成。
+function makeSinglePressManifestSrc(targetKey) {
+  return 'window.WTJ_MANIFEST = {' +
+    '  tasks: { templates: {' +
+    '    drag: { examples: [{ id: "drag-x", objectSprite: "sprites/apple.png", targetSprite: "sprites/basket.png", voicePrompt: "", successAudio: "" }] },' +
+    '    click: { examples: [{ id: "click-x", targetSprite: "sprites/lamp.png", targetSpriteActive: null, voicePrompt: "", successAudio: "" }] },' +
+    '    find: { examples: [{ id: "find-x", targetSprite: "sprites/dog.png", distractorSprites: [], voicePrompt: "", successAudio: "" }] },' +
+    '    press: { examples: [{ id: "press-x", targetKey: "' + targetKey + '", voicePrompt: "", successAudio: "" }] }' +
+    '  } },' +
+    '  rewards: { statusLights: { count: 3 } }' +
+    '};';
+}
+
+test('按键任务（010）：targetKey 为符号时，WTJ_KEYBOARD.onSymbol 命中该符号才 completeTask，不匹配的符号不完成', function () {
+  var env = createSandbox({ manifestOverrideSrc: makeSinglePressManifestSrc(',') });
+  var info = startTaskOfType(env, 'press');
+  assert.equal(info.taskId, 'press-x');
+
+  env.keyboardStub.emitSymbol('[', 0.6); // 不匹配的符号
+  assert.equal(env.taskStub.completeTaskCalls.length, 0, '不匹配的符号不应完成任务');
+
+  env.keyboardStub.emitSymbol(',', 0.6); // 匹配 targetKey
+  assert.equal(env.taskStub.completeTaskCalls.length, 1);
+  assert.equal(env.taskStub.completeTaskCalls[0].type, 'press');
+  assert.equal(env.taskStub.completeTaskCalls[0].taskId, 'press-x');
+});
+
+test('按键任务（010）：targetKey 为 "Space" 时，WTJ_KEYBOARD.onFunctionKey({key:"Space",...}) 才 completeTask，其它功能键不完成', function () {
+  var env = createSandbox({ manifestOverrideSrc: makeSinglePressManifestSrc('Space') });
+  var info = startTaskOfType(env, 'press');
+  assert.equal(info.taskId, 'press-x');
+
+  env.keyboardStub.emitFunctionKey({ key: 'Enter', category: 'light', intensity: 1 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 0, '不匹配的功能键（Enter）不应完成 Space 任务');
+
+  env.keyboardStub.emitFunctionKey({ key: 'Space', category: 'light', intensity: 1 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 1);
+  assert.equal(env.taskStub.completeTaskCalls[0].type, 'press');
+  assert.equal(env.taskStub.completeTaskCalls[0].taskId, 'press-x');
+});
+
+test('按键任务（010）：targetKey 为 "Enter" 时，WTJ_KEYBOARD.onFunctionKey({key:"Enter",...}) 才 completeTask，其它功能键不完成', function () {
+  var env = createSandbox({ manifestOverrideSrc: makeSinglePressManifestSrc('Enter') });
+  var info = startTaskOfType(env, 'press');
+  assert.equal(info.taskId, 'press-x');
+
+  env.keyboardStub.emitFunctionKey({ key: 'Tab', category: 'other', intensity: 0.5 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 0, '不匹配的功能键（Tab）不应完成 Enter 任务');
+
+  env.keyboardStub.emitFunctionKey({ key: 'Enter', category: 'light', intensity: 1 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 1);
+  assert.equal(env.taskStub.completeTaskCalls[0].type, 'press');
+  assert.equal(env.taskStub.completeTaskCalls[0].taskId, 'press-x');
+});
+
+test('按键任务（010）：targetKey 为方向键 "ArrowUp" 时，WTJ_KEYBOARD.onFunctionKey({key:"ArrowUp",...}) 才 completeTask，其它方向键不完成', function () {
+  var env = createSandbox({ manifestOverrideSrc: makeSinglePressManifestSrc('ArrowUp') });
+  var info = startTaskOfType(env, 'press');
+  assert.equal(info.taskId, 'press-x');
+
+  env.keyboardStub.emitFunctionKey({ key: 'ArrowDown', category: 'other', intensity: 0.5 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 0, '不匹配的方向键（ArrowDown）不应完成 ArrowUp 任务');
+
+  env.keyboardStub.emitFunctionKey({ key: 'ArrowUp', category: 'other', intensity: 0.5 });
+  assert.equal(env.taskStub.completeTaskCalls.length, 1);
+  assert.equal(env.taskStub.completeTaskCalls[0].type, 'press');
+  assert.equal(env.taskStub.completeTaskCalls[0].taskId, 'press-x');
+});
+
+test('按键任务（010）门禁：进行中任务不是 press 类型时，杂散的 onSymbol/onFunctionKey/onLetter 事件不应误触发 completeTask（防止 Enter/方向键/符号误判其它三类任务完成）', function () {
+  var env = createSandbox();
+  var info = startTaskOfType(env, 'drag'); // 当前进行中任务类型是 drag，不是 press
+  assert.equal(info.type, 'drag');
+
+  env.keyboardStub.emitSymbol(',', 1);
+  env.keyboardStub.emitFunctionKey({ key: 'Enter', category: 'light', intensity: 1 });
+  env.keyboardStub.emitFunctionKey({ key: 'ArrowUp', category: 'other', intensity: 0.5 });
+  env.keyboardStub.pressLetter('A');
+
+  assert.equal(env.taskStub.completeTaskCalls.length, 0, 'activeRuntime.type !== "press" 时，任何键盘事件都不应触发 completeTask');
 });
 
 // =============================================================================================

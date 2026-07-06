@@ -48,12 +48,16 @@
 //     （pressOrHoverAlsoCompletes）在本文件的落地方式就是让这两个 target 回调共享同一个完成
 //     函数，不是两套独立判定逻辑。
 // 四、按键（REQ-TASK-10）：不渲染任何 DOM（纯语音 + 键盘判定，见文件头"长什么样"一节）。加载
-//     时注册一个常驻的 WTJ_KEYBOARD.onLetter 处理函数（WTJ_KEYBOARD.onLetter 与 013 对
+//     时注册常驻的 WTJ_KEYBOARD.onLetter/onSymbol/onFunctionKey 三路处理函数（三者都与 013 对
 //     WTJ_KEYBOARD.onEffectiveKey 的处理同一个模式——只支持追加订阅、不支持退订，因此本文件也
 //     采用"常驻处理函数 + 内部状态判断当前是否有进行中的按键任务"这种等价退订写法，见 013
 //     文件头「键盘转移淡出的实现机制」一节的同款设计说明）：当前若存在一个 type==='press' 的
-//     进行中任务，比较传入的大写字符与 taskDef.targetKey（统一转大写比较，兼容 manifest 里
-//     'A'/'3' 这类已是大写/数字的写法）是否相等，相等则判定任务完成。
+//     进行中任务，比较传入的键身份字符串与 taskDef.targetKey（统一转大写比较，兼容 manifest 里
+//     'A'/'3' 这类已是大写/数字的写法，也兼容符号/'Space'/'Enter'/'ArrowUp' 等写法）是否相等，
+//     相等则判定任务完成。WTJ-20260706-010 前 targetKey 只能是字母/数字（onLetter 是唯一接线的
+//     判定通道），symbol（如 ','）/'Space'/'Enter'/方向键作为 targetKey 永远无法完成——010 卡
+//     补齐 onSymbol/onFunctionKey 两路订阅（见下方 handlePressKey()/wireSymbol()/
+//     wireFunctionKey() 的详细说明），三路统一收敛到同一个 handlePressKey() 判定+完成入口。
 //
 // -----------------------------------------------------------------------
 // 任务生成：问号点击 → 洗牌袋（shuffle bag）真随机挑一个任务模板类型 + 具体示例
@@ -209,7 +213,8 @@
 //   REQ-TASK-08  renderClickTask()：accepts:'click' 的 onClick 回调，切换 targetSpriteActive。
 //   REQ-TASK-09  renderFindTask()：accepts:['hover','click']，onHover 与 onClick 共享同一个
 //                完成回调（"点一下也算完成"）。
-//   REQ-TASK-10  setupPressTask() + handlePressLetter()：WTJ_KEYBOARD.onLetter 常驻处理函数。
+//   REQ-TASK-10  setupPressTask() + handlePressKey()：WTJ_KEYBOARD.onLetter/onSymbol/
+//                onFunctionKey 三路常驻处理函数（010 起补齐 symbol/Space/Enter/方向键判定）。
 //   REQ-PTR-02/03 本文件通过 WTJ_POINTER.registerTarget 消费 012 已经实现的点击/拖拽判定，
 //                不重新实现命中测试/弹性跟随算法本身；handleDragMove()/handleDragDropGlobal()
 //                订阅 onDragMove/onDrop 的输出结果渲染跟随视觉/拖错弹回（P1-2）。
@@ -1277,15 +1282,47 @@
     return { elements: [], pointerIds: [] };
   }
 
-  function handlePressLetter(charUpper) {
+  // WTJ-20260706-010：原来只有 handlePressLetter(charUpper)，只服务 WTJ_KEYBOARD.onLetter
+  // （字母/数字）。缺口：targetKey 是符号（如 ',' '[' ']' '=' '?' '/'）或 'Space'/'Enter'/
+  // 方向键（'ArrowUp' 等）的按键任务永远无法命中——onSymbol/onFunctionKey 从未接线到这里。
+  // 泛化成 handlePressKey(keyIdentity)，对任意"键身份"字符串统一按 toUpperCase() 比较（与
+  // 原字母任务同一比较方式，字母任务本就转大写比较；符号/Space/Enter/方向键转大写不影响其
+  // 唯一性，'ArrowUp'.toUpperCase() 仍是自身大小写归一化后的唯一值，不会与其它键身份碰撞）。
+  // guard 仍在最前面：只有 activeRuntime.type === 'press' 时才可能完成，杂散的 Enter/方向键/
+  // 符号事件在 drag/click/find 进行中任务时直接短路返回，不会误判其它类型完成。
+  function handlePressKey(keyIdentity) {
     if (!activeRuntime || activeRuntime.type !== 'press') {
       return;
     }
     var example = activeRuntime.example;
     var want = (example && typeof example.targetKey === 'string') ? example.targetKey.toUpperCase() : null;
-    if (want !== null && charUpper === want) {
+    var got = (typeof keyIdentity === 'string') ? keyIdentity.toUpperCase() : null;
+    if (want !== null && got !== null && got === want) {
       handleTemplateComplete('press', example);
     }
+  }
+
+  // 保留旧名字作为别名（内部注释 REQ-TASK-10 索引与历史设计说明引用过这个名字），避免无谓改动
+  // 其它引用点；本文件内目前只有下方 wireKeyboard() 这一处消费者。
+  var handlePressLetter = handlePressKey;
+
+  // WTJ_KEYBOARD.onSymbol(fn) 是 fn(char, intensity) 两个位置参数（不是 payload 对象，
+  // 与 onLetter/onMilestone 同一单参数风格不同——见 keyboard.js 文件头设计说明第 26~33 行）。
+  // 按键任务判定只需要 char 本身，intensity（连打衰减强度）与"是否命中 targetKey"无关，不消费。
+  function handlePressSymbol(char) {
+    handlePressKey(char);
+  }
+
+  // WTJ_KEYBOARD.onFunctionKey(fn) 是 fn({ key, category, intensity }) 单一 payload 对象
+  // （与 onSymbol 两个位置参数的约定不同，见 keyboard.js 文件头设计说明第 23~25 行）。key 已经过
+  // keyboard.js 的 normalizeFunctionKeyName() 归一化——Space 键统一是字符串 'Space'（原始
+  // e.key 是单个空格字符 ' '，本文件不需要再关心这层转换），其余功能键原样透传 e.key（如
+  // 'Enter'/'ArrowUp'/'ArrowDown'/'ArrowLeft'/'ArrowRight'/'Tab'/'Escape'/'Meta' 等）。
+  function handlePressFunctionKey(payload) {
+    if (!payload) {
+      return;
+    }
+    handlePressKey(payload.key);
   }
 
   // ---------------------------------------------------------------------
@@ -1452,6 +1489,31 @@
       }
     } catch (err) {
       console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onLetter 失败，已捕获：', err);
+    }
+  })();
+
+  // WTJ-20260706-010：按键任务此前只能通过 onLetter 命中（targetKey 为字母/数字），symbol /
+  // Space / Enter / 方向键等 targetKey 永远无法完成任务（缺口修复）。这里新增两路订阅，复用
+  // 同一个 handlePressKey() 门禁（见上方 handlePressKey() 注释）——不会误触发其余三类任务的
+  // 完成，也不会写入秘密词 rolling buffer / 有效键计数（那两套状态完全由 keyboard.js/
+  // secretword.js 自己维护，本文件从不碰）。
+  (function wireSymbol() {
+    try {
+      if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onSymbol === 'function') {
+        window.WTJ_KEYBOARD.onSymbol(handlePressSymbol);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onSymbol 失败，已捕获：', err);
+    }
+  })();
+
+  (function wireFunctionKey() {
+    try {
+      if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onFunctionKey === 'function') {
+        window.WTJ_KEYBOARD.onFunctionKey(handlePressFunctionKey);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onFunctionKey 失败，已捕获：', err);
     }
   })();
 

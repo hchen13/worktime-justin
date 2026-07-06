@@ -371,9 +371,14 @@
         findHoverSec: 1
       },
 
-      // REQ-TASK-10：按键任务仅字母/数字，不做复杂组合键。
+      // REQ-TASK-10：按键任务不做复杂组合键。allowedKeyTypes 纯文档字段（供 PM/QA 对照，
+      // task-templates.js 不读取本字段——它按 targetKey 字面值直接比较，不做类型校验），
+      // WTJ-20260706-010 起 task-templates.js 的 handlePressKey() 已接线 WTJ_KEYBOARD.onLetter/
+      // onSymbol/onFunctionKey 三路判定，targetKey 除字母/数字外也可以是符号（symbol，如 ','）、
+      // 空白类功能键（whitespace，即 'Space'/'Enter'）或方向键（arrow，即 'ArrowUp'/'ArrowDown'/
+      // 'ArrowLeft'/'ArrowRight'），故在此扩列这三类，与运行时判定范围保持一致。
       pressTask: {
-        allowedKeyTypes: ['alpha', 'digit'],
+        allowedKeyTypes: ['alpha', 'digit', 'symbol', 'whitespace', 'arrow'],
         complexComboAllowed: false
       },
 
