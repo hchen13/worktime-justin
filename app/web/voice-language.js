@@ -80,6 +80,69 @@
   var EN_AVAILABLE_SET = idSetFrom(EN_AVAILABLE_TASK_IDS);
   var ZH_AVAILABLE_SET = idSetFrom(ZH_AVAILABLE_TASK_IDS);
 
+  // ---------------------------------------------------------------------
+  // 秘密词（words）语言可用性台账——WTJ-20260706-011（ZH 秘密词二期脚手架，第二片）
+  // ---------------------------------------------------------------------
+  // 与上面 TASK 台账同一约定，但方向相反：秘密词英文 .m4a 现在**全量交付**（100/100，见
+  // app/web/audio/missing-audio.json secretWords[] 全部 status:"delivered"，磁盘
+  // app/web/audio/words/*.m4a 现存 100 个文件），中文 .zh.m4a **尚未生成任何一条**（音频
+  // 生成本身是 008 卡的范围，本卡只做不依赖生成音频的脚手架：ZH 文案 + missing-audio.json
+  // 登记 + 本文件的台账 + secretword.js 的语言感知播放分支，全部 dormant/not-delivered）。
+  // 因此这里只需要一份"哪些词的中文已交付"的台账（ZH_AVAILABLE_WORD），不需要像 TASK 那样
+  // 两份都维护——英文永远可用，判定逻辑见 isWordZhAvailable()：不在这份清单里的词一律走
+  // 英文，NO-SILENT 天然满足（从不构造/请求未交付的 .zh.m4a 路径）。
+  //
+  // ALL_WORD_IDS：与 app/web/manifest.js secretWords.pool[].word 完全一致的 100 词清单
+  // （xylophone 已被 WTJ-20260706-011 从池中删除）。tests/unit/voice-language.test.mjs 有
+  // 一条断言核对两者未漂移。
+  var ALL_WORD_IDS = [
+    'apple', 'ant', 'airplane', 'alligator',
+    'ball', 'basket', 'bell', 'banana',
+    'cat', 'car', 'cup', 'cake',
+    'dog', 'door', 'duck', 'drum',
+    'egg', 'elephant', 'eye', 'envelope',
+    'fish', 'flower', 'frog', 'faucet',
+    'goat', 'grapes', 'gift', 'guitar',
+    'horse', 'hat', 'heart', 'house',
+    'icecream', 'igloo', 'insect', 'island',
+    'juice', 'jam', 'jar', 'jellyfish',
+    'key', 'kite', 'koala', 'kettle',
+    'lamp', 'leaf', 'lion', 'lemon',
+    'moon', 'mouse', 'milk', 'monkey',
+    'nest', 'nose', 'net', 'noodle',
+    'orange', 'owl', 'octopus', 'oven',
+    'pig', 'pear', 'pencil', 'pizza',
+    'queen', 'quilt', 'quail', 'quarter',
+    'rocket', 'robot', 'rainbow', 'ring',
+    'star', 'sun', 'shoe', 'spoon',
+    'treasure', 'tree', 'train', 'turtle',
+    'umbrella', 'unicorn', 'ukulele', 'uniform',
+    'van', 'vase', 'violin', 'volcano',
+    'whale', 'watch', 'window', 'wagon',
+    'fox',
+    'yoyo', 'yarn', 'yak',
+    'zebra', 'zipper', 'zucchini',
+    'treasurechest'
+  ];
+
+  // ZH_AVAILABLE_WORD：中文秘密词已交付的 word 清单——WTJ-20260706-008（TTS 生成卡）确认
+  // 后才会从这里开始逐个补齐（同步 app/web/audio/words/<word>.zh.m4a 落盘 + missing-audio
+  // .json secretWordsZh[] 对应条目 status 改 "delivered"）。**当前必须是空数组**：这既是
+  // 本卡的交付范围边界（011 不生成任何音频），也是本切片"零用户可见变化"的核心保证——只要
+  // 这里是空的，secretword.js 的语言感知分支就恒定判定"这个词的中文不可用"，天然、无条件地
+  // 回退到英文，效果与改动前逐字节相同（见 tests/unit/secretword-engine.test.mjs 新增用例
+  // 与本文件 10. 号用例）。
+  var ZH_AVAILABLE_WORD = [];
+
+  var ZH_AVAILABLE_WORD_SET = idSetFrom(ZH_AVAILABLE_WORD);
+
+  // isWordZhAvailable(word)：给 secretword.js 用的最小查询接口——大小写/归一化由调用方负责
+  // （与 pool 条目的 word 字段大小写约定一致，本文件不重复归一化逻辑）。空台账时对任何输入
+  // 恒返回 false。
+  function isWordZhAvailable(word) {
+    return !!(typeof word === 'string' && ZH_AVAILABLE_WORD_SET[word] === true);
+  }
+
   function warnOnce(message) {
     // 与 audio.js 同款轻量去重（避免同一诊断文案在长会话里被打印几十遍），但本文件独立维护
     // 自己的一份 seen 记录，不依赖/耦合 audio.js 的内部状态。
@@ -308,7 +371,14 @@
     // tests/unit/voice-language.test.mjs 能对照磁盘真实文件核对没有漂移。
     getAllTaskIds: function () { return ALL_TASK_IDS.slice(); },
     getEnAvailableTaskIds: function () { return EN_AVAILABLE_TASK_IDS.slice(); },
-    getZhAvailableTaskIds: function () { return ZH_AVAILABLE_TASK_IDS.slice(); }
+    getZhAvailableTaskIds: function () { return ZH_AVAILABLE_TASK_IDS.slice(); },
+
+    // 秘密词（words）语言可用性——WTJ-20260706-011。isWordZhAvailable() 供 secretword.js
+    // 消费；getAllWordIds()/getZhAvailableWordIds() 供测试内省（与上面 TASK 三个 getter 同
+    // 一用途，不参与运行时播放决策）。
+    isWordZhAvailable: isWordZhAvailable,
+    getAllWordIds: function () { return ALL_WORD_IDS.slice(); },
+    getZhAvailableWordIds: function () { return ZH_AVAILABLE_WORD.slice(); }
   };
 
   if (Object.freeze) {

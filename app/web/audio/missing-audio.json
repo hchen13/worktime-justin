@@ -42,6 +42,11 @@
     "taskVoiceZh": {
       "totalNotDelivered": 8,
       "note": "WTJ-20260704-084 全量新生成的 24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P，见 taskVoiceZh[] 里 status:delivered 的 24 条与 TTS-PROVENANCE.md「ZH 中文任务语音」一节）仍然保持 24/24 完整，不受影响。WTJ-20260705-025（drag 池扩容 + door/doorbell 点击任务）新增 8 条 taskVoiceZh 条目，status 均为 not-delivered——见本数组末尾 8 条与 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落（拟定文案已就绪，待 024/084 排期生成）。这 8 条对应的 app/web/manifest.js example 目前 voicePrompt 均为空字符串 ''（no-silent-fallback：不静默复用其他任务的语音），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 的 101/8/10 EN 门与「24 条 delivered ZH」门——deliveredPaths() 按 status==='delivered' 过滤，本次新增的 8 条 not-delivered 不计入该计数；task-voice-path.test.mjs 的 ===8 EN 门同样不受影响）。"
+    },
+    "secretWordsZh": {
+      "total": 100,
+      "totalNotDelivered": 100,
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架（第二片）：app/web/manifest.js secretWords.pool 100 个词的中文首过标签（zhLabel，PM/Ethan 待审）+ 约定 path（audio/words/<word>.zh.m4a）已登记在下方 secretWordsZh[]，但**全部 100 条 status 均为 not-delivered**——本卡（011）不生成任何音频，音频生成是 008（TTS 生成卡）确认后的范围。此新增分类不影响既有 secretWords（EN，100/100 delivered）计数门，也不参与 tests/e2e/check_audio_assets.py 的 collect_inventory()/pass-fail 判定（该脚本硬编码分类清单未包含 secretWordsZh，见脚本注释）。"
     }
   },
   "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
@@ -1045,6 +1050,708 @@
       "packBBatch": null,
       "packBSpriteStatus": null,
       "licenseNeed": "同上；另注意该词不在 Pack B 的 100 词范围内（Pack B 用的是 'treasure'，不是 'treasurechest'）。app/web/manifest.js 当前 secretWords.pool 直接引用了 'treasurechest' 这个 token（复用 REQ-AST-12 已验收 sprite），该差异已在 app/web/MANIFEST.md 「已知的文档/素材对齐问题」中记录，本卡不自行裁决是否保留该词，仅如实登记音频缺口。"
+    }
+  ],
+  "secretWordsZh": [
+    {
+      "word": "apple",
+      "zhLabel": "苹果",
+      "path": "audio/words/apple.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "ant",
+      "zhLabel": "蚂蚁",
+      "path": "audio/words/ant.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "airplane",
+      "zhLabel": "飞机",
+      "path": "audio/words/airplane.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "alligator",
+      "zhLabel": "鳄鱼",
+      "path": "audio/words/alligator.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "ball",
+      "zhLabel": "球",
+      "path": "audio/words/ball.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "basket",
+      "zhLabel": "篮子",
+      "path": "audio/words/basket.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "bell",
+      "zhLabel": "铃铛",
+      "path": "audio/words/bell.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "banana",
+      "zhLabel": "香蕉",
+      "path": "audio/words/banana.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "cat",
+      "zhLabel": "猫",
+      "path": "audio/words/cat.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "car",
+      "zhLabel": "汽车",
+      "path": "audio/words/car.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "cup",
+      "zhLabel": "杯子",
+      "path": "audio/words/cup.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "cake",
+      "zhLabel": "蛋糕",
+      "path": "audio/words/cake.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "dog",
+      "zhLabel": "狗",
+      "path": "audio/words/dog.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "door",
+      "zhLabel": "门",
+      "path": "audio/words/door.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "duck",
+      "zhLabel": "鸭子",
+      "path": "audio/words/duck.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "drum",
+      "zhLabel": "鼓",
+      "path": "audio/words/drum.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "egg",
+      "zhLabel": "鸡蛋",
+      "path": "audio/words/egg.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "elephant",
+      "zhLabel": "大象",
+      "path": "audio/words/elephant.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "eye",
+      "zhLabel": "眼睛",
+      "path": "audio/words/eye.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "envelope",
+      "zhLabel": "信封",
+      "path": "audio/words/envelope.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "fish",
+      "zhLabel": "鱼",
+      "path": "audio/words/fish.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "flower",
+      "zhLabel": "花",
+      "path": "audio/words/flower.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "frog",
+      "zhLabel": "青蛙",
+      "path": "audio/words/frog.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "faucet",
+      "zhLabel": "水龙头",
+      "path": "audio/words/faucet.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "goat",
+      "zhLabel": "山羊",
+      "path": "audio/words/goat.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "grapes",
+      "zhLabel": "葡萄",
+      "path": "audio/words/grapes.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "gift",
+      "zhLabel": "礼物",
+      "path": "audio/words/gift.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "guitar",
+      "zhLabel": "吉他",
+      "path": "audio/words/guitar.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "horse",
+      "zhLabel": "马",
+      "path": "audio/words/horse.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "hat",
+      "zhLabel": "帽子",
+      "path": "audio/words/hat.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "heart",
+      "zhLabel": "爱心",
+      "path": "audio/words/heart.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "house",
+      "zhLabel": "房子",
+      "path": "audio/words/house.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "icecream",
+      "zhLabel": "冰淇淋",
+      "path": "audio/words/icecream.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "igloo",
+      "zhLabel": "冰屋",
+      "path": "audio/words/igloo.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "insect",
+      "zhLabel": "昆虫",
+      "path": "audio/words/insect.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "island",
+      "zhLabel": "岛",
+      "path": "audio/words/island.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "juice",
+      "zhLabel": "果汁",
+      "path": "audio/words/juice.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "jam",
+      "zhLabel": "果酱",
+      "path": "audio/words/jam.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "jar",
+      "zhLabel": "罐子",
+      "path": "audio/words/jar.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "jellyfish",
+      "zhLabel": "水母",
+      "path": "audio/words/jellyfish.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "key",
+      "zhLabel": "钥匙",
+      "path": "audio/words/key.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "kite",
+      "zhLabel": "风筝",
+      "path": "audio/words/kite.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "koala",
+      "zhLabel": "考拉",
+      "path": "audio/words/koala.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "kettle",
+      "zhLabel": "水壶",
+      "path": "audio/words/kettle.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "lamp",
+      "zhLabel": "台灯",
+      "path": "audio/words/lamp.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "leaf",
+      "zhLabel": "树叶",
+      "path": "audio/words/leaf.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "lion",
+      "zhLabel": "狮子",
+      "path": "audio/words/lion.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "lemon",
+      "zhLabel": "柠檬",
+      "path": "audio/words/lemon.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "moon",
+      "zhLabel": "月亮",
+      "path": "audio/words/moon.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "mouse",
+      "zhLabel": "老鼠",
+      "path": "audio/words/mouse.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "milk",
+      "zhLabel": "牛奶",
+      "path": "audio/words/milk.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "monkey",
+      "zhLabel": "猴子",
+      "path": "audio/words/monkey.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "nest",
+      "zhLabel": "鸟窝",
+      "path": "audio/words/nest.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "nose",
+      "zhLabel": "鼻子",
+      "path": "audio/words/nose.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "net",
+      "zhLabel": "网",
+      "path": "audio/words/net.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "noodle",
+      "zhLabel": "面条",
+      "path": "audio/words/noodle.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "orange",
+      "zhLabel": "橙子",
+      "path": "audio/words/orange.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "owl",
+      "zhLabel": "猫头鹰",
+      "path": "audio/words/owl.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "octopus",
+      "zhLabel": "章鱼",
+      "path": "audio/words/octopus.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "oven",
+      "zhLabel": "烤箱",
+      "path": "audio/words/oven.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "pig",
+      "zhLabel": "猪",
+      "path": "audio/words/pig.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "pear",
+      "zhLabel": "梨",
+      "path": "audio/words/pear.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "pencil",
+      "zhLabel": "铅笔",
+      "path": "audio/words/pencil.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "pizza",
+      "zhLabel": "披萨",
+      "path": "audio/words/pizza.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "queen",
+      "zhLabel": "女王",
+      "path": "audio/words/queen.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "quilt",
+      "zhLabel": "被子",
+      "path": "audio/words/quilt.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "quail",
+      "zhLabel": "鹌鹑",
+      "path": "audio/words/quail.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "quarter",
+      "zhLabel": "硬币",
+      "path": "audio/words/quarter.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "rocket",
+      "zhLabel": "火箭",
+      "path": "audio/words/rocket.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "robot",
+      "zhLabel": "机器人",
+      "path": "audio/words/robot.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "rainbow",
+      "zhLabel": "彩虹",
+      "path": "audio/words/rainbow.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "ring",
+      "zhLabel": "戒指",
+      "path": "audio/words/ring.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "star",
+      "zhLabel": "星星",
+      "path": "audio/words/star.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "sun",
+      "zhLabel": "太阳",
+      "path": "audio/words/sun.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "shoe",
+      "zhLabel": "鞋子",
+      "path": "audio/words/shoe.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "spoon",
+      "zhLabel": "勺子",
+      "path": "audio/words/spoon.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "treasure",
+      "zhLabel": "宝藏",
+      "path": "audio/words/treasure.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "tree",
+      "zhLabel": "树",
+      "path": "audio/words/tree.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "train",
+      "zhLabel": "火车",
+      "path": "audio/words/train.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "turtle",
+      "zhLabel": "乌龟",
+      "path": "audio/words/turtle.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "umbrella",
+      "zhLabel": "雨伞",
+      "path": "audio/words/umbrella.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "unicorn",
+      "zhLabel": "独角兽",
+      "path": "audio/words/unicorn.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "ukulele",
+      "zhLabel": "尤克里里",
+      "path": "audio/words/ukulele.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "uniform",
+      "zhLabel": "校服",
+      "path": "audio/words/uniform.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "van",
+      "zhLabel": "面包车",
+      "path": "audio/words/van.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "vase",
+      "zhLabel": "花瓶",
+      "path": "audio/words/vase.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "violin",
+      "zhLabel": "小提琴",
+      "path": "audio/words/violin.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "volcano",
+      "zhLabel": "火山",
+      "path": "audio/words/volcano.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "whale",
+      "zhLabel": "鲸鱼",
+      "path": "audio/words/whale.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "watch",
+      "zhLabel": "手表",
+      "path": "audio/words/watch.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "window",
+      "zhLabel": "窗户",
+      "path": "audio/words/window.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "wagon",
+      "zhLabel": "小推车",
+      "path": "audio/words/wagon.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "fox",
+      "zhLabel": "狐狸",
+      "path": "audio/words/fox.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "yoyo",
+      "zhLabel": "溜溜球",
+      "path": "audio/words/yoyo.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "yarn",
+      "zhLabel": "毛线",
+      "path": "audio/words/yarn.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "yak",
+      "zhLabel": "牦牛",
+      "path": "audio/words/yak.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "zebra",
+      "zhLabel": "斑马",
+      "path": "audio/words/zebra.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "zipper",
+      "zhLabel": "拉链",
+      "path": "audio/words/zipper.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "zucchini",
+      "zhLabel": "西葫芦",
+      "path": "audio/words/zucchini.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+    },
+    {
+      "word": "treasurechest",
+      "zhLabel": "宝箱",
+      "path": "audio/words/treasurechest.zh.m4a",
+      "status": "not-delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
     }
   ],
   "sfx": [

@@ -88,3 +88,64 @@ test('084: delivered ZH paths follow the audio/tasks/<id>.zh.m4a convention (no 
     assert.equal(enTaskPaths.has(rel), false, `ZH path must not collide with an EN taskVoice path: ${rel}`);
   }
 });
+
+// =====================================================================================
+// WTJ-20260706-011 — ZH secret-word scaffolding (dormant, no audio generated). This card
+// only registers the first-pass ZH labels + not-delivered ledger; audio generation is card
+// 008's scope. These assertions prove the scaffolding is well-formed and 100% dormant so it
+// cannot regress the existing 100/8/10 EN gate above or silently claim delivery it hasn't done.
+// =====================================================================================
+
+const secretWordsZh = manifest.secretWordsZh;
+
+test('011: secretWordsZh is well-formed — 100 entries, one per pool word, all status "not-delivered"', () => {
+  assert.equal(Array.isArray(secretWordsZh), true, 'missing-audio.json must have a secretWordsZh array');
+  assert.equal(secretWordsZh.length, 100, 'secretWordsZh must have exactly 100 entries (one per current 100-word pool, xylophone already removed)');
+
+  const enWordSet = new Set(manifest.secretWords.map((e) => e.word));
+  const zhWordSet = new Set(secretWordsZh.map((e) => e.word));
+  assert.equal(zhWordSet.size, 100, 'secretWordsZh words must be unique (no duplicates)');
+  assert.deepEqual([...zhWordSet].sort(), [...enWordSet].sort(),
+    'secretWordsZh word set must exactly match the EN secretWords word set (same 100 words, no drift)');
+
+  for (const e of secretWordsZh) {
+    assert.equal(e.status, 'not-delivered', `${e.word}: WTJ-20260706-011 does not generate any audio, status must be "not-delivered"`);
+    assert.equal(typeof e.zhLabel, 'string', `${e.word}: zhLabel must be a string`);
+    assert.ok(e.zhLabel.length > 0, `${e.word}: zhLabel must not be empty`);
+    assert.equal(e.path, `audio/words/${e.word}.zh.m4a`, `${e.word}: path must follow the audio/words/<word>.zh.m4a convention`);
+  }
+});
+
+test('011: no secretWordsZh path exists on disk yet (genuinely dormant, no audio generated)', () => {
+  const existing = secretWordsZh.filter((e) => existsSync(join(APP_WEB, e.path)));
+  assert.deepEqual(existing.map((e) => e.path), [], `these ZH word paths must not exist yet (008 has not run): ${existing.map((e) => e.path).join(', ')}`);
+});
+
+test('011: secretWordsZh does not leak into the deliveredPaths()/100-count EN gate (new category is additive only)', () => {
+  const deliveredZh = secretWordsZh.filter((e) => e.status === 'delivered');
+  assert.equal(deliveredZh.length, 0, 'no secretWordsZh entry may be marked delivered by this card');
+  assert.equal(words.length, 100, 'the pre-existing EN secretWords delivered-count gate must remain 100 (untouched by the new secretWordsZh category)');
+});
+
+test('011: app/scripts/tts-text-manifest.zh.json "words" segment matches missing-audio.json secretWordsZh 1:1 (same word set, same out path, same text/zhLabel)', () => {
+  const zhManifestPath = join(REPO, 'app', 'scripts', 'tts-text-manifest.zh.json');
+  const zhManifest = JSON.parse(readFileSync(zhManifestPath, 'utf8'));
+  const zhWords = zhManifest.words;
+  assert.equal(typeof zhWords, 'object', 'tts-text-manifest.zh.json must have a top-level "words" object');
+  assert.equal(Object.keys(zhWords).length, 100, 'tts-text-manifest.zh.json words segment must have exactly 100 entries');
+
+  for (const e of secretWordsZh) {
+    const entry = zhWords[e.word];
+    assert.ok(entry, `tts-text-manifest.zh.json words segment missing entry for "${e.word}"`);
+    assert.equal(entry.out, e.path, `${e.word}: tts-text-manifest.zh.json out must match missing-audio.json secretWordsZh path`);
+    assert.equal(entry.text, e.zhLabel, `${e.word}: tts-text-manifest.zh.json text must match missing-audio.json zhLabel (single source of truth for the ZH label)`);
+    assert.match(entry.out, /^audio\/words\/[^/]+\.zh\.m4a$/, `${e.word}: out must follow the audio/words/<word>.zh.m4a convention`);
+  }
+});
+
+test('011: summary.secretWordsZh block reports total=100, totalNotDelivered=100', () => {
+  const summary = manifest.summary.secretWordsZh;
+  assert.ok(summary, 'missing-audio.json summary.secretWordsZh block must exist');
+  assert.equal(summary.total, 100);
+  assert.equal(summary.totalNotDelivered, 100);
+});

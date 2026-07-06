@@ -336,3 +336,63 @@ test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件
     '少了会导致明明已交付的素材被误判缺失、语言选项被不必要地禁用');
   console.log('PASS 9c: EN_AVAILABLE_TASK_IDS 与磁盘现存英文 .m4a 文件集合完全一致（无漂移）。');
 });
+
+// =====================================================================================
+// 10. 秘密词（words）语言可用性台账——WTJ-20260706-011（ZH 秘密词二期脚手架，dormant）
+// =====================================================================================
+
+test('10a. getAllWordIds() 恰好 100 条，与 app/web/manifest.js secretWords.pool 的 word 字段集合完全一致（顺序也一致）', function () {
+  var env = makeSandbox();
+  var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
+  var manifestSandbox = {};
+  manifestSandbox.window = manifestSandbox;
+  vm.createContext(manifestSandbox);
+  vm.runInContext(manifestSrc, manifestSandbox, { filename: 'manifest.js' });
+  var poolWords = manifestSandbox.window.WTJ_MANIFEST.secretWords.pool.map(function (e) { return e.word; });
+
+  var allWordIds = env.api.getAllWordIds();
+  assert.equal(allWordIds.length, 100, 'WTJ-20260706-011 删除 xylophone 后真实词池应为 100 条');
+  assert.equal(poolWords.length, 100);
+  // JSON.stringify 比较：同上文 9a 的跨 vm-realm 数组原型不一致说明。
+  assert.equal(JSON.stringify(allWordIds), JSON.stringify(poolWords),
+    'voice-language.js 的 ALL_WORD_IDS 必须与 manifest.js secretWords.pool 的 word 顺序、内容完全一致，否则秘密词语言台账会脱离真实词池');
+  console.log('PASS 10a: ALL_WORD_IDS 与 manifest.js secretWords.pool 100 词完全一致（顺序 + 内容）。');
+});
+
+test('10b. getZhAvailableWordIds() 当前应为空数组（ZH 秘密词音频尚未生成，本卡不生成任何音频，台账 dormant）', function () {
+  var env = makeSandbox();
+  var zhWordIds = env.api.getZhAvailableWordIds();
+  // JSON.stringify 比较：见 9a 注释——vm 沙箱数组与主 realm 数组原型不同，deepEqual 会误判。
+  assert.equal(zhWordIds.length, 0, 'ZH_AVAILABLE_WORD 台账当前必须是空数组——这是 011 切片"零用户可见变化"的核心保证');
+  assert.equal(JSON.stringify(zhWordIds), JSON.stringify([]));
+  console.log('PASS 10b: getZhAvailableWordIds() 当前为空数组，秘密词 ZH 语音全部 not-delivered。');
+});
+
+test('10c. isWordZhAvailable() 对全部 100 个真实词、以及非字符串/非法输入均返回 false（当前台账为空）', function () {
+  var env = makeSandbox();
+  var allWordIds = env.api.getAllWordIds();
+  allWordIds.forEach(function (word) {
+    assert.equal(env.api.isWordZhAvailable(word), false, 'isWordZhAvailable("' + word + '") 当前台账为空，应恒返回 false');
+  });
+  assert.equal(env.api.isWordZhAvailable('not-a-real-word'), false, '未登记的陌生词也应返回 false（不是抛错或 undefined）');
+  assert.equal(env.api.isWordZhAvailable(null), false, 'null 入参安全返回 false，不抛错');
+  assert.equal(env.api.isWordZhAvailable(undefined), false, 'undefined 入参安全返回 false，不抛错');
+  assert.equal(env.api.isWordZhAvailable(123), false, '非字符串入参安全返回 false，不抛错');
+  console.log('PASS 10c: isWordZhAvailable() 对全部真实词与各类非法输入均安全返回 false（当前台账为空）。');
+});
+
+test('10d. 假想未来场景：把某个词临时补进 ZH_AVAILABLE_WORD 后，isWordZhAvailable() 应正确识别该词、且不影响其它词', function () {
+  // 与 8. 号用例同一手法：只在内存字符串上替换，不触碰磁盘上的真实 voice-language.js。
+  var patched = VOICE_LANG_SRC.replace(
+    /var ZH_AVAILABLE_WORD = \[\];/,
+    "var ZH_AVAILABLE_WORD = ['apple'];"
+  );
+  assert.notEqual(patched, VOICE_LANG_SRC, '替换应当命中（否则说明源码结构变了，这条测试需要同步更新正则）');
+
+  var env = makeSandbox({ sourceOverride: patched });
+  assert.equal(env.api.isWordZhAvailable('apple'), true, '假想补齐后，台账里的词应正确识别为已交付');
+  assert.equal(env.api.isWordZhAvailable('dog'), false, '未补齐的其它词应仍不受影响，继续判定为未交付');
+  // JSON.stringify 比较：见 9a 注释——vm 沙箱数组与主 realm 数组原型不同，deepEqual 会误判。
+  assert.equal(JSON.stringify(env.api.getZhAvailableWordIds()), JSON.stringify(['apple']));
+  console.log('PASS 10d: 假想台账补齐单个词后，isWordZhAvailable() 正确区分"已交付"与"未交付"，互不干扰。');
+});
