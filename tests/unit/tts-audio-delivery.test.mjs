@@ -30,20 +30,21 @@ const tasks = deliveredPaths(manifest.taskVoice, 'voicePromptPath');
 const phrases = deliveredPaths(manifest.compositePhrases, 'path');
 const tasksZh = deliveredPaths(manifest.taskVoiceZh, 'voicePromptPath');
 
-test('074+015: expected delivered TTS counts (99 words delivered + fox pending / 8 tasks / 10 phrases)', () => {
-  // WTJ-20260706-011/015: xylophone/xray removed; fox sprite is integrated but fox.m4a
-  // is intentionally pending WTJ-20260706-008/011 audio rework. Do not fake it with xray.
-  assert.equal(words.length, 99, '99 secret word audio files delivered; fox.m4a remains pending');
+test('074+015+008: expected delivered TTS counts (100 words delivered incl. fox / 8 tasks / 10 phrases)', () => {
+  // WTJ-20260706-011/015: xylophone/xray removed; fox integrated. WTJ-20260706-008: the
+  // CosyVoice3 rework (ASR-gated reseed) produced a real fox.m4a (whisper-verified "Fox"),
+  // so fox is now delivered — no longer pending, not faked with xray.
+  assert.equal(words.length, 100, '100 secret word audio files delivered (incl. fox via 008 ASR-gated rework)');
   assert.equal(tasks.length, 8, 'all 8 task prompts delivered');
   assert.equal(phrases.length, 10, 'all 10 composite phrases delivered');
 });
 
-test('011+015: xylophone/xray removed and fox audio remains explicitly pending', () => {
+test('011+015+008: xylophone/xray removed and fox audio delivered via CosyVoice3 rework', () => {
   assert.equal(manifest.secretWords.some((e) => e.word === 'xylophone'), false, 'xylophone entry must not remain in missing-audio.json secretWords[]');
   assert.equal(manifest.secretWords.some((e) => e.word === 'xray'), false, 'xray entry must not remain in missing-audio.json secretWords[]');
   const fox = manifest.secretWords.find((e) => e.word === 'fox');
   assert.ok(fox, 'fox entry must exist in missing-audio.json secretWords[]');
-  assert.equal(fox.status, 'not-delivered', 'fox.m4a must stay not-delivered until CosyVoice3 rework produces a real file');
+  assert.equal(fox.status, 'delivered', 'fox.m4a delivered by WTJ-20260706-008 ASR-gated CosyVoice3 rework (real, whisper-verified file)');
 });
 
 test('084+024: expected delivered ZH task-voice count (32: 24 + 025 new 8)', () => {

@@ -11,14 +11,14 @@
     "secretWords": {
       "packBTotal": 99,
       "additionalManifestOnlyWords": 1,
-      "totalNotDelivered": 1,
+      "totalNotDelivered": 0,
       "byPackBBatch": {
         "ready-v1": 37,
         "batch-02": 24,
         "batch-03": 27,
         "batch-04": 11
       },
-      "note": "fox 已替代 xray/xylophone 成为结尾 x 词；sprite 已接入，fox.m4a 暂未交付，需随 WTJ-20260706-008/011 音频返工生成。"
+      "note": "fox 已替代 xray/xylophone 成为结尾 x 词；sprite + fox.m4a 均已接入（fox.m4a 由 WTJ-20260706-008 ASR-gated CosyVoice3 重生成交付，whisper 自证念‘Fox’）。"
     },
     "sfx": {
       "totalNotDelivered": 0,
@@ -970,11 +970,11 @@
       "word": "fox",
       "soundKey": "secret.word.fox",
       "path": "audio/words/fox.m4a",
-      "status": "not-delivered",
+      "status": "delivered",
       "source": "production-pack-b",
       "packBBatch": "WTJ-20260706-015",
       "packBSpriteStatus": "ready",
-      "licenseNeed": "WTJ-20260706-015 已接入 fox sprite；真实 fox.m4a 尚未生成，必须随 WTJ-20260706-008/011 的 CosyVoice3 返工一起交付，不能复用 xray 或其他占位音频。"
+      "licenseNeed": "WTJ-20260706-015 接入 fox sprite；fox.m4a 已由 WTJ-20260706-008 ASR-gated CosyVoice3 重生成交付（whisper 自证念‘Fox’），非占位音频。"
     },
     {
       "word": "yoyo",
