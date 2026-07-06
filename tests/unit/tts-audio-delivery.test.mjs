@@ -30,10 +30,15 @@ const tasks = deliveredPaths(manifest.taskVoice, 'voicePromptPath');
 const phrases = deliveredPaths(manifest.compositePhrases, 'path');
 const tasksZh = deliveredPaths(manifest.taskVoiceZh, 'voicePromptPath');
 
-test('074: expected delivered TTS counts (101 words / 8 tasks / 10 phrases)', () => {
-  assert.equal(words.length, 101, 'all 101 secret words delivered');
+test('074: expected delivered TTS counts (100 words / 8 tasks / 10 phrases)', () => {
+  // WTJ-20260706-011: xylophone deleted (taught the wrong X sound), 101 -> 100.
+  assert.equal(words.length, 100, 'all 100 secret words delivered');
   assert.equal(tasks.length, 8, 'all 8 task prompts delivered');
   assert.equal(phrases.length, 10, 'all 10 composite phrases delivered');
+});
+
+test('011: xylophone removed from secretWords delivery manifest', () => {
+  assert.equal(manifest.secretWords.some((e) => e.word === 'xylophone'), false, 'xylophone entry must not remain in missing-audio.json secretWords[]');
 });
 
 test('084+024: expected delivered ZH task-voice count (32: 24 + 025 new 8)', () => {

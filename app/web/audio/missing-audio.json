@@ -9,14 +9,14 @@
   "summary": {
     "note": "三大必选类目（验收标准 6）：secretWords / sfx / taskVoice。compositePhrases 为支撑 REQ-AST-08 组合任务语音运行时拼接架构的额外补充清单，非验收标准硬要求，但与 audio.js 的 playComposite 直接对应。",
     "secretWords": {
-      "packBTotal": 100,
+      "packBTotal": 99,
       "additionalManifestOnlyWords": 1,
       "totalNotDelivered": 0,
       "byPackBBatch": {
         "ready-v1": 37,
         "batch-02": 24,
         "batch-03": 27,
-        "batch-04": 12
+        "batch-04": 11
       }
     },
     "sfx": {
@@ -959,16 +959,6 @@
       "word": "wagon",
       "soundKey": "secret.word.wagon",
       "path": "audio/words/wagon.m4a",
-      "status": "delivered",
-      "source": "production-pack-b",
-      "packBBatch": "batch-04",
-      "packBSpriteStatus": "pending_sprite_stubbed",
-      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
-    },
-    {
-      "word": "xylophone",
-      "soundKey": "secret.word.xylophone",
-      "path": "audio/words/xylophone.m4a",
       "status": "delivered",
       "source": "production-pack-b",
       "packBBatch": "batch-04",

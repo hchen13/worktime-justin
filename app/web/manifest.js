@@ -288,7 +288,6 @@
         { word: 'window', spriteFile: 'sprites/window.png', audioFile: 'audio/words/window.m4a' }, // Pack B ready（batch-04）
         { word: 'wagon', spriteFile: 'sprites/wagon.png', audioFile: 'audio/words/wagon.m4a' }, // Pack B ready（batch-04）
         // --- X ---
-        { word: 'xylophone', spriteFile: 'sprites/xylophone.png', audioFile: 'audio/words/xylophone.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
         { word: 'xray', spriteFile: 'sprites/xray.png', audioFile: 'audio/words/xray.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
         // --- Y ---
         { word: 'yoyo', spriteFile: 'sprites/yoyo.png', audioFile: 'audio/words/yoyo.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
