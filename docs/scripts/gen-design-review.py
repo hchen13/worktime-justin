@@ -746,7 +746,7 @@ def render_pack_a_section() -> str:
 def render_pack_b_section() -> str:
     return render_source_root(
         "docs/assets/production-pack-b",
-        "生产素材 Pack B（秘密词词池 100 词）",
+        "生产素材 Pack B（活跃秘密词 99 词）",
         "pack-b",
         note="对应飞书卡 WTJ-20260704-006；stubs/ 下的占位素材已不再被 manifest 引用，标记为「疑似旧版」。",
     )

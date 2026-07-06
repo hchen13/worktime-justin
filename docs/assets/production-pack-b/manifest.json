@@ -3,8 +3,8 @@
   "card_id": "WTJ-20260704-006",
   "created_by": "DESIGN",
   "created_at_cst": "2026-07-04 02:17",
-  "target_word_count": 100,
-  "production_ready_count": 100,
+  "target_word_count": 99,
+  "production_ready_count": 99,
   "stubbed_pending_count": 0,
   "style_baseline": "docs/assets/sprites/production-sprite-contact-sheet.png",
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
@@ -145,11 +145,6 @@
     "wagon_source_green": "docs/assets/production-pack-b/source/wagon-source-green.png",
     "wagon_alpha_raw": "docs/assets/production-pack-b/source/wagon-alpha-raw.png",
     "letter_w_prompt_record": "docs/assets/production-pack-b/source/letter-w-prompt.md",
-    "xylophone_source_green": "docs/assets/production-pack-b/source/xylophone-source-green.png",
-    "xylophone_alpha_raw": "docs/assets/production-pack-b/source/xylophone-alpha-raw.png",
-    "xray_source_green": "docs/assets/production-pack-b/source/xray-source-green.png",
-    "xray_alpha_raw": "docs/assets/production-pack-b/source/xray-alpha-raw.png",
-    "letter_x_prompt_record": "docs/assets/production-pack-b/source/letter-x-prompt.md",
     "yoyo_source_green": "docs/assets/production-pack-b/source/yoyo-source-green.png",
     "yoyo_alpha_raw": "docs/assets/production-pack-b/source/yoyo-alpha-raw.png",
     "yarn_source_green": "docs/assets/production-pack-b/source/yarn-source-green.png",
@@ -163,7 +158,10 @@
     "zipper_alpha_raw": "docs/assets/production-pack-b/source/zipper-alpha-raw.png",
     "zucchini_source_magenta": "docs/assets/production-pack-b/source/zucchini-source-magenta.png",
     "zucchini_alpha_raw": "docs/assets/production-pack-b/source/zucchini-alpha-raw.png",
-    "letter_z_prompt_record": "docs/assets/production-pack-b/source/letter-z-prompt.md"
+    "letter_z_prompt_record": "docs/assets/production-pack-b/source/letter-z-prompt.md",
+    "fox_source_green": "docs/assets/production-pack-b/source/fox-source-green.png",
+    "fox_alpha_raw": "docs/assets/production-pack-b/source/fox-alpha-raw.png",
+    "fox_prompt_record": "docs/assets/production-pack-b/source/fox-prompt.md"
   },
   "schema": {
     "word": "lowercase secret input token; no spaces",
@@ -1097,24 +1095,14 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/wagon.png"
     },
     {
-      "word": "xylophone",
+      "word": "fox",
       "first_letter": "X",
-      "display_name": "Xylophone",
-      "asset_path": "docs/assets/production-pack-b/sprites/xylophone.png",
-      "sound_key": "secret.word.xylophone",
+      "display_name": "Fox",
+      "asset_path": "docs/assets/production-pack-b/sprites/fox.png",
+      "sound_key": "secret.word.fox",
       "status": "ready",
       "batch": "batch-04",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/xylophone.png"
-    },
-    {
-      "word": "xray",
-      "first_letter": "X",
-      "display_name": "X-ray",
-      "asset_path": "docs/assets/production-pack-b/sprites/xray.png",
-      "sound_key": "secret.word.xray",
-      "status": "ready",
-      "batch": "batch-04",
-      "intended_asset_path": "docs/assets/production-pack-b/sprites/xray.png"
+      "intended_asset_path": "docs/assets/production-pack-b/sprites/fox.png"
     },
     {
       "word": "yoyo",
@@ -1177,7 +1165,7 @@
       "intended_asset_path": "docs/assets/production-pack-b/sprites/zucchini.png"
     }
   ],
-  "updated_at_cst": "2026-07-04 10:58",
+  "updated_at_cst": "2026-07-06 21:05",
   "updates": [
     {
       "card_id": "WTJ-20260704-033",
@@ -1395,6 +1383,14 @@
         "zucchini"
       ],
       "changes": "Generated production zebra, zipper, and zucchini sprites, replaced final placeholder asset_paths, updated contact sheet, and marked Pack B fully ready."
+    },
+    {
+      "card_id": "WTJ-20260706-015",
+      "updated_at_cst": "2026-07-06 21:05",
+      "words": [
+        "fox"
+      ],
+      "changes": "Integrated fox as the X-ending secret word, removed xylophone/xray from the active review pack, copied production sprite/source/review assets, and updated runtime manifest alignment."
     }
   ]
 }

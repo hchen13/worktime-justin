@@ -3,7 +3,7 @@
   "cardId": "WTJ-20260704-016",
   "generatedAtCst": "2026-07-04",
   "sourceOfTruth": {
-    "secretWordRange": "docs/assets/production-pack-b/manifest.json（100 词目标词池，卡 WTJ-20260704-006）——不是 app/web/manifest.js 当前运行时样例的 8 词子集。",
+    "secretWordRange": "docs/assets/production-pack-b/manifest.json（99 个活跃 Pack B 验收词；fox 替代 xray/xylophone）+ app/web/manifest.js 的遗留 treasurechest 词。",
     "runtimePathConvention": "app/web/manifest.js secretWords.pool[].audioFile 与 tasks.templates.*.examples[].voicePrompt/successAudio 的路径约定（audio/words/<word>.m4a 、 audio/tasks/<id>.m4a 、 audio/sfx/<key>.m4a）。"
   },
   "summary": {
@@ -11,13 +11,14 @@
     "secretWords": {
       "packBTotal": 99,
       "additionalManifestOnlyWords": 1,
-      "totalNotDelivered": 0,
+      "totalNotDelivered": 1,
       "byPackBBatch": {
         "ready-v1": 37,
         "batch-02": 24,
         "batch-03": 27,
         "batch-04": 11
-      }
+      },
+      "note": "fox 已替代 xray/xylophone 成为结尾 x 词；sprite 已接入，fox.m4a 暂未交付，需随 WTJ-20260706-008/011 音频返工生成。"
     },
     "sfx": {
       "totalNotDelivered": 0,
@@ -37,7 +38,7 @@
     "compositePhrases": {
       "totalNotDelivered": 0
     },
-    "grandTotalNotDelivered": 8,
+    "grandTotalNotDelivered": 9,
     "taskVoiceZh": {
       "totalNotDelivered": 8,
       "note": "WTJ-20260704-084 全量新生成的 24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P，见 taskVoiceZh[] 里 status:delivered 的 24 条与 TTS-PROVENANCE.md「ZH 中文任务语音」一节）仍然保持 24/24 完整，不受影响。WTJ-20260705-025（drag 池扩容 + door/doorbell 点击任务）新增 8 条 taskVoiceZh 条目，status 均为 not-delivered——见本数组末尾 8 条与 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落（拟定文案已就绪，待 024/084 排期生成）。这 8 条对应的 app/web/manifest.js example 目前 voicePrompt 均为空字符串 ''（no-silent-fallback：不静默复用其他任务的语音），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 的 101/8/10 EN 门与「24 条 delivered ZH」门——deliveredPaths() 按 status==='delivered' 过滤，本次新增的 8 条 not-delivered 不计入该计数；task-voice-path.test.mjs 的 ===8 EN 门同样不受影响）。"
@@ -966,14 +967,14 @@
       "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
     },
     {
-      "word": "xray",
-      "soundKey": "secret.word.xray",
-      "path": "audio/words/xray.m4a",
-      "status": "delivered",
+      "word": "fox",
+      "soundKey": "secret.word.fox",
+      "path": "audio/words/fox.m4a",
+      "status": "not-delivered",
       "source": "production-pack-b",
-      "packBBatch": "batch-04",
-      "packBSpriteStatus": "pending_sprite_stubbed",
-      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+      "packBBatch": "WTJ-20260706-015",
+      "packBSpriteStatus": "ready",
+      "licenseNeed": "WTJ-20260706-015 已接入 fox sprite；真实 fox.m4a 尚未生成，必须随 WTJ-20260706-008/011 的 CosyVoice3 返工一起交付，不能复用 xray 或其他占位音频。"
     },
     {
       "word": "yoyo",
@@ -1704,7 +1705,7 @@
     },
     "encoding": "ffmpeg loudnorm I=-16 LUFS + alimiter limit=0.794 level=false; 24kHz mono AAC 64k .m4a",
     "coverage": {
-      "secretWords": 101,
+      "secretWords": 99,
       "taskVoice": 8,
       "compositePhrases": 10
     },

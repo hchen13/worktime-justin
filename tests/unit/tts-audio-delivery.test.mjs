@@ -7,9 +7,9 @@
 //
 // WTJ-20260704-084 update: added the same static delivery gate for the new ZH task-voice
 // category (taskVoiceZh, 24 complete Chinese sentences — Kokoro zf_xiaoxiao). This is a
-// distinct, additive count: the existing 101/8/10 EN gate is untouched (regenerated 084's
+// distinct, additive count: the original EN gate is tracked separately (regenerated 084's
 // EN audio byte-for-byte identical to the 074/075 delivery — see TTS-PROVENANCE.md), so
-// this file still separately asserts the original EN counts to catch any future regression,
+// this file still separately asserts the current EN counts to catch any future regression,
 // plus the new 24-count ZH gate below.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,15 +30,20 @@ const tasks = deliveredPaths(manifest.taskVoice, 'voicePromptPath');
 const phrases = deliveredPaths(manifest.compositePhrases, 'path');
 const tasksZh = deliveredPaths(manifest.taskVoiceZh, 'voicePromptPath');
 
-test('074: expected delivered TTS counts (100 words / 8 tasks / 10 phrases)', () => {
-  // WTJ-20260706-011: xylophone deleted (taught the wrong X sound), 101 -> 100.
-  assert.equal(words.length, 100, 'all 100 secret words delivered');
+test('074+015: expected delivered TTS counts (99 words delivered + fox pending / 8 tasks / 10 phrases)', () => {
+  // WTJ-20260706-011/015: xylophone/xray removed; fox sprite is integrated but fox.m4a
+  // is intentionally pending WTJ-20260706-008/011 audio rework. Do not fake it with xray.
+  assert.equal(words.length, 99, '99 secret word audio files delivered; fox.m4a remains pending');
   assert.equal(tasks.length, 8, 'all 8 task prompts delivered');
   assert.equal(phrases.length, 10, 'all 10 composite phrases delivered');
 });
 
-test('011: xylophone removed from secretWords delivery manifest', () => {
+test('011+015: xylophone/xray removed and fox audio remains explicitly pending', () => {
   assert.equal(manifest.secretWords.some((e) => e.word === 'xylophone'), false, 'xylophone entry must not remain in missing-audio.json secretWords[]');
+  assert.equal(manifest.secretWords.some((e) => e.word === 'xray'), false, 'xray entry must not remain in missing-audio.json secretWords[]');
+  const fox = manifest.secretWords.find((e) => e.word === 'fox');
+  assert.ok(fox, 'fox entry must exist in missing-audio.json secretWords[]');
+  assert.equal(fox.status, 'not-delivered', 'fox.m4a must stay not-delivered until CosyVoice3 rework produces a real file');
 });
 
 test('084+024: expected delivered ZH task-voice count (32: 24 + 025 new 8)', () => {

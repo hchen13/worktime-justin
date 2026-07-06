@@ -2,7 +2,7 @@
   "missing_count": 0,
   "stub_asset_path": "docs/assets/production-pack-b/stubs/secret-word-placeholder.png",
   "items": [],
-  "updated_at_cst": "2026-07-04 10:58",
+  "updated_at_cst": "2026-07-06 21:05",
   "resolved": [
     {
       "card_id": "WTJ-20260704-033",
@@ -335,18 +335,6 @@
       "resolved_at_cst": "2026-07-04 09:54"
     },
     {
-      "card_id": "WTJ-20260704-052",
-      "word": "xylophone",
-      "asset_path": "docs/assets/production-pack-b/sprites/xylophone.png",
-      "resolved_at_cst": "2026-07-04 10:23"
-    },
-    {
-      "card_id": "WTJ-20260704-052",
-      "word": "xray",
-      "asset_path": "docs/assets/production-pack-b/sprites/xray.png",
-      "resolved_at_cst": "2026-07-04 10:23"
-    },
-    {
       "card_id": "WTJ-20260704-053",
       "word": "yoyo",
       "asset_path": "docs/assets/production-pack-b/sprites/yoyo.png",
@@ -381,6 +369,12 @@
       "word": "zucchini",
       "asset_path": "docs/assets/production-pack-b/sprites/zucchini.png",
       "resolved_at_cst": "2026-07-04 10:58"
+    },
+    {
+      "card_id": "WTJ-20260706-015",
+      "word": "fox",
+      "asset_path": "docs/assets/production-pack-b/sprites/fox.png",
+      "resolved_at_cst": "2026-07-06 21:05"
     }
   ]
 }

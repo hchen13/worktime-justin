@@ -144,18 +144,16 @@
       //
       // 词池扩展记录（本卡 WTJ-20260704-019 第二批，2026-07-04）：pool 已从"首批 8 词"
       // 同步扩展到 Pack B 生产词池（卡 WTJ-20260704-006，源 docs/assets/production-pack-b/
-      // manifest.json + missing-assets.json）。Pack B 曾是活数据源、DESIGN 分批补齐 stub，现已
-      // **全部产出完毕**——现场核对以两个 json 的 updated_at_cst 2026-07-04 10:58 版本为准：
-      // target_word_count=100、production_ready_count=100、stubbed_pending_count=0（卡
-      // WTJ-20260704-054 补齐最后 Z 组 zebra/zipper/zucchini，PM 已验收）。下方 pool 共 101 条，
-      // **全部 ready、无 spriteStub**：Pack B 的 100 词（100 条 ready，每词 spriteFile 指向真实
-      // sprite）+ 1 条非 Pack B 的遗留词 treasurechest（复用已验收 treasure-chest.png，见下方说明）。
+      // manifest.json + missing-assets.json）。Pack B 曾是活数据源、DESIGN 分批补齐 stub，2026-07-06
+      // 按 Ethan 验收裁定移除旧 X 起始词 xylophone/xray，并接入结尾 x 词 fox（WTJ-20260706-015）。
+      // 下方 pool 共 100 条，全部有真实 sprite、无 spriteStub：活跃 Pack B 99 词 + 1 条非 Pack B
+      // 的遗留词 treasurechest（复用已验收 treasure-chest.png，见下方说明）。
       // 曾用于 stub 占位的共享图 sprites/secret-word-placeholder.png 现已无 pool 条目引用，作为
       // "未来若有新 stub 词可复用"的备用素材保留在 app/web/assets/sprites/，不被运行时加载。
       //
       // 已知差异（据实记录，不在本卡自行裁决）：docs/index.html #secret 词池规模段落下方给出的示例词
       // 标签是 dog / cat / apple / ball / moon / star / car / zoo（8 个，仅作规模示意，覆盖不同字母）。
-      // Pack B 100 词已覆盖 dog / cat / apple / ball / star / car / basket（moon 词已在 Pack B M 组
+      // Pack B 活跃词已覆盖 dog / cat / apple / ball / star / car / basket（moon 词已在 Pack B M 组
       // 补齐为正式秘密词；zoo 仍未补齐，Pack B 未提供对应词）。这 7 个词与"首批 8 词"最初
       // 已验收的 v3 baseline sprite（卡 WTJ-20260703-007，REQ-AST-12）同名，但 Pack B 对它们
       // 重新生成了一版不同的 sprite（md5 与 v3 baseline 不同，已现场核对）——本卡按"以已验收为准，
@@ -163,13 +161,12 @@
       // 不切换成 Pack B 重生成版（Pack B 版未拷贝进运行时，仅停留在 docs/assets/production-pack-b/
       // sprites/），下方各条目已用行内注释标注。
       //
-      // treasurechest（101st，非 Pack B 词）：遗留自 004/009 首批 8 词基线，Pack B 100 词范围内
+      // treasurechest（非 Pack B 词）：遗留自 004/009 首批 8 词基线，Pack B 词范围内
       // 用的是不同的词 treasure（T 组，含义相近但字面不同，各自独立词条、互不冲突，均已入池）。
       // treasurechest 对应的 sprite（treasure-chest.png）在 docs/index.html 素材章节原本对应的是
       // REQ-AST-06（宝箱），而非 REQ-AST-04（秘密词对应物体），且不在 Pack B 的 100 词正式清单内。
       // 本卡不删除这个已存在两个批次（004/009、016）都引用过的词（audio/missing-audio.json 已把它
-      // 登记为 additionalManifestOnlyWords: 1、totalNotDelivered 101 的一部分，删除会与该清单的
-      // 既有口径不一致），仅在此如实记录，请 PM / DESIGN 后续裁决是否正式保留 treasurechest 为
+      // 登记为 additionalManifestOnlyWords: 1），仅在此如实记录，请 PM / DESIGN 后续裁决是否正式保留 treasurechest 为
       // 秘密词，或改回任务专用素材。
       pool: [
         // --- A ---
@@ -288,7 +285,7 @@
         { word: 'window', spriteFile: 'sprites/window.png', audioFile: 'audio/words/window.m4a' }, // Pack B ready（batch-04）
         { word: 'wagon', spriteFile: 'sprites/wagon.png', audioFile: 'audio/words/wagon.m4a' }, // Pack B ready（batch-04）
         // --- X ---
-        { word: 'xray', spriteFile: 'sprites/xray.png', audioFile: 'audio/words/xray.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
+        { word: 'fox', spriteFile: 'sprites/fox.png', audioFile: 'audio/words/fox.m4a' }, // Pack B ready（WTJ-20260706-015；按 Ethan 裁定用结尾 x 词替代 xray/xylophone）
         // --- Y ---
         { word: 'yoyo', spriteFile: 'sprites/yoyo.png', audioFile: 'audio/words/yoyo.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
         { word: 'yarn', spriteFile: 'sprites/yarn.png', audioFile: 'audio/words/yarn.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
@@ -297,13 +294,11 @@
         { word: 'zebra', spriteFile: 'sprites/zebra.png', audioFile: 'audio/words/zebra.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
         { word: 'zipper', spriteFile: 'sprites/zipper.png', audioFile: 'audio/words/zipper.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
         { word: 'zucchini', spriteFile: 'sprites/zucchini.png', audioFile: 'audio/words/zucchini.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
-        // --- 非 Pack B：既有 v3 基线遗留词（101st，见上方说明） ---
-        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' } // 遗留自 004/009 首批 8 词基线；不在 Pack B 100 词范围内（Pack B 用的是 'treasure'，见上方 T 组），PM/DESIGN 尚未裁决是否保留（见 app/web/MANIFEST.md「已知的文档/素材对齐问题」与 app/web/audio/missing-audio.json additionalManifestOnlyWords）
+        // --- 非 Pack B：既有 v3 基线遗留词（见上方说明） ---
+        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' } // 遗留自 004/009 首批 8 词基线；不在 Pack B 活跃词范围内（Pack B 用的是 'treasure'，见上方 T 组），PM/DESIGN 尚未裁决是否保留（见 app/web/MANIFEST.md「已知的文档/素材对齐问题」与 app/web/audio/missing-audio.json additionalManifestOnlyWords）
       ],
-      // 上述 101 条 audioFile 均为约定路径 stub：授权语音 / 音效素材尚未到位（全部 137 条缺口的一部分，
-      // 见 app/web/audio/missing-audio.json 的 secretWords 段，totalNotDelivered: 101 = Pack B 100 +
-      // 本 manifest 独有的 treasurechest 1 条），由音频供给卡（016，命名沿用本文件 WTJ-20260704-016）
-      // 交付 .m4a 文件后落地，届时无需改动路径，只需补齐对应文件（见 REQ-AST-08 / REQ-AST-09）。
+      // 上述 audioFile 均为约定路径；当前只有 fox.m4a 仍未交付（见 app/web/audio/missing-audio.json，
+      // WTJ-20260706-008/011 音频返工链路），届时无需改动路径，只需补齐对应文件。
       // wtjres:// 加载层（019 第一批，见 shell/main.swift WTJResourceSchemeHandler）已就位：真实
       // .m4a 文件放入对应路径后，audio.js 的 fetch() 即可直接加载播放，无需再改任何代码。
       audioNotDelivered: true,
