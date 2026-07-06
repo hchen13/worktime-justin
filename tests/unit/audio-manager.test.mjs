@@ -96,7 +96,7 @@ function run() {
   assert.strictEqual(Object.isFrozen(WTJ_AUDIO), true, 'WTJ_AUDIO must be frozen');
   var expectedMethods = [
     'unlock', 'isUnlocked', 'preload', 'preloadManifest',
-    'playWord', 'playSfx', 'playTaskVoice', 'playComposite',
+    'playWord', 'playWordBilingual', 'playSfx', 'playTaskVoice', 'playComposite',
     'clearCache', 'getCacheStats', 'setMaxCacheEntries',
     'getMissingReport', 'getSfxKeys'
   ];
@@ -261,6 +261,56 @@ function run() {
         assert.strictEqual(r2.path, 'audio/tasks/press-a.m4a');
         assert.strictEqual(r2.key, 'press-letter-a');
         console.log('PASS: playTaskVoice string + object passthrough both resolve (id != filename stem case).');
+      });
+    });
+  });
+
+  section('8b. WTJ-20260706-012: playWordBilingual({word, audioFile, audioFileZh:null}) degrades to EN-only playback (equivalent to playWord())');
+  pending = pending.then(function () {
+    WTJ_AUDIO.clearCache();
+    startCalls.length = 0;
+    return WTJ_AUDIO.playWordBilingual({ word: 'dog', audioFile: 'audio/words/exists-dog.m4a', audioFileZh: null }).then(function (result) {
+      console.log('bilingual EN-only parts:', JSON.stringify(result.parts.map(function (p) { return p.path; })));
+      assert.strictEqual(result.parts.length, 1, 'audioFileZh=null should schedule exactly one (EN) part');
+      assert.strictEqual(result.parts[0].path, 'audio/words/exists-dog.m4a');
+      assert.strictEqual(result.parts[0].ok, true);
+      assert.strictEqual(result.silent, false);
+      assert.deepStrictEqual(startCalls, [0], 'EN-only playback should schedule exactly one source.start(0) call');
+      console.log('PASS: playWordBilingual(audioFileZh=null) degrades to EN-only playback via playComposite.');
+    });
+  });
+
+  section('8c. WTJ-20260706-012: playWordBilingual({word, audioFile, audioFileZh}) sequences EN then ZH via playComposite (no overlap)');
+  pending = pending.then(function () {
+    WTJ_AUDIO.clearCache();
+    startCalls.length = 0;
+    return WTJ_AUDIO.playWordBilingual({ word: 'dog', audioFile: 'audio/words/exists-dog.m4a', audioFileZh: 'audio/words/exists-dog.zh.m4a' }).then(function (result) {
+      console.log('bilingual EN->ZH parts:', JSON.stringify(result.parts.map(function (p) { return p.path; })));
+      console.log('recorded start(when) calls:', JSON.stringify(startCalls));
+      assert.strictEqual(result.parts.length, 2, 'audioFileZh present should schedule EN + ZH, two parts');
+      assert.strictEqual(result.parts[0].path, 'audio/words/exists-dog.m4a');
+      assert.strictEqual(result.parts[1].path, 'audio/words/exists-dog.zh.m4a');
+      result.parts.forEach(function (p) {
+        assert.strictEqual(p.ok, true);
+        assert.strictEqual(p.silent, false);
+      });
+      assert.deepStrictEqual(startCalls, [0, FAKE_BUFFER_DURATION], 'EN then ZH must be scheduled sequentially (no overlap), same semantics as playComposite()');
+      assert.strictEqual(result.silent, false);
+      console.log('PASS: playWordBilingual(word+ZH) sequences EN then ZH via playComposite, no overlap.');
+    });
+  });
+
+  section('8d. WTJ-20260706-012: playWordBilingual() defensive argument validation (non-object / missing word / missing audioFile) degrades without throwing');
+  pending = pending.then(function () {
+    return WTJ_AUDIO.playWordBilingual(null).then(function (r1) {
+      assert.strictEqual(r1.silent, true, 'non-object arg should degrade to silent');
+      assert.strictEqual(r1.reason, 'invalid-arg');
+      return WTJ_AUDIO.playWordBilingual({ audioFileZh: 'audio/words/exists-x.zh.m4a' }).then(function (r2) {
+        assert.strictEqual(r2.silent, true, 'missing word/audioFile should degrade to silent, not throw');
+        return WTJ_AUDIO.playWordBilingual({ word: 'dog' }).then(function (r3) {
+          assert.strictEqual(r3.silent, true, 'missing audioFile alone should also degrade to silent');
+          console.log('PASS: playWordBilingual() invalid/incomplete args degrade to silent without throwing.');
+        });
       });
     });
   });

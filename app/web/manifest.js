@@ -771,7 +771,27 @@
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'zebra'
             }
-          ]
+          ],
+          // WTJ-20260706-012（EN-side 随机 word-card find driver；ZH 半部分门禁在 011/008，
+          // 本卡不新增任何 ZH 清单/字段）：启用后 task-templates.js 的 handleQuestionClicked()
+          // 改为从 secretWords.pool（现场核对 100 词，xylophone 已在 011 卡删除，不是 101）里
+          // 抽 1 个 target + sampleSize 个 distractor 合成一个 synthetic find example，取代上方
+          // 12 条精选 example 作为主路径——那 12 条不删除，继续作为 randomPool 缺失/禁用/pool
+          // 为空时的回退路径（见 task-templates.js drawWordCardFind() 的说明）。
+          // sampleSize=2：与上方 12 条既有 find example 的 distractorSprites 数量口径保持一致
+          // （逐条现场核对，均恰好 2 个干扰项），不引入新的干扰项数量约定。
+          randomPool: {
+            enabled: true,
+            sampleSize: 2,
+            sourcePool: 'secretWords'
+          },
+          // wordCardBilingual：true 表示 renderFindTask() 在任务渲染开始时通过 WTJ_AUDIO.
+          // playWordBilingual() 播放目标词的双语语音。EN 半部分本卡落地（audioFile 直接取自
+          // 抽中的 secretWords.pool[].audioFile，100 词均已交付真实 .m4a）；ZH 半部分
+          // （audioFileZh）门禁在 011（中文秘密词清单）/008，本卡的 synthetic example 恒把
+          // audioFileZh 设为 null——playWordBilingual() 对 null 的既有降级契约是退化为纯 EN
+          // 播放（等价于 playWord()），不是本卡自造的新分支。
+          wordCardBilingual: true
         },
 
         press: {

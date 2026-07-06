@@ -314,6 +314,15 @@
   // tasks.templates.drag.examples 行内注释），同样全部复用 secretWords.pool 已交付 sprite，
   // 这里追加对应的新文件名（egg/nest/flower/vase/leaf/lemon/pear/net/jam/jar/treasure/key/
   // spoon），零新增美术、零逻辑改动，只是扩充这张既有白名单。
+  //
+  // WTJ-20260706-012（EN-side 随机 word-card find driver）：drawWordCardFind() 会从
+  // secretWords.pool 里任意抽取 target/distractor（不再局限于上方 12 条精选 example 手工列举
+  // 过的那一小撮词），因此这里现场核对 manifest.js secretWords.pool 的全部 100 个词条（xylophone
+  // 已在 011 卡删除，现场核对不是 101），把此前未被任何 find/drag example 手工引用过、因此还不
+  // 在白名单里的词条 sprite 文件名一次性补全——否则这些词被随机抽中当 target/distractor 时，
+  // resolveSpritePath() 会走到"未知文件名"的 assets/ 前缀兜底分支噪声警告（路径拼接本身其实还是
+  // 对的，只是会刷 console.warn）。下方新增的这一批全部是 secretWords.pool 已交付的真实素材，
+  // 零新增美术。
   var SPRITES_FILENAMES = [
     'dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png',
     'banana.png', 'orange.png', 'moon.png', 'sun.png', 'fish.png', 'frog.png', 'duck.png',
@@ -321,7 +330,32 @@
     'rocket.png', 'robot.png', 'rainbow.png', 'turtle.png', 'unicorn.png', 'zebra.png',
     'whale.png', 'octopus.png',
     'egg.png', 'nest.png', 'flower.png', 'vase.png', 'leaf.png', 'lemon.png', 'pear.png',
-    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png'
+    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png',
+    // WTJ-20260706-012 新增：secretWords.pool 里此前从未被任何 drag/find example 引用过的
+    // 剩余词条 sprite 文件名（按 pool 内 A~Z 分组顺序列出，逐一现场核对磁盘文件存在）。
+    'ant.png', 'airplane.png', 'alligator.png',
+    'cup.png', 'cake.png',
+    'drum.png',
+    'eye.png', 'envelope.png',
+    'grapes.png', 'gift.png', 'guitar.png',
+    'hat.png', 'heart.png', 'house.png',
+    'icecream.png', 'igloo.png', 'insect.png', 'island.png',
+    'juice.png', 'jellyfish.png',
+    'kite.png', 'kettle.png',
+    'mouse.png', 'milk.png',
+    'nose.png', 'noodle.png',
+    'owl.png', 'oven.png',
+    'pencil.png', 'pizza.png',
+    'queen.png', 'quilt.png', 'quail.png', 'quarter.png',
+    'ring.png',
+    'shoe.png',
+    'tree.png', 'train.png',
+    'umbrella.png', 'ukulele.png', 'uniform.png',
+    'van.png', 'violin.png', 'volcano.png',
+    'watch.png', 'window.png', 'wagon.png',
+    'fox.png',
+    'yoyo.png', 'yarn.png', 'yak.png',
+    'zipper.png', 'zucchini.png'
   ];
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
@@ -538,6 +572,109 @@
       indices.push(i);
     }
     return drawFromShuffleBag(state, indices);
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260706-012（EN-side 随机 word-card find driver）：find 类型的 target/distractor
+  // 不再局限于 manifest.js tasks.templates.find.examples 手工列举过的那 12 条精选组合——
+  // 改为直接从 secretWords.pool（现场核对 100 词，见该 domain 行内注释）任意抽取，覆盖面从
+  // "12 条手工搭配"扩到"100 词间任意组合"。target 用一个专属的持续洗牌袋（wordCardBagState，
+  // 候选池是 pool 的下标），与 drawTaskType()/drawExampleIndex() 完全同一套
+  // refillShuffleBag()/drawFromShuffleBag() 机制、同样的两条契约（一整袋内每个词都恰好当一次
+  // target；跨袋边界不连续选中同一个词）。distractor 则在每次调用时现搭一个"候选池=pool 里
+  // 除本次 target 外全部下标"的一次性洗牌袋抽 sampleSize 个——用的是同一对 helper 函数，只是
+  // state 是每次调用现建的临时对象而不是像 target 那样持续复用：这是刻意的，如果 distractor
+  // 也复用同一个持续状态、又恰好在同一次调用内触发袋子重新洗牌，重新洗出来的新袋子是对整个
+  // pool 重新洗牌（不排除本次已经抽中的 target），会破坏"target 与 distractor 不重复"这条
+  // 硬要求；本次调用内候选池已经手工排除了 target，且 pool.length-1 恒 >= sampleSize（100 词
+  // 池子），refillShuffleBag() 在同一次调用内只会触发一次，不会出现"袋子中途重新洗牌"的边界
+  // 问题。
+  var wordCardBagState = { bag: [], lastPicked: null };
+
+  function getSecretWordsPool() {
+    if (MANIFEST && MANIFEST.secretWords && Array.isArray(MANIFEST.secretWords.pool)) {
+      return MANIFEST.secretWords.pool;
+    }
+    return [];
+  }
+
+  // sampleWordCardsFromPool(n)：从 secretWords.pool 抽 1 个 target + n 个 distractor（互不
+  // 重复），返回 { target, distractors }（均为 pool 条目对象本身，非下标）；pool 为空/缺失时
+  // 返回 null（调用方 drawWordCardFind() 据此回退到固定 examples，并且这里已经 warn 过一次，
+  // 调用方不需要重复 warn）。n 大于 pool.length-1（可用的 distractor 候选数）时防御式截断到
+  // 实际可抽取的最大数量，不抛错、不返回不足额的报错——纯粹的边界防御，正常配置（sampleSize=2,
+  // pool=100 词）不会走到这个分支。
+  function sampleWordCardsFromPool(n) {
+    var pool = getSecretWordsPool();
+    if (!pool.length) {
+      console.warn('[WTJ_TASK_TEMPLATES] secretWords.pool 为空/缺失，无法抽取随机 word-card find 目标。');
+      return null;
+    }
+    var indices = [];
+    var i;
+    for (i = 0; i < pool.length; i++) {
+      indices.push(i);
+    }
+    var targetIdx = drawFromShuffleBag(wordCardBagState, indices);
+
+    var remaining = [];
+    for (i = 0; i < indices.length; i++) {
+      if (indices[i] !== targetIdx) {
+        remaining.push(indices[i]);
+      }
+    }
+    var count = (typeof n === 'number' && n >= 0) ? Math.min(n, remaining.length) : 0;
+    var distractorState = { bag: [], lastPicked: null }; // 每次调用现建的一次性状态，见上方说明。
+    var distractors = [];
+    for (i = 0; i < count; i++) {
+      var distractorIdx = drawFromShuffleBag(distractorState, remaining);
+      distractors.push(pool[distractorIdx]);
+    }
+    return { target: pool[targetIdx], distractors: distractors };
+  }
+
+  // drawWordCardFind()：读取 manifest.tasks.templates.find.randomPool 配置，未启用/pool 为空
+  // 时返回 null（调用方 handleQuestionClicked() 据此回退到 12 条固定 examples，见该函数）。
+  // 启用时构建一个 SYNTHETIC find example——形状上尽量贴近固定 example 的 schema（targetSprite/
+  // distractorSprites/hoverSec/pressOrHoverAlsoCompletes/successAudio/learningWord 字段齐全，
+  // renderFindTask()/handleTemplateComplete() 等既有消费逻辑不需要区分"这是不是随机抽的"），
+  // 额外带两个只有 synthetic example 才有的字段（wordAudioFile/wordAudioFileZh），供
+  // renderFindTask() 在任务开始时播放目标词双语语音（见该函数 playFindWordBilingualDefensive()
+  // 一节）。voicePrompt 恒为空字符串——随机抽取的目标词没有对应的预生成"找到 xxx"任务提示句
+  // （zh/en 均没有，且 100 词任意组合也不可能穷举预生成），no-silent-fallback 原则下不指向任何
+  // 语义不匹配的现成语音文件，走 wordCardBilingual 的双语词语播放替代任务语音提示。
+  function drawWordCardFind() {
+    var findCfg = TEMPLATES_CFG ? TEMPLATES_CFG.find : null;
+    var randomPoolCfg = (findCfg && findCfg.randomPool) ? findCfg.randomPool : null;
+    if (!randomPoolCfg || randomPoolCfg.enabled !== true) {
+      return null;
+    }
+    var sampleSize = (typeof randomPoolCfg.sampleSize === 'number' && randomPoolCfg.sampleSize >= 0) ? randomPoolCfg.sampleSize : 2;
+    var sample = sampleWordCardsFromPool(sampleSize);
+    if (!sample) {
+      return null;
+    }
+    var entry = sample.target;
+    var distractorSprites = [];
+    var i;
+    for (i = 0; i < sample.distractors.length; i++) {
+      distractorSprites.push(sample.distractors[i].spriteFile);
+    }
+    return {
+      id: 'find-card-' + entry.word,
+      targetSprite: entry.spriteFile,
+      distractorSprites: distractorSprites,
+      voicePrompt: '',
+      hoverSec: 1,
+      pressOrHoverAlsoCompletes: true,
+      successAudio: 'audio/sfx/task-success.m4a',
+      learningWord: entry.word,
+      // synthetic example 专属字段（12 条固定 example 没有）：renderFindTask() 消费，见该函数。
+      wordAudioFile: entry.audioFile,
+      // ZH 半部分门禁在 011（中文秘密词清单）/008，本卡不新增 ZH word-card 列表，恒传 null——
+      // playWordBilingual() 对 null 的既有降级契约是退化为纯 EN 播放。
+      wordAudioFileZh: null
+    };
   }
 
   // ---------------------------------------------------------------------
@@ -952,6 +1089,32 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260706-012：renderFindTask() 任务渲染开始时（而非完成时——与上面 playLearningWordDefensive()
+  // 的完成态强化播放是两个不同的时机）播放目标词的双语语音。只有 drawWordCardFind() 产出的
+  // synthetic find example 才带 wordAudioFile 字段（见该函数说明）；12 条固定 example 没有这个
+  // 字段，下面第一个分支据此静默 no-op——它们的语音提示走既有 task.js playTaskVoiceDefensive()
+  // 读取 voicePrompt 字段的路径，不受本函数影响。audioFileZh 恒读取 example.wordAudioFileZh，
+  // 门禁在 011/008 的当前状态下恒为 null，playWordBilingual() 对 null 的既有降级契约是退化为
+  // 纯 EN 播放。
+  // ---------------------------------------------------------------------
+  function playFindWordBilingualDefensive(example) {
+    try {
+      if (!example || typeof example.wordAudioFile !== 'string' || !example.wordAudioFile) {
+        return; // 12 条固定 example 没有 wordAudioFile 字段，属于正常 no-op。
+      }
+      if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWordBilingual === 'function') {
+        window.WTJ_AUDIO.playWordBilingual({
+          word: (typeof example.learningWord === 'string' && example.learningWord) ? example.learningWord : null,
+          audioFile: example.wordAudioFile,
+          audioFileZh: (typeof example.wordAudioFileZh === 'string' && example.wordAudioFileZh) ? example.wordAudioFileZh : null
+        });
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] window.WTJ_AUDIO.playWordBilingual 调用失败，已捕获：', err);
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // 当前进行中任务的运行时状态（同一时刻只有一个，与 013 的"同一时刻只允许一个进行中任务"
   // 不变式保持一致——本文件不需要自己再做一次并发保护，013 的 startTask() 已经保证了这点）。
   // ---------------------------------------------------------------------
@@ -1229,6 +1392,10 @@
   // 三、寻找任务（REQ-TASK-09）
   // ---------------------------------------------------------------------
   function renderFindTask(example) {
+    // WTJ-20260706-012：任务渲染开始时防御式播放目标词双语语音（见 playFindWordBilingualDefensive()
+    // 说明）——12 条固定 example 没有 wordAudioFile 字段时是安全 no-op，不影响既有行为。
+    playFindWordBilingualDefensive(example);
+
     var elements = [];
     var pointerIds = [];
 
@@ -1386,17 +1553,26 @@
     }
 
     var type = drawTaskType();
-    var examples = getExamplesForType(type);
-    if (!examples.length) {
-      console.warn('[WTJ_TASK_TEMPLATES] 类型 "' + type + '" 没有任何可用任务示例，已跳过本次问号点击。');
-      questionClickCounter += 1;
-      return;
+
+    // WTJ-20260706-012：find 类型优先走随机 word-card 抽取（drawWordCardFind()，消费
+    // manifest.tasks.templates.find.randomPool 配置）——manifest 缺少该配置 / 显式禁用 /
+    // secretWords.pool 为空时返回 null，下面照旧回退到 12 条固定 examples 这条既有路径，不
+    // 影响 drag/click/press 三类的既有行为（它们从不会命中这个分支）。
+    var example = (type === 'find') ? drawWordCardFind() : null;
+
+    if (!example) {
+      var examples = getExamplesForType(type);
+      if (!examples.length) {
+        console.warn('[WTJ_TASK_TEMPLATES] 类型 "' + type + '" 没有任何可用任务示例，已跳过本次问号点击。');
+        questionClickCounter += 1;
+        return;
+      }
+      // 洗牌袋（见文件头「任务生成」一节与上方 drawExampleIndex() 详细说明）：每个 type 各自
+      // 维护一个 example 下标的洗牌袋，无放回抽取保证该 type 的每个 example 在一轮内都会被抽到
+      // ——这就是 P1-1（Fable 对抗评审）"每个 example 都必须可达"这条硬要求现在的满足方式。
+      var exampleIndex = drawExampleIndex(type, examples.length);
+      example = examples[exampleIndex];
     }
-    // 洗牌袋（见文件头「任务生成」一节与上方 drawExampleIndex() 详细说明）：每个 type 各自维护
-    // 一个 example 下标的洗牌袋，无放回抽取保证该 type 的每个 example 在一轮内都会被抽到——这就
-    // 是 P1-1（Fable 对抗评审）"每个 example 都必须可达"这条硬要求现在的满足方式。
-    var exampleIndex = drawExampleIndex(type, examples.length);
-    var example = examples[exampleIndex];
 
     var taskDef = { id: example.id, type: type, voicePrompt: example.voicePrompt };
 

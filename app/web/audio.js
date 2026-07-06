@@ -659,6 +659,39 @@
     return playFromPath(descriptor.type, descriptor.key, descriptor.path);
   }
 
+  // playWordBilingual({ word, audioFile, audioFileZh })
+  // WTJ-20260706-012（EN-side 随机 word-card find driver）新增的双语词语播放入口：先播 EN
+  // （audioFile），若 audioFileZh 是非空字符串则紧接着再播一段 ZH（audioFileZh）——顺序播放
+  // 复用 playComposite() 现成的「时间轴排程」机制（见该函数一节的"依次、不重叠播放"承诺），
+  // 不新写一套排程逻辑。audioFileZh 缺失/null/非字符串/空字符串时只播 EN 一段，效果与既有
+  // playWord({word, audioFile}) 完全等价——这是本函数刻意实现的降级契约（ZH 半部分门禁在
+  // 011「中文秘密词清单」/008，本卡唯一的调用方 task-templates.js renderFindTask() 恒传
+  // audioFileZh:null，直到 011/008 交付后才会传入真实路径，届时无需改动本函数）。不改动
+  // playWord() 本身（P0 红线，二者是两个独立入口）。
+  //
+  // 与 playWord()/playSfx() 不同：本函数只接受对象入参（不支持裸字符串 word 快捷式），因为
+  // audioFile 是必需字段——调用方（renderFindTask()）总是从 secretWords.pool 条目取
+  // {word, audioFile}，没有"只有 word 没有 audioFile"这种需要走约定路径拼接的场景。
+  function playWordBilingual(opts) {
+    if (!isPlainObject(opts)) {
+      warnOnce('WTJ_AUDIO: playWordBilingual() 需要 {word, audioFile, audioFileZh} 对象。');
+      return Promise.resolve({ ok: false, silent: true, reason: 'invalid-arg', compositeKey: null, parts: [] });
+    }
+    var word = (typeof opts.word === 'string' && opts.word) ? opts.word : null;
+    var audioFile = (typeof opts.audioFile === 'string' && opts.audioFile) ? opts.audioFile : null;
+    if (!word || !audioFile) {
+      warnOnce('WTJ_AUDIO: playWordBilingual() 缺少合法 word/audioFile 字符串，已忽略。');
+      return Promise.resolve({ ok: false, silent: true, reason: 'invalid-arg', compositeKey: null, parts: [] });
+    }
+    var parts = [{ type: 'word', key: word, path: audioFile }];
+    if (typeof opts.audioFileZh === 'string' && opts.audioFileZh) {
+      // key 与 EN 那段相同（同一个词），path 各自指向 EN/ZH 各自的音频文件——playComposite()
+      // 的 compositeKey 按 path 列表拼接生成，key 重复不影响其唯一性判定。
+      parts.push({ type: 'word', key: word, path: opts.audioFileZh });
+    }
+    return playComposite(parts);
+  }
+
   // playSfx(sfxKey) / playSfx({ sfxKey, path })
   // 音效播放；011 奖励卡（开箱声等）、013 任务卡（task-success 等）消费。
   function playSfx(sfxKeyOrObj) {
@@ -856,6 +889,7 @@
 
     // 播放
     playWord: playWord,
+    playWordBilingual: playWordBilingual,
     playSfx: playSfx,
     playTaskVoice: playTaskVoice,
     playComposite: playComposite,
