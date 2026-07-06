@@ -1,0 +1,131 @@
+{
+  "card_id": "WTJ-20260706-004",
+  "executor": "Designer 1",
+  "identity": "CodexThread:019f2887-9de8-7b72-b53b-230a0857f710",
+  "method": "deterministic derived bitmap frames from accepted closed door sprite; rebuilt clean warm aperture, retained accepted stone frame/wood material, no new generative model output",
+  "frame_count": 5,
+  "source_frame": "docs/assets/production-animations-v1/door/closed/door_closed_000.png",
+  "outputs": {
+    "frames": "docs/assets/production-animations-v1/door/opening/door_opening_000.png..004.png",
+    "source_sheet": "docs/assets/production-animations-v1/door/sheets/opening-sheet.png",
+    "runtime_sheet": "app/web/assets/anim/door/opening-sheet.png",
+    "contact_sheet": "docs/assets/production-animations-v1/door/door-contact-sheet.png",
+    "preview_gif": "docs/assets/production-animations-v1/previews/door-opening-preview.gif",
+    "local_preview_gif": "docs/assets/production-animations-v1/door/previews/door-opening-preview.gif",
+    "before_after": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-before-after-contact-sheet.png",
+    "small_size": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-small-size-readability.png",
+    "aperture_crop": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-aperture-crop-before-after.png",
+    "alpha_checker": "docs/assets/production-animations-v1/door/evidence/wtj-20260706-004/door-opening-alpha-checker-preview.png",
+    "terminal_open_frame": "docs/assets/production-animations-v1/door/open/door_open_000.png",
+    "terminal_open_source_sheet": "docs/assets/production-animations-v1/door/sheets/open-sheet.png",
+    "terminal_open_runtime_sheet": "app/web/assets/anim/door/open-sheet.png"
+  },
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "door_leaf_width_px": 333,
+      "door_leaf_left_px": 377,
+      "door_leaf_right_px": 710,
+      "alpha_bbox": [
+        207,
+        122,
+        817,
+        901
+      ]
+    },
+    {
+      "frame": 1,
+      "door_leaf_width_px": 256,
+      "door_leaf_left_px": 456,
+      "door_leaf_right_px": 712,
+      "alpha_bbox": [
+        207,
+        122,
+        817,
+        901
+      ]
+    },
+    {
+      "frame": 2,
+      "door_leaf_width_px": 186,
+      "door_leaf_left_px": 528,
+      "door_leaf_right_px": 714,
+      "alpha_bbox": [
+        207,
+        122,
+        817,
+        901
+      ]
+    },
+    {
+      "frame": 3,
+      "door_leaf_width_px": 116,
+      "door_leaf_left_px": 600,
+      "door_leaf_right_px": 716,
+      "alpha_bbox": [
+        207,
+        122,
+        817,
+        901
+      ]
+    },
+    {
+      "frame": 4,
+      "door_leaf_width_px": 62,
+      "door_leaf_left_px": 656,
+      "door_leaf_right_px": 718,
+      "alpha_bbox": [
+        207,
+        122,
+        817,
+        901
+      ]
+    }
+  ],
+  "corner_alpha": [
+    {
+      "frame": 0,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 1,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 2,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 3,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    },
+    {
+      "frame": 4,
+      "tl": 0,
+      "tr": 0,
+      "bl": 0,
+      "br": 0
+    }
+  ],
+  "self_check": [
+    "All opening frames are 1024x1024 RGBA.",
+    "All four corner alpha values are 0 for every new opening frame.",
+    "Runtime strip remains 5 cells at 256px each, so app/web/anim-manifest.js frameCount remains compatible.",
+    "The previous horizontal seam and blocky generated interior shadows are replaced with one continuous warm aperture gradient.",
+    "No external sprite, watermark, text, or magenta residue was introduced.",
+    "The open terminal frame and open-sheet were synchronized to the cleaned final aperture so the contact sheet/GIF do not reintroduce the old dirty background."
+  ],
+  "residual_risk": "This remains a flattened sprite opening approximation, not a true hinged 3D door rig; scoped to cleaning the opening background while preserving accepted material."
+}
