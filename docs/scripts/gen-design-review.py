@@ -473,22 +473,17 @@ AFTER_DIR_008 = "docs/assets/008-audio-review/after"
 
 CLIPS_008 = [
     {"id": "apple", "kind": "秘密词", "text": "apple",
-     "before": "app/web/audio/words/apple.m4a",
-     "q": "after 是否比 before 更自然、发音更准？"},
+     "before": "app/web/audio/words/apple.m4a"},
     {"id": "banana", "kind": "秘密词", "text": "banana",
-     "before": "app/web/audio/words/banana.m4a",
-     "q": "after 是否比 before 更自然、发音更准？"},
+     "before": "app/web/audio/words/banana.m4a"},
     {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
-     "before": "app/web/audio/words/yoyo.m4a",
-     "q": "after 是否比 before 更自然、发音更准？"},
+     "before": "app/web/audio/words/yoyo.m4a"},
     {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
-     "before": "app/web/audio/tasks/click-faucet-on.m4a",
-     "q": "after 是否比 before 更自然、发音更准？（本条 before 本就用 en.wav，after 用短连续片段对比）"},
+     "before": "app/web/audio/tasks/click-faucet-on.m4a"},
     {"id": "press-m.zh", "kind": "中文任务", "text": "按下字母 M！",
-     "before": "app/web/audio/tasks/press-m.zh.m4a", "after_missing": True,
-     "q": "after 缺失——短连续参考裁切策略对「中文 + 字母 M」混合目标会把时长截断到 ~0.68s"
-          "（before 为 3.20s），无法产出可用 after。请判断 before 的具体症状类型"
-          "（choppy 断续 / 发音错 / 音色不对 / 爆音），以便 TL 换用针对性修法。"},
+     "before": "app/web/audio/tasks/press-m.zh.m4a"},
+    {"id": "fox", "kind": "秘密词（WTJ-20260706-015 新词）", "text": "fox",
+     "before_missing": True},
 ]
 
 
@@ -496,38 +491,43 @@ def render_008_audio_fix_section() -> str:
     parts = [
         '<h2 id="008-audio-fix">008 音频修复 before/after 对照 '
         '<span class="count">(P0 · Ethan 主观裁决)</span></h2>',
-        '<p class="section-note">卡片 WTJ-20260706-008：Ethan 全量试听点名的 5 条音频，TL 用<strong>改进的'
-        '参考录音裁切策略</strong>重生成 after 版供 A/B 对比。<strong>根因</strong>：024 全量生成把 Ethan '
-        '自录的 <code class="inline-code">words.wav</code>（11 个孤立单词、实测 16 段内部静音、很 choppy）'
-        '当 prompt_wav 克隆全部英文词 → 单词克隆不自然。<strong>改进</strong>：改用<strong>短的连续朗读片段</strong>'
-        '作参考（EN 用 en.wav 首句切 ~5s，内部静音 16→3；ZH 用 zh.wav 首段切 ~5s）。'
-        'TL 不试听，主观优劣以 Ethan 判断为准；确认后 TL 按此策略全量重生成并接入。</p>',
-        '<p class="section-note">before = 现役 stage 音频（引用其 tracked 实路径 '
-        '<code class="inline-code">app/web/audio/**</code>）；after = 改进连续参考重生成候选（committed '
-        '到 <code class="inline-code">docs/assets/008-audio-review/after/</code>，可从任意检出复现）。纯 '
-        '<code class="inline-code">&lt;audio controls preload="none"&gt;</code> 相对引用，符合 docs 零 JS 约束。</p>',
+        '<p class="section-note">卡片 WTJ-20260706-008：上一版 after 被 Ethan 拒收=<strong>文不对题</strong>'
+        '（念的是 reference 句子而非目标词）。<strong>真因</strong>：CosyVoice3 zero-shot 对「单词/短目标」不稳——'
+        '目标文本远短于 prompt_text 时模型会跑偏/复述参考（cosyvoice.py 的「synthesis text too short than prompt '
+        'text」警告 + llm.py 把 prompt_text 与目标 concat）。<strong>修法</strong>：<strong>ASR-gated 重 seed</strong>'
+        '——每条生成后用 whisper 自证念的是目标文本，不中就换随机种子重生成，命中才写盘；绝不 ship 文不对题音频。</p>',
+        '<p class="section-note">本批 6 条<strong>已全部 ASR 自证内容正确</strong>：apple / banana / yoyo / fox → '
+        '「Apple / Banana / Yo yo / Fox」；click-faucet-on →「Turn on the water」；press-m.zh → 含「按下…M」。'
+        'before = 现役 stage 音频（tracked <code class="inline-code">app/web/audio/**</code>）；after = ASR-gated '
+        '重生成（committed 到 <code class="inline-code">docs/assets/008-audio-review/after/</code>）。fox 是 015 新词、'
+        '此前无音频，故只有 after。<strong>TL 不试听；内容已技术自证，请 Ethan 只裁决主观音色/自然度。</strong></p>',
     ]
     items = []
     for c in CLIPS_008:
         cid = c["id"]
-        before_rel = c["before"]
-        before_href = rel_href(before_rel)
-        if c.get("after_missing"):
-            after_block = (
+        after_rel = f"{AFTER_DIR_008}/{cid}.m4a"
+        after_href = rel_href(after_rel)
+        after_block = (
+            '<div class="ab-col">'
+            '<span class="ab-label">AFTER（ASR 自证）</span>'
+            f'<audio controls preload="none" src="{esc(after_href)}">您的浏览器不支持音频播放。</audio>'
+            f'<code class="path">{esc(after_rel)}</code>'
+            '</div>'
+        )
+        if c.get("before_missing"):
+            before_block = (
                 '<div class="ab-col ab-missing">'
-                '<span class="ab-label">AFTER</span>'
-                '<span class="ab-na">（无可用 after，见下方问题）</span>'
+                '<span class="ab-label">BEFORE</span>'
+                '<span class="ab-na">（015 新词，此前无音频）</span>'
                 '</div>'
             )
         else:
-            after_rel = f"{AFTER_DIR_008}/{cid}.m4a"
-            after_href = rel_href(after_rel)
-            after_block = (
-                '<div class="ab-col">'
-                '<span class="ab-label">AFTER</span>'
-                f'<audio controls preload="none" src="{esc(after_href)}">您的浏览器不支持音频播放。</audio>'
-                f'<code class="path">{esc(after_rel)}</code>'
-                '</div>'
+            before_rel = c["before"]
+            before_href = rel_href(before_rel)
+            before_block = (
+                '<div class="ab-col"><span class="ab-label">BEFORE</span>'
+                f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
+                f'<code class="path">{esc(before_rel)}</code></div>'
             )
         items.append(
             '<div class="ab-item">'
@@ -535,12 +535,9 @@ def render_008_audio_fix_section() -> str:
             f'<span class="task-kind">{esc(c["kind"])}</span>'
             f'<span class="task-text">{esc(c["text"])}</span></div>'
             '<div class="ab-cols">'
-            '<div class="ab-col"><span class="ab-label">BEFORE</span>'
-            f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
-            f'<code class="path">{esc(before_rel)}</code></div>'
+            f'{before_block}'
             f'{after_block}'
             '</div>'
-            f'<p class="ab-q"><strong>请 Ethan 判断：</strong>{esc(c["q"])}</p>'
             '</div>'
         )
     parts.append(f'<div class="ab-list">{"".join(items)}</div>')
