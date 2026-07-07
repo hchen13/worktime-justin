@@ -192,11 +192,17 @@ def pick_best(passing, ref):
 
 
 def build_worklist_ext(cosy3, app_web, script_dir):
-    """cosy3.build_worklist() + the ZH secretWordsZh "words" segment (not in the base script)."""
+    """cosy3.build_worklist() + the ZH secretWordsZh "words" segment (not in the base script)
+    + the ZH "phrases" segment (WTJ-20260707-003: the "找到" find-prefix phrase — the one
+    sanctioned exception to the ZH no-runtime-concat red line, see tts-text-manifest.zh.json
+    _note; still not in the base cosy3.build_worklist(), which only reads the base script's
+    own EN phrases + ZH tasks/tasksPending)."""
     work = cosy3.build_worklist(app_web, script_dir)
     zt = json.load(open(os.path.join(script_dir, "tts-text-manifest.zh.json"), encoding="utf-8"))
     for k, v in zt.get("words", {}).items():
         work.append((v["text"], v["out"], "zh", f"zhword:{k}"))
+    for k, v in zt.get("phrases", {}).items():
+        work.append((v["text"], v["out"], "zh", f"zh-phrase:{k}"))
     return work
 
 

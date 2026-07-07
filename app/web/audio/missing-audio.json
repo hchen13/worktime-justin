@@ -47,6 +47,10 @@
       "total": 100,
       "totalNotDelivered": 0,
       "note": "ZH 词卡音频由 WTJ-20260706-011 CosyVoice3 ASR-gated 管线全量交付：100/100 已交付，0 未交付、无 EN fallback 占位。返工要点：裸「猫」(māo) 因 whisper 同音「毛」(máo) 判失败改用「小猫」；所有条目每条 whisper 自证念的是目标中文词（不中重 seed，命中才写盘）。"
+    },
+    "compositePhrasesZh": {
+      "totalNotDelivered": 0,
+      "note": "WTJ-20260707-003 新增，仅 1 条：find.zh（「找到」，audio/phrases/find.zh.m4a）。这是 CN-TASK-DRAFT.md #0 红线（ZH 禁止运行时拼接）的唯一一处经 TL 综合裁定明确认可的例外——ZH 问号找物任务开始播放该引导语 + 目标词中文词卡两段组合，见 CN-TASK-DRAFT.md #0 一节追加说明与 task-templates.js playFindWordBilingualDefensive()。与上方 compositePhrases（EN，10 条）是各自独立的数组/计数，互不影响既有 074 EN 门（tts-audio-delivery.test.mjs 的 10 phrases 门读的是 compositePhrases，不读本数组）。generate-tts-asr-gated.py ASR-gated 生成：whisper 自证转写为「找到」（ratio=1.00，seed=46，5 次尝试内 3 候选通过取时长最贴近的一条，dur=1.08s——与同为 2 字的 secretWordsZh.apple 词卡同一时长量级，非仓促）。"
     }
   },
   "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
@@ -3117,6 +3121,23 @@
       "purpose": "“我们开始吧！”（任务起始语气词，可选）",
       "path": "audio/phrases/lets-go.m4a",
       "status": "delivered"
+    }
+  ],
+  "compositePhrasesZh": [
+    {
+      "phraseKey": "find.zh",
+      "purpose": "「找到」引导语（ZH），WTJ-20260707-003 新增——与目标词中文词卡音频（audio/words/<word>.zh.m4a）组合成 ZH 问号找物任务开始提示，是 CN-TASK-DRAFT.md #0 红线（ZH 禁止运行时拼接）唯一经 TL 综合裁定认可的例外，见该文件 #0 一节追加说明。",
+      "path": "audio/phrases/find.zh.m4a",
+      "status": "delivered",
+      "asrGated": {
+        "asrText": "找到",
+        "ratio": 1.0,
+        "seed": 46,
+        "attempts": 5,
+        "durationSec": 1.08,
+        "whisperModel": "small",
+        "reproScript": "app/scripts/generate-tts-asr-gated.py --only zh-phrase:find"
+      }
     }
   ],
   "ttsDelivery": {
