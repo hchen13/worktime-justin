@@ -469,6 +469,14 @@
       color: #fff;
     }
 
+    /* ghost 占位：默认 3 个主槽之外、配置扩展到 5 时新增的槽以低透明「可扩展」占位呈现，
+       不参与真实点亮判定（对应运行版 hud.css .wtj-hud-slot.is-ghost）。 */
+    .slot.ghost {
+      opacity: .42;
+      border-style: dashed;
+      color: rgba(255,255,255,.3);
+    }
+
     .status-lights {
       position: absolute;
       left: 20px;
@@ -730,7 +738,7 @@
       <a href="#principles">设计原则</a>
       <a href="#keyboard">键盘探索</a>
       <a href="#secret">秘密词</a>
-      <a href="#slots">五个发现槽</a>
+      <a href="#slots">发现槽</a>
       <a href="#tasks">问号任务</a>
       <a href="#pointer">鼠标反馈</a>
       <a href="#rewards">奖励系统</a>
@@ -761,7 +769,7 @@
       <h2 id="overview-heading">一屏概览</h2>
       <div class="grid">
         <div class="card span-7">
-          <div class="app-wireframe" role="img" aria-label="核心界面线框：默认画布、五个发现槽、右侧问号与角落任务状态灯示意">
+          <div class="app-wireframe" role="img" aria-label="核心界面线框：默认画布、默认三个发现槽（可配置扩展至五，含 ghost 占位）、右侧问号与角落任务状态灯示意">
             <div class="topbar" aria-hidden="true">
               <span>Work Time, Justin! / 小小工作台</span>
               <span class="parent-lock">⌁</span>
@@ -790,11 +798,11 @@
               <span class="slot filled">★</span>
               <span class="slot filled">●</span>
               <span class="slot">+</span>
-              <span class="slot">+</span>
-              <span class="slot">+</span>
+              <span class="slot ghost">+</span>
+              <span class="slot ghost">+</span>
             </div>
           </div>
-          <p class="caption" id="req-def-01" data-req-id="REQ-DEF-01"><span class="req-badge">REQ-DEF-01</span> 线框：默认只保留画布、底部五个发现槽、右侧一个问号、角落任务状态灯和很小的家长入口。</p>
+          <p class="caption" id="req-def-01" data-req-id="REQ-DEF-01"><span class="req-badge">REQ-DEF-01</span> 线框：默认只保留画布、底部默认三个发现槽（数量可配置扩展至五，超出主槽的以 ghost 占位呈现）、右侧一个问号、角落任务状态灯和很小的家长入口。</p>
         </div>
         <div class="card span-5">
           <img class="mock-image" src="assets/accepted-mvp-mockup.png" alt="已认可的 MVP 界面方向图" width="1672" height="941" />
@@ -804,10 +812,10 @@
 
       <div class="callout mt-16" id="req-def-02" data-req-id="REQ-DEF-02">
         <p><strong><span class="req-badge">REQ-DEF-02</span> mock 与需求文本差异声明</strong></p>
-        <p>PM 已裁决（2026-07-04）：最终文字需求为规范源（normative），mock / 状态图仅作方向示意（directional）。默认单问号、五个发现槽、无回显条均为已定点。以下为差异明细：</p>
+        <p>PM 已裁决（2026-07-04）：最终文字需求为规范源（normative），mock / 状态图仅作方向示意（directional）。默认单问号、默认三个发现槽（可配置扩展至五，超出主槽以 ghost 占位呈现）、无回显条均为已定点。以下为差异明细：</p>
         <ul class="list">
           <li>① mock 右侧有 4 个图标竖排（星 / 火箭 / 心 / 彩带）；需求文本规定默认右侧只保留一个低调问号（见 <a href="#req-task-01">REQ-TASK-01</a>），以需求文本为准。</li>
-          <li>② mock 底部为约 9 节点进度轨道 + 末端宝箱；需求文本规定为五个发现槽（见 <a href="#req-slot-01">REQ-SLOT-01</a>），以需求文本为准。</li>
+          <li>② mock 底部为约 9 节点进度轨道 + 末端宝箱；需求文本规定为发现槽（默认三个主槽，可配置扩展至五，见 <a href="#req-slot-01">REQ-SLOT-01</a>），以需求文本为准。</li>
           <li>③ mock 有终端式输入回显条「justin@worktime: dog」；需求文本规定不需要输入框、不显示字母流回显（见 <a href="#req-sec-01">REQ-SEC-01</a>），以需求文本为准。</li>
           <li>④ 已验收的 005 状态图中（尤其 secret-word-dog.png）亦包含终端回显条、右侧图标竖排等与需求文本冲突的视觉细节，同样适用上述裁决；素材视觉修订由 DESIGN 按已裁决口径处理。</li>
         </ul>
@@ -833,7 +841,7 @@
             <tr><td>DEF</td><td>默认界面</td><td><a href="#overview">#overview</a></td><td>REQ-DEF-01 ~ REQ-DEF-02</td><td>2</td></tr>
             <tr><td>KB</td><td>键盘</td><td><a href="#keyboard">#keyboard</a></td><td>REQ-KB-01 ~ REQ-KB-09</td><td>9</td></tr>
             <tr><td>SEC</td><td>秘密词</td><td><a href="#secret">#secret</a></td><td>REQ-SEC-01 ~ REQ-SEC-11</td><td>11</td></tr>
-            <tr><td>SLOT</td><td>五个发现槽</td><td><a href="#slots">#slots</a></td><td>REQ-SLOT-01 ~ REQ-SLOT-04</td><td>4</td></tr>
+            <tr><td>SLOT</td><td>发现槽</td><td><a href="#slots">#slots</a></td><td>REQ-SLOT-01 ~ REQ-SLOT-04</td><td>4</td></tr>
             <tr><td>TASK</td><td>问号任务</td><td><a href="#tasks">#tasks</a></td><td>REQ-TASK-01 ~ REQ-TASK-10</td><td>10</td></tr>
             <tr><td>EXIT</td><td>退出机制</td><td><a href="#exit">#exit</a></td><td>REQ-EXIT-01 ~ REQ-EXIT-04</td><td>4</td></tr>
             <tr><td>PTR</td><td>鼠标反馈</td><td><a href="#pointer">#pointer</a></td><td>REQ-PTR-01 ~ REQ-PTR-03</td><td>3</td></tr>
@@ -851,7 +859,7 @@
       <div class="grid">
         <div class="card span-6">
           <img class="mock-image" src="assets/states/default-canvas.png" alt="默认画布状态图" width="1440" height="810" />
-          <div class="caption">默认画布：保留标题、低调问号、五个发现槽和状态灯；普通输入只留下短暂高对比字母反馈。</div>
+          <div class="caption">默认画布：保留标题、低调问号、发现槽（默认三个主槽，可扩展）和状态灯；普通输入只留下短暂高对比字母反馈。</div>
         </div>
         <div class="card span-6">
           <img class="mock-image" src="assets/states/secret-word-dog.png" alt="秘密词命中状态图" width="1440" height="810" />
@@ -862,8 +870,8 @@
           <div class="caption">问号任务：语音提示为主，不依赖中文说明；任务目标足够大，超时条保持轻量。</div>
         </div>
         <div class="card span-6">
-          <img class="mock-image" src="assets/states/treasure-reward.png" alt="五槽满宝箱奖励状态图" width="1440" height="810" />
-          <div class="caption">五槽满：宝箱和短暂光效给一次性大奖励；底部槽位清楚解释奖励触发来源。</div>
+          <img class="mock-image" src="assets/states/treasure-reward.png" alt="发现槽全满宝箱奖励状态图" width="1440" height="810" />
+          <div class="caption">发现槽全满：宝箱和短暂光效给一次性大奖励；底部槽位清楚解释奖励触发来源。（图为方向示意，槽数以需求文本为准，见 <a href="#req-def-02">差异声明</a>）</div>
         </div>
       </div>
     </section>
@@ -878,7 +886,7 @@
         </div>
         <div class="card card-pad span-4">
           <h3>大反馈只给有意义事件</h3>
-          <p>秘密词、有效探索里程碑、小任务完成、五槽满、连续三次任务完成，才触发明显奖励。乱按也有反馈，但会衰减。</p>
+          <p>秘密词、有效探索里程碑、小任务完成、发现槽全满、连续三次任务完成，才触发明显奖励。乱按也有反馈，但会衰减。</p>
           <span class="tag done">已定</span>
         </div>
         <div class="card card-pad span-4">
@@ -962,34 +970,37 @@
     </section>
 
     <section id="slots" data-domain="SLOT" aria-labelledby="slots-heading">
-      <h2 id="slots-heading">五个发现槽</h2>
+      <h2 id="slots-heading">发现槽</h2>
       <p>本章负责发现槽机制本身（点亮规则与来源）；槽满后的宝箱奖励表现细节见 <a href="#rewards">#rewards</a>（<a href="#req-rwd-01">REQ-RWD-01</a>）。</p>
+      <div class="callout mt-16">
+        <p><strong>发现槽数量口径（PM 已裁决 2026-07-04，WTJ-20260704-083）</strong>：发现槽数量是可配置项；<strong>默认为 3 个主发现槽</strong>（早期文档与 004/010 首次落地曾默认 5，对 3 岁目标用户实测偏多——需集齐 5 次发现才触发一次宝箱，正反馈间隔过长，故 PM 定为默认 3）。数量可按配置扩展至 5；<strong>超出 3 个主槽的槽位以 ghost 占位呈现</strong>（低透明「可扩展」提示，不参与真实点亮/满槽判定，对应运行版 hud.css <code>.wtj-hud-slot.is-ghost</code>）。下文以「发现槽」泛称，REQ-SLOT-01~04 的语义与编号不变——只是「全部点亮」指的是全部<strong>主</strong>发现槽。</p>
+      </div>
       <div class="flow cols-2" aria-label="发现槽点亮流程">
         <div class="step" id="req-slot-01" data-req-id="REQ-SLOT-01">
-          <strong><span class="req-badge">REQ-SLOT-01</span> 点亮五槽</strong>
-          <p>秘密词命中或键盘探索里程碑（见 REQ-SLOT-03）会点亮五个发现槽之一；当前五格内不重复；同一词重复命中只给小反馈，不再占新格（见 <a href="#req-sec-07">REQ-SEC-07</a>）。</p>
+          <strong><span class="req-badge">REQ-SLOT-01</span> 点亮发现槽</strong>
+          <p>秘密词命中或键盘探索里程碑（见 REQ-SLOT-03）会点亮发现槽之一（默认 3 个主发现槽，数量可配置扩展至 5，超出主槽的以 ghost 占位呈现）；当前各格内不重复；同一词重复命中只给小反馈，不再占新格（见 <a href="#req-sec-07">REQ-SEC-07</a>）。</p>
         </div>
         <div class="step" id="req-slot-02" data-req-id="REQ-SLOT-02">
           <strong><span class="req-badge">REQ-SLOT-02</span> 开宝箱</strong>
-          <p>五格全部点亮后触发宝箱开启，进入一次性大奖励（表现细节见 <a href="#req-rwd-01">REQ-RWD-01</a>），随后清空五槽，进入下一轮。</p>
+          <p>所有主发现槽全部点亮后触发宝箱开启，进入一次性大奖励（表现细节见 <a href="#req-rwd-01">REQ-RWD-01</a>），随后清空发现槽，进入下一轮。</p>
         </div>
       </div>
 
       <div class="card card-pad mt-16">
         <h3>发现槽来源</h3>
         <ul class="list">
-          <li id="req-slot-03" data-req-id="REQ-SLOT-03"><span class="req-badge">REQ-SLOT-03</span> 五槽不只服务秘密词，也可被自由探索里程碑点亮，例如累计 100 次、200 次有效按键。这样孩子即使没有拼出单词，也会因为持续探索获得小目标。</li>
+          <li id="req-slot-03" data-req-id="REQ-SLOT-03"><span class="req-badge">REQ-SLOT-03</span> 发现槽不只服务秘密词，也可被自由探索里程碑点亮，例如累计 100 次、200 次有效按键。这样孩子即使没有拼出单词，也会因为持续探索获得小目标。</li>
           <li id="req-slot-04" data-req-id="REQ-SLOT-04"><span class="req-badge">REQ-SLOT-04</span> 建议把秘密词命中显示为对应对象图标，把键盘里程碑显示为「键盘星星」这类抽象图标。当前一轮内同类发现不重复。</li>
         </ul>
       </div>
 
-      <div class="card card-pad mt-16" role="img" aria-label="五个发现槽示意：两格已点亮，三格待点亮">
+      <div class="card card-pad mt-16" role="img" aria-label="发现槽示意：默认三个主槽（示意两格已点亮、一格待点亮），另含两个可扩展 ghost 占位">
         <div class="slots standalone" aria-hidden="true">
           <span class="slot filled">★</span>
           <span class="slot filled">●</span>
           <span class="slot">+</span>
-          <span class="slot">+</span>
-          <span class="slot">+</span>
+          <span class="slot ghost">+</span>
+          <span class="slot ghost">+</span>
         </div>
       </div>
     </section>
@@ -1073,17 +1084,17 @@
       <h2 id="rewards-heading">奖励系统</h2>
       <div class="grid">
         <div class="card card-pad span-6">
-          <h3>五槽满：开宝箱</h3>
+          <h3>发现槽全满：开宝箱</h3>
           <ul class="list">
             <li id="req-rwd-01" data-req-id="REQ-RWD-01"><span class="req-badge">REQ-RWD-01</span> 宝箱奖励以一次性表现为主，不长期占用屏幕空间；可用烟花、大贴纸弹出后淡出、短动画、临时背景变化、新音效等形式。</li>
-            <li id="req-rwd-02" data-req-id="REQ-RWD-02"><span class="req-badge">REQ-RWD-02</span> 宝箱开启后清空五槽，进入下一轮（见 <a href="#req-slot-02">REQ-SLOT-02</a>）。</li>
+            <li id="req-rwd-02" data-req-id="REQ-RWD-02"><span class="req-badge">REQ-RWD-02</span> 宝箱开启后清空发现槽，进入下一轮（见 <a href="#req-slot-02">REQ-SLOT-02</a>）。</li>
             <li id="req-rwd-03" data-req-id="REQ-RWD-03"><span class="req-badge">REQ-RWD-03</span> 烟花建议用 Canvas / SVG 代码生成，预设「满天星、打铁花、圆形、星形」等类型；颜色从少量高质量色板出发做 HSL / HSV 微调，不做完全 RGB 随机。</li>
           </ul>
         </div>
         <div class="card card-pad span-6">
           <h3>任务完成：工作状态灯</h3>
           <ul class="list">
-            <li id="req-rwd-04" data-req-id="REQ-RWD-04"><span class="req-badge">REQ-RWD-04</span> 小任务奖励不与底部五槽混用；角落放一排很小的工作状态灯，完成一个任务点亮一个。</li>
+            <li id="req-rwd-04" data-req-id="REQ-RWD-04"><span class="req-badge">REQ-RWD-04</span> 小任务奖励不与底部发现槽混用；角落放一排很小的工作状态灯，完成一个任务点亮一个。</li>
             <li id="req-rwd-05" data-req-id="REQ-RWD-05"><span class="req-badge">REQ-RWD-05</span> 连续完成 3 个任务，触发「今日工作完成」奖励。</li>
             <li id="req-rwd-06" data-req-id="REQ-RWD-06"><span class="req-badge">REQ-RWD-06</span> 「今日工作完成」奖励表现可以是三个灯一起闪、工作台盖章、小火箭发射、宝箱小开一次；整体风格接近爸爸工作界面的状态灯，但是儿童版。</li>
           </ul>
@@ -1100,7 +1111,7 @@
       <h2 id="assets-heading">素材与声音</h2>
       <div class="card mb-16">
         <img class="mock-image" src="assets/style/visual-style-tile.png" alt="WorkTime Justin 视觉风格基准图" width="1600" height="1000" />
-        <div class="caption">视觉基准：深色干净舞台、高对比动态字母、五槽、问号、状态灯、宝箱奖励，以及明确不做的复杂工具栏和永久贴纸堆积。</div>
+        <div class="caption">视觉基准：深色干净舞台、高对比动态字母、发现槽、问号、状态灯、宝箱奖励，以及明确不做的复杂工具栏和永久贴纸堆积。</div>
       </div>
       <div class="card mb-16" id="sprite-contact-sheet">
         <img class="mock-image" src="assets/sprites/production-sprite-contact-sheet.png" alt="秘密词 sprite 生产基准 v3 接触表" width="1280" height="640" />
@@ -1286,7 +1297,7 @@
         <h3>v0.1 · 2026-07-03 · 卡片 WTJ-20260703-002（QA 质控卡 WTJ-20260703-003）</h3>
         <ul class="list">
           <li>建立全文需求 ID 与可追溯体系：10 个需求域固定域码，共 63 条 REQ-XXX-NN 原子需求，新增「需求覆盖矩阵」#coverage 作为 QA 断言清单。</li>
-          <li>信息架构拆分：新增 #slots（五个发现槽）与 #exit（退出机制）两个独立 section，区分孩子侧退出与家长侧退出。</li>
+          <li>信息架构拆分：新增 #slots（发现槽）与 #exit（退出机制）两个独立 section，区分孩子侧退出与家长侧退出。</li>
           <li>新增内容：mock 与需求文本差异声明 callout、参数与阈值总表 #params、秘密词「命中判定规则」子块及边界问题。</li>
           <li>新增 DESIGN 素材集成点占位（core-states / style-baseline / sprites-batch1，对应在途卡 005 / 006 / 007）。</li>
           <li>工程硬化：零 JS / 零外部请求自查、无障碍语义（skip-link、main、aria-labelledby、表格 caption/scope）、表格横向滚动容器、prefers-reduced-motion 冻结动画、字号 clamp() 化、图片真实尺寸与丢失兜底、修复打印样式、清理死 CSS。</li>
@@ -1300,7 +1311,7 @@
 
     <footer>
       版本：v0.1 · 生成日期：2026-07-03 · 本文件为正式需求文档 artifact v0.1（卡片 WTJ-20260703-002），由 TL 交付、QA 质控（WTJ-20260703-003）。<br />
-      整理依据：需求卡 WTJ-20260703-001 整理的需求源材料，覆盖界面 mock、秘密词池、问号小任务、五槽奖励、退出机制、素材策略和桌面运行约束。
+      整理依据：需求卡 WTJ-20260703-001 整理的需求源材料，覆盖界面 mock、秘密词池、问号小任务、发现槽奖励、退出机制、素材策略和桌面运行约束。
     </footer>
   </div>
 </body>

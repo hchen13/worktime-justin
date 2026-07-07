@@ -1,0 +1,608 @@
+{
+ "stage": "bf8b284",
+ "generated_by": "QA-loop ClaudeSession:47f2c9e9",
+ "counts": {
+  "Pass": 49,
+  "Risk": 17,
+  "Fail": 0
+ },
+ "p0p1": 0,
+ "confirmedRealDefects": [],
+ "verdict": "GO (conditional: 3x P2 pending Ethan sign-off; 0 P0/P1/Fail)",
+ "items": [
+  {
+   "req": "REQ-DEF-01",
+   "requirement": "线框：默认只保留画布、底部五个发现槽、右侧一个问号、角落任务状态灯和很小的家长入口（默认极简界面）。",
+   "status": "Risk",
+   "severity": "P2",
+   "evidence": "画布 app/web/index.html:22 (#stage)；单问号 app/web/hud.js:359-366 (单个 .wtj-hud-question button + question-mark-token.png)；角落任务状态灯 app/web/hud.js:627-633 (.wtj-hud-lights / working-status-light.png)；很小的家长入口 app/web/parent-controls.js:109-117 (隐藏 Cmd+Q 长按进度条, aria-hidden)。极简性无多余 chrome（无回显条/图标竖排/进度轨道）——满足。但『五个发现槽』：app/web/manifest.js:317 slots.count=3、app/web/hud.js DEFAULT_SLOT_COUNT=3（git show bf8b284 确认 count:3 live）。tests/unit/task-templates.test.mjs 多处断言 count=3。APPSHELL smoke / task_target_visibility_webkit 25/25 覆盖 HUD 元素在位但不校验槽数=5。",
+   "note": "元素类型全部在位、极简性满足，但默认槽数与规范文本冲突：DEF-01 明文『五个发现槽』，DEF-02 line 807/810 又把『五个发现槽』列为已定点并以需求文本为准，SLOT-01(line 970) 与奖励汇总表(line 1237『发现槽数量 5 个』)亦均为 5；实现默认 3 主槽 + ghost 可扩展位。此为 WTJ-20260704-083(c3365ab) 有意把槽数改为可配置、默认 3 引入，但权威 docs 从未同步。与 interim(Pass) 不同：这不是已闭环的历史 Risk，而是 interim(@9a455e6) 漏判的一条当前活跃的规范/实现背离，直接影响满槽→宝箱的奖励节奏与默认线框呈现。非阻塞（app 可用、系有意改动），故 Risk P2 交 Ethan 裁决（改 manifest 回 5 或更新 docs 承认 3+ghost）。",
+   "domain": "DEF"
+  },
+  {
+   "req": "REQ-DEF-02",
+   "requirement": "mock 与需求文本差异声明：PM 裁决（2026-07-04）文字需求为规范源、mock/状态图仅方向示意；列①右侧图标竖排②进度轨道+宝箱③终端回显条④005 状态图冲突视觉，各以需求文本为准并交叉引用。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "声明节点存在 docs/index.html:805-814 (data-req-id=REQ-DEF-02，含①②③④四条差异 + 交叉引用)；交叉锚点 #req-task-01/#req-slot-01/#req-sec-01 各解析(grep=1)；tests/reports/docqc_static_report.json:13-19 DOCQC-002 PASS(7/7 local refs, problems=[])。单问号/无回显条两条『已定点』与实现一致(hud.js:359 单 question button；index.html 无回显条/无输入框)。",
+   "note": "作为治理性声明——存在、结构完整、交叉引用全解析、DOCQC-002 干净——核心功能（记录 mock↔文本四条差异裁决）成立。但声明第 807 行及第②项把『五个发现槽』列为已定点/以需求文本为准，而 WTJ-20260704-083 已把默认改为 3 槽（manifest.js:317）——该声明自身携带了一条已被后续卡覆盖却未同步的规范主张，属文档一致性漂移。与 interim(Pass) 不同的根因与 DEF-01 同源；因仅为 meta 声明的内容陈旧、不影响声明其余部分成立，降为 Risk P3，随 DEF-01 一并交 Ethan 决定是否回改槽数或修订声明文本。",
+   "domain": "DEF"
+  },
+  {
+   "req": "REQ-KB-01",
+   "requirement": "每按一个普通字母，屏幕随机位置弹出这个字母。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:322-347 handleAlnumKey() 非repeat普通字母键 emit onLetter(rawKey.toUpperCase()); app.js:490-491 订阅后 spawnLetter(ch); app.js:242-243 x/y=rand(area.minX..maxX, minY..maxY) 随机位置(computeSafeArea letter-motion.js:204/213单测)。e2e tests/e2e/kbd_secret_slots_regression.py KBD-01-normal-letter(letters==['A'],effective==[1])、KBD-10-digit-onletter(真浏览器dispatch KeyboardEvent 断言 onLetter 触发)。",
+   "note": "事件链+随机位置边界均有真浏览器 wiring e2e 与 computeSafeArea 单测覆盖，与 interim(Pass) 一致。字母的实际 canvas 落像素走 drawLetterGlyph fillText(全应用同一渲染路径)，无独立像素 e2e 但路径确定。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-02",
+   "requirement": "颜色、大小、旋转、位置都可以变化，但必须保证深色背景上高对比可读。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "变化项全部实现+单测：app.js:212 size=randomLetterSize(letter-motion.js:255 区间[56,148]，单测L149/158/171)、app.js:213 rotFinal=randomRotationRad(区间[-12,12]度，单测L180)、app.js:245 color=pick(PALETTE=6色亮板 letter-motion.js:131，token单测L94)、位置随机(见KB-01)。深色底 style.css:12 #0e1117；对比手段 app.js:886-897 darkStroke(alpha0.58)+左上白高光(0.2)+主体亮色三层。",
+   "note": "变化四要素(颜色/大小/旋转/位置)均有单测量化覆盖，判 Pass 侧；但『深色背景高对比可读』仅由亮色板+描边+高光的静态设计保证，无自动对比度/像素测量测试——保留为 P3 静态残余，与 interim(Risk) 判定一致(后续卡未新增对比度门)。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-03",
+   "requirement": "出现方式是啪一下弹出，然后约 0.8-1.5 秒逐渐淡出。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app.js:219-222 life=rand(LETTER_FADE_MS_RANGE)=manifest.js:62 keyboard.letterFadeMsRange[800,1500]；letter-motion.js:443 computeLetterFrame 四阶段：birthPop 90ms scale 0.78→1.08 overshoot(『啪』)→settle→fade(fadeWindow=clamp(life*0.4,300,600) 线性淡出+blur至1.5px)。单测 tests/unit/letter-motion.test.mjs L261(pop scale0.78/opacity0起)、L276(settle回落1.0)、L292(fade opacity线性+blur)、L254(age>life 移除)。",
+   "note": "弹出+淡出时长与曲线由 manifest 真值[800,1500]驱动、computeLetterFrame 纯函数逐阶段单测覆盖，代码正确；但整段是动画时序，无真浏览器逐帧像素捕获验证实际观感——纯『无动态像素测试但代码+单测已覆盖』故 P3。与 interim(Risk) 一致，非阻塞。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-04",
+   "requirement": "字母建议用 SVG / Canvas / HTML text 动态生成，不为每种颜色准备贴图。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app.js:880-897 drawLetterGlyph 用 ctx.font=buildLetterFont(size)+ctx.fillStyle=l.color+ctx.strokeText/fillText(l.ch) 运行时 Canvas 文本渲染，颜色/字号/字形全动态生成，无逐字母/逐色贴图资产。run_all sprite-asset-scan 无硬缺陷(无字母贴图集)。",
+   "note": "静态可判定的实现事实——纯 Canvas fillText，零字母贴图。与 interim(Pass) 一致，无残余。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-05",
+   "requirement": "空格、回车可以有轻微波纹或弹跳；Command/Option/Control/Shift 反馈很弱或不计奖励。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:136-138/164-170 functionKeys.lightFeedback=[Space,Enter] / weakOrNoReward=[Meta,Alt,Control,Shift]；handleFunctionKey:364-376 分类 light/weak/other，功能键永不计 effectiveKeyCount。e2e KBD-05-funckey-no-count-decay(Space/Enter→light,count=0)、KBD-06-weak-modifiers(Shift/Alt/Control/Meta→weak,base 0.3,count=0)；单测 keyboard-engine.test.mjs L123/L250。",
+   "note": "分类与『修饰键不计奖励』有真浏览器 e2e + 单测双覆盖。与 interim(Pass) 一致。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-06",
+   "requirement": "连续乱按功能键，反馈快速衰减到几乎没有。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:372 decayMultiplier=max(0,1-(sameKeyStreak-1)/FUNCTION_KEY_DECAY_SPAN=4)，intensity=base*decay，约4次后归0。e2e KBD-05(intensities递减)、KBD-08-decay-floor-clamp(6x同功能键→intensity夹到0非负)；单测 keyboard-engine.test.mjs L269(单调降至趋近0)。",
+   "note": "衰减曲线+归零下限有 e2e+单测覆盖。与 interim(Pass) 一致。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-07",
+   "requirement": "长按一个键不持续计数。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:326-329 handleAlnumKey 与 352-355 handleFunctionKey 均对 e.repeat 直接 return(不更新streak/不计数/不emit)。e2e KBD-02-keyhold-no-count(10个 e.repeat 事件全忽略,count=1)；单测 keyboard-engine.test.mjs L289 + L304(repeat 不污染 streak 的强用例)。",
+   "note": "e.repeat 短路 + 不污染连续同键统计均有覆盖。与 interim(Pass) 一致。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-08",
+   "requirement": "连续重复同一个键超过 3 次后暂停计数；换键后再切回来可以重新计数。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:331-341 normalized===lastKeyId 累加 sameKeyStreak，严格 >PAUSE_AFTER_COUNT(=manifest pauseAfterCount 3)才暂停；换键立即重置为1(334-335)。e2e KBD-03-repeat-threshold(6x'c'→counted=3)、KBD-04-switch-resets-streak(cccc dddd→6)、KBD-09 大小写不敏感同键；单测 L339(阈值+换键重置+切回重计,阈值取真实manifest)。轮次边界 066 修复(resetEffectiveKeyCount清 lastKeyId/streak)有单测L495/522/541。",
+   "note": "阈值语义、换键重置、轮次边界修复全覆盖。与 interim(Pass) 一致。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-KB-09",
+   "requirement": "正常双写不计入连续重复同键的暂停规则，例如连续输入 apple 中的 pp 不会被判定为过度重复。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "keyboard.js:338-341 阈值严格 >3，连续2次(pp)天然落在阈值内正常计数(设计说明第3条,行54-62)。单测 keyboard-engine.test.mjs L327『双写例外：连续2次同键(pp)』断言 letters==['P','P'] 且 count==2；e2e SEC-04-double-letter-apple(typed apple→hits['apple']，pp 不阻断)。",
+   "note": "双写例外由阈值语义天然满足，有精确单测+秘密词 e2e 佐证。与 interim(Pass) 一致。",
+   "domain": "KB"
+  },
+  {
+   "req": "REQ-SEC-01",
+   "requirement": "自由输入：系统监听最近的普通英文字母流，不要求输入框，也不要求回车，不回显字母流。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:514-534 (onNewLetter 直接消费 WTJ_KEYBOARD.onLetter，buffer 仅内存、getBuffer() 从不写 DOM)；tests/unit/secretword-engine.test.mjs:185 用例0 静态红线断言无 createElement input/textarea、无 contenteditable、无 innerText/textContent/innerHTML 写入；e2e SEC-08-no-dom-echo (tests/reports/kbd_secret_slots_report.json)；两 test 文件 node --test 40/40 PASS",
+   "note": "与 interim 一致 Pass。红线由静态源码扫描断言真实生效，非仅注释。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-02",
+   "requirement": "命中判定：输入字母流中出现完整暗语子串即视为命中。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:490-512 tryMatchAtBufferTail 用 buffer.lastIndexOf(w)==len-w.len 末尾匹配；tests/unit/secretword-engine.test.mjs:220 用例2 XXDOGXX→dog；e2e SEC-02-substring",
+   "note": "与 interim 一致 Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-03",
+   "requirement": "出现对象：dog 出现小狗、apple 出现苹果，同时播放授权音效或预生成语音。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "sprite: secretword.js:382-416 showSpriteOverlay + resolveSpritePath('assets/'+ 前缀)，tests/unit/secretword-engine.test.mjs:357 用例9 断言 WTJ_HUD.setSlot 收到 assets/ 前缀 spriteUrl；101 sprite PNG 静态扫描 0 defect。audio: 词音已交付 app/web/audio/words/ 200 个 .m4a(100 en+100 zh)，audio_asset_scan.json present=260/missing=0/defective=0，用例9 断言 WTJ_AUDIO.playWord 被调用。",
+   "note": "较 interim 升级：interim 判 Risk 因『声音半边未交付(016)』，bf8b284 词音已实际落盘且 scan 0 缺陷、playWord 已接线。残余仅为：sprite 屏上一次性淡入→停留→淡出无动态像素/e2e 视觉测试（仅单测 DOM 叠层接线），且音频可听性为主观项（TL 不试听，交 QA076/Ethan）。故 P3，非阻塞。附注：manifest.js:304 audioNotDelivered:true 及行 301 注释『只有 fox.m4a 未交付』均为过时元数据，但无运行时读者(audio.js 不 gate 该标志)，不构成产品缺陷。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-04",
+   "requirement": "子串命中：输入流中任意连续子串包含完整暗语即触发，如 xxdogxx 中间含 dog 即命中。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:498 buffer 末尾匹配 + buffer 保留最近字符实现子串；tests/unit/secretword-engine.test.mjs:220 用例2 XXDOGXX→dog(仅一次)；e2e SEC-02-substring",
+   "note": "与 SEC-02 同实现，与 interim 一致 Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-05",
+   "requirement": "重叠触发：dogg 输入到第三个字母 g 时即触发 dog，无需独立分隔。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:514-522 每新字母只查一次末尾匹配→重叠但不重复；tests/unit/secretword-engine.test.mjs:249 用例4 DOGG 第3字母G触发、第4字母G不重复触发；e2e SEC-03-overlap-dogg-once",
+   "note": "与 interim 一致 Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-06",
+   "requirement": "双写不惩罚：apple 中的 pp 不打断或误判命中。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js 匹配算法无任何『连续重复字母打断』分支(注释 47-48/113)；tests/unit/secretword-engine.test.mjs:304 用例7 APPLE(含 pp)正常命中 apple；e2e SEC-04-double-letter-apple",
+   "note": "与 interim 一致 Pass；双写天然放行。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-07",
+   "requirement": "同词重复命中：同一词同一轮内重复只给小反馈，不再点亮新发现槽；同轮已收集词再次命中同样适用。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:461-485 handleHit：roundHitSet[word]===true 走 emit(minorHit) 直接 return，不 setSlot/不 sprite/不出声；tests/unit/secretword-engine.test.mjs:316 用例8 dog两次→第1次onHit+setSlot、第2次onMinorHit且setSlot未再调用、resetRound后再onHit；e2e SEC-07-repeat-minor + SEC-07b-resetround-restores-hit",
+   "note": "与 interim 一致 Pass。Object.create(null) 无原型表 + ===true 双保险(用例15 constructor 词验证)。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-08",
+   "requirement": "词池规模：26 字母×约4词，目标约100词，X/Y/Z 可减量。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/manifest.js pool 100 条(grep word: =100)；tests/unit/secretword-pool-integrity.test.mjs 用例1 长度=100、用例3 无重复、用例4/10 sprite 文件与目录双向一致、用例12 样本词(alligator/umbrella/wagon/fox/yoyo/zebra)命中解析到专属 sprite；40/40 PASS",
+   "note": "较 interim(长度101)更新：xylophone/xray 已由 fox 替换(011/015)，现为 Pack B 99+遗留 treasurechest=100，仍满足『约100』。Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-09",
+   "requirement": "大小写等价：DOG、Dog、dog 均判定为命中同一暗语（PM 2026-07-04 裁决）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:193-196 normalizeStr(caseInsensitive→toLowerCase)，180 CASE_INSENSITIVE 读 manifest；tests/unit/secretword-engine.test.mjs:235 用例3 DOG/Dog/dog 均命中 + 用例17a caseInsensitive:false 反证；e2e SEC-01-basic-caseinsensitive",
+   "note": "与 interim 一致 Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-10",
+   "requirement": "复合输入顺序命中：hotdog 先命中 hot 后命中 dog，各自独立触发（PM 裁决）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js 不同位置各自触发末尾匹配(注释52-55)；tests/unit/secretword-engine.test.mjs:284 用例6 注入 hot+dog，HOTDOG→hot,dog 各一次 + 用例14 真实 manifest vm 直跑；e2e SEC-06-compound-hotdog + SEC-09-compound-three",
+   "note": "与 interim 一致 Pass。真实 pool 无 hot，用例注入 pool 验证引擎复合能力。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SEC-11",
+   "requirement": "最长词优先：同一时刻多个后缀同时构成命中时取最长词优先触发（PM 裁决）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/secretword.js:490-512 tryMatchAtBufferTail 多后缀同时命中时 LONGEST_MATCH_PRIORITY 取 w.length 最大且只触发一个；tests/unit/secretword-engine.test.mjs:267 用例5 car+scar，SCAR→只命中 scar + 用例17b longestMatchPriority:false 反证取 car；e2e SEC-05-longest-scar-not-car",
+   "note": "与 interim 一致 Pass。",
+   "domain": "SEC"
+  },
+  {
+   "req": "REQ-SLOT-01",
+   "requirement": "点亮五槽：秘密词命中或键盘探索里程碑点亮五个发现槽之一；当前五格内不重复；同一词重复命中只给小反馈、不占新格（见 REQ-SEC-07）。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/slots.js:300-334 fillSlot（isKnownSource 分支支持 secret-word/keyboard-milestone 两来源；findDuplicateIndex L202-210 同 source+itemKey 去重返回 duplicate:true 不占新槽）；SLOT_COUNT 从 manifest.slots.count 读 L131-134。manifest.js:317 count:3（非 5）。tests/unit/slots-engine.test.mjs 用例0(读到真实 count=3)/2(slotCount 等于真实 manifest count)/3(两 source 各占一槽)/4(同 source+itemKey 二次→duplicate:true 且不再调 setSlot)/13(真实 DOG 命中委托 fillSlot secret-word)/15(真实累计100键委托 fillSlot keyboard-milestone)。run_all tl-unit 全绿(evidence-brief:12)。",
+   "note": "点亮机制、五格内去重、双来源点槽全部实现且行为性测试通过——机制层 Pass。唯一残留：交付槽数为 3 而文档权威文本(docs/index.html:965,970,986-993 反复写「五个/五格」)规定 5。这是 WTJ-20260704-083 的 PM 明确裁定(manifest.js:313-316 记录「文档原文为5…对3岁实测偏多…PM 裁定默认改为3」)，属 PM 已接受的取舍且槽数本就是可配置项，非产品缺陷；但 docs 权威源未同步更新，故对最终 Go 显式标 Risk。P3：不影响功能/安全，仅规范源与交付值的文档口径分歧，建议更新 docs 或 PM 复核确认 3。interim 标 Pass 未暴露此文档分歧。",
+   "domain": "SLOT"
+  },
+  {
+   "req": "REQ-SLOT-02",
+   "requirement": "开宝箱：五格全部点亮后触发宝箱开启（一次性大奖励，表现见 REQ-RWD-01），随后清空五槽、进入下一轮。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/slots.js:327-331 满槽当次 emit onFull 恰好一次(everFullEmittedForCurrentRound 守卫)，满后保持点亮不自动清；L344-348 reset()=clearSlots()+通知 009 resetRound/008 resetEffectiveKeyCount 开新一轮。tests/unit/slots-engine.test.mjs 用例5(填满 emit onFull 恰一次、溢出 filled:false/full:true 不覆盖)/5b(满槽后 dup 不重复 emit)/6(reset 清空后再次填满再 emit onFull 累计2)。reward-chest 订阅 onFull 并在序列播完调 WTJ_SLOTS.reset()（tests/unit/reward-chest.test.mjs REQ-RWD-02 reset 被调一次、跨轮累计2）；run_all task-reward-integration PASS(evidence-brief:12)。",
+   "note": "满槽→宝箱→清空进下一轮契约完整实现并测试；onFull 单次语义、reset 重新武装、宝箱模块闭环订阅均验证。interim Pass 维持。",
+   "domain": "SLOT"
+  },
+  {
+   "req": "REQ-SLOT-03",
+   "requirement": "发现槽来源不只服务秘密词，也可被自由探索里程碑点亮（例如累计 100、200 次有效按键），使孩子未拼出单词也能获得小目标。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "manifest.js:110 effectiveKeyMilestones:[100,200]（单一事实来源，slots.js 注释 L90-92 明确不重复定义）；app/web/keyboard.js:76-83 达阈值触发 onMilestone 并委托 fillSlot('keyboard-milestone',{itemKey:阈值,renderState:{milestone:true}})。tests/unit/slots-engine.test.mjs 用例15：真实触发 100 次 keydown(sb.fire)→断言 slotsFillCalls[0].source==='keyboard-milestone'、itemKey===100、renderState.milestone===true（行为性，非仅测试名）；用例16 fallback 路径 100/200 各一次直连 setSlot。",
+   "note": "键盘里程碑作为独立于秘密词的点槽来源已落地，阈值 100/200 单源于 manifest，委托路径行为验证。interim Pass 维持。",
+   "domain": "SLOT"
+  },
+  {
+   "req": "REQ-SLOT-04",
+   "requirement": "建议把秘密词命中显示为对应对象图标，键盘里程碑显示为「键盘星星」这类抽象图标；当前一轮内同类发现不重复。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/hud.js:412-430 renderSlot：renderState.milestone===true → 渲染 img.wtj-hud-slot-milestone-sprite src=manifest.slots.milestoneStickerSprite（CSS ★ 仅在 manifest 缺字段时兜底 L427-430）；spriteUrl → 渲染对象图标 img L433-436。manifest.js:335 milestoneStickerSprite:'assets/discovery-icons/keyboard-star.png'（DESIGN-007 medallion）；实测 app/web/assets/discovery-icons/keyboard-star.png 存在。去重：slots.js findDuplicateIndex 按 source+itemKey，slots-engine 用例4 覆盖。",
+   "note": "关键闭环：interim 曾标 P2 残留『里程碑为 hud.js 文本 ★ 占位、非专属美术』——已被 WTJ-20260705-008 消除：真实 keyboard-star.png 素材替换 ★ Unicode 占位(hud.js:416-417 注释+实测文件在位)，CSS 星形降为 manifest 缺失兜底。秘密词对象图标(spriteUrl img)+里程碑抽象键盘星(真实 sprite)+同类不重复(fillSlot 去重)三点齐备，专属美术已交付，P2 残留关闭，判 Pass。",
+   "domain": "SLOT"
+  },
+  {
+   "req": "REQ-TASK-01",
+   "requirement": "默认右侧只保留一个低调的问号，不再放 3-4 个图标按钮。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/hud.js:358-383 buildQuestion() 只构建单个 <button.wtj-hud-question>+question-mark-token.png；root.appendChild(buildQuestion()) 仅在 hud.js:739 调用一次，全文无任何图标列/多按钮渲染代码；红线注释 hud.js:13。webkit task_target_visibility_webkit 25/25 真浏览器识别含问号在内的 5 个 HUD 区。无一条测试正向断言『右侧恰好一个问号且不存在 3-4 图标列』（hud.test.mjs:179 明示不断言 question 部分）。",
+   "note": "代码结构性保证只渲染单个低调问号、无图标列，需求实质已满足；残余仅是缺少专项 DOM/像素计数断言，且 docs REQ-DEF-02 自陈 mock 仍画 4 图标（以文本需求为准）。非功能缺陷，判 Risk P3 而非 Fail。与 interim 的 Risk 一致（其 P1 注记即『无专项断言』）。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-02",
+   "requirement": "点问号后播放语音任务，不显示中文任务文字。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "task.js:324 startTask() 走 WTJ_AUDIO.playTaskVoice；task.js 全文零 DOM 创建 API（tests/unit/task-lifecycle.test.mjs:223-229 §0 静态源码扫描断言无 innerHTML/textContent/createElement/appendChild）。task-templates.js 创建的 DOM 只有 sprite 叠层与按键提示键帽（tests/unit/task-templates.test.mjs:1566/1570/1583 断言键帽/气泡 textContent 恰为 'A'/'3' 等键本身，无解释性中文）。中文只存在于 voicePrompt 音频路径（manifest 各 .zh.m4a），作为音频播放。",
+   "note": "任务提示唯一手段是语音；界面上不出现中文任务文字。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-03",
+   "requirement": "15 秒未完成：轻提示一次。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task.js:326-329 hintTimerId=setTimeout(emit phase 'hint', LIGHT_HINT_SEC*1000)，LIGHT_HINT_SEC 取自 manifest.tasks.timing.lightHintSec=15。tests/unit/task-lifecycle.test.mjs:286-299 §3 断言 14999ms 前不触发、t=15000ms 恰好 emit ['hint'] 一次。",
+   "note": "interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-04",
+   "requirement": "30 秒未完成：目标变明显，比如闪一下或稍微放大。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task.js:331-334 emphasizeTimerId=setTimeout(emit phase 'emphasize', EMPHASIZE_SEC*1000=30000)。tests/unit/task-lifecycle.test.mjs:302-314 §4 断言 t=30000ms emit、序列恰为 ['hint','emphasize']。具体『闪/放大』视觉由 014 消费 onPhase（task-templates handleTaskPhase, task-templates.js:2073）。",
+   "note": "引擎按时序广播 emphasize 事件，模板消费渲染增强。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-05",
+   "requirement": "45-60 秒仍未完成：任务自动收起，不算失败。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task.js:336-339 autoDismissTimerId=setTimeout(dismiss('timeout'), randomAutoDismissMs())，randomAutoDismissMs (task.js:263-274) 产出 [45,60)s。dismiss() (task.js:344-358) payload 仅 {reason}，无任何 failure/success 字段（REQ-EXIT-04）。tests/unit/task-lifecycle.test.mjs:320-357 §5 断言 randomValue=0→45000ms、=1→60000ms 边界、reason='timeout'。",
+   "note": "自动收起且结构性不带失败语义。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-06",
+   "requirement": "孩子明显转去玩键盘（连续 20 个有效键）任务自动淡出（不算失败）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task.js:387-395 handleEffectiveKey()：ACTIVE 期间每有效键 effectiveKeysSinceStart+1，>=KEYBOARD_DISTRACTION_KEY_COUNT(=20) 时 dismiss('keyboard-distraction')；常驻订阅 task.js:397-405 靠 state 检查实现退订语义。tests/unit/task-lifecycle.test.mjs:379-383 §6 断言第 19 键不 dismiss、第 20 键 dismiss(reason='keyboard-distraction')。",
+   "note": "interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-07",
+   "requirement": "拖拽：把苹果放进篮子/狗狗带回家/星星拖到天空。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task-templates.js:1392 renderDragTask()：物体 draggable+dropTargetIds、目标 accepts:['drag'] 的 onDrop(1415)→handleTemplateComplete→WTJ_TASK.completeTask (1354-1379)；拖错弹回 handleDragDropGlobal(1507) dropCancel 复位。单测 task-templates.test.mjs §599 区（onDrop 命中完成、迟到重复不二次完成、onDragMove 跟随）。webkit drag_task_webkit 修测后 2/2：拖空 0 completion+弹回、拖到目标 1 completion、nativeDragStarts=0（WTJ-080 防御）。",
+   "note": "drag 产品功能无回归；原 e2e 过期是测试资产脆性（P3 资产），已由 QA 注入确定性 RNG 修复。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-08",
+   "requirement": "点击：点一下开灯/关水龙头/按铃铛/开门/让小马跑起来。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task-templates.js:1530 renderClickTask()：accepts:['click'] onClick(1551)→completeTask；idle/active 帧动效 PROP_ANIM_STATE_MAP（horse idle→run、door closed→opening、bell idle→ring、lamp/faucet 切图）。单测 §687 区 + task-templates.test.mjs:1136/1267 防御式回退静态 img。webkit：target_visibility 25/25（含 door/bell/faucet/horse/lamp 6/6 真实鼠标点 rect 中心完成）、faucet_water_ratio 6/6、door_bell_click 14/14（bell idle 8255px/door idle 24485px 可见、点击 flip active、hit→complete 成对）。",
+   "note": "门铃 006 病理由 007 修复（frame-anim draw-before-decode），webkit 14/14 像素级验证+真机 task-complete=6。不再判 Fail。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-09",
+   "requirement": "寻找：语音说找到小狗，鼠标悬停 1 秒或点一下算完成。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task-templates.js:1590 renderFindTask()：目标 accepts:['hover','click']，onHover 与 onClick 共享同一 onFoundIt 完成回调（1623-1624，pressOrHoverAlsoCompletes）；悬停满 findHoverSec=1s 判定在 012/pointer 侧。干扰项渲染但不注册 pointer target。单测 §807 区（onHover 命中完成、干扰项不注册、不悬停直接 onClick 也完成）+ find 随机 word-card 抽取 12+ 用例全绿（run 输出）。",
+   "note": "悬停 1 秒或点击两路都完成。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-TASK-10",
+   "requirement": "按键：只要求一个键且仅限字母/数字，如 Press A / Press 3，不做复杂组合键。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/task-templates.js:1985 setupPressTask()+handlePressKey(2023-2039) 按 targetKey.toUpperCase() 比对单键完成。manifest.js:853+ press.examples 全部为单个字母/数字 targetKey（A/3/B/S/M/5/7 + C-V 字母，逐条核 30+ 条无非字母数字）；task-templates.js:277 回退 example 亦仅 'A'。WTJ-010 补的 onSymbol/onFunctionKey 三路（2242-2253）是引擎超集能力，不改变生成的任务恒为字母/数字。webkit press_key_hint_webkit 10/10（仅 press 显示、单颗 space、气泡只显目标键、dismiss 立即清 DOM）。",
+   "note": "生成任务恒为单个字母/数字键，满足需求；引擎可处理符号只是不引入非字母数字任务。interim Pass，维持。",
+   "domain": "TASK"
+  },
+  {
+   "req": "REQ-EXIT-01",
+   "requirement": "App 内部拦截 Command+H / Command+W / Command+Q 等常见快捷键，防止孩子误触退出。",
+   "status": "Risk",
+   "severity": "P2",
+   "evidence": "app/shell/main.swift:781-798 handleKeyDown：Cmd+Q(kiosk)进 handleCmdQKeyDown 状态机 return nil；Cmd+W/H/M/` 两模式均 return nil 吞键；配合 setupMenu 空主菜单去掉默认 keyEquivalent（约 line 705）。无任何 CI/自动断言（tests/swift/main.swift 仅 quota-reset 88 行；run_all 第 8 suite=swift-daily-quota-reset，与 EXIT 无关）。",
+   "note": "实现正确且在位，与 interim(Risk) 一致，且未被门铃/发热/额度修复链触及（那些针对 web 渲染/发热，与原生吞键无关）。残余：原生吞键仅代码审查+窗口模式 responder 手测，真机端到端未闭环（interim 开放 P0 项 491 仍在）。有冗余防线（吞键+空菜单去绑定），家长可重启，故非阻塞→P2。",
+   "domain": "EXIT"
+  },
+  {
+   "req": "REQ-EXIT-02",
+   "requirement": "Esc 键不直接触发退出。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/shell/main.swift:757-780：keyCode==53 一律进入 handleEscKeyDown 长按状态机并 return nil，短按/单击只推进或复位计时；全文仅 2 处 NSApp.terminate（line 700 窗口调试菜单项，受 kIsWindowedMode 门；line 905 口令校验通过后），bare Esc 无法到达任一处。web 侧 app/web/app.js:384-393 wtjEscProgress 仅驱动进度条，绝不 terminate。",
+   "note": "负向性质由单一受控 terminate 门 + Esc 只进状态机的结构可静态证明，与 interim(Pass) 一致。虽无专用 swift 断言，但该保证是结构性的（Esc 无路径触达 terminate），判 Pass。",
+   "domain": "EXIT"
+  },
+  {
+   "req": "REQ-EXIT-03",
+   "requirement": "家长退出需长按 Esc ≥5 秒，触发口令输入；口令正确后才能退出全屏安全空间。",
+   "status": "Risk",
+   "severity": "P2",
+   "evidence": "app/shell/main.swift:39 kEscHoldSeconds=5.0；handleEscKeyDown(840-850)/checkEscProgress(860-874) elapsed>=5 → showExitPasswordPrompt(885-913)：NSSecureTextField 输入，仅当 response==确定 且 field==resolveExitPasscode() 才 NSApp.terminate(905)，错误/取消复位进度条不退出。web 镜像 app.js:21/35 exit.escHoldSec=5。",
+   "note": "实现+审查在位，与 interim(Risk) 一致，无后续卡闭环。残余为真机交互链（NSAlert 模态焦点/安全输入框/terminate）从未在 CI 或真机端到端验证（interim 开放 P0 项 486；证据简报 justin.local 会话为只读诊断、未触发退出）。这是唯一安全退出闸门，错误口令不退出已静态可证，非 Fail；但真机保真未闭环、需 Ethan 显式签核→P2。",
+   "domain": "EXIT"
+  },
+  {
+   "req": "REQ-EXIT-04",
+   "requirement": "孩子侧不存在主动退出入口；任务超时自动收起（REQ-TASK-05）与转移键盘触发的任务淡出（REQ-TASK-06）均不判定为失败，也不触发应用退出。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "web 层无任何退出/quit UI（grep app/web/index.html+app.js 仅得 exit.escHoldSec 配置，无按钮）；原生退出与任务系统解耦（main.swift:834-838 注释+结构：仅 2 处 terminate 均为家长闸门）；tests/unit/task-lifecycle.test.mjs:339-357 断言 auto-dismiss 载荷 Object.keys===['reason']、reason='timeout'，无 failure/success 语义字段；§6(360+) 20 键淡出边界。task-lifecycle 随 run_all tl-unit 全绿。",
+   "note": "与 interim(Pass) 一致，且有实际自动化测试背书（非仅代码审查）：dismiss 无失败语义 + 无孩子侧退出入口 + terminate 与任务解耦，三点均可证。强 Pass。",
+   "domain": "EXIT"
+  },
+  {
+   "req": "REQ-PTR-01",
+   "requirement": "移动：很淡的光点尾迹，快速移动时稍明显；连续乱晃约3秒后尾迹变弱、停一下再恢复；大反馈：经过有效对象可让对象轻微躲开/旋转/发光。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "引擎 app/web/pointer.js:335-365 updateTrailIntensity（速度映射 TRAIL_MIN_BASE 0.28→TRAIL_MAX_BASE 0.55、IDLE_DECAY_MS=3000 衰减坡道、PAUSE_RESET_MS 停顿重算）。单测 tests/unit/pointer-engine.test.mjs:238（manifest idleDecayApproxSec=3；~5s 后 late<=0.2 且 <0.5*early；停400ms 后 recovered≈early）、:888（P2-5① <3s 未衰减，钉住起点）、:281（onMove==getTrailIntensity）。消费渲染 app/web/app.js:349 spawnTrailDot / :557-563 onMove / :700 drawTrail；jsdom 集成 tests/unit/pointer-visual-003.test.mjs:273（真实 mousemove 驱动 pointer.js→app.js 星点渲染）、:302（衰减不受 003 影响）。大反馈避让 app/web/pointer-trail.js computeDropAvoidanceFactor + pointer-visual-003.test.mjs:401/437/467。",
+   "note": "核心'淡尾迹+速度稍明显+3秒衰减+停顿恢复'已实现且单测钉死数值台阶、jsdom 集成验证真实渲染路径 → 非 Fail。Risk P3 两点残余：(1) 大反馈'对象轻微躲开/旋转/发光'未实现为对象对指针悬停的反应；computeDropAvoidanceFactor 是'拖拽期间尾迹星点避开 drop target'另一种效果，真正对象反应被 pointer.js:165-168 显式设计延迟给消费方且目前无落地（docs '可让'措辞属可选加分）；(2) 尾迹衰减平滑度仅单测数值台阶+jsdom canvas，无真机逐帧像素视觉测试。均为儿童 kiosk 非阻塞化妆性反馈。较 interim(Risk) 判据更新：消费渲染现已被 pointer-visual-003 覆盖，残余收窄。",
+   "domain": "PTR"
+  },
+  {
+   "req": "REQ-PTR-02",
+   "requirement": "点击：第一下有小星点/短音效/小印章；连续狂点反馈越来越弱、太快时不给声音；大反馈：点中任务目标/宝箱/有效对象才有明显反应。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "引擎 app/web/pointer.js:379-395 computeClickIntensity（第一下满值；streak 衰减 1-(streak-1)/5；soundless 独立阈值 SOUNDLESS_GAP_MS=180）+ :715-743 onClickEvent 输出{intensity,soundless,targetId}。单测 tests/unit/pointer-engine.test.mjs:294（100ms 狂点6次单调递减到0、全 soundless）、:317（800ms 每次满值有声）、:335（300ms 衰减但不 soundless）、:368（targetId 命中带 id/未命中 null）、:927（P2-5④ 180ms 边界）。大反馈 app/web/pointer-trail.js classifyClickTier→CLICK_HIT + app/web/app.js:583-584 命中额外星点；jsdom tests/unit/pointer-visual-003.test.mjs:329（clickHit 明显多于 clickMiss）。",
+   "note": "点击强度衰减、soundless、命中大反馈三段全实现且单测+jsdom 集成断言真实行为。与 interim 一致(Pass)，无新残余。",
+   "domain": "PTR"
+  },
+  {
+   "req": "REQ-PTR-03",
+   "requirement": "拖拽：只有可拖对象进入强反馈、对象弹性跟随；拖错不惩罚只轻轻弹回；大反馈：拖到正确目标后出现成功动画和任务计数。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "引擎 app/web/pointer.js:613-654 onMouseDown（仅 draggable 命中进入 + WTJ-080 preventDefault:638 阻原生 HTML5 拖拽卡死）、:579-588 updateDragFollow（弹簧-阻尼弹性跟随）、:656-689 onMouseUp（命中→drop；未命中→dropCancel；dropTargetIds 白名单）、:594-599 finalizeDragAsCancel。单测 tests/unit/pointer-engine.test.mjs:486/537（dragStart+弹性有延迟）、:515/526（WTJ-080 仅真拖拽时 preventDefault）、:565/592/615（drop成功/cancel/白名单）、:734/755/764（button 守卫、丢 mouseup 换绑收尾）。webkit e2e drag_task_webkit 2/2、nativeDragStarts=0（证据简报 line19）。大反馈 app/web/pointer-trail.js classifyDropTier→DRAG_SUCCESS + app/web/app.js:598-603 成功星点；jsdom pointer-visual-003.test.mjs:360（dragSuccess 爆发、dropCancel 无）；任务计数由 drag e2e PhaseB 1 completion 证实。",
+   "note": "拖拽状态机、弹性跟随、拖错弹回、成功大反馈+任务计数全链闭环。drag e2e 曾因测试资产脆性（赌随机 drag）过期，QA 已用 _setRandom 确定性修复后 webkit 2/2 PASS——属测试资产问题非产品缺陷，nativeDragStarts=0 证 WTJ-080 防御无回归。与 interim 一致(Pass) 并新增 webkit 真机渲染证据。",
+   "domain": "PTR"
+  },
+  {
+   "req": "REQ-RWD-01",
+   "requirement": "宝箱奖励以一次性表现为主，不长期占用屏幕空间；可用烟花、大贴纸弹出后淡出、短动画、临时背景变化、新音效等形式。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/reward-chest.js:670 TOTAL_SEQUENCE_MS=2600 → finishSequence():697 调 clearFireworksCanvas()+clearOverlayChildren()（一次性清屏，叠层子元素整体移除）；runSequence():730 一次序列内落地 IMPLEMENTED_FORMS=['fireworks','short-animation','temporary-background-change','new-sfx'](:244) —— showChest()(Canvas 帧动效/回退 img)、showBackgroundFlash()(:663)、playChestOpenSfxDefensive('chest-open')(:349)、playFireworksDefensive('molten-fountain')(:548)。tests/unit/reward-chest.test.mjs:69 '序列自然播完后 Canvas 清空/DOM 子元素移除/reset/onChestComplete emit'（root.children.length 触发>0→播完=0，不跨轮堆积，第二轮同样归零）；:53 烟花 one-shot 触发瞬间 play() 恰一次、序列期间不重复。run_all tl-unit(node --test tests/unit/*.test.mjs) 全绿(8/8)。",
+   "note": "机制与一次性/清屏逻辑完整且单测充分；宝箱开箱走 WTJ_FRAME_ANIM，其渲染路径已由 faucet6/6+door/bell14/14 webkit e2e 像素级验证（同引擎）。残余：reward-fireworks 粒子引擎与 treasure-chest 开箱的运行态逐帧像素/视觉无任何自动化渲染测试；证据简报 L24 明确 justin.local 短会话未触发宝箱、无真机宝箱截图（QA 只读诊断）。属纯运行态视觉未验证、代码正确+相邻引擎已 e2e 覆盖 → P3 非阻塞。interim L91 把它并入 056 大范围动效视觉 P1，但该 P1 大半（faucet/door/bell/lamp/horse）已被后续 e2e 闭环，RWD 仅剩烟花/宝箱这点视觉未验。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-RWD-02",
+   "requirement": "宝箱开启后清空五槽，进入下一轮（见 REQ-SLOT-02）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/reward-chest.js:697 finishSequence()→callSlotsResetDefensive():319 防御式调用 window.WTJ_SLOTS.reset()（订阅 slots.js onFull，010 满槽后在 reset 前不再 emit,见注释:763）。tests/unit/reward-chest.test.mjs:83 '序列播完后应调用一次 WTJ_SLOTS.reset()'、:101 第二轮累计 reset=2（跨轮次正确清槽开新一轮）；:22/:23 引擎缺失回退路径仍 reset=1。task-reward-integration e2e 在 run_all PASS。",
+   "note": "与 interim 一致 Pass；bf8b284 复核逻辑与断言均在位、无回归。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-RWD-03",
+   "requirement": "烟花建议用 Canvas / SVG 代码生成，预设『满天星、打铁花、圆形、星形』等类型；颜色从少量高质量色板出发做 HSL / HSV 微调，不做完全 RGB 随机。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/reward-fireworks.js:8 只用 document.createElement('canvas')+2D API（doc 已否决 SVG/DOM 逐粒子）；STYLE_PARAMS:345 三形态 molten-fountain(打铁花上扬扇形)/starburst(星形)/round-bloom(圆形)；COLOR_TABLE:384 少量 HSL 基色 + VARIANT_OFFSETS:468 dh/dl 色相/明度微调 + hslaCss():479，无完全 RGB 随机。tests/unit/reward-fireworks.test.mjs:351/:384 三形态×三档确定性粒子数矩阵、:408 并发共享 300 硬预算触顶回落、:179 shadowBlur setter 陷阱断言全程 0 次赋值（性能红线）。",
+   "note": "005 卡 TL 决策 D2 把 011 首版五预设(circle/starfield/sparkler/star/heart)整合为三形态，覆盖打铁花/星形/圆形族；『满天星』族随整合折叠。docs 文本为『建议…等类型』(advisory)，且整合是 PM/TL 已接受设计决策，故仍判 Pass。生成方式/色板策略为可静态+单测验证项，均已覆盖；运行态观感残余归 REQ-RWD-01。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-RWD-04",
+   "requirement": "小任务奖励不与底部五槽混用；角落放一排很小的工作状态灯，完成一个任务点亮一个。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/hud.js:626 buildStatusLights() 建独立 .wtj-hud-lights 容器（working-status-light.png，data-light-index），与五槽 .wtj-hud-slot 是两套 DOM；hud.css:725 .wtj-hud-lights position:fixed left:16px bottom:16px（左下角），.wtj-hud-light 22-28px（很小）——与居中 footer 五槽物理分离、不混用。点亮：app/web/task-templates.js:1359 handleTemplateComplete() 每次完成 setStatusLightDefensive(index,true)，statusLightIndex 按 count=3 取模轮转。tests/unit/task-templates.test.mjs:1791 断言 setStatusLight 第二参恒 true、index 序列[0,1,2,0]。",
+   "note": "与 interim 一致 Pass；确认状态灯是角落独立元素、非五槽复用，每任务点亮一个。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-RWD-05",
+   "requirement": "连续完成 3 个任务，触发『今日工作完成』奖励。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/status-rewards.js:679 handleTaskComplete()→streak++（:692），streak>=getStreakThreshold()(:142,manifest.rewards.statusLights.streakThreshold 默认3) 调 triggerWorkComplete():653。tests/unit/status-rewards.test.mjs:452 连续2个不触发+断言 streakThreshold=3 取自真实 manifest；:474 第3个触发 onWorkComplete emit、payload.streak=3/streakThreshold=3。run_all tl-unit 全绿。",
+   "note": "与 interim 一致 Pass；阈值来自真实 manifest，非硬编码镜像。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-RWD-06",
+   "requirement": "『今日工作完成』奖励表现可为三灯一起闪 / 工作台盖章 / 小火箭发射 / 宝箱小开一次；风格接近爸爸工作界面的状态灯，但儿童版。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/status-rewards.js:160 IMPLEMENTED_FORMS=['lights-flash-together','desk-stamp']；flashLightsSequence():404 反复 setAllLightsDefensive(on/off) 实现三灯连闪；showRewardOverlay():442 渲染 completion-stamp-v3.png(getCompletionStampSpritePath():174, config 驱动) 一次性 pop/scale/fade(工作台盖章)。风格用 working-status-light.png(爸爸状态灯儿童版)。tests/unit/status-rewards.test.mjs:493/:496 断言 forms 含 lights-flash-together+desk-stamp、:497 不再含已替换的 mini-rocket-launch、:500 sfx=streak-reward-fanfare、:528 setStatusLight 多次交替 on/off。",
+   "note": "docs 菜单为『可以是…』(advisory)，落地两种(三灯连闪+盖章,>=一种门槛)。WTJ-20260705-010 用 completion-stamp-v3 替换粗糙火箭占位。盖章/连闪的运行态观感残余与 RWD-01 同属非阻塞视觉未验证，但机制(灯 on/off、叠层创建/移除)完全单测覆盖，故 Pass；与 interim 一致。",
+   "domain": "RWD"
+  },
+  {
+   "req": "REQ-AST-01",
+   "requirement": "字母弹出、颜色、大小、旋转和淡出（代码生成，优先 Canvas 2D，非图片素材）。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/app.js:209 spawnLetter()（rot=rand rotFinal、size=rand、color 选亮色板、life=rand(LETTER_FADE_MS_RANGE)）+ app.js:88 淡出 opacity=1-age/life + app.js:893/897 ctx.fillText 动态渲染；运动参数外置 app/web/letter-motion.js。逻辑覆盖 tl-unit（keyboard-engine）全绿、e2e KBD-01/10 确认按键→字母弹出（run_all kbd-secret-slots 31/31）。",
+   "note": "纯代码生成、无字母贴图，实现与 e2e 弹出覆盖到位。interim 判 Risk 的『待 056』理由已消（056 done+接入）；残余仅『淡出 0.8-1.5s 曲线/旋转的逐帧像素视觉』无自动视觉快照/真机截图，非阻塞，故 P3。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-02",
+   "requirement": "烟花粒子和部分 UI 动效（代码生成，优先 Canvas 2D）。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/reward-chest.js + reward-fireworks.js（Canvas rAF 粒子引擎、四预设满天星/打铁花/圆/星、getMaxParticles 上限、HSL 微调、无 shadowBlur）；单测 tests/unit/reward-chest.test.mjs L434『四预设全触发·粒子≤300·确定性顶满』，run_all tl-unit 全绿。",
+   "note": "粒子引擎与上限裁剪逻辑经确定性单测锁死。残余仅生产态逐帧渲染平滑度无自动像素视觉验证（单测用 stub）。056 已接入，故不再是『待 056』；P3 视觉盲区非阻塞。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-03",
+   "requirement": "鼠标尾迹、点击波纹、轻量过渡（代码生成，优先 Canvas 2D）。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/pointer.js（尾迹强度算法 idleDecayApproxSec=3、onMove/onClickFeedback、拖拽状态机，纯事件层）+ app/web/app.js:769-773 ripple life/衰减、trail dot 绘制；单测 tests/unit/pointer-engine.test.mjs（尾迹 3s 衰减台阶、狂点单调递减到 0）全绿。",
+   "note": "尾迹/波纹判定数值经单测钉死；消费侧 Canvas 绘制在 app.js。残余仅渲染平滑度无自动视觉/真机验证（PTR-01 已知后续项）。P3。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-04",
+   "requirement": "秘密词对应物体 PNG（图片 / Sprite）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "tests/reports/sprite_asset_scan.json：total 140 PNG / 0 defects / 0 warnings（全 RGBA、有透明背景、非空、内容不触边）；app/web/assets/sprites/ 实存 102 项；run_all sprite-asset-scan PASS『无硬缺陷』。task-reward-integration e2e 真实 GET 200 加载 cat.png/umbrella.png 等。",
+   "note": "静态扫描 0 缺陷 + 运行时加载 200 均已到位，与 interim Pass 一致。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-05",
+   "requirement": "任务物件、动物、篮子、狗窝、灯、水龙头（图片 / Sprite）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/assets/task-props/ 实存 8 道具 apple/basket/bell/doghouse/door/faucet/horse/lamp + PROVENANCE.md；sprite_asset_scan 0 缺陷。webkit e2e task_target_visibility 25/25（47 props 视口安全边界、每 CANVAS/IMG 非透明像素>0）、faucet_water_ratio 6/6、门 door idle 像素 24485。",
+   "note": "全部任务道具在位并像素级可达。interim 的 P2『lamp on/off 单图+CSS、door/bell 静态占位』已被 app/web/assets/anim/ 下 lamp/faucet/horse/bell/door 分帧 sheet（056）取代，残余消解，转 Pass。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-06",
+   "requirement": "宝箱、贴纸、必要的短帧动画（图片 / Sprite）。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/web/assets/sprites/treasure-chest.png + assets/rewards/（star-sticker/sparkle-burst/completion-stamp-v3.png）+ assets/anim/（bell/door/faucet/horse/lamp/treasure-chest 分帧 sheet，sprite_asset_scan 0 缺陷）；frame-anim.js 引擎接入 index.html:137。门铃 door_bell_click_webkit 14/14 像素级、faucet 6/6 逐帧比例验证。",
+   "note": "贴纸+宝箱+短帧动画素材齐备并 0 缺陷；door/bell/faucet 帧播放已 webkit 像素验证、treasure-chest opening 由 reward-chest 单测覆盖。残余：lamp/horse 帧序列逐帧动态视觉未全部自动化。056 已 done+接入，interim『待 056』理由消，降为 P3。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-07",
+   "requirement": "不使用 Chrome 自带发音作为产品声音（声音 / TTS）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "grep 全 app/web/ 确认代码零 speechSynthesis/SpeechSynthesisUtterance（仅 audio.js:8 红线注释与 AUDIO-API.md 说明）；产品语音走 Web Audio decodeAudioData（app/web/audio.js:290 decodeAudioDataCompat）。音频已交付：audio_asset_scan 260 present/0 missing、required 178/178、audio_runtime_report missing=0、run_all audio-runtime PASS。",
+   "note": "interim 判 Risk 仅因当时运行时未接入真实音频、担心回退 Chrome 发音。bf8b284 音频 100% 交付且 runtime 用真实 m4a（8 words/6 sfx/72 tasks 实测），红线代码级成立，转 Pass。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-08",
+   "requirement": "固定短句预生成；组合任务运行时生成后缓存（声音 / TTS）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/audio.js playComposite()（时间轴排程、依次不重叠）+ LRU 缓存（MAX_CACHE_ENTRIES=64、cacheGet/cachePut audio.js:307-325、setMaxCacheEntries）；app/web/audio/phrases/ 实存 11 固定短句 m4a（click/find/press/pick-up/put-into/take-to/turn-off/good-job/lets-go 等）；missing-audio.json compositePhrases totalNotDelivered=0；audio_runtime_report cache len=3。",
+   "note": "interim Pending 因音频 0 交付。bf8b284 固定短句已预生成、playComposite 运行时拼接 + LRU 缓存架构齐备且素材到位，转 Pass。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-09",
+   "requirement": "动物叫声、铃铛、水声、开箱声使用授权素材（声音 / SFX）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/audio.js:66 DEFAULT_SFX_MAP 覆盖 animal（dog/cat/duck/horse/pig/frog/elephant/mouse）/bell（bell-ring/bell-jingle）/water（tap-flow/drop/splash）/chest（chest-open/chest-lid-creak）；missing-audio.json sfx byCategory 全 0 not-delivered（20/20 交付）；授权记于 app/web/audio/SOURCE-LICENSES.md（Mixkit License + Wikimedia Commons CC0/CC BY-SA 已署名 + ffmpeg 合成无版权）；audio_asset_scan 0 defective。",
+   "note": "interim Pending 因 SFX 0 交付。bf8b284 四类 SFX 全交付且授权来源逐条记档，转 Pass。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-10",
+   "requirement": "core-states：核心状态图已验收，4 张状态图已集成于 #state-assets 章（素材集成点，卡 005）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/web/assets/states/ 实存 4 图 default-canvas/secret-word-dog/question-task-drag/treasure-reward.png；docs/index.html:849 #state-assets 章 <img> 集成引用到位。",
+   "note": "集成点需求成立。docs:812 自陈 secret-word-dog.png 仍含终端回显条/右侧图标竖排与文本冲突，但已由 PM 裁决『文本为规范源、状态图仅方向示意』，视觉修订属 DESIGN 下游追踪项、不阻断本集成点，故 Pass（残余登记）。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-11",
+   "requirement": "style-baseline：视觉风格基线已验收，风格基准图已集成于本章上方（素材集成点，卡 006）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "docs/assets/style/visual-style-tile.png 实存（513KB）；docs/index.html:1102 <img> 集成于素材章顶部。",
+   "note": "与 interim Pass 一致，集成点到位。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-AST-12",
+   "requirement": "sprites-batch1：sprite 生产基准 v3 已验收（commit 8cc540f），已集成于本章基准展示卡（素材集成点，卡 007）。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "docs/assets/sprites/production-sprite-contact-sheet.png 实存；docs/index.html:1106 #sprite-contact-sheet 展示卡集成 8 个 v3 基准 sprite（dog/cat/apple/ball/star/car/basket/treasure-chest）；changelog docs:1282 记录接入 v3 基准。",
+   "note": "与 interim Pass 一致，集成点到位。",
+   "domain": "AST"
+  },
+  {
+   "req": "REQ-DESK-01",
+   "requirement": "目标机器为 2014 款 MacBook Air，应用以 macOS 桌面全屏方式运行。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/shell/main.swift:1272-1294 kiosk 分支：frame=NSScreen.main?.frame、KioskWindow styleMask=.borderless、level=.mainMenu+1、collectionBehavior=[.canJoinAllSpaces,.stationary]、isOpaque/black/setFrame(display) 手工伪全屏；:1379-1380 presentationOptions hideDock/hideMenuBar。真机：evidence-brief §7/§22 justin.local(Big Sur 11.7.11 x86_64)=/Applications=bf8b284、该 build 已运行≥1 次、task-complete=6（WKWebView 全屏渲染并可完成任务，非白屏/崩溃）。真机清单 tests/manual/WTJ-055-bigsur-realmachine.md #1/#7 结果列仍空白。",
+   "note": "较 interim 的 Risk 根因已实质缩小：interim 判 Risk 是因『x86_64 交叉编译产物从未在 2014 MBA/Big Sur 跑过』——现已在 justin.local(Big Sur x86_64)实跑且 task-complete=6，证明伪全屏 WKWebView 在目标 OS/架构上确实起来并能玩。残余仅为『无现场全屏 GUI 目视截图』（QA 只读诊断、未注入 GUI；WTJ-055 #1/#7 目视未记录）。代码正确 + 目标机运行已证，故降为 P3。",
+   "domain": "DESK"
+  },
+  {
+   "req": "REQ-DESK-02",
+   "requirement": "应用需能打包成可安装/启动形式，例如 DMG 或等价分发方式。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/build.sh 全链：:67-75 swiftc x86_64+arm64 双 slice→lipo -create universal；:114 codesign --force --deep；:116-118 hdiutil create -format UDZO 生成 DMG；构建后硬门禁 :128-132 lipo -archs 断言两 slice、:135-146 otool -l 断言两 slice minos 11.0（MIN_OS=11.0 :16）、:176-181 codesign -v。evidence-brief §6-9：app/dist/WorkTimeJustin.dmg@bf8b284 已构建、本机+justin.local /Applications 均装 bf8b284、bundle 内 web 对源逐字节零差异，DMG md5 差异经核为 hdiutil 容器非确定性。",
+   "note": "与 interim 一致 Pass。脚本化全链 + 硬门禁断言 + 双机真实安装态证据，DMG 分发形式完整达标。",
+   "domain": "DESK"
+  },
+  {
+   "req": "REQ-DESK-03",
+   "requirement": "Electron 是否可接受需要 TL 做性能验证；也可评估更轻的原生方案。需求层只要求孩子能进入一个稳定全屏安全空间。",
+   "status": "Risk",
+   "severity": "P3",
+   "evidence": "app/PERFORMANCE.md §4 Swift/AppKit/WKWebView vs Electron 选型（选原生轻量方案）、§3 2014 MBA 性能预算量化表（粒子≤300/禁 shadowBlur/idleStopSec:5/dpr/AudioBuffer LRU64/HD5000 帧率红线+降级策略）、§1 构建机不可线性外推目标机、§6 列 P0 需真机。稳定性：evidence-brief §13/§23 发热真凶(010)现场确认 justin.local 心跳 rafTicksSinceLast=1（旧≈300/心跳）~300× 降频、APPSHELL-08 gate 实测；task-complete=6 稳定运行。WTJ-055 §6 #4(HD5000 帧率)/#5(RSS)/#6(音频解锁)结果列仍空白。",
+   "note": "较 interim 的 Risk 显著收敛：TL 性能验证职责已由 PERFORMANCE.md 落实（Electron 评估 + 原生选型 + 量化预算），且『稳定全屏安全空间』的最大威胁——旧机发热空转(010)——已修复并在真机诊断日志现场确认 ~300× 降频。残余仅为 HD5000 逐帧帧率 / 物理 RSS / Safari14-WebKit 音频解锁的现场目视 P0 未录（WTJ-055 空白列）；app 已证实在目标机稳定进入并运行，故 P3 而非 P2。",
+   "domain": "DESK"
+  },
+  {
+   "req": "REQ-DESK-04",
+   "requirement": "Command+Space / Command+Tab 等 macOS 系统级快捷键，普通应用未必能 100% 禁掉。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "这是诚实边界式需求（陈述限制，非要求屏蔽）。app/SECURITY.md §2『拦不住什么（诚实边界，REQ-DESK-04/05）』:113-131 明列 Cmd+Space/Cmd+Tab/Cmd+Option+Esc 普通 app 拦不住的固有边界；main.swift:1367-1381 setupKioskPresentation 注释明示 presentationOptions 仅 best-effort 建议标志位、不构成系统级快捷键保证屏蔽；:1400-1449 setupSystemHotkeyBlocker CGEventTap 分层升级（需辅助功能授权，attemptEnableSystemHotkeyTap no-silent-fallback、失败必 NSLog 显式告知未拦住）。",
+   "note": "与 interim 一致 Pass。需求本身只要求『不虚假承诺 100% 屏蔽』，代码注释与 SECURITY.md 诚实口径完全达标，并额外提供 best-effort 分层（presentationOptions + CGEventTap + 机器级 symbolichotkeys 脚本）。真机压制实效（WTJ-055 空白）不影响此需求的达成——需求要的是诚实边界，非绝对屏蔽。",
+   "domain": "DESK"
+  },
+  {
+   "req": "REQ-DESK-05",
+   "requirement": "如需更强控制，需要系统设置、辅助功能权限或家长控制配合，不能在产品需求里虚假承诺。",
+   "status": "Pass",
+   "severity": "none",
+   "evidence": "app/SECURITY.md §2/§2.1 best-effort 边界与『干扰非逃逸』说明 :136-152；§3『家长可以做的补强』:157-173 列屏幕使用时间内容限制、受限账号+开机自启、辅助功能权限+CGEventTap 更强拦截；main.swift:1373-1377/1395-1399 注释明示需辅助功能授权才能真正兜住系统级键、未授权时不静默假装成功。",
+   "note": "与 interim 一致 Pass。诚实『无虚假承诺』的文档型需求：明确把更强控制归到系统设置/辅助功能/家长控制配合，并给出可执行的补强路径，口径诚实、达标。",
+   "domain": "DESK"
+  }
+ ]
+}
