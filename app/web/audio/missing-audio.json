@@ -45,8 +45,8 @@
     },
     "secretWordsZh": {
       "total": 100,
-      "totalNotDelivered": 15,
-      "note": "ZH 词卡音频由 WTJ-20260706-011 CosyVoice3 ASR-gated 生成:已交付 85/100;未交付 15 词(多为单字/短标签,CosyVoice3 对超短 ZH 目标 too-short 不稳,拟用载体短语+裁切补)。"
+      "totalNotDelivered": 0,
+      "note": "ZH 词卡音频由 WTJ-20260706-011 CosyVoice3 ASR-gated 管线全量交付：100/100 已交付，0 未交付、无 EN fallback 占位。返工要点：裸「猫」(māo) 因 whisper 同音「毛」(máo) 判失败改用「小猫」；所有条目每条 whisper 自证念的是目标中文词（不中重 seed，命中才写盘）。"
     }
   },
   "licensingGapStatement": "本卡（WTJ-20260704-016）交付统一 Audio/TTS manager 、缓存策略与本缺口清单，不产出任何真实音频素材。以下所有条目均为 status: not-delivered，需要 PM/DESIGN 在后续卡片中完成：1) 选定 TTS 供应商/声优并确认商用授权条款（适用于 secretWords 与 taskVoice 两类）；2) 采购或制作授权 SFX 素材（适用于 REQ-AST-09 点名的动物叫声/铃铛/水声/开箱声四类）；3) 确认 basket/treasurechest 是否保留为正式秘密词（见 app/web/MANIFEST.md 已记录的差异）。所有文件交付后只需按本文件的 path 字段放入对应位置，无需改动 audio.js 或 manifest.js 的路径字段。",
@@ -1195,10 +1195,10 @@
     },
     {
       "word": "fish",
-      "zhLabel": "鱼",
+      "zhLabel": "小鱼",
       "path": "audio/words/fish.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "flower",
@@ -1253,8 +1253,8 @@
       "word": "horse",
       "zhLabel": "马",
       "path": "audio/words/horse.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "hat",
@@ -1300,10 +1300,10 @@
     },
     {
       "word": "island",
-      "zhLabel": "岛",
+      "zhLabel": "小岛",
       "path": "audio/words/island.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "juice",
@@ -1433,10 +1433,10 @@
     },
     {
       "word": "net",
-      "zhLabel": "网",
+      "zhLabel": "渔网",
       "path": "audio/words/net.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "noodle",
@@ -1475,17 +1475,17 @@
     },
     {
       "word": "pig",
-      "zhLabel": "猪",
+      "zhLabel": "小猪",
       "path": "audio/words/pig.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "pear",
-      "zhLabel": "梨",
+      "zhLabel": "梨子",
       "path": "audio/words/pear.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "pencil",
@@ -1517,10 +1517,10 @@
     },
     {
       "word": "quail",
-      "zhLabel": "鹌鹑",
+      "zhLabel": "小鹌鹑",
       "path": "audio/words/quail.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "quarter",
@@ -1596,8 +1596,8 @@
       "word": "tree",
       "zhLabel": "树",
       "path": "audio/words/tree.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "train",
@@ -1617,22 +1617,22 @@
       "word": "umbrella",
       "zhLabel": "雨伞",
       "path": "audio/words/umbrella.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "unicorn",
       "zhLabel": "独角兽",
       "path": "audio/words/unicorn.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "ukulele",
       "zhLabel": "尤克里里",
       "path": "audio/words/ukulele.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "uniform",
@@ -1722,8 +1722,8 @@
       "word": "yak",
       "zhLabel": "牦牛",
       "path": "audio/words/yak.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "zebra",
@@ -1736,22 +1736,22 @@
       "word": "zipper",
       "zhLabel": "拉链",
       "path": "audio/words/zipper.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "zucchini",
       "zhLabel": "西葫芦",
       "path": "audio/words/zucchini.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     },
     {
       "word": "treasurechest",
       "zhLabel": "宝箱",
       "path": "audio/words/treasurechest.zh.m4a",
-      "status": "not-delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "status": "delivered",
+      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
     }
   ],
   "sfx": [

@@ -125,29 +125,31 @@
     'treasurechest'
   ];
 
-  // ZH_AVAILABLE_WORD：中文秘密词已交付的 word 清单——WTJ-20260706-008（TTS 生成卡）确认
-  // 后才会从这里开始逐个补齐（同步 app/web/audio/words/<word>.zh.m4a 落盘 + missing-audio
-  // .json secretWordsZh[] 对应条目 status 改 "delivered"）。**当前必须是空数组**：这既是
-  // 本卡的交付范围边界（011 不生成任何音频），也是本切片"零用户可见变化"的核心保证——只要
-  // 这里是空的，secretword.js 的语言感知分支就恒定判定"这个词的中文不可用"，天然、无条件地
-  // 回退到英文，效果与改动前逐字节相同（见 tests/unit/secretword-engine.test.mjs 新增用例
-  // 与本文件 10. 号用例）。
+  // ZH_AVAILABLE_WORD：中文秘密词已交付的 word 清单。**WTJ-20260706-011 返工后为完整 100 词**
+  // （与 app/web/manifest.js secretWords.pool 完全一致，顺序也一致）：全部 100 个 <word>.zh.m4a
+  // 已由 008 ASR-gated CosyVoice3 管线落盘（每条 whisper 自证念的是目标中文词，不中重 seed，命中
+  // 才写盘；同音异字用 toneless-pinyin 救回、繁简用 opencc 归一），missing-audio.json
+  // secretWordsZh[] 对应 100 条 status 均为 "delivered"。**不再存在"中文未交付·回落英文"的
+  // 可接受态**——这份台账即"每个词的中文都可用"，secretword.js 语言感知分支对全部 100 词都切
+  // .zh.m4a（见 tests/unit/secretword-engine.test.mjs 20 号用例与本文件 10. 号用例）。
   var ZH_AVAILABLE_WORD = [
     'apple', 'ant', 'airplane', 'alligator', 'ball', 'basket',
     'bell', 'banana', 'cat', 'car', 'cup', 'cake',
     'dog', 'door', 'duck', 'drum', 'egg', 'elephant',
-    'eye', 'envelope', 'flower', 'frog', 'faucet', 'goat',
-    'grapes', 'gift', 'guitar', 'hat', 'heart', 'house',
-    'icecream', 'igloo', 'insect', 'juice', 'jam', 'jar',
-    'jellyfish', 'key', 'kite', 'koala', 'kettle', 'lamp',
-    'leaf', 'lion', 'lemon', 'moon', 'mouse', 'milk',
-    'monkey', 'nest', 'nose', 'noodle', 'orange', 'owl',
-    'octopus', 'oven', 'pencil', 'pizza', 'queen', 'quilt',
-    'quarter', 'rocket', 'robot', 'rainbow', 'ring', 'star',
-    'sun', 'shoe', 'spoon', 'treasure', 'train', 'turtle',
-    'uniform', 'van', 'vase', 'violin', 'volcano', 'whale',
-    'watch', 'window', 'wagon', 'fox', 'yoyo', 'yarn',
-    'zebra'
+    'eye', 'envelope', 'fish', 'flower', 'frog', 'faucet',
+    'goat', 'grapes', 'gift', 'guitar', 'horse', 'hat',
+    'heart', 'house', 'icecream', 'igloo', 'insect', 'island',
+    'juice', 'jam', 'jar', 'jellyfish', 'key', 'kite',
+    'koala', 'kettle', 'lamp', 'leaf', 'lion', 'lemon',
+    'moon', 'mouse', 'milk', 'monkey', 'nest', 'nose',
+    'net', 'noodle', 'orange', 'owl', 'octopus', 'oven',
+    'pig', 'pear', 'pencil', 'pizza', 'queen', 'quilt',
+    'quail', 'quarter', 'rocket', 'robot', 'rainbow', 'ring',
+    'star', 'sun', 'shoe', 'spoon', 'treasure', 'tree',
+    'train', 'turtle', 'umbrella', 'unicorn', 'ukulele', 'uniform',
+    'van', 'vase', 'violin', 'volcano', 'whale', 'watch',
+    'window', 'wagon', 'fox', 'yoyo', 'yarn', 'yak',
+    'zebra', 'zipper', 'zucchini', 'treasurechest'
   ];
 
   var ZH_AVAILABLE_WORD_SET = idSetFrom(ZH_AVAILABLE_WORD);

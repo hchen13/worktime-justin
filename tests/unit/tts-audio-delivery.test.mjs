@@ -90,18 +90,21 @@ test('084: delivered ZH paths follow the audio/tasks/<id>.zh.m4a convention (no 
 });
 
 // =====================================================================================
-// WTJ-20260706-011 — ZH secret-word audio delivery. First-pass ZH labels + audio generated
-// via the 008-approved CosyVoice3 ASR-gated reseed pipeline. 85/100 delivered; 15 remain
-// not-delivered (mostly single-char / very short ZH labels where CosyVoice3's too-short-target
-// instability persists — to be filled by a carrier-phrase+trim pass). Status must stay
-// consistent with disk: delivered ⟺ a non-empty .m4a exists; not-delivered ⟺ no file yet.
+// WTJ-20260706-011 — ZH secret-word audio delivery. FULL 100/100 delivered via the 008-approved
+// CosyVoice3 ASR-gated reseed pipeline (generate-tts-asr-gated.py): every clip whisper-verified
+// to read the target ZH word (reseed on miss; toneless-pinyin homophone rescue + opencc
+// Traditional→Simplified normalization). The prior 85/100 pass left 15 short/single-char words
+// pending; the rework delivered all 15 (single-char words that whisper transcribed as empty or a
+// homophone got a child-friendly longer label, e.g. 猫→小猫 / 鱼→小鱼 / 岛→小岛, filename unchanged).
+// 0 remain not-delivered; there is NO EN-fallback placeholder. Status ⟺ disk: delivered ⟺ a
+// non-empty .m4a exists.
 // =====================================================================================
 
 const secretWordsZh = manifest.secretWordsZh;
 const deliveredZh = secretWordsZh.filter((e) => e.status === 'delivered');
 const notDeliveredZh = secretWordsZh.filter((e) => e.status === 'not-delivered');
 
-test('011+008: secretWordsZh well-formed — 100 entries (85 delivered + 15 pending), one per pool word', () => {
+test('011+008: secretWordsZh well-formed — 100 entries (100 delivered, 0 pending), one per pool word', () => {
   assert.equal(Array.isArray(secretWordsZh), true, 'missing-audio.json must have a secretWordsZh array');
   assert.equal(secretWordsZh.length, 100, 'secretWordsZh must have exactly 100 entries (one per current 100-word pool)');
 
@@ -117,8 +120,8 @@ test('011+008: secretWordsZh well-formed — 100 entries (85 delivered + 15 pend
     assert.ok(e.zhLabel.length > 0, `${e.word}: zhLabel must not be empty`);
     assert.equal(e.path, `audio/words/${e.word}.zh.m4a`, `${e.word}: path must follow the audio/words/<word>.zh.m4a convention`);
   }
-  assert.equal(deliveredZh.length, 85, 'WTJ-20260706-011: 85/100 ZH word audio delivered (008 ASR-gated CosyVoice3 pipeline)');
-  assert.equal(notDeliveredZh.length, 15, '15 ZH words remain pending (single-char/short too-short cases, carrier-phrase pass to follow)');
+  assert.equal(deliveredZh.length, 100, 'WTJ-20260706-011 返工: 100/100 ZH word audio delivered (008 ASR-gated CosyVoice3 pipeline)');
+  assert.equal(notDeliveredZh.length, 0, '0 ZH words remain pending — 无 EN fallback 占位，全部中文已交付');
 });
 
 test('011+008: delivered secretWordsZh .m4a exist & non-empty; not-delivered do not exist (status ⟺ disk)', () => {
@@ -152,10 +155,10 @@ test('011: app/scripts/tts-text-manifest.zh.json "words" segment matches missing
   }
 });
 
-test('011: summary.secretWordsZh block reports total=100, totalNotDelivered=15 (85 delivered by 008 ASR-gated CosyVoice3 pipeline)', () => {
+test('011: summary.secretWordsZh block reports total=100, totalNotDelivered=0 (100/100 delivered by 008 ASR-gated CosyVoice3 pipeline)', () => {
   const summary = manifest.summary.secretWordsZh;
   assert.ok(summary, 'missing-audio.json summary.secretWordsZh block must exist');
   assert.equal(summary.total, 100);
   assert.equal(summary.totalNotDelivered, notDeliveredZh.length, 'summary.totalNotDelivered must match the actual count of not-delivered secretWordsZh entries');
-  assert.equal(summary.totalNotDelivered, 15, 'WTJ-20260706-011: 15 ZH words remain pending after the 85-word delivery');
+  assert.equal(summary.totalNotDelivered, 0, 'WTJ-20260706-011 返工: 0 ZH words pending — 全部 100 中文已交付');
 });
