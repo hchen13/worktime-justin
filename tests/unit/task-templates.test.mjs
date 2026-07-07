@@ -406,6 +406,36 @@ function makeFrameAnimStub(durationsByKey) {
   };
 }
 
+// --- WTJ_VOICE_LANG stub（WTJ-20260706-012 第二阶段：ZH word-card 语言分支测试用）--------------
+// 手写最小 stub（不加载真实 voice-language.js 源码——本文件对其它依赖一贯采用"消费方只测自己
+// 这一层逻辑"策略，语言模块自身的 getEffectiveLanguage()/isWordZhAvailable() 契约已由
+// tests/unit/voice-language.test.mjs 独立覆盖）。只暴露 task-templates.js 实际消费的两个方法。
+// opts.lang：'zh' | 'en'，getEffectiveLanguage() 恒返回这个值。
+// opts.zhWords：Array<string>，isWordZhAvailable(word) 对这个数组里的词返回 true，其余（含
+// 拼写不在数组内的、null/undefined/非字符串）一律返回 false——与真实 voice-language.js
+// isWordZhAvailable() 的防御式契约一致。
+function makeVoiceLangStub(opts) {
+  opts = opts || {};
+  var lang = opts.lang || 'en';
+  var zhWordSet = {};
+  (opts.zhWords || []).forEach(function (w) { zhWordSet[w] = true; });
+  var calls = { getEffectiveLanguage: 0, isWordZhAvailable: [] };
+  return {
+    api: {
+      getEffectiveLanguage: function () {
+        calls.getEffectiveLanguage += 1;
+        return lang;
+      },
+      isWordZhAvailable: function (word) {
+        calls.isWordZhAvailable.push(word);
+        return typeof word === 'string' && zhWordSet[word] === true;
+      }
+    },
+    calls: calls,
+    setLang: function (newLang) { lang = newLang; } // 供"语言切换"测试在同一 sandbox 内动态改变生效语言。
+  };
+}
+
 // --- WTJ_TASK stub (onQuestionClicked/onDismiss/onPhase 都是多订阅者，镜像 task.js) -----------
 function makeTaskStub() {
   var questionHandlers = [];
@@ -470,6 +500,10 @@ function createSandbox(opts) {
   var audioStub = makeAudioStub();
   var taskStub = makeTaskStub();
   var frameAnimStub = makeFrameAnimStub(opts.frameAnimDurations);
+  // opts.voiceLang：{ lang, zhWords } 时创建 WTJ_VOICE_LANG stub 并挂到 window（见
+  // makeVoiceLangStub() 说明）；不传时 window.WTJ_VOICE_LANG 保持完全缺失——沿用本卡第一阶段
+  // （1048c0e）"未接线语言模块 = 视为 en"的既有测试路径，绝大多数既有用例不需要改动。
+  var voiceLangStub = opts.voiceLang ? makeVoiceLangStub(opts.voiceLang) : null;
 
   var fakeWindow = {};
   if (opts.includePointer !== false) fakeWindow.WTJ_POINTER = pointerStub.api;
@@ -478,6 +512,7 @@ function createSandbox(opts) {
   if (opts.includeAudio !== false) fakeWindow.WTJ_AUDIO = audioStub.api;
   if (opts.includeTask !== false) fakeWindow.WTJ_TASK = taskStub.api;
   if (opts.includeFrameAnim !== false) fakeWindow.WTJ_FRAME_ANIM = frameAnimStub.api;
+  if (voiceLangStub) fakeWindow.WTJ_VOICE_LANG = voiceLangStub.api;
 
   var sandbox = {
     window: fakeWindow,
@@ -524,6 +559,7 @@ function createSandbox(opts) {
     audioStub: audioStub,
     taskStub: taskStub,
     frameAnimStub: frameAnimStub,
+    voiceLangStub: voiceLangStub,
     clock: clock,
     warnCalls: warnCalls,
     errorCalls: errorCalls
@@ -2077,6 +2113,130 @@ test('WTJ-20260706-012：manifest.tasks.templates.find.randomPool.enabled 显式
 
   var info = startTaskOfType(env, 'find');
   assert.equal(info.taskId, 'find-x', 'randomPool.enabled=false 时应该回退到固定 examples，不应该走随机 word-card 抽取');
+});
+
+// =============================================================================================
+// 12b. WTJ-20260706-012 第二阶段（TL 定案 2026-07-07）：ZH word-card 语言分支。
+// 推翻本卡最初"ZH 整句预生成"的口径——ZH 模型改为 word-card：目标词提示音频 = 该词自己已
+// 交付的中文词卡音频（audio/words/<word>.zh.m4a，011 卡交付），候选池收窄为
+// window.WTJ_VOICE_LANG.isWordZhAvailable() 为真的子集，缺中文音频的词直接排除、不做 EN
+// fallback。本节覆盖：①ZH 池非空且随机路径被实际走到（不是静默落到 12 条固定 fallback）；
+// ②多轮抽样非固定序列、覆盖多个词；③缺音频的词被排除、从不被选中、也从不落到 EN 音频；
+// ④语言切换后同一次会话内使用对应语言的词卡音频。
+// =============================================================================================
+
+test('WTJ-20260706-012（ZH）：ZH 模式下候选池收窄为 isWordZhAvailable() 子集，随机路径被实际走到（synthetic find-card- id，不是静默回退到 12 条固定 examples），wordAudioFile 指向 .zh.m4a 词卡音频；多轮抽样覆盖多个不同词（不是固定序列）', function () {
+  // 真实 secretWords.pool（100 词）+ 一个 10 词的 ZH 可用子集（均为真实 pool 声明顺序里的前 10
+  // 个词：A 组 4 个 + B 组 4 个 + C 组前 2 个），用会真正洗牌的确定性 RNG 覆盖更多样的组合。
+  var zhWords = ['apple', 'ant', 'airplane', 'alligator', 'ball', 'basket', 'bell', 'banana', 'cat', 'car'];
+  var env = createSandbox({ randomFn: mulberry32(2026), voiceLang: { lang: 'zh', zhWords: zhWords } });
+  var zhWordSet = {};
+  zhWords.forEach(function (w) { zhWordSet[w] = true; });
+
+  var seenWords = {};
+  for (var round = 0; round < 40; round++) {
+    var info = startTaskOfType(env, 'find');
+    var m = /^find-card-([a-z]+)$/.exec(info.taskId);
+    assert.ok(m, '第 ' + round + ' 轮：ZH 模式下 find 仍应走随机 word-card 抽取（synthetic id），不应静默回退到 12 条固定 examples，实际 taskId="' + info.taskId + '"');
+    var word = m[1];
+    assert.ok(zhWordSet[word], '第 ' + round + ' 轮：目标词 "' + word + '" 应该来自 ZH 可用子集，不应该抽到子集外的词（no-EN-fallback 候选池收窄）');
+    seenWords[word] = true;
+
+    var call = env.audioStub.bilingualCalls[env.audioStub.bilingualCalls.length - 1];
+    assert.equal(call.audioFile, 'audio/words/' + word + '.zh.m4a', '第 ' + round + ' 轮：ZH 模式下 wordAudioFile 应指向该词自己的中文词卡音频（不是整句、不是英文）');
+    assert.equal(call.audioFileZh, null, 'wordAudioFileZh 恒为 null——只借用 playWordBilingual() 的单文件播放载体，不触发其双语顺序播放分支');
+
+    env.taskStub.dismissActive();
+  }
+
+  assert.ok(Object.keys(seenWords).length >= 3, '40 轮内应覆盖至少 3 个不同的 ZH 词（不是固定序列/固定一个词），实际覆盖：' + Object.keys(seenWords).join(','));
+});
+
+test('WTJ-20260706-012（ZH）：缺中文词卡音频的词被排除出候选池，多轮抽取从不被选中、也从不落到英文音频顶替（no-EN-fallback）', function () {
+  var customManifestSrc =
+    'window.WTJ_MANIFEST = {' +
+    '  secretWords: { pool: [' +
+    '    { word: "dog", spriteFile: "sprites/dog.png", audioFile: "audio/words/dog.m4a" },' +
+    '    { word: "cat", spriteFile: "sprites/cat.png", audioFile: "audio/words/cat.m4a" },' +
+    '    { word: "apple", spriteFile: "sprites/apple.png", audioFile: "audio/words/apple.m4a" },' +
+    '    { word: "star", spriteFile: "sprites/star.png", audioFile: "audio/words/star.m4a" }' +
+    '  ] },' +
+    '  tasks: { templates: {' +
+    '    drag: { examples: [{ id: "drag-x", objectSprite: "sprites/apple.png", targetSprite: "sprites/basket.png", voicePrompt: "", successAudio: "" }] },' +
+    '    click: { examples: [{ id: "click-x", targetSprite: "sprites/lamp.png", targetSpriteActive: null, voicePrompt: "", successAudio: "" }] },' +
+    '    find: { examples: [{ id: "find-legacy", targetSprite: "sprites/dog.png", distractorSprites: ["sprites/cat.png"], voicePrompt: "", successAudio: "" }],' +
+    '      randomPool: { enabled: true, sampleSize: 1, sourcePool: "secretWords" } },' +
+    '    press: { examples: [{ id: "press-x", targetKey: "A", voicePrompt: "", successAudio: "" }] }' +
+    '  } },' +
+    '  rewards: { statusLights: { count: 3 } }' +
+    '};';
+  // 只有 dog/cat 有中文词卡音频；apple/star 没有——ZH 模式下候选池应收窄到只剩 dog/cat。
+  var env = createSandbox({ manifestOverrideSrc: customManifestSrc, voiceLang: { lang: 'zh', zhWords: ['dog', 'cat'] } });
+
+  for (var round = 0; round < 12; round++) {
+    var info = startTaskOfType(env, 'find');
+    var m = /^find-card-([a-z]+)$/.exec(info.taskId);
+    assert.ok(m, '第 ' + round + ' 轮：应走随机 word-card 抽取');
+    var word = m[1];
+    assert.ok(word === 'dog' || word === 'cat', '第 ' + round + ' 轮：目标词应恒为 dog/cat 之一，实际="' + word + '"（apple/star 缺中文音频，绝不应该被选中）');
+
+    var call = env.audioStub.bilingualCalls[env.audioStub.bilingualCalls.length - 1];
+    assert.equal(call.audioFile.indexOf('.zh.m4a'), call.audioFile.length - '.zh.m4a'.length, '第 ' + round + ' 轮：wordAudioFile 应恒以 .zh.m4a 结尾，绝不应该退化成英文 .m4a（no-EN-fallback）');
+
+    env.taskStub.dismissActive();
+  }
+});
+
+test('WTJ-20260706-012（ZH）：ZH 可用子集为空（理论边界）时 fail-fast——不静默回退英文，而是 console.error 并整体回退到固定 examples（那 12/N 条本身走语言感知的 voicePrompt，不会漏播成英文）', function () {
+  var customManifestSrc =
+    'window.WTJ_MANIFEST = {' +
+    '  secretWords: { pool: [' +
+    '    { word: "dog", spriteFile: "sprites/dog.png", audioFile: "audio/words/dog.m4a" },' +
+    '    { word: "cat", spriteFile: "sprites/cat.png", audioFile: "audio/words/cat.m4a" }' +
+    '  ] },' +
+    '  tasks: { templates: {' +
+    '    drag: { examples: [{ id: "drag-x", objectSprite: "sprites/apple.png", targetSprite: "sprites/basket.png", voicePrompt: "", successAudio: "" }] },' +
+    '    click: { examples: [{ id: "click-x", targetSprite: "sprites/lamp.png", targetSpriteActive: null, voicePrompt: "", successAudio: "" }] },' +
+    '    find: { examples: [{ id: "find-legacy", targetSprite: "sprites/dog.png", distractorSprites: ["sprites/cat.png"], voicePrompt: "", successAudio: "" }],' +
+    '      randomPool: { enabled: true, sampleSize: 1, sourcePool: "secretWords" } },' +
+    '    press: { examples: [{ id: "press-x", targetKey: "A", voicePrompt: "", successAudio: "" }] }' +
+    '  } },' +
+    '  rewards: { statusLights: { count: 3 } }' +
+    '};';
+  // zhWords 为空数组：pool 里的 dog/cat 均无中文词卡音频，ZH 合格候选池应为空集。
+  var env = createSandbox({ manifestOverrideSrc: customManifestSrc, voiceLang: { lang: 'zh', zhWords: [] } });
+
+  var info = startTaskOfType(env, 'find');
+  assert.equal(info.taskId, 'find-legacy', 'ZH 候选池为空时应整体回退到固定 examples，而不是静默改用英文候选池');
+  assert.equal(env.audioStub.bilingualCalls.length, 0, '固定 example 没有 wordAudioFile 字段，不应该调用 playWordBilingual');
+  var sawExpectedError = env.errorCalls.some(function (msg) { return msg.indexOf('no-EN-fallback') !== -1; });
+  assert.ok(sawExpectedError, 'ZH 候选池为空应该 console.error 一条包含 no-EN-fallback 字样的诊断，实际 errorCalls：' + JSON.stringify(env.errorCalls));
+});
+
+test('WTJ-20260706-012（ZH）：语言切换——同一次会话内从 en 切到 zh 之后，同一个词的 wordAudioFile 应从英文路径切换为对应的中文词卡路径', function () {
+  var zhWords = ['apple', 'ant', 'airplane', 'alligator', 'ball'];
+  var env = createSandbox({ voiceLang: { lang: 'en', zhWords: zhWords } }); // 默认 identity RNG。
+
+  // EN 模式：候选池是真实 secretWords.pool 全量 100 词，identity RNG 下首次抽取恒为 pool[0]
+  // ='apple'（与既有"一整袋 100 词声明顺序"测试用例同一退化行为）。
+  var infoEn = startTaskOfType(env, 'find');
+  var mEn = /^find-card-([a-z]+)$/.exec(infoEn.taskId);
+  assert.ok(mEn, 'EN 模式下应走随机 word-card 抽取');
+  assert.equal(mEn[1], 'apple', 'identity RNG 下 EN 模式首次抽取应恰为 secretWords.pool[0]=apple');
+  var callEn = env.audioStub.bilingualCalls[env.audioStub.bilingualCalls.length - 1];
+  assert.equal(callEn.audioFile, 'audio/words/apple.m4a', 'EN 模式下 wordAudioFile 应为英文词卡路径');
+  env.taskStub.dismissActive();
+
+  // 切到 zh：候选池收窄为 zhWords 子集，其声明顺序里的第一个同样是 'apple'（zhWords 数组第一项），
+  // identity RNG 下 ZH 语言专属的持续洗牌袋（wordCardBagStates.zh，首次使用，从头装袋）同样恰好
+  // 抽中 'apple'——同一个词，验证的是"音频路径随语言切换而变"，不是"换了一个不同的词"。
+  env.voiceLangStub.setLang('zh');
+  var infoZh = startTaskOfType(env, 'find');
+  var mZh = /^find-card-([a-z]+)$/.exec(infoZh.taskId);
+  assert.ok(mZh, '切到 ZH 模式后应仍走随机 word-card 抽取');
+  assert.equal(mZh[1], 'apple', '切到 ZH 后 identity RNG 下应恰为 ZH 候选池声明顺序第一个词=apple（与 EN 模式抽到的是同一个词，突出音频路径随语言切换而变）');
+  var callZh = env.audioStub.bilingualCalls[env.audioStub.bilingualCalls.length - 1];
+  assert.equal(callZh.audioFile, 'audio/words/apple.zh.m4a', '切到 ZH 后 wordAudioFile 应变为对应的中文词卡路径，而不是继续沿用英文路径');
 });
 
 // ============================================================================================
