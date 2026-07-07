@@ -350,12 +350,15 @@ def build_out_index(manifest: dict) -> dict[str, dict[str, str]]:
 
 def render_secret_word_audio_group() -> str:
     pool = parse_secret_word_pool()
-    STATS["per_root"].append(("秘密词英文发音（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
+    STATS["per_root"].append(("秘密词发音 EN+ZH（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
+    _ma = json.loads((REPO_ROOT / "app" / "web" / "audio" / "missing-audio.json").read_text(encoding="utf-8"))
+    zh_delivered = set(e["word"] for e in _ma.get("secretWordsZh", []) if e.get("status") == "delivered")
     parts = [
-        f'<h3 id="audio-words">秘密词英文发音 <span class="count">(共 {len(pool)} 词)</span></h3>',
-        '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]（word/spriteFile/audioFile 三元组，'
-        '运行时引擎本身读的就是这份数据，比按文件名猜配对更可靠）。sprite 缩略图 + 对应英文发音，'
-        '用 preload="none" 避免一次性加载 100+ 条音频。</p>',
+        f'<h3 id="audio-words">秘密词发音（英文 + 中文） <span class="count">(共 {len(pool)} 词；中文已交付 {len(zh_delivered)}/{len(pool)})</span></h3>',
+        '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]。每词展示 sprite + <strong>英文发音</strong>'
+        '（audio/words/&lt;word&gt;.m4a）与 <strong>中文发音</strong>（audio/words/&lt;word&gt;.zh.m4a，WTJ-20260706-011 '
+        f'交付 {len(zh_delivered)}/{len(pool)} 条）。中文未交付的词（CosyVoice3 超短 ZH too-short 限制）标注「中文未交付·'
+        'ZH 模式回落英文」，运行时无静音。preload="none" 避免一次性加载。</p>',
     ]
     if not pool:
         parts.append('<p class="section-note pending-note">未能从 manifest.js 解析出 secretWords.pool，请检查该文件结构是否变化。</p>')
@@ -369,14 +372,27 @@ def render_secret_word_audio_group() -> str:
         audio_href = rel_href(audio_relpath)
         ALL_REFS.append((sprite_href, sprite_relpath))
         ALL_REFS.append((audio_href, audio_relpath))
+        if word in zh_delivered:
+            zh_relpath = f"app/web/audio/words/{word}.zh.m4a"
+            zh_href = rel_href(zh_relpath)
+            ALL_REFS.append((zh_href, zh_relpath))
+            zh_block = (
+                '<span class="zh-label">中文</span>'
+                f'<audio controls preload="none" src="{esc(zh_href)}">您的浏览器不支持音频播放。</audio>'
+                f'<code class="path">{esc(zh_relpath)}</code>'
+            )
+        else:
+            zh_block = '<span class="zh-na">中文未交付·ZH 模式回落英文</span>'
         items.append(
             '<figure class="item audio-item">'
             f'<a href="{esc(sprite_href)}" target="_blank" rel="noopener" class="thumb-link">'
             f'<img src="{esc(sprite_href)}" loading="lazy" alt="{esc(word)}" /></a>'
             '<figcaption>'
             f'<span class="word-label">{esc(word)}</span>'
+            '<span class="en-label">英文</span>'
             f'<audio controls preload="none" src="{esc(audio_href)}">您的浏览器不支持音频播放。</audio>'
             f'<code class="path">{esc(entry["audio_relpath"])}</code>'
+            f'{zh_block}'
             '</figcaption>'
             '</figure>'
         )
@@ -474,11 +490,8 @@ AFTER_DIR_008 = "docs/assets/008-audio-review/after"
 CLIPS_008 = [
     {"id": "apple", "kind": "秘密词", "text": "apple",
      "before": "app/web/audio/words/apple.m4a"},
-    {"id": "banana", "kind": "秘密词（返工·6 候选待 Ethan 挑美式发音）", "text": "banana",
-     "before": "app/web/audio/words/banana.m4a",
-     "after_alts": ["banana.alt2.m4a", "banana.alt3.m4a", "banana.alt4.m4a", "banana.alt5.m4a", "banana.alt6.m4a"],
-     "after_alts_note": "banana 返工：Ethan 要美式发音。上方 AFTER = 候选 #1（清晰度最高）；下面 5 个不同参考/种子，"
-                        "发音风格略不同。请 Ethan 挑最美式的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2~#6），TL 即定为正式版。"},
+    {"id": "banana", "kind": "秘密词（美式发音已验收 = 候选 #3/alt3，已固化为正式 banana.m4a）", "text": "banana",
+     "before": "app/web/audio/words/banana.m4a"},
     {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
      "before": "app/web/audio/words/yoyo.m4a"},
     {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
