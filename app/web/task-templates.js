@@ -21,9 +21,10 @@
 // DOM"）；本文件明确需要创建任务目标的 DOM 叠层（拖拽物体/放置目标/点击目标/寻找目标与干扰
 // 项），这是 013 文件头「本卡边界」一节明确交给 014 的工作："长什么样（呼吸光晕/闪烁/放大等）
 // 完全由 014 决定并自行创建 DOM"。REQ-TASK-02"不显示中文任务文字"在本文件的落地方式是：全文
-// 不出现任何 textContent/innerHTML 赋值中文文案（本文件根本不通过任何 DOM 节点渲染文字，四类
-// 任务的提示手段是语音 voicePrompt 播放 + 纯视觉 sprite 叠层，按键任务甚至不渲染任何 DOM，
-// 完全依赖语音提示 + 键盘匹配判定，见下方「四、按键任务」一节）。
+// 不出现任何 textContent/innerHTML 赋值中文文案（本文件根本不通过任何 DOM 节点渲染中文文字，
+// 四类任务的提示手段是语音 voicePrompt 播放 + 纯视觉 sprite 叠层；按键任务 014 首次交付时甚至
+// 不渲染任何 DOM，完全依赖语音提示 + 键盘匹配判定——WTJ-20260707-009 起追加了屏幕键盘提示 DOM
+// （只显示键帽字符/符号/图形，同样零中文文案），判定语义本身不变，见下方「四、按键任务」一节）。
 //
 // -----------------------------------------------------------------------
 // 四类任务完成判定（REQ-TASK-07~10）
@@ -47,8 +48,10 @@
 //     再计时）与 config.onClick 都指向同一个完成回调——"悬停 1 秒或点一下均算完成"
 //     （pressOrHoverAlsoCompletes）在本文件的落地方式就是让这两个 target 回调共享同一个完成
 //     函数，不是两套独立判定逻辑。
-// 四、按键（REQ-TASK-10）：不渲染任何 DOM（纯语音 + 键盘判定，见文件头"长什么样"一节）。加载
-//     时注册常驻的 WTJ_KEYBOARD.onLetter/onSymbol/onFunctionKey 三路处理函数（三者都与 013 对
+// 四、按键（REQ-TASK-10）：判定本身仍是纯语音 + 键盘判定（不依赖任何 DOM 结构）；
+//     WTJ-20260707-009 起额外渲染一套屏幕键盘提示 DOM（见下方「四、按键任务」一节详述），只是
+//     辅助视觉，不参与本节判定逻辑。加载时注册常驻的 WTJ_KEYBOARD.onLetter/onSymbol/
+//     onFunctionKey 三路处理函数（三者都与 013 对
 //     WTJ_KEYBOARD.onEffectiveKey 的处理同一个模式——只支持追加订阅、不支持退订，因此本文件也
 //     采用"常驻处理函数 + 内部状态判断当前是否有进行中的按键任务"这种等价退订写法，见 013
 //     文件头「键盘转移淡出的实现机制」一节的同款设计说明）：当前若存在一个 type==='press' 的
@@ -1620,10 +1623,377 @@
   }
 
   // ---------------------------------------------------------------------
-  // 四、按键任务（REQ-TASK-10）：不渲染任何 DOM，见文件头设计说明。
+  // 四、按键任务（REQ-TASK-10 + WTJ-20260707-009）：press 任务激活时渲染屏幕键盘提示 DOM。
   // ---------------------------------------------------------------------
-  function setupPressTask() {
-    return { elements: [], pointerIds: [] };
+  // 014 首次交付时按键任务不渲染任何 DOM（纯语音 + 键盘判定，见文件头「四、按键任务」一节的
+  // 历史设计说明）——WTJ-20260707-009 起改变这一点：press 任务激活时额外渲染一套低干扰屏幕
+  // 键盘提示（要按的键高亮，其余键退成线框，气泡居中只显示要按的键本身），语音仍是任务说明
+  // 主通道，本节新增的 DOM 只是辅助视觉提示，不改变 handlePressKey() 的判定语义（仍然只比较
+  // keyIdentity 与 example.targetKey，见下方）、不碰 keyboard.js / 秘密词 rolling buffer /
+  // 任务音频路由（这三者不在本卡改动范围内）。
+  //
+  // 设计规格来源：WTJ-20260707-005（Designer 1，分支 codex/designer1-wtj-005-keyboard-hint，
+  // docs/design/wtj-20260707-005-keyboard-task-hint-spec.md + 同目录
+  // keyboard-task-hint-preview.html）。TL 核实提示：本卡接手时该设计文档状态仍是"提交 PM
+  // review"（非 accepted 终稿）——规格本身已经具体到可以直接实装（MacBook Air ANSI 布局/
+  // 气泡内容规则/配色 token 均有明确数值），本卡按其字面内容落地；若后续设计评审改写规格，
+  // 需要回头核对本节与 task-templates.css 对应的 .wtj-kh-*/.wtj-key-hint-root 规则。
+  //
+  // DOM 清理完全复用既有 activeRuntime.elements 机制：本节返回的 { elements: [rootEl] } 会被
+  // handleTemplateComplete()（完成，~800ms 可见窗口后移除）与 cleanupActiveRuntime()（dismiss/
+  // 超时/键盘转移，立即移除）两条既有路径处理，不需要为按键任务再实现一套独立清理逻辑
+  // ——这正是验收标准"任务完成/取消/切换/超时/phase 变化时清理 DOM"在本文件里已经结构性满足
+  // 的方式（同一套代码此前已经服务 drag/click/find 三类）。
+  //
+  // 布局：MacBook Air 常见 ANSI 实体键位（功能行/数字行/Tab 行/Caps 行/Shift 行/底部行），60
+  // 列栅格（功能行单独用 14 列栅格，见 task-templates.css .wtj-kh-row--fn）。KEY_HINT_ROWS 每
+  // 一行的 --wtj-kh-u 宽度单位总和均精确等于 60（功能行例外，是 14），已逐行在下方注释核算，
+  // 保证"每行填满同一个键盘外壳宽度，左右边缘对齐"（005 spec 硬要求）。'+' 不是独立键，是数字
+  // 行 '=' 键的上档符号（target 直接取 '+' 这个上档符号本身）；space 全局只出现一次。
+  //
+  // 气泡固定居中（.wtj-kh-bubble 不随目标键左右位置切换），只显示目标键本身：
+  // computeKeyHintBubble() 不产生"目标键"/"数字键"/"方向键"这类解释文字——数字键额外显示上档
+  // 符号组合（如 "3"+"#"），Space/Enter/方向键走 NAMED_KEY_GLYPHS 具名符号表，其余（字母/符号）
+  // 直接显示 targetKey 字面值本身（它已经是"要按的键"的最简形式，字母大写单字符/符号原始字符，
+  // 不需要再翻译）。
+  //
+  // 47 个可命中的 targetKey（与 manifest.js tasks.templates.press.examples 的完整覆盖集合
+  // 一一对应，见该文件"WTJ-20260706-010 全量覆盖"一节）：A-Z 26 个、0-9 10 个、
+  // , . ; - + 5 个符号、Space/Enter 2 个、ArrowUp/Down/Left/Right 4 个方向键，
+  // 26+10+5+2+4=47。KEY_HINT_ROWS 逐一覆盖，见下方各键 target 字段。
+  // ---------------------------------------------------------------------
+
+  // Space/Enter/方向键气泡符号表——键帽本身：Space 用 icon+label（␣ + "space" 小字，与预览一致），
+  // Enter 键帽保留文字 "return"（005 预览截图如此，气泡才收窄成纯符号 ↵），方向键键帽直接是箭头
+  // 字符本身（main 字段），故此表只服务气泡内容，不直接决定键帽渲染。
+  var NAMED_KEY_GLYPHS = {
+    Space: '␣',
+    Enter: '↵',
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    ArrowLeft: '←',
+    ArrowRight: '→'
+  };
+
+  // KEY_HINT_ROWS：静态数据，模块级只构建一次（多次 press 任务激活共享同一份定义，真正的
+  // document.createElement 发生在 buildKeyHintKeyboard()，每次 press 任务激活都会重新构建一套
+  // 全新 DOM，任务结束后随 activeRuntime.elements 一并被移除，不做跨任务复用）。字段含义：
+  //   target      能被高亮命中的键身份字面量，须与 example.targetKey 完全相同（如 'A'/'3'/
+  //               ','/'+'/'Space'/'Enter'/'ArrowUp'）；缺省表示这颗键永远不会被高亮（tab/
+  //               caps lock/shift/control/option/command/fn/delete/esc/F1-F12/⏻，以及不在
+  //               47 键集合内的符号 ` [ ] \ ' /）。
+  //   main/shift  键帽主字符 / 上档符号（数字行与部分符号键同时显示两者，无 shift 字段的键只
+  //               显示 main）。
+  //   label       非字符类键帽显示的文字（tab/caps lock/return/command 等）；配合 icon 出现时
+  //               作为 icon 下方的小字（目前只有 space 用到这个组合）。
+  //   icon        Space 键帽用的图形字符（␣）。
+  //   mini        功能行键（esc/F1-F12/⏻）压缩样式标记。
+  //   widthClass  宽键 modifier（w15/w17/w185/w21/w225/w26/w125/space），映射到
+  //               task-templates.css 的 --wtj-kh-u 栅格单位，取值与 005 预览 HTML 的 w-* class
+  //               一一对应。
+  //   soft        true 表示命中时用 is-soft-target 青色高亮（Space/Enter/方向键专用），缺省
+  //               为字母/数字/符号专用的暖黄 is-target——见 005 spec「Keycap」一节。
+  var KEY_HINT_ROWS = [
+    // 功能行：14 键 × --wtj-kh-u:1 = 14（独立 14 列栅格），全部不可命中。
+    {
+      fn: true,
+      keys: [
+        { label: 'esc', mini: true }, { label: 'F1', mini: true }, { label: 'F2', mini: true },
+        { label: 'F3', mini: true }, { label: 'F4', mini: true }, { label: 'F5', mini: true },
+        { label: 'F6', mini: true }, { label: 'F7', mini: true }, { label: 'F8', mini: true },
+        { label: 'F9', mini: true }, { label: 'F10', mini: true }, { label: 'F11', mini: true },
+        { label: 'F12', mini: true }, { label: '⏻', mini: true }
+      ]
+    },
+    // 数字行：13 个默认 --wtj-kh-u:4 键（52）+ delete w17（8）= 60。
+    {
+      keys: [
+        { main: '`', shift: '~' },
+        { main: '1', shift: '!', target: '1' },
+        { main: '2', shift: '@', target: '2' },
+        { main: '3', shift: '#', target: '3' },
+        { main: '4', shift: '$', target: '4' },
+        { main: '5', shift: '%', target: '5' },
+        { main: '6', shift: '^', target: '6' },
+        { main: '7', shift: '&', target: '7' },
+        { main: '8', shift: '*', target: '8' },
+        { main: '9', shift: '(', target: '9' },
+        { main: '0', shift: ')', target: '0' },
+        { main: '-', shift: '_', target: '-' },
+        // '+' 不是独立键：target 直接取上档符号本身，命中判定与显示都指向同一颗 '='/'+' 键
+        // （005 spec「布局」一节明确要求，见文件头 KEY_HINT_ROWS 说明）。
+        { main: '=', shift: '+', target: '+' },
+        { label: 'delete', widthClass: 'w17' }
+      ]
+    },
+    // Tab 行：tab(6) + QWERTYUIOP 10×4(40) + [ ] 2×4(8) + \ w15(6) = 60。
+    {
+      keys: [
+        { label: 'tab', widthClass: 'w15' },
+        { main: 'Q', target: 'Q' }, { main: 'W', target: 'W' }, { main: 'E', target: 'E' },
+        { main: 'R', target: 'R' }, { main: 'T', target: 'T' }, { main: 'Y', target: 'Y' },
+        { main: 'U', target: 'U' }, { main: 'I', target: 'I' }, { main: 'O', target: 'O' },
+        { main: 'P', target: 'P' },
+        { main: '[', shift: '{' }, { main: ']', shift: '}' },
+        { main: '\\', shift: '|', widthClass: 'w15' }
+      ]
+    },
+    // Caps 行：caps lock w185(7) + ASDFGHJKL 9×4(36) + ; (4) + ' (4) + return w21(9) = 60。
+    {
+      keys: [
+        { label: 'caps lock', widthClass: 'w185' },
+        { main: 'A', target: 'A' }, { main: 'S', target: 'S' }, { main: 'D', target: 'D' },
+        { main: 'F', target: 'F' }, { main: 'G', target: 'G' }, { main: 'H', target: 'H' },
+        { main: 'J', target: 'J' }, { main: 'K', target: 'K' }, { main: 'L', target: 'L' },
+        { main: ';', shift: ':', target: ';' },
+        { main: "'", shift: '"' },
+        { label: 'return', widthClass: 'w21', target: 'Enter', soft: true }
+      ]
+    },
+    // Shift 行：shift w225(9) + ZXCVBNM 7×4(28) + , . / 3×4(12) + shift w26(11) = 60。
+    {
+      keys: [
+        { label: 'shift', widthClass: 'w225' },
+        { main: 'Z', target: 'Z' }, { main: 'X', target: 'X' }, { main: 'C', target: 'C' },
+        { main: 'V', target: 'V' }, { main: 'B', target: 'B' }, { main: 'N', target: 'N' },
+        { main: 'M', target: 'M' },
+        { main: ',', shift: '<', target: ',' },
+        { main: '.', shift: '>', target: '.' },
+        { main: '/', shift: '?' },
+        { label: 'shift', widthClass: 'w26' }
+      ]
+    },
+    // 底部行：fn(4) + control w125(5) + option w125(5) + command w15(6) + space(20) +
+    // command w15(6) + option w125(5) + arrow-cluster(9) = 60。方向键簇内部另起 3 列子栅格
+    // （左 / 上下堆叠 / 右），不占用本行 60 列栅格之外的空间（见 task-templates.css
+    // .wtj-kh-arrow-cluster）。
+    {
+      keys: [
+        { label: 'fn' },
+        { label: 'control', widthClass: 'w125' },
+        { label: 'option', widthClass: 'w125' },
+        { label: 'command', widthClass: 'w15' },
+        { label: 'space', widthClass: 'space', icon: NAMED_KEY_GLYPHS.Space, target: 'Space', soft: true },
+        { label: 'command', widthClass: 'w15' },
+        { label: 'option', widthClass: 'w125' },
+        {
+          arrowCluster: {
+            left: { main: NAMED_KEY_GLYPHS.ArrowLeft, target: 'ArrowLeft', soft: true },
+            up: { main: NAMED_KEY_GLYPHS.ArrowUp, target: 'ArrowUp', soft: true },
+            down: { main: NAMED_KEY_GLYPHS.ArrowDown, target: 'ArrowDown', soft: true },
+            right: { main: NAMED_KEY_GLYPHS.ArrowRight, target: 'ArrowRight', soft: true }
+          }
+        }
+      ]
+    }
+  ];
+
+  // 单颗键 DOM：ghost/target/soft-target 三选一的最终 class 在创建时一次性写进 el.className
+  // 字符串（与 createPropEl() 同一手法），不是先建后 classList.remove('ghost') 再 add(...)——
+  // 后者需要 classList.remove()，某些精简 DOM 实现（包括本文件单测用的沙箱 document stub）不
+  // 提供这个方法，前者对生产真实 DOM 与测试沙箱都成立，见 tests/unit/task-templates.test.mjs
+  // 「按键任务屏幕键盘提示」一节的对应说明。isMatch 返回值供 buildKeyHintKeyboard() 记录"这就是
+  // 当前 example.targetKey 对应的那颗键"，用于气泡内容与命中成功闪光（flashKeyHintSuccess()）。
+  function createKeyHintKeyEl(def, targetKey) {
+    var el = document.createElement('div');
+    var isMatch = !!(def.target && targetKey && def.target === targetKey);
+    var cls = 'wtj-kh-key';
+    if (def.mini) {
+      cls += ' wtj-kh-key--mini';
+    }
+    if (def.widthClass) {
+      cls += ' wtj-kh-key--' + def.widthClass;
+    }
+    cls += isMatch ? (def.soft ? ' wtj-kh-key--soft-target' : ' wtj-kh-key--target') : ' wtj-kh-key--ghost';
+    el.className = cls;
+
+    if (def.icon) {
+      var iconEl = document.createElement('span');
+      iconEl.className = 'wtj-kh-key-icon';
+      iconEl.textContent = def.icon;
+      el.appendChild(iconEl);
+      if (def.label) {
+        var iconLabelEl = document.createElement('span');
+        iconLabelEl.className = 'wtj-kh-key-label';
+        iconLabelEl.textContent = def.label;
+        el.appendChild(iconLabelEl);
+      }
+    } else if (def.shift) {
+      var shiftEl = document.createElement('span');
+      shiftEl.className = 'wtj-kh-key-shift';
+      shiftEl.textContent = def.shift;
+      var mainEl = document.createElement('span');
+      mainEl.className = 'wtj-kh-key-main';
+      mainEl.textContent = def.main;
+      el.appendChild(shiftEl);
+      el.appendChild(mainEl);
+    } else if (def.label) {
+      el.textContent = def.label;
+    } else if (def.main) {
+      el.textContent = def.main;
+    }
+
+    return { el: el, isMatch: isMatch };
+  }
+
+  // 按 KEY_HINT_ROWS 构建一整套全新键盘 DOM，单次遍历顺带记录 targetKey 命中的那颗键（元素 +
+  // 定义），供调用方渲染气泡内容与后续命中成功闪光，不需要额外一趟 DOM 查找（本文件其余代码
+  // 与单测沙箱都不依赖 querySelector，见上方 createKeyHintKeyEl() 说明）。
+  function buildKeyHintKeyboard(targetKey) {
+    var keyboardEl = document.createElement('div');
+    keyboardEl.className = 'wtj-kh-keyboard';
+    var matchedEl = null;
+    var matchedDef = null;
+
+    function makeKey(def) {
+      var built = createKeyHintKeyEl(def, targetKey);
+      if (built.isMatch) {
+        matchedEl = built.el;
+        matchedDef = def;
+      }
+      return built.el;
+    }
+
+    for (var r = 0; r < KEY_HINT_ROWS.length; r++) {
+      var rowDef = KEY_HINT_ROWS[r];
+      var rowEl = document.createElement('div');
+      rowEl.className = rowDef.fn ? 'wtj-kh-row wtj-kh-row--fn' : 'wtj-kh-row';
+      for (var k = 0; k < rowDef.keys.length; k++) {
+        var keyDef = rowDef.keys[k];
+        if (keyDef.arrowCluster) {
+          var clusterEl = document.createElement('div');
+          clusterEl.className = 'wtj-kh-arrow-cluster';
+          clusterEl.appendChild(makeKey(keyDef.arrowCluster.left));
+          var stackEl = document.createElement('div');
+          stackEl.className = 'wtj-kh-arrow-stack';
+          stackEl.appendChild(makeKey(keyDef.arrowCluster.up));
+          stackEl.appendChild(makeKey(keyDef.arrowCluster.down));
+          clusterEl.appendChild(stackEl);
+          clusterEl.appendChild(makeKey(keyDef.arrowCluster.right));
+          rowEl.appendChild(clusterEl);
+        } else {
+          rowEl.appendChild(makeKey(keyDef));
+        }
+      }
+      keyboardEl.appendChild(rowEl);
+    }
+
+    return { keyboardEl: keyboardEl, matchedEl: matchedEl, matchedDef: matchedDef };
+  }
+
+  // 气泡内容：只返回"要按的键本身"，不产生任何解释文字（005 spec「Bubble」一节硬要求）。数字
+  // （0-9 且匹配到的键定义带 shift 上档符号）显示主字符+上档符号组合；Space/Enter/方向键走
+  // NAMED_KEY_GLYPHS 具名符号；其余（字母/符号）直接显示 targetKey 字面值本身。
+  function computeKeyHintBubble(targetKey, matchedDef) {
+    if (Object.prototype.hasOwnProperty.call(NAMED_KEY_GLYPHS, targetKey)) {
+      return { kind: 'glyph', glyph: NAMED_KEY_GLYPHS[targetKey] };
+    }
+    if (matchedDef && matchedDef.shift && (/^[0-9]$/).test(targetKey)) {
+      return { kind: 'combo', main: targetKey, shift: matchedDef.shift };
+    }
+    return { kind: 'glyph', glyph: targetKey };
+  }
+
+  function buildKeyHintBubbleEl(bubbleContent) {
+    var bubbleEl = document.createElement('div');
+    bubbleEl.className = 'wtj-kh-bubble';
+    if (bubbleContent.kind === 'combo') {
+      var comboEl = document.createElement('div');
+      comboEl.className = 'wtj-kh-bubble-combo';
+      var mainEl = document.createElement('span');
+      mainEl.className = 'wtj-kh-bubble-main';
+      mainEl.textContent = bubbleContent.main;
+      var shiftEl = document.createElement('span');
+      shiftEl.className = 'wtj-kh-bubble-shift';
+      shiftEl.textContent = bubbleContent.shift;
+      comboEl.appendChild(mainEl);
+      comboEl.appendChild(shiftEl);
+      bubbleEl.appendChild(comboEl);
+    } else {
+      var targetEl = document.createElement('div');
+      targetEl.className = 'wtj-kh-bubble-target';
+      targetEl.textContent = bubbleContent.glyph;
+      bubbleEl.appendChild(targetEl);
+    }
+    return bubbleEl;
+  }
+
+  // 按键任务屏幕键盘提示根节点：独立于 ensureOverlayRoot() 的 .wtj-tt-root（drag/click/find
+  // 共用叠层，z-index:6），单独一层 .wtj-key-hint-root（z-index:7，见 task-templates.css），
+  // 直接挂在 document.body 下、只在 press 任务激活期间存在。失败路径（document/body 缺失、
+  // targetKey 非法）一律返回 null 防御式降级——按键任务仍然能通过语音+键盘判定完成，只是没有
+  // 屏幕提示，不阻断任务本身（与本文件其余 WTJ_POINTER/WTJ_HUD/WTJ_AUDIO 调用一贯的降级契约
+  // 一致）。
+  function buildKeyHintDom(example) {
+    if (typeof document === 'undefined' || !document || typeof document.createElement !== 'function' || !document.body) {
+      return null;
+    }
+    var targetKey = (example && typeof example.targetKey === 'string' && example.targetKey) ? example.targetKey : null;
+    if (!targetKey) {
+      console.warn('[WTJ_TASK_TEMPLATES] press 任务 example 缺少合法 targetKey，跳过键盘提示 DOM 渲染。');
+      return null;
+    }
+    try {
+      var built = buildKeyHintKeyboard(targetKey);
+      if (!built.matchedEl) {
+        // 防御式兜底：targetKey 不在 KEY_HINT_ROWS 47 键覆盖范围内（不应该发生——manifest.js
+        // press.examples 目前枚举的 targetKey 均已覆盖）。仍然渲染键盘与气泡，只是没有任何键
+        // 会被点亮，好过整段抛异常导致按键任务连语音提示都出不来。
+        console.warn('[WTJ_TASK_TEMPLATES] targetKey "' + targetKey + '" 未在屏幕键盘布局中找到对应实体键，已跳过高亮（气泡仍会显示）。');
+      }
+
+      var bubbleContent = computeKeyHintBubble(targetKey, built.matchedDef);
+      var bubbleEl = buildKeyHintBubbleEl(bubbleContent);
+
+      var coachEl = document.createElement('div');
+      coachEl.className = 'wtj-kh-coach';
+      coachEl.appendChild(bubbleEl);
+      coachEl.appendChild(built.keyboardEl);
+
+      var rootEl = document.createElement('div');
+      rootEl.className = 'wtj-key-hint-root';
+      if (typeof rootEl.setAttribute === 'function') {
+        rootEl.setAttribute('aria-hidden', 'true');
+      }
+      rootEl.appendChild(coachEl);
+
+      document.body.appendChild(rootEl);
+
+      return { root: rootEl, keyHintTargetEl: built.matchedEl };
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 创建按键任务屏幕键盘提示 DOM 失败，已捕获：', err);
+      return null;
+    }
+  }
+
+  function setupPressTask(example) {
+    var built = buildKeyHintDom(example);
+    if (!built) {
+      return { elements: [], pointerIds: [] };
+    }
+    // keyHintTargetEl：命中当前 targetKey 的那颗键 DOM 元素（找不到匹配键时为 null），供
+    // handlePressKey() 命中判定通过时调用 flashKeyHintSuccess() 补一次成功闪光——见下方两处
+    // 说明。不是 activeRuntime 既有字段（elements/pointerIds/emphasizeElements/...）之一，是
+    // 本卡新增的 press 专属字段，下方 handleQuestionClicked() 的 activeRuntime 对象字面量已
+    // 同步接线（见该处新增行）。
+    return { elements: [built.root], pointerIds: [], keyHintTargetEl: built.keyHintTargetEl };
+  }
+
+  // 命中成功时给高亮键补一次 220ms 成功闪光（005 spec「交互节奏·完成」一节："命中后，高亮键做
+  // 220ms 成功闪光，然后交给现有任务完成奖励；不在屏幕键盘里点亮五槽"）。随后正常走
+  // handleTemplateComplete() 的完成态可见窗口 + 状态灯/音频奖励链路，本函数只负责这一次视觉
+  // 反馈，不重复实现完成判定或清理。drag/click/find 三类没有这个概念（它们各自的 onClick/onDrop
+  // 回调里另有自己的 active 态切换，如 renderClickTask() 的 setAnimState()），因此这里直接消费
+  // runtime.keyHintTargetEl 这个 press 专属字段，不通用化成公共 API。
+  function flashKeyHintSuccess(runtime) {
+    if (!runtime || !runtime.keyHintTargetEl || !runtime.keyHintTargetEl.classList || typeof runtime.keyHintTargetEl.classList.add !== 'function') {
+      return;
+    }
+    try {
+      runtime.keyHintTargetEl.classList.add('wtj-kh-key--success');
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 按键任务成功闪光失败，已捕获：', err);
+    }
   }
 
   // WTJ-20260706-010：原来只有 handlePressLetter(charUpper)，只服务 WTJ_KEYBOARD.onLetter
@@ -1642,6 +2012,10 @@
     var want = (example && typeof example.targetKey === 'string') ? example.targetKey.toUpperCase() : null;
     var got = (typeof keyIdentity === 'string') ? keyIdentity.toUpperCase() : null;
     if (want !== null && got !== null && got === want) {
+      // WTJ-20260707-009：命中瞬间先给键盘提示的高亮键补一次成功闪光，再走既有完成流程——
+      // 顺序不能反，handleTemplateComplete() 里会立即把 activeRuntime 置空（见该函数 guard
+      // 注释），之后再想读 activeRuntime.keyHintTargetEl 就晚了。
+      flashKeyHintSuccess(activeRuntime);
       handleTemplateComplete('press', example);
     }
   }
@@ -1792,6 +2166,10 @@
       // 见 computeVisualHoldMs() 的消费方式。
       animProp: (runtime && runtime.animProp) || null,
       animActiveState: (runtime && runtime.animActiveState) || null,
+      // WTJ-20260707-009：仅 setupPressTask() 会填充，命中当前 targetKey 的屏幕键盘提示键
+      // DOM 元素（其余类型/未找到匹配键时为 null）——供 handlePressKey() 命中判定通过时调用
+      // flashKeyHintSuccess() 补一次成功闪光，见该函数说明。
+      keyHintTargetEl: (runtime && runtime.keyHintTargetEl) || null,
       // WTJ-20260705-015：drag/click/find 三类填充 { leftPercent, topPercent }，press 类
       // （无 DOM）恒为 null——见 presetAt() 下方 anchorFromPos() 一节说明，供 handleTemplateComplete()
       // 通过 onTaskComplete 事件透传给 015 的任务成功即时视觉反馈消费。
