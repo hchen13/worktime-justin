@@ -61,12 +61,15 @@ UNIVERSAL_BIN="$MACOS_DIR/${APP_NAME}"
 # -swift-version 5：钉死 Swift 5 语言模式，防止未来默认切到 Swift 6 语言模式后
 # 引入 @MainActor 隐式并发（Big Sur 缺 _Concurrency 回退库，启动即崩）。
 echo "==> 编译 x86_64 slice（交付目标：Intel 2014 MacBook Air / Big Sur 11）"
+# shell/DailyQuota.swift（WTJ-20260707-004）：跨日重置纯逻辑，除 main.swift 外唯一的
+# 额外源文件，本身只含函数声明、无顶层语句（Swift 多文件编译规则：顶层可执行语句只能出现
+# 在名为 main.swift 的文件里），一并传给 swiftc 即视为同一模块，main.swift 无需 import。
 swiftc -O -swift-version 5 -target "x86_64-apple-macosx${MIN_OS}" -sdk "$SDK" \
-  -o "$X64_BIN" shell/main.swift
+  -o "$X64_BIN" shell/main.swift shell/DailyQuota.swift
 
 echo "==> 编译 arm64 slice（本机 Apple Silicon 原生冒烟用）"
 swiftc -O -swift-version 5 -target "arm64-apple-macosx${MIN_OS}" -sdk "$SDK" \
-  -o "$ARM64_BIN" shell/main.swift
+  -o "$ARM64_BIN" shell/main.swift shell/DailyQuota.swift
 
 echo "==> lipo 合成 universal 二进制"
 lipo -create -output "$UNIVERSAL_BIN" "$X64_BIN" "$ARM64_BIN"

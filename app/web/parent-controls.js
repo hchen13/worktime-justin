@@ -450,6 +450,55 @@
     return isLocked() || isSettingsPanelOpen();
   }
 
+  // ---------------------------------------------------------------------
+  // "reset" 口令：跨日额度恢复的输入侧入口（WTJ-20260707-004，验收标准 #2/#3）
+  // ---------------------------------------------------------------------
+  // 与 keyboard.js 的 onLetter 拼词流程（secretword.js 消费游戏秘密词）完全独立、不共用同一
+  // 路径：keyboard.js 的 onKeyDown 在 isInputSuspended()（锁屏/设置面板打开）为 true 时整段
+  // 直接 return（见该文件 onKeyDown 顶部 WTJ-20260705-018 注释），字母流根本到不了
+  // secretword.js；但 reset 口令恰恰必须在"锁屏界面"这个最典型场景下也能生效（验收标准 #2
+  // 原文："锁屏界面收到 reset 口令时，必须检查当前本地日期"），因此这里单独挂一个完全独立、
+  // 刻意绕开 isInputSuspended 网关的 window 级 keydown 监听，直接消费原始 DOM 事件，不经过
+  // keyboard.js（本文件与 keyboard.js 是并列的两个 window keydown 监听者，互不影响——DOM
+  // 允许同一事件类型挂多个监听器，各自独立收到同一次事件）。
+  //
+  // 判定规则（与 secretword.js 的 rolling buffer 后缀匹配同一手法，见该文件
+  // tryMatchAtBufferTail/onNewLetter，本处简化为固定单词、不需要"多词最长优先"的复杂度）：
+  // 维护一个最近字母的滚动缓冲区，长度上限为 RESET_WORD 本身的长度，每次新增字母后做一次
+  // 整串比较（大小写不敏感，输入前已归一化为小写）；命中后立即清空 buffer——不像
+  // secretword.js 那样允许词间重叠触发（"reset" 是口令而非游戏收集词，命中一次即应消费掉
+  // 这次输入，避免连续键入 "resetreset" 之类被误判触发出乎意料的次数）。
+  //
+  // 只在字母键（a-z，不分大小写）时才追加进 buffer；数字/符号/功能键忽略且不清空已积累的
+  // buffer——现实中打字间隙夹一个数字/符号是常见的无意义按键，不应该让输入者被迫从头重新
+  // 拼一遍 "reset" 五个字母。e.repeat（长按自动连发）直接忽略，避免按住某个字母键时无意义地
+  // 疯狂重算 buffer。
+  //
+  // 命中后只是把尝试转发给 shell（{ type: 'wtjResetPasscodeAttempt' }）——是否真的跨天、
+  // 是否真的解锁完全由 shell（main.swift 的 handleResetPasscodeAttempt()）权威判定：同一天
+  // 额度用完时 reset 不解锁（验收标准 #3），本文件自己不做、也不应该做这个判断（与文件顶部
+  // "shell 持有全部权威状态"的职责边界一致）。
+  var RESET_WORD = 'reset';
+  var resetWordBuffer = '';
+
+  function onResetWordKeyDown(e) {
+    if (!e || typeof e.key !== 'string' || e.key.length !== 1 || e.repeat) return;
+    var ch = e.key.toLowerCase();
+    if (ch < 'a' || ch > 'z') return; // 忽略数字/符号/功能键，不打断已积累的字母缓冲
+    resetWordBuffer += ch;
+    if (resetWordBuffer.length > RESET_WORD.length) {
+      resetWordBuffer = resetWordBuffer.slice(resetWordBuffer.length - RESET_WORD.length);
+    }
+    if (resetWordBuffer === RESET_WORD) {
+      resetWordBuffer = ''; // 命中即清空，见上方注释：不允许词间重叠再次触发
+      postToShell({ type: 'wtjResetPasscodeAttempt' });
+    }
+  }
+
+  // 有意不经过 isInputSuspended() 判断——本监听器存在的意义就是在锁屏/设置面板打开期间也要
+  // 生效（验收标准 #2），这是与 keyboard.js/pointer.js 唯一的、刻意的不对称之处，勿"统一"掉。
+  window.addEventListener('keydown', onResetWordKeyDown, false);
+
   function getCachedState() {
     return {
       dailyLimitMinutes: shellState.dailyLimitMinutes,

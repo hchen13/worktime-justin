@@ -582,6 +582,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     /// 当前是否处于"额度耗尽安静锁屏"状态（验收标准 #5/#6）。
     private var isLockedOut = false
 
+    // MARK: 跨日检查生命周期通知句柄（WTJ-20260707-004，验收标准 #2）
+
+    /// App 重新获得焦点（NSApplication.didBecomeActiveNotification）观察者句柄。
+    private var appActiveObserverToken: NSObjectProtocol?
+    /// kiosk 窗口重新成为 key window（NSWindow.didBecomeKeyNotification）观察者句柄。
+    private var windowKeyObserverToken: NSObjectProtocol?
+    /// 系统从睡眠唤醒（NSWorkspace.didWakeNotification）观察者句柄；该通知走
+    /// NSWorkspace.shared.notificationCenter，不是 NotificationCenter.default，
+    /// applicationWillTerminate 需要到对应的 center 上移除，不能混用。
+    private var workspaceWakeObserverToken: NSObjectProtocol?
+
     // MARK: CGEventTap 系统级快捷键拦截状态（WTJ-20260705-013）
 
     /// CGEventTap 句柄；非 nil 表示 tap 已创建（不代表一定仍 enabled，可能被系统因超时
@@ -623,8 +634,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         // WTJ_WINDOWED 窗口化调试模式都启用——调试时也应能观察/验证额度耗尽锁屏行为，与
         // W/H/M/` 快捷键拦截"两种模式都拦"的既有惯例一致（见 handleKeyDown 顶部注释）。
         loadUsageStateFromDefaults()
-        _ = refreshUsageStateForNewDayIfNeeded()
+        checkForNewDayAndSyncIfNeeded()
         startUsageTickTimer()
+        // WTJ-20260707-004，验收标准 #2：启动本身的跨日检查已经在上面完成；这里额外注册
+        // "窗口恢复/系统唤醒/重新获得焦点"三类生命周期通知，覆盖启动之后孩子/家长实际会遇到
+        // 的跨日场景（最典型：夜里合眼睡眠、家长次日早上唤醒机器）。
+        setupDailyQuotaLifecycleObservers()
 
         // 全屏进入可靠性加固（层 3，WTJ-20260705-013）：顺序调整为"先 activate 进程，再让
         // 窗口成为 key + front，kiosk 模式下最后再 orderFrontRegardless 兜底一次"。
@@ -669,6 +684,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         usageTickTimer?.invalidate()
         usageTickTimer = nil
         tearDownSystemHotkeyBlocker()
+        tearDownDailyQuotaLifecycleObservers()
     }
 
     // MARK: 菜单 / 键盘
@@ -1050,7 +1066,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     @discardableResult
     private func refreshUsageStateForNewDayIfNeeded() -> Bool {
         let today = wtjCurrentLocalDateString()
-        guard usageDateString != today else { return false }
+        // WTJ-20260707-004：日期比较本身抽成 app/shell/DailyQuota.swift 里的纯函数
+        // wtjIsNewLocalDay()，供独立测试覆盖（tests/swift/main.swift，配
+        // tests/swift/run_daily_quota_reset_test.sh），
+        // 同时也是本卡新增的"reset 口令"处理（见下方 handleResetPasscodeAttempt()）与本函数
+        // 共用的唯一判定条件——两处不会出现"各自写一份、逐渐不同步"的分叉。
+        guard wtjIsNewLocalDay(recordedDateString: usageDateString, currentDateString: today) else { return false }
         usageDateString = today
         usedSecondsToday = 0
         let wasLocked = isLockedOut
@@ -1063,6 +1084,75 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         return true
     }
 
+    /// 统一的跨日检查入口（WTJ-20260707-004，验收标准 #2）：App 启动、每秒 tick、窗口恢复/
+    /// 系统唤醒/重新获得焦点等多个生命周期回调都应该"检查一次当前本地日期，跨天则清锁+
+    /// 归零已用秒数"，全部委托给同一份 refreshUsageStateForNewDayIfNeeded()；这里只是在其上
+    /// 包一层"检测到跨日就补一次全量状态同步"的公共收尾（与改动前 tickUsage() 里
+    /// "仅在刚发生跨日归零时补一次同步"的既有惯例一致，只是把它提升为可被多个调用点共用的
+    /// 具名函数，不是新增行为）。平时不需要每次 tick/每次焦点变化都无条件
+    /// evaluateJavaScript（web 层不展示倒计时 UI，避免在 4GB 旧机上无意义地唤醒 JS 引擎），
+    /// 只有真的发生跨日时才补这一次同步。
+    @discardableResult
+    private func checkForNewDayAndSyncIfNeeded() -> Bool {
+        let changed = refreshUsageStateForNewDayIfNeeded()
+        if changed {
+            notifyShellStateToWeb()
+        }
+        return changed
+    }
+
+    /// 注册"窗口恢复/系统唤醒/App 重新获得焦点"三类生命周期通知，统一走
+    /// checkForNewDayAndSyncIfNeeded()（WTJ-20260707-004，验收标准 #2）。启动本身的检查已在
+    /// applicationDidFinishLaunching 里单独、提前调用过一次（不依赖任何通知），本函数只覆盖
+    /// "启动之后"孩子/家长实际会遇到的三类恢复场景：
+    ///   - NSApplication.didBecomeActiveNotification：App 从后台重新变为前台（重新获得焦点）。
+    ///   - NSWindow.didBecomeKeyNotification（限定 object: window）：kiosk 窗口重新成为
+    ///     key window（例如短暂被系统对话框/Space 切换夺走焦点后回来，即"窗口恢复"）。
+    ///   - NSWorkspace.didWakeNotification：系统从睡眠唤醒——这是本地日期最可能已经跨天的
+    ///     高发场景（家长夜里合眼睡眠、次日早上唤醒机器），该通知走
+    ///     NSWorkspace.shared.notificationCenter，不是 NotificationCenter.default，
+    ///     见 tearDownDailyQuotaLifecycleObservers() 对应的移除逻辑。
+    /// 用 NotificationCenter 的闭包式 API（addObserver(forName:object:queue:using:)），与文件
+    /// 其余部分 Timer 闭包的风格一致，不涉及 Swift Concurrency（回调仍是普通同步闭包）。
+    private func setupDailyQuotaLifecycleObservers() {
+        let defaultCenter = NotificationCenter.default
+        appActiveObserverToken = defaultCenter.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: nil
+        ) { [weak self] _ in
+            self?.checkForNewDayAndSyncIfNeeded()
+        }
+        windowKeyObserverToken = defaultCenter.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: window, queue: nil
+        ) { [weak self] _ in
+            self?.checkForNewDayAndSyncIfNeeded()
+        }
+        workspaceWakeObserverToken = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification, object: nil, queue: nil
+        ) { [weak self] _ in
+            self?.checkForNewDayAndSyncIfNeeded()
+        }
+    }
+
+    /// 移除 setupDailyQuotaLifecycleObservers() 注册的三个观察者；在 applicationWillTerminate
+    /// 里调用。注意 workspaceWakeObserverToken 是在 NSWorkspace.shared.notificationCenter 上
+    /// 注册的，必须到同一个 center 上移除——与另外两个走 NotificationCenter.default 的句柄
+    /// 分开处理，不能混用（混用会导致该 token 实际未被移除）。
+    private func tearDownDailyQuotaLifecycleObservers() {
+        let defaultCenter = NotificationCenter.default
+        if let token = appActiveObserverToken {
+            defaultCenter.removeObserver(token)
+        }
+        if let token = windowKeyObserverToken {
+            defaultCenter.removeObserver(token)
+        }
+        if let token = workspaceWakeObserverToken {
+            NSWorkspace.shared.notificationCenter.removeObserver(token)
+        }
+        appActiveObserverToken = nil
+        windowKeyObserverToken = nil
+        workspaceWakeObserverToken = nil
+    }
+
     private func startUsageTickTimer() {
         usageTickTimer?.invalidate()
         usageTickTimer = Timer.scheduledTimer(withTimeInterval: kUsageTickInterval, repeats: true) { [weak self] _ in
@@ -1071,7 +1161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     private func tickUsage() {
-        let dayChanged = refreshUsageStateForNewDayIfNeeded()
+        checkForNewDayAndSyncIfNeeded()
         guard !isLockedOut else { return }
         usedSecondsToday += Int(kUsageTickInterval)
         if usedSecondsToday >= dailyLimitMinutes * 60 {
@@ -1079,13 +1169,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             return
         }
         persistUsageState()
-        // 平时不需要每秒都 evaluateJavaScript 推送状态（web 层不展示倒计时 UI，避免在 4GB
-        // 旧机上无意义地每秒唤醒 JS 引擎）；仅在刚发生跨日归零时补一次同步，确保 web 侧持有的
-        // "已用/锁定"展示（若设置面板恰好开着）不会因为没收到 wtjSetLockout(false) 之外的字段
-        // 更新而显得过期。
-        if dayChanged {
-            notifyShellStateToWeb()
-        }
     }
 
     private func enterLockout() {
@@ -1108,6 +1191,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             notifyShellStateToWeb()
         }
         NSLog("WTJ: 家长已手动重置今日使用时长。")
+    }
+
+    /// "reset 口令"处理（WTJ-20260707-004，验收标准 #2/#3）：web 层任意界面（含锁屏叠层，
+    /// 见 app/web/parent-controls.js 里独立于 isInputSuspended 的按键监听）识别到用户连续
+    /// 输入 "reset" 后，经 "wtjResetPasscodeAttempt" 消息转发到这里。与上面 resetUsageToday()
+    /// （家长菜单/设置面板触发、无条件、同日即可用的人工重置通道，本函数不影响、继续保留）
+    /// 刻意不同——这里只在本地日期确实已经跨天时才放行解锁；同一天额度已用完时，输入 reset
+    /// 绝不解除锁定（验收标准 #3 原文）。直接复用 refreshUsageStateForNewDayIfNeeded()：
+    /// 它的判定条件就是 wtjIsNewLocalDay(usageDateString, today)，与这里"reset 口令是否应该
+    /// 放行"的要求完全一致，不需要另外维护一套判断逻辑，也保证这条路径与启动/tick/唤醒/
+    /// 焦点场景走的是同一份跨日检查代码，不会出现"两处日期比较逻辑各写一份、逐渐不同步"的
+    /// 隐患。
+    private func handleResetPasscodeAttempt() {
+        let didUnlock = refreshUsageStateForNewDayIfNeeded()
+        if didUnlock {
+            NSLog("WTJ: 收到 reset 口令，检测到本地日期已跨天，已自动恢复新一天额度。")
+        } else {
+            NSLog("WTJ: 收到 reset 口令，但本地日期未变化（仍是 %@），同日额度用完不解锁" +
+                  "（家长可用隐藏家长菜单「重置今日使用时长」/设置面板作为同日人工重置通道）。",
+                  usageDateString)
+        }
     }
 
     private func remainingSecondsToday() -> Int {
@@ -1502,6 +1606,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             }
         case "wtjResetUsageToday":
             resetUsageToday()
+        case "wtjResetPasscodeAttempt":
+            // WTJ-20260707-004，验收标准 #2/#3：web 层"任意界面连续输入 reset"命中后转发的
+            // 口令尝试；与上面 wtjResetUsageToday（家长菜单/设置面板、无条件同日重置）区分为
+            // 两条独立消息，处理逻辑见 handleResetPasscodeAttempt() 顶部注释。
+            handleResetPasscodeAttempt()
         case "wtjReturnToParentMenu":
             // WTJ-20260705-027：二级设置面板"关闭"时发来的消息——设置页是从一级隐藏家长菜单
             // （showParentMenu()，NSMenu：退出/设置…/重置）的「设置…」项进入的，离开时必须
