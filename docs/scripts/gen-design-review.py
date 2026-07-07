@@ -605,7 +605,7 @@ CLIPS_008 = [
      "before": "app/web/audio/words/apple.m4a"},
     {"id": "banana", "kind": "秘密词（美式发音已验收 = 候选 #3/alt3，已固化为正式 banana.m4a）", "text": "banana",
      "before": "app/web/audio/words/banana.m4a"},
-    {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
+    {"id": "yoyo", "kind": "秘密词（Ethan 已验收 after/yoyo.m4a，已固化为正式 yoyo.m4a）", "text": "yoyo",
      "before": "app/web/audio/words/yoyo.m4a"},
     # WTJ-20260706-009：原 click-faucet-on「Turn on the water」before/after 对照已整条移除。
     # faucet EN 任务语义已由 009（已验收）从 turn-on 翻转为 turn-off，"Turn on the water" 音频

@@ -21,7 +21,7 @@
 > **下方 Kokoro（074/084）内容为历史记录**——其 af_heart/zf_xiaoxiao 产物已被本次 CosyVoice3
 > 全量重生成整体取代（磁盘上的 `.m4a` 现为 CosyVoice3 + Ethan 版本）。
 
-> ## ⚑ WTJ-20260706-008：ASR-gated 修复（apple / banana 固化）
+> ## ⚑ WTJ-20260706-008：ASR-gated 修复（apple / banana / yoyo 固化）
 >
 > 024 全量重生成后 Ethan 驳回部分词条为**文不对题**（CosyVoice3 zero-shot 对短目标不稳，会
 > 复述参考句而非目标词）。修法：`app/scripts/generate-tts-asr-gated.py`（WTJ-011 造的
@@ -33,6 +33,7 @@
 > |---|---|---|
 > | words/apple.m4a | `after/apple.m4a`（单候选，ASR 自证「Apple」） | `f32761db…be99ced` |
 > | words/banana.m4a | `after/banana.alt3.m4a`（6 候选中 Ethan 选定 #3，美式发音） | `63ddd08a…266951e` |
+> | words/yoyo.m4a | `after/yoyo.m4a`（ASR 自证「Yo yo」，Ethan 已验收） | `0afe7a6b…383763` |
 > | tasks/press-m.zh.m4a | `after/press-m.zh.m4a`（第三版 ~2.1s 适中语速，Ethan/PM 批准；010 卡按下字母 M 依赖此版） | `54aa6f41…42ecc65` |
 >
 > fox 同批固化（见 secretWords fox 条目 licenseNeed 注记）。banana 保持 alt3 不动。
