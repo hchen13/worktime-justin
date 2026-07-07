@@ -457,14 +457,13 @@
       bg.alt = '';
       wrap.appendChild(bg);
     } else {
-      // WTJ-20260704-083 返工（PM 打回②）：不再用纯色胶囊占位（旧 .wtj-hud-tray-bg-fallback，
-      // PM 判定"粗糙占位"不可接受）。改用 DESIGN 082 规则的可交付 footer 背景条
-      // （.wtj-hud-footer-bar：深蓝黑半透明 + 顶部低对比分界线，数值取自 082 doc「发现槽规则」
-      // 布局一节），配合 --generic 修饰类把槽位指示点放大到接近 082 的桌面槽径目标
-      // （82px~92px，见 hud.css `.wtj-hud-tray-wrap--generic .wtj-hud-slot`）。
+      // WTJ-20260707-011 验收反馈①：非 count===5 的默认（3 槽）路径不再画横向背景条。Ethan
+      // 反馈底部发现卡槽的横向长条背景（旧 .wtj-hud-footer-bar 圆角面板）观感不佳，要求改成参考
+      // 图二 keyboard-hint-preview 的三个独立圆圈（无长条底、间距更紧凑居中）。故这里删掉
+      // .wtj-hud-footer-bar 节点，只保留 --generic 修饰类（仍供 hud.css 锁定槽径样式与容器几何，
+      // 宽度已在 hud.css `.wtj-hud-tray-wrap--generic` 收窄以紧凑居中三圆圈）。槽位圆圈本身的
+      // Empty 视觉（.wtj-hud-slot.is-empty::after）不变，本就与参考图二一致。
       wrap.classList.add('wtj-hud-tray-wrap--generic');
-      var bgBar = el('div', 'wtj-hud-footer-bar');
-      wrap.appendChild(bgBar);
     }
 
     var percents = computeSlotLeftPercents(SLOT_COUNT);
