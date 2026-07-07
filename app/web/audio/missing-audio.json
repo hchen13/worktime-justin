@@ -2007,12 +2007,12 @@
       "note": null
     },
     {
-      "taskId": "click-faucet-on",
+      "taskId": "click-faucet-off",
       "templateReqId": "REQ-TASK-08",
-      "voicePromptPath": "audio/tasks/click-faucet-on.m4a",
+      "voicePromptPath": "audio/tasks/click-faucet-off.m4a",
       "status": "delivered",
       "successAudioRef": "sfx:task-success",
-      "note": "WTJ-20260704-072 新增（manifest.js tasks.templates.click.examples[1]）。voicePrompt 与其余 taskVoice 条目一样走静默兜底，不阻断任务判定。"
+      "note": "WTJ-20260706-009 由 click-faucet-on 改名+语义翻转（关水）。英文文案 'Turn off the water!'，由 ASR-gated CosyVoice3 wrapper 生成（whisper 自证 asr='Turn off the water.' ratio=1.00）。旧 click-faucet-on.m4a（'Turn on the water!'）已随本卡改名删除。"
     },
     {
       "taskId": "click-horse-run",
@@ -2076,13 +2076,13 @@
       "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
     },
     {
-      "taskId": "click-faucet-on",
-      "textZh": "打开水龙头！",
-      "phonemes": "ta↓kʰai→ ʂwei↓lʊ↗ŋtʰou↗!",
-      "voicePromptPath": "audio/tasks/click-faucet-on.zh.m4a",
+      "taskId": "click-faucet-off",
+      "textZh": "关掉水龙头！",
+      "phonemes": "kwan→tjau↘ ʂwei↓lʊ↗ŋtʰou↗!",
+      "voicePromptPath": "audio/tasks/click-faucet-off.zh.m4a",
       "status": "delivered",
-      "durationSec": 1.216,
-      "note": "WTJ-20260704-084 全量新生成：完整句，禁止运行时拼接（无 phrases 表，见 CN-TASK-DRAFT.md 红线）。out 用 <id>.zh.m4a 避免覆盖已交付的 EN audio/tasks/<id>.m4a（见 tts-text-manifest.zh.json 文件头 out 路径约定说明）。Phase B（004）负责把 manifest.js 对应 example 的 voicePrompt 接到这里。"
+      "durationSec": 1.76,
+      "note": "WTJ-20260706-009 由 click-faucet-on 改名+语义翻转（关水）。完整句 '关掉水龙头！'（禁止运行时拼接，见 CN-TASK-DRAFT.md 红线），由 ASR-gated CosyVoice3 wrapper 生成（whisper 自证 asr='关掉水龙头' ratio=1.00，seed=42）。旧 click-faucet-on.zh.m4a（'打开水龙头！'）已随本卡改名删除。"
     },
     {
       "taskId": "click-horse-run",

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Faucet running-state water-column pixel gate (WTJ-20260705-020, P0).
+"""Faucet running-state water-column pixel gate (WTJ-20260705-020, P0) +
+WTJ-20260706-009 close-semantics regression lock.
 
 Background: Ethan reported the shipped faucet's running-state water column reads as
 a "thin water line" (细小水线) that doesn't match the outlet's visual scale. TL's
@@ -7,17 +8,32 @@ dispatch card for this P0 explicitly forbids treating the WTJ-20260704-023 visua
 QA pass ("faucet 水柱与出水口匹配...已解决") as clearance — that pass predates this
 fresh complaint and only inspected contact sheets / preview GIFs, never a real
 running app frame. This script is the durable regression lock: it drives the REAL
-app.web/index.html in WebKit, forces the click-faucet-on task into its 'running'
-animation state via a real trusted mouse click (not a stubbed engine call), and
-reads the ACTUAL <canvas> backing-store pixels (getImageData) to measure the water
-column's bounding-box width against the outlet ring's width — the same ratio TL's
-card asked to be quantified across three tiers (docs source frames / downsampled
-runtime sheet / live rendered canvas). This file covers the third tier; the other
-two are one-off measurements recorded in the WTJ-20260705-020 handoff notes (they
-are static-asset facts, not something that needs a repeatable script — this file's
-job is to catch a *runtime* regression: wrong sheet wired up, wrong cell/frame
-index math, wrong canvas scaling, or the source asset silently getting swapped for
-a thinner one on a future rebuild).
+app.web/index.html in WebKit, and reads the ACTUAL <canvas> backing-store pixels
+(getImageData) to measure the water column's bounding-box width against the outlet
+ring's width — the same ratio TL's card asked to be quantified across three tiers
+(docs source frames / downsampled runtime sheet / live rendered canvas). This file
+covers the third tier; the other two are one-off measurements recorded in the
+WTJ-20260705-020 handoff notes (they are static-asset facts, not something that
+needs a repeatable script — this file's job is to catch a *runtime* regression:
+wrong sheet wired up, wrong cell/frame index math, wrong canvas scaling, or the
+source asset silently getting swapped for a thinner one on a future rebuild).
+
+WTJ-20260706-009 update (task semantics flip): the task previously started in a
+static 'off' (no water) idle state and only showed the 'running' water column
+*after* a click (idle='off'/active='running', i.e. click = "turn the water on").
+Ethan's product call flips this: the task must now start showing water RUNNING
+(idle='running') and a click must CLOSE it (active='closing', clamping on the
+already-existing "关水" closing sequence DESIGN produced back with card 026 but
+that was never wired up). Two consequences for this file:
+  1. The water-column ratio gate below no longer needs a forced click to reach
+     the 'running' state — it's the idle state now, visible the moment the task
+     spawns. The driving code was simplified accordingly (no more "force idle ->
+     active via a trusted click" step for this first measurement).
+  2. A second, new gate was added: after a real trusted click, the water column
+     must have visually disappeared (the 'closing' animation clamps on its last,
+     no-water frame) — this is the pixel-level proof that criterion 1 of card 009
+     ("点击后表现为关水/停止流水") actually holds at runtime, not just in the
+     idle/active state names.
 
 Why these specific sample rows (in the 256px-cell canvas backing-store space):
 the faucet body is a fixed layer shared by every state (off/running/closing/closed
@@ -76,11 +92,28 @@ MIN_WATER_TO_OUTLET_RATIO = 0.45
 # Absolute floor in the 256px-cell backing store: guards the degenerate case where
 # both numerator and denominator shrink together (e.g. the whole prop silently
 # rendered at a fraction of cellSize) and would otherwise still clear the ratio gate.
+# WTJ-20260706-009 also reuses this same constant as an UPPER bound after a click
+# closes the faucet (see MAX_CLOSED_WATER_WIDTH_PX below) — "at least this wide when
+# running" / "less than this wide once closed" are two ends of the same yardstick.
 MIN_WATER_WIDTH_PX = 15
+MAX_CLOSED_WATER_WIDTH_PX = MIN_WATER_WIDTH_PX
 
 OUTLET_ROW_OFFSET = -15  # rows above the anchor row: clean flat ring band.
 WATER_ROW_OFFSET = 15    # rows below the anchor row: clean flat water-column band.
 ROW_BAND_HALF_HEIGHT = 4  # sample a small band and average, to damp AA noise.
+
+# WTJ-20260706-009: anim-manifest.js faucet.closing is frameCount=6/fps=8 -> a full,
+# non-looping play-through is 750ms (see getDuration() semantics in frame-anim.js).
+# Wait past that before taking the "closed" measurement so we sample the clamped
+# final frame, not a mid-transition frame -- but task-templates.js's
+# computeVisualHoldMs() also *removes* the completed task's DOM (canvas included)
+# at Math.max(800, duration + COMPLETE_VISUAL_HOLD_BUFFER_MS(150)) = 900ms after
+# completion, so this measurement has to land inside the (750, 900) window: late
+# enough that closing has actually clamped on its no-water last frame, early enough
+# that scheduleElementsRemoval() hasn't torn the canvas out of the DOM yet. 800ms
+# (closing's 750ms + 50ms) leaves ~100ms of margin on both sides.
+CLOSING_ANIM_DURATION_MS = 750
+POST_CLICK_SETTLE_MS = CLOSING_ANIM_DURATION_MS + 50
 
 
 class _ReusableTCPServer(socketserver.TCPServer):
@@ -157,19 +190,29 @@ def drive_and_measure(pw, engine, url):
         page.click(".wtj-hud-question")
         page.wait_for_timeout(150)
         task_info = page.evaluate("() => window.WTJ_TASK_TEMPLATES.getActiveTaskInfo()")
-        if task_info and task_info.get("taskId") == "click-faucet-on":
+        if task_info and task_info.get("taskId") == "click-faucet-off":
             break
         page.evaluate("() => window.WTJ_TASK.dismiss('manual')")
         page.wait_for_timeout(30)
 
-    if not task_info or task_info.get("taskId") != "click-faucet-on":
+    if not task_info or task_info.get("taskId") != "click-faucet-off":
         browser.close()
-        return None, console_errors, "never reached click-faucet-on task after 30 question-clicks"
+        return None, None, console_errors, "never reached click-faucet-off task after 30 question-clicks"
 
-    # Real trusted click at the canvas's live DOM rect center -- forces idle 'off'
-    # -> active 'running' exactly the way a child's tap would (see PROP_ANIM_STATE_MAP
-    # in task-templates.js). We measure while the canvas is still on-screen inside its
-    # COMPLETE_VISUAL_HOLD_MS (800ms) window, well before removal.
+    # WTJ-20260706-009: idle IS 'running' now (no click needed to see water) — the
+    # task just rendered, give frame-anim a couple of ticks to actually paint before
+    # the first (idle, running-water) measurement.
+    page.wait_for_timeout(150)
+    idle_measurement = page.evaluate(MEASURE_JS, {
+        "outlet": OUTLET_ROW_OFFSET,
+        "water": WATER_ROW_OFFSET,
+        "halfHeight": ROW_BAND_HALF_HEIGHT,
+    })
+
+    # Real trusted click at the canvas's live DOM rect center -- forces idle 'running'
+    # -> active 'closing' exactly the way a child's tap would (see PROP_ANIM_STATE_MAP
+    # in task-templates.js). Wait past the full non-looping closing animation so the
+    # canvas has clamped onto its final, no-water frame before the second measurement.
     rect = page.evaluate("""() => {
         var root = document.querySelector('.wtj-tt-root');
         var canvas = root.querySelector('canvas[data-wtj-anim-prop="faucet"]');
@@ -177,15 +220,15 @@ def drive_and_measure(pw, engine, url):
         return {x: r.left, y: r.top, w: r.width, h: r.height};
     }""")
     page.mouse.click(rect["x"] + rect["w"] / 2, rect["y"] + rect["h"] / 2)
-    page.wait_for_timeout(150)  # a few animation ticks into 'running', well inside the hold window
+    page.wait_for_timeout(POST_CLICK_SETTLE_MS)
 
-    measurement = page.evaluate(MEASURE_JS, {
+    closed_measurement = page.evaluate(MEASURE_JS, {
         "outlet": OUTLET_ROW_OFFSET,
         "water": WATER_ROW_OFFSET,
         "halfHeight": ROW_BAND_HALF_HEIGHT,
     })
     browser.close()
-    return measurement, console_errors, None
+    return idle_measurement, closed_measurement, console_errors, None
 
 
 def run_suite(pw, app_web: Path, engine: str, port: int):
@@ -198,25 +241,26 @@ def run_suite(pw, app_web: Path, engine: str, port: int):
         print(f"{'PASS' if ok else 'FAIL'} {cid}  {detail}")
 
     try:
-        measurement, console_errors, infra_err = drive_and_measure(pw, engine, url)
+        idle_measurement, closed_measurement, console_errors, infra_err = drive_and_measure(pw, engine, url)
 
         check("FAUCET-RATIO-no-console-errors", not console_errors,
               f"console/page errors: {console_errors[:5]}")
-        check("FAUCET-RATIO-reached-click-faucet-on-task", infra_err is None,
-              infra_err or "reached click-faucet-on and clicked it")
+        check("FAUCET-RATIO-reached-click-faucet-off-task", infra_err is None,
+              infra_err or "reached click-faucet-off (idle already shows running water)")
 
-        if measurement is None or "error" in measurement:
+        if idle_measurement is None or "error" in idle_measurement:
             check("FAUCET-RATIO-measured-canvas-pixels", False,
-                  (measurement or {}).get("error", "no measurement (task never reached)"))
+                  (idle_measurement or {}).get("error", "no measurement (task never reached)"))
             check("FAUCET-RATIO-water-to-outlet-ratio-gate", False, "skipped: no measurement")
             check("FAUCET-RATIO-water-absolute-width-gate", False, "skipped: no measurement")
+            check("FAUCET-CLOSE-water-disappears-after-click", False, "skipped: no measurement")
         else:
-            outlet_w = measurement["outletWidth"]
-            water_w = measurement["waterWidth"]
+            outlet_w = idle_measurement["outletWidth"]
+            water_w = idle_measurement["waterWidth"]
             ratio = (water_w / outlet_w) if outlet_w > 0 else 0.0
             check("FAUCET-RATIO-measured-canvas-pixels", outlet_w > 0,
-                  f"cellSize={measurement['cellSize']} anchorYPx={measurement['anchorYPx']} "
-                  f"outletRow={measurement['outletRow']} waterRow={measurement['waterRow']} "
+                  f"cellSize={idle_measurement['cellSize']} anchorYPx={idle_measurement['anchorYPx']} "
+                  f"outletRow={idle_measurement['outletRow']} waterRow={idle_measurement['waterRow']} "
                   f"outletWidth={outlet_w:.1f}px waterWidth={water_w:.1f}px ratio={ratio:.3f}")
             check("FAUCET-RATIO-water-to-outlet-ratio-gate", ratio >= MIN_WATER_TO_OUTLET_RATIO,
                   f"ratio={ratio:.3f} (water={water_w:.1f}px / outlet={outlet_w:.1f}px), "
@@ -225,6 +269,17 @@ def run_suite(pw, app_web: Path, engine: str, port: int):
             check("FAUCET-RATIO-water-absolute-width-gate", water_w >= MIN_WATER_WIDTH_PX,
                   f"waterWidth={water_w:.1f}px, gate>={MIN_WATER_WIDTH_PX}px "
                   f"(guards against both dimensions shrinking together while ratio still passes)")
+
+            if closed_measurement is None or "error" in closed_measurement:
+                check("FAUCET-CLOSE-water-disappears-after-click", False,
+                      (closed_measurement or {}).get("error", "no post-click measurement"))
+            else:
+                closed_water_w = closed_measurement["waterWidth"]
+                check("FAUCET-CLOSE-water-disappears-after-click", closed_water_w < MAX_CLOSED_WATER_WIDTH_PX,
+                      f"WTJ-20260706-009: post-click (after the 'closing' animation clamps on its final "
+                      f"frame) waterWidth={closed_water_w:.1f}px, gate<{MAX_CLOSED_WATER_WIDTH_PX}px -- "
+                      f"proves the task's click result is genuinely 'water off', not a residual stream "
+                      f"(idle-state waterWidth was {water_w:.1f}px for comparison)")
     finally:
         httpd.shutdown()
 

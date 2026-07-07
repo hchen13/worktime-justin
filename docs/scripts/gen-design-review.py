@@ -607,8 +607,12 @@ CLIPS_008 = [
      "before": "app/web/audio/words/banana.m4a"},
     {"id": "yoyo", "kind": "秘密词", "text": "yoyo",
      "before": "app/web/audio/words/yoyo.m4a"},
-    {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
-     "before": "app/web/audio/tasks/click-faucet-on.m4a"},
+    # WTJ-20260706-009：原 click-faucet-on「Turn on the water」before/after 对照已整条移除。
+    # faucet EN 任务语义已由 009（已验收）从 turn-on 翻转为 turn-off，"Turn on the water" 音频
+    # 退役、不再随 app 交付（app/web/audio/tasks/click-faucet-on.m4a 已改名删除），该音质对照
+    # 因此作废；008 当时的 after 历史件仍 committed 在 docs/assets/008-audio-review/after/，git
+    # provenance 不丢，这里删掉的只是 live 面板里指向已删除文件的断链引用。新的关水语音
+    # click-faucet-off（EN+ZH）已在本页「英文/中文任务语音」区可试听（那两区目录扫描自动收录）。
     {"id": "press-m.zh", "kind": "中文任务（第三版·Ethan/PM 已批准 = after/press-m.zh.m4a，已固化为正式 press-m.zh.m4a）", "text": "按下字母 M！",
      "before": "app/web/audio/tasks/press-m.zh.m4a",
      "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"],
@@ -628,8 +632,10 @@ def render_008_audio_fix_section() -> str:
         '目标文本远短于 prompt_text 时模型会跑偏/复述参考（cosyvoice.py 的「synthesis text too short than prompt '
         'text」警告 + llm.py 把 prompt_text 与目标 concat）。<strong>修法</strong>：<strong>ASR-gated 重 seed</strong>'
         '——每条生成后用 whisper 自证念的是目标文本，不中就换随机种子重生成，命中才写盘；绝不 ship 文不对题音频。</p>',
-        '<p class="section-note">本批 6 条<strong>已全部 ASR 自证内容正确</strong>：apple / banana / yoyo / fox → '
-        '「Apple / Banana / Yo yo / Fox」；click-faucet-on →「Turn on the water」；press-m.zh → 含「按下…M」。'
+        '<p class="section-note">本批<strong>已全部 ASR 自证内容正确</strong>：apple / banana / yoyo / fox → '
+        '「Apple / Banana / Yo yo / Fox」；press-m.zh → 含「按下…M」。'
+        '（原 click-faucet-on「Turn on the water」对照已由 WTJ-20260706-009 移除——faucet 任务语义翻转为'
+        '关水，该英文句退役；新的关水语音见本页「英文/中文任务语音」区。）'
         'before = 现役 stage 音频（tracked <code class="inline-code">app/web/audio/**</code>）；after = ASR-gated '
         '重生成（committed 到 <code class="inline-code">docs/assets/008-audio-review/after/</code>）。fox 是 015 新词、'
         '此前无音频，故只有 after。<strong>TL 不试听；内容已技术自证，请 Ethan 只裁决主观音色/自然度。</strong></p>',

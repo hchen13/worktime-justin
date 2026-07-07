@@ -13,9 +13,9 @@
       "text": "点亮小台灯！",
       "out": "audio/tasks/click-lamp-on.zh.m4a"
     },
-    "click-faucet-on": {
-      "text": "打开水龙头！",
-      "out": "audio/tasks/click-faucet-on.zh.m4a"
+    "click-faucet-off": {
+      "text": "关掉水龙头！",
+      "out": "audio/tasks/click-faucet-off.zh.m4a"
     },
     "click-horse-run": {
       "text": "让小马跑起来！",
