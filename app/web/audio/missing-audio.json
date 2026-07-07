@@ -1303,7 +1303,7 @@
       "zhLabel": "小岛",
       "path": "audio/words/island.zh.m4a",
       "status": "delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词返工：本词中文发音已由 008 ASR-gated CosyVoice3 管线生成交付（每条 whisper 自证念的是目标中文词，不中重 seed，命中才写盘），非占位。"
+      "note": "WTJ-20260707-001 声调返工：原 clip 听成小刀被 Ethan 驳回；用更严声调门(whisper-small 精确岛 + tone-pinyin 3声 dǎo)重生成干净小岛，非占位。"
     },
     {
       "word": "juice",
