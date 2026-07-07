@@ -56,6 +56,31 @@
 // 的地方（record() 内层 try/catch），与"修 bug 不能 no silent fallback"是两回事。
 //
 // -----------------------------------------------------------------------
+// WTJ-20260707-010 — rAF 探针发热 gate（不改变本卡诊断契约，只改变采样频率）
+// -----------------------------------------------------------------------
+// 起因：WTJ-20260707-008 排查 app.js 主循环发热时发现，本文件的 rafLoop()（见下方
+// 「requestAnimationFrame ticking 探测」一节）从 017 起就是"永久 requestAnimationFrame
+// 自链"——不受 app.js 自己的 idle park 影响，每次进程启动都以浏览器满帧率（旧机上通常仍是
+// 60Hz）空转到退出，且**本文件在正常 App/带 WTJ_APP_DIAG 诊断/QA 真机诊断三条路径下都是同一份
+// index.html、同一个无条件加载的 <script src="diag.js">**——没有任何独立的"诊断模式"开关，
+// 也就是说这个探针在孩子平时正常使用 kiosk 时也一样连续满帧空转，是比 app.js 主循环更可疑的
+// 旧机发热/风扇负载来源（app.js 至少有 idleStopSec 秒无活动后 park，这个探针从不 park）。
+//
+// 本卡不删这个探针、也不改变它要回答的问题（"浏览器本身是否具备推进 rAF 回调的能力"，与"app
+// 自己选不选择 park"是两回事，见下方 rafLoop 顶部注释），只改变**采样节奏**：
+//   diagRafFullRate=false（manifest.performance，默认值，日常 kiosk 构建）
+//     低频基线：探针不再每帧自我重排，只在每个心跳窗口（HEARTBEAT_MS=5000ms）采一帧样本——
+//     足以回答"这段窗口内浏览器还能不能推进 rAF"这个是/否问题（能推进=至少采到 1 次 tick，
+//     不能推进=0 次，与原始"数满帧计数"语义一致，只是粒度从"每帧"变成"每心跳窗口 1 帧"），
+//     把这条探针自身造成的合成器唤醒次数从"每秒 60 次"降到"每 5 秒 1 次"（约 300 倍），
+//     消除这条路径对旧机发热的贡献。
+//   diagRafFullRate=true（诊断构建临时开启）
+//     满频：rafLoop 恢复 017 原始的持续自链行为，用于真机深度诊断时需要逐帧时序（而不只是
+//     "能不能动"这个粗粒度信号）的场景。
+// 见 resolveDiagRafFullRate()/applyRafProbeMode()（deferredInit() 里读取 manifest 决定初始
+// 模式，之后由 heartbeatTick() 在低频模式下每个窗口重新武装一次采样）。
+//
+// -----------------------------------------------------------------------
 // 语法基线与加载位置
 // -----------------------------------------------------------------------
 // 与项目其余引擎同一基线：Safari 14 兼容（ES2020 以内），只用 var/function 声明式，不用
@@ -74,8 +99,10 @@
 // -----------------------------------------------------------------------
 // 对外 API（window.WTJ_DIAG，Object.freeze 冻结 + 绑定加固，与 009~015/056 同款约定）
 // -----------------------------------------------------------------------
-//   getState()   返回 { recent, counts, rafTicking, rafTotalTicks, buildInfo }，供 QA/单测
-//                内省——recent 是最近 MAX_RECENT 条诊断记录的浅拷贝，counts 是按 kind 计数。
+//   getState()   返回 { recent, counts, rafTicking, rafTotalTicks, rafMode, buildInfo }，供
+//                QA/单测内省——recent 是最近 MAX_RECENT 条诊断记录的浅拷贝，counts 是按 kind
+//                计数，rafMode 是 WTJ-20260707-010 加入的 rAF 探针采样模式（'idle'/'full'，
+//                见「rAF 探针发热 gate」一节）。
 //   _setClock(clock)  测试专用：可整体或部分替换 setTimeout/clearTimeout/now/
 //                requestAnimationFrame/cancelAnimationFrame，与其余引擎同款模式。
 // -----------------------------------------------------------------------
@@ -593,16 +620,44 @@
   // "canvas 长期空白"，rAF 本身是否在推进是排查"引擎完全没跑"还是"引擎跑了但没画出来"
   // 的第一道分界线（frame-anim.js 用可注入 setTimeout 链而非 rAF 驱动自己的 tick，但
   // app.js 的主渲染循环用 rAF——两者若表现不一致，这里能分开诊断）。
+  //
+  // WTJ-20260707-010：见文件头「rAF 探针发热 gate」一节——rafState.mode 决定 rafLoop() 触发
+  // 后是否自我重排下一帧：
+  //   'idle'（默认）  rafLoop 只负责计数，不重排；下一次采样由 heartbeatTick() 在每个心跳
+  //                   窗口尾部显式调用 scheduleRafTick() 武装一次，相当于把探针从"每帧一次"
+  //                   降到"每 HEARTBEAT_MS 一次"，但仍然如实回答"这段窗口内浏览器是否推进过
+  //                   rAF"（rafTicksSinceLast>0 vs ===0，语义与满频模式一致）。
+  //   'full'          rafLoop 触发后立即重排下一帧，即 017 原始的持续自链行为。
+  // rafState.scheduled 防止 idle→full 切换瞬间与心跳武装的采样请求重复排队（见
+  // applyRafProbeMode()）。CARD_ID 常量指向 017 是因为这仍是同一份诊断契约，只是采样节奏
+  // 由本卡（010）接管；rafState.mode 不影响 rafLoop 计数/heartbeat 上报的字段形状。
   // ---------------------------------------------------------------------
-  var rafState = { totalTicks: 0, ticksSinceHeartbeat: 0, lastTickAt: null, active: false };
+  var rafState = {
+    totalTicks: 0,
+    ticksSinceHeartbeat: 0,
+    lastTickAt: null,
+    active: false,
+    mode: 'idle', // 'idle' | 'full'，见上方注释；deferredInit() 会按 manifest 校正一次。
+    scheduled: false
+  };
 
   function rafLoop() {
+    rafState.scheduled = false;
     rafState.totalTicks++;
     rafState.ticksSinceHeartbeat++;
     rafState.lastTickAt = clockRef.now();
-    if (clockRef.requestAnimationFrame) {
-      clockRef.requestAnimationFrame(rafLoop);
+    if (rafState.mode === 'full') {
+      scheduleRafTick(); // 满频：立即重排下一帧，恢复 017 原始持续自链行为。
     }
+    // 'idle' 模式：不重排——保持空闲，等 heartbeatTick() 在下一个心跳窗口尾部再武装一次。
+  }
+
+  function scheduleRafTick() {
+    if (!clockRef.requestAnimationFrame || rafState.scheduled) {
+      return; // rAF 不可用，或已有一帧在途（避免 idle/full 切换瞬间重复排队造成计数翻倍）。
+    }
+    rafState.scheduled = true;
+    clockRef.requestAnimationFrame(rafLoop);
   }
 
   function startRafProbe() {
@@ -611,7 +666,33 @@
       return;
     }
     rafState.active = true;
-    clockRef.requestAnimationFrame(rafLoop);
+    // 无论最终模式是 idle 还是 full，先武装一次采样建立启动时刻的基线（manifest 此刻多半还
+    // 没加载完，deferredInit() 会在 0ms 后按实际配置校正模式——见 applyRafProbeMode()）。
+    scheduleRafTick();
+  }
+
+  // WTJ-20260707-010：manifest.performance.diagRafFullRate 防御式读取（同 resolveHonorReducedMotion()
+  // 同款回退：缺失/非 true 都当 false=低频基线，与 diag.js 其余"晚加载模块缺失不报错"的
+  // 一贯取舍一致）。
+  function resolveDiagRafFullRate() {
+    try {
+      return !!(window.WTJ_MANIFEST && window.WTJ_MANIFEST.performance && window.WTJ_MANIFEST.performance.diagRafFullRate === true);
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // 按解析出的开关值切换 rafState.mode；只在真正变化时动作，且切到 'full' 时补一次
+  // scheduleRafTick()（若此刻已有一帧在途，scheduled 守卫会防止重复排队——见上方注释）。
+  function applyRafProbeMode(fullRate) {
+    var nextMode = fullRate ? 'full' : 'idle';
+    if (nextMode === rafState.mode) {
+      return;
+    }
+    rafState.mode = nextMode;
+    if (nextMode === 'full' && rafState.active) {
+      scheduleRafTick();
+    }
   }
 
   function readFrameAnimSnapshot() {
@@ -648,6 +729,13 @@
       rafTicking: ticksDelta > 0,
       frameAnim: readFrameAnimSnapshot()
     });
+    // WTJ-20260707-010：低频模式下 rafLoop 触发后不会自我重排（见 rafLoop() 注释），这里
+    // 在心跳窗口尾部显式武装下一次采样，让"每个心跳窗口采 1 帧"这个节奏与 HEARTBEAT_MS 对齐。
+    // 满频模式下 rafLoop 自己已经在持续重排，这里调用 scheduleRafTick() 会被 scheduled 守卫
+    // 当成 no-op，不会造成重复排队。
+    if (rafState.active) {
+      scheduleRafTick();
+    }
     scheduleHeartbeat();
   }
 
@@ -659,6 +747,11 @@
   function deferredInit() {
     emitHeader();
     subscribeTaskComplete();
+    // WTJ-20260707-010：此刻 manifest.js 已同步执行完毕（见文件头「语法基线与加载位置」一节
+    // 的 0ms 宏任务时序保证），按 manifest.performance.diagRafFullRate 校正 rAF 探针采样模式
+    // ——启动瞬间（IIFE 顶层 startRafProbe() 调用时）manifest 多半还没加载，只能先按默认
+    // 'idle' 武装第一次采样，这里才是"真正生效的模式"第一次被确定的地方。
+    applyRafProbeMode(resolveDiagRafFullRate());
   }
 
   // ---------------------------------------------------------------------
@@ -677,6 +770,9 @@
       counts: countsCopy,
       rafTicking: rafState.totalTicks > 0,
       rafTotalTicks: rafState.totalTicks,
+      // WTJ-20260707-010：当前 rAF 探针采样模式（'idle'=每心跳窗口采 1 帧的低频基线，
+      // 'full'=017 原始持续自链），供 QA/单测确认发热 gate 是否按 manifest 配置生效。
+      rafMode: rafState.mode,
       buildInfo: resolveBuildInfo()
     };
   }
