@@ -226,6 +226,10 @@
 }
 
 .wtj-kh-row--fn .wtj-kh-key {
+  /* 修复：功能行栅格是 repeat(14, ...)，键帽若沿用默认 --wtj-kh-u:4 会在 14 列里每 3 颗就
+     挤不下换行（14/4=3.5），整条功能行被拆成多行——必须把每颗键收窄到 --wtj-kh-u:1，与
+     005 预览 HTML 的 .key-row.function-row .key{--u:1} 对应规则一致。 */
+  --wtj-kh-u: 1;
   height: 27px;
   border-radius: 6px;
   font-size: 9px;
