@@ -64,7 +64,7 @@ Required fields:
 - `阻塞负责人`: PM or Ethan only, when `状态 = blocking`.
 - `阻塞问题`: exact question or missing decision, when blocked.
 - `依赖`: upstream card IDs or dependencies. Prefix blocking dependencies with `Hard:` and non-blocking coordination dependencies with `Soft:`. If the field contains unqualified card IDs, PM must clarify them before the owner treats them as a stop condition.
-- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. After PM accepts a runtime-impacting or docs-preview-impacting delivery for integrated Ethan validation, this field or `产物/证据` must also name the TL-integrated `stage` commit, unless PM records an explicit integration deferral.
+- `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. For runtime-impacting or docs-preview-impacting TL delivery, this field or `产物/证据` must also name the TL-integrated `stage` commit, unless the card explicitly says branch-only preliminary review or PM records an explicit integration deferral.
 - `产物/证据`: PR, commit, screenshot, generated asset path, test report, or other proof.
 - `最新进展`: concise human-written status note.
 - `截止/检查点`: date for the next expected transition or review.
@@ -128,8 +128,8 @@ Branch ownership:
 
 Integration rule:
 
-- When PM accepts a runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, PM must route TL to merge the accepted delivery branch into `stage` promptly.
-- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, updates `/Users/claire/Documents/worktime-justin` to the integrated `stage` commit, builds or verifies the stakeholder-facing docs/app/DMG artifacts from that directory, and records the `stage` commit plus package or run evidence on the card.
+- For runtime-impacting implementation, production asset change, audio/TTS change, packaging change, QA-visible docs preview, or other change that Ethan should validate in the app/docs, TL delivery normally includes merging/syncing the completed branch into `stage` before PM review. PM may accept a branch-only preliminary review only when the card says so explicitly.
+- TL performs the `stage` merge, resolves code/build/test/package/asset conflicts, updates `/Users/claire/Documents/worktime-justin` to the integrated `stage` commit, builds or verifies the stakeholder-facing docs/app/DMG artifacts from that directory, and records the `stage` commit plus package or run evidence on the card before requesting integrated PM/Ethan validation.
 - If a `stage` conflict requires product, requirement, or design judgment, TL routes the card to PM with the exact files, conflicting choices, and recommended technical options. PM decides or routes to Ethan, then TL completes the technical merge.
 - If a conflict is only in PM-owned process docs, requirement wording, or collaboration protocol, PM may resolve that documentation conflict directly or give TL exact text to apply.
 - A user-facing card may not be marked `done` before `stage` integration. The only exceptions are changes that do not affect the runnable validation surface; PM must state that explicitly in `最新进展` or `产物/证据`. Do not use `stage integration deferred` to close a user-facing card; keep it active and route TL until Ethan can see it in `stage`.
@@ -325,6 +325,8 @@ Use `完整流程` for complex or high-risk work:
 
 For `完整流程`, TL should use the full process: at least three technical review subagents, implementation, adversarial review, verification, then PM review.
 
+The selected review depth is per card, not per TL session. TL may run several card workflows in parallel when each card keeps its own executor/workstream claim, branch or worktree, evidence, and acceptance trail. Parallel execution does not weaken the required review depth for any individual card.
+
 Use `轻量流程` for small, clear, low-risk cards:
 
 - obvious CSS/layout fixes, including image aspect-ratio bugs
@@ -357,7 +359,7 @@ PM responsibilities:
 8. Split large DESIGN/QA work enough that multiple same-role sessions can run without editing the same assets or test files.
 9. Inspect active role sessions or thread summaries when the board alone does not explain why a card is stalled, when a role asks Ethan for missing information, or when one session claims multiple cards at once.
 10. Convert session-only questions into board instructions. If TL, DESIGN, or QA says "need image", "which asset", "waiting for Ethan", or similar in chat, PM writes the exact path, blocker, or routing decision into the card so the next loop can proceed from the board alone.
-11. Keep `stage` current by routing PM-accepted runtime/docs-preview work to TL for integration when Ethan should see it in the combined app/docs, or record a concrete integration deferral on the relevant cards.
+11. Keep `stage` current by requiring runtime/docs-preview TL cards to include `stage` integration in their delivery unless PM explicitly marks a branch-only preliminary review, or record a concrete integration deferral on the relevant cards.
 12. Stop routine routing when the workflow invariant itself is broken. If PM finds cards parked on role owners while the real next action is Ethan validation, or role loops repeatedly ignore assigned active cards, PM must repair the protocol/routing failure before continuing ordinary PM-loop work.
 
 PM acceptance requires:
@@ -372,7 +374,7 @@ PM branch discipline:
 
 - PM owns `main` and product acceptance. TL owns `stage` technical integration.
 - PM should verify final branch and commit only after TL hands the card to `review`, unless there is evidence that `stage`/`main` history was changed outside the defined ownership model or a destructive operation is underway.
-- PM should route accepted runtime/docs-preview work to TL for `stage` integration before asking Ethan to validate the combined app. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest integrated app.
+- PM should expect runtime/docs-preview TL handoffs to include `stage` integration before Ethan validates the combined app, unless the card explicitly says branch-only preliminary review. If `stage` is not current, say so instead of presenting `main` or a feature branch as the latest integrated app.
 - QA may validate a combined app build from `stage` when the card asks for integrated-app QA, but QA may also run target-specific tests from a named branch/package/worktree. PM must not treat a target-specific QA pass as Ethan acceptance of `stage`.
 - PM must not resolve code/build/test/package conflicts on `stage` or during `stage` to `main` promotion. Route those to TL with exact files and target baseline. PM may resolve PM-owned documentation, requirement wording, or workflow-protocol conflicts.
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
@@ -390,7 +392,15 @@ TL responsibilities:
 6. Iterate until TL judges the work ready for PM review or QA.
 7. Own git version control on implementation branches and the `stage` integration branch.
 
-TL must not merge directly to `main`. TL may merge to `stage` only when PM has accepted/routed the work for integrated Ethan validation or the card explicitly defines `stage` integration as TL's next action.
+TL must not merge directly to `main`. For runtime-impacting or docs-preview-impacting cards, TL normally merges/syncs the completed work into `stage` before handoff to PM review, because PM/Ethan validation uses the integrated project checkout. TL may skip `stage` integration only when the card explicitly says the work is branch-only preliminary review, or when TL records a concrete PM-owned blocker that prevents integration.
+
+TL is allowed, and often expected, to act as a technical scheduler rather than a single-card coder. If several TL-owned cards are ready, TL may claim and coordinate multiple cards in parallel by launching separate technical-review, coding, and adversarial-review workstreams. Each active card must still be independently auditable:
+
+- `最新进展` names the card's executor/workstream label and stable identity.
+- `分支`, `依赖`, `下一步动作`, and `产物/证据` name that card's branch/worktree, touched scope, current step, and verification output.
+- Parallel work uses independent branches/worktrees or explicitly non-overlapping file scopes. TL must not use `/Users/claire/Documents/worktime-justin` as a scratch checkout.
+- TL resolves cross-card conflicts before handoff. A branch/worktree can be reviewed by PM or QA as a preliminary target, but it is not the Ethan-facing integrated surface until TL merges/syncs it to `stage`, updates `/Users/claire/Documents/worktime-justin` to that `stage` commit, and records the project-directory artifact paths.
+- `stage` integration is serialized and evidence-backed. TL may have many cards in flight, but every card that should affect Ethan's integrated app/docs must eventually record the final branch commit, the integrated `stage` commit, and the exact docs/app/package path under `/Users/claire/Documents/worktime-justin`.
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
