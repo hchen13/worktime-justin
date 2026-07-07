@@ -1111,10 +1111,10 @@
     },
     {
       "word": "cat",
-      "zhLabel": "猫",
+      "zhLabel": "小猫",
       "path": "audio/words/cat.zh.m4a",
       "status": "delivered",
-      "note": "WTJ-20260706-011 ZH 秘密词二期脚手架：中文首过标签（PM/Ethan 待审，未生成音频）。音频生成本身是 008 卡范围，本条 status 恒为 not-delivered，path 是约定路径（尚未落盘）。"
+      "note": "WTJ-20260706-011 ZH 秘密词返工：裸字「猫」(māo) 被 CosyVoice3 合成后 whisper 8/8 判为同音字「毛」(máo)，属真实合成/ASR 同音困难。改用儿童友好词「小猫」(与 find-the-cat.zh「找到小猫！」一致；EN 词/文件名 cat.zh.m4a 不变)，ASR-gated 重生成确认念对。"
     },
     {
       "word": "car",
