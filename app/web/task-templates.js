@@ -147,10 +147,15 @@
 // 与引擎缺失时的回退路径仍然是 <img>）与 renderClickTask()（onClick 命中时从"切换
 // targetSpriteActive 静态贴图"改为"WTJ_FRAME_ANIM.play() 播放 activeState"）+
 // handleTemplateComplete()/scheduleElementsRemoval() 的 COMPLETE_VISUAL_HOLD 耦合修正。
-// 拖拽/寻找两类任务的道具渲染路径不变（它们目前的 manifest 示例都不引用 faucet/horse/lamp
-// 三个已接入引擎的 prop，仍然全程走静态 img；若未来某个 drag/find 示例的 sprite 文件名恰好
-// 命中这三者，createPropEl() 会通用地按 idle 态播放循环动效，设计上是通用的，不是只服务
-// click 任务类型）。
+// 拖拽/寻找两类任务的道具渲染路径本身不变（createPropEl() 是唯一分支点，调用方不需要区分
+// canvas/img，见该函数），但"是否会实际命中动效道具"这件事 025 之后已经不再是纯假设：
+// drag 目前手写的 example 确实都不引用 PROP_ANIM_STATE_MAP 里的任何 prop，仍全程走静态 img；
+// find 则不同——WTJ-20260706-012 起 find 的随机 word-card 抽取（drawWordCardFind()）直接从
+// secretWords.pool 全量随机取 target/distractor，而该 pool 本身就含 'bell'/'door' 两个词条
+// （spriteFile 分别是 sprites/bell.png、sprites/door.png），所以 find 任务在日常运行中会
+// 随机抽到 bell/door 并按 idle 态播放循环动效——这不是"若未来命中"的假设分支，是当前代码路径
+// 已经在跑的真实场景。createPropEl() 对此完全通用（不区分调用方是 click/drag/find），故不需要
+// 任何改动；这里只是据实更正上面这段历史注释的过时前提。
 //
 // **per-prop idle/active 映射表**（PROP_ANIM_STATE_MAP，二值 idle/active → anim-manifest.js
 // 里的具体 state 名）：
@@ -359,7 +364,11 @@
     'yoyo.png', 'yarn.png', 'yak.png',
     'zipper.png', 'zucchini.png'
   ];
-  // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
+  // 五个"打 data-anim-state 属性"的道具（见文件头「animation state 接口预留」一节）——014
+  // 首次交付时这五个确实都只有静态占位；056 起 faucet/horse/lamp 先接入真实分帧动画，025 起
+  // door/bell 也接入（见 PROP_ANIM_STATE_MAP），现在全部五个都是真实 canvas 帧动画，不再是
+  // 静态占位。这份清单本身的用途不变：wantsAnimState() 用它判断"该不该打 data-anim-state
+  // 属性"，与是否已接入引擎是两件事（后者由 PROP_ANIM_STATE_MAP 单独判定）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
 
   // 已知的 stub 文件名别名：早期 manifest.js 的 click.examples[0] 曾把 targetSprite/
@@ -425,9 +434,13 @@
 
   // ---------------------------------------------------------------------
   // 056 动效引擎接入：per-prop idle/active 映射表（见文件头「五、动效引擎接入」一节的表格与
-  // 逐条理由）。door/bell 有意不在这张表里——resolvePropAnimInfo() 对它们恒返回 null，
-  // createPropEl() 因此恒回退静态 <img>，这是 v1_boundary.deferred_to_v2 在本文件的落地
-  // 方式，不是遗漏。
+  // 逐条理由）。**WTJ-20260707-007 更正**：下面这张表当前登记了全部 5 个 animation-state
+  // 道具（faucet/horse/lamp/door/bell）——door/bell 已由 WTJ-20260705-025 从
+  // v1_boundary.deferred_to_v2 移入 included 并在此登记（见文件头「五、动效引擎接入」一节
+  // 表格），resolvePropAnimInfo() 对它们不再恒返回 null，createPropEl() 因此会用真实 canvas
+  // 帧动画而不是静态 <img>。此前这里写着"door/bell 有意不在这张表里/恒回退静态 img"，那是
+  // 056 首次交付、025 接入之前的旧状态描述，025 落地后忘了同步这条紧邻代码的注释——与代码
+  // 本身（紧接着的对象字面量里明明有 door/bell 两个 key）直接矛盾，故本卡据实更正。
   // ---------------------------------------------------------------------
   var PROP_ANIM_STATE_MAP = {
     // WTJ-20260706-009：语义翻转——idle 现在是 'running'（水一直流），active 是 'closing'
@@ -956,9 +969,10 @@
     }
   }
 
-  // 056：动效道具（faucet/horse/lamp）挂载 <canvas> + 用引擎播放 idleState（loop:true）；
-  // 非动效道具与 door/bell（resolvePropAnimInfo() 返回 null）、以及引擎缺失/play() 失败时
-  // 一律回退原有的静态 <img> 占位——这是本函数唯一的分支点，调用方（renderDragTask()/
+  // 056：动效道具（faucet/horse/lamp/door/bell，door/bell 由 025 接入，见 PROP_ANIM_STATE_MAP）
+  // 挂载 <canvas> + 用引擎播放 idleState（loop:true）；非动效道具（resolvePropAnimInfo() 返回
+  // null，如 apple/basket/dog 等没有 PROP_ANIM_STATE_MAP 条目的 sprite）、以及引擎缺失/play()
+  // 失败时一律回退原有的静态 <img> 占位——这是本函数唯一的分支点，调用方（renderDragTask()/
   // renderClickTask()/renderFindTask()）完全不需要关心某个具体元素最终是 canvas 还是 img。
   function createPropEl(spriteFile, pos, extraClass) {
     var root = ensureOverlayRoot();
@@ -1101,8 +1115,9 @@
   // 056：COMPLETE_VISUAL_HOLD_MS（800）曾经是"恰好 >= 唯一一种完成态视觉时长"的巧合，不是
   // 契约——现在动效道具的 activeState 真的有一个由 WTJ_FRAME_ANIM.getDuration() 给出的确切
   // 播放时长，hold 窗口必须不短于这个时长，否则素材以后加长会被腰斩（DOM 在动画播完前就被
-  // 摘掉）。computeVisualHoldMs()：非动效道具（animProp/animActiveState 为 null，即 door/
-  // bell/drag/find 等）直接沿用 800ms 既有下限；动效道具取
+  // 摘掉）。computeVisualHoldMs()：非动效道具（animProp/animActiveState 为 null，即 drag/find
+  // 等没有 PROP_ANIM_STATE_MAP 条目的道具；door/bell 自 025 起已登记进该表，不再属于此类）
+  // 直接沿用 800ms 既有下限；动效道具（含 door/bell）取
   // Math.max(800, getDuration(prop, activeState) + 缓冲)。
   var COMPLETE_VISUAL_HOLD_BUFFER_MS = 150; // 缓冲：给最后一帧真正被 paint 出来留一点余量。
 
@@ -1519,10 +1534,11 @@
     var targetId = 'wtj-tt-click-target-' + example.id;
 
     // 056：只有当 createPropEl() 真的用上了引擎（拿到一个 <canvas>）时才走 WTJ_FRAME_ANIM
-    // 播放 activeState 这条路径；animInfo 非空只代表"这个 spriteFile 理论上在三个已接入引擎
-    // 的道具清单里"（PROP_ANIM_STATE_MAP），createPropEl() 仍可能因为引擎缺失/play() 失败而
-    // 退回静态 <img>（door/bell 或引擎完全未加载时的最终兜底）——用 targetEl.tagName 是否为
-    // CANVAS 二次确认，避免"以为用了引擎但其实拿到的是 img"这种错配。
+    // 播放 activeState 这条路径；animInfo 非空只代表"这个 spriteFile 理论上在 PROP_ANIM_STATE_MAP
+    // 已接入引擎的道具清单里"（当前 faucet/horse/lamp/door/bell 共 5 个，door/bell 由 025 接入），
+    // createPropEl() 仍可能因为引擎缺失/play() 失败而退回静态 <img>（此时是最终兜底，door/bell
+    // 不再是这条兜底的固定命中者）——用 targetEl.tagName 是否为 CANVAS 二次确认，避免"以为用了
+    // 引擎但其实拿到的是 img"这种错配。
     var animInfo = resolvePropAnimInfo(example.targetSprite);
     var usingEngine = !!(animInfo && targetEl.tagName && String(targetEl.tagName).toUpperCase() === 'CANVAS');
 
