@@ -608,7 +608,20 @@
   //   中"该词的中文词卡音频已交付"的子集（见 getFindCandidatePool()），缺中文音频的词直接被排除
   //   出候选池，绝不参与抽取——不存在"抽中了但没有中文音频，于是回退播英文"这条分支。EN 模式则
   //   维持第一阶段落地的机制不变：候选池 = secretWords.pool 全量（100 词均已交付 EN .m4a）。
+  //
+  //   再追加（WTJ-20260707-003，再次反转"不拼接"这半句）：Ethan 反馈 ZH 模式下找物任务开始只
+  //   念词卡本身（如「小狗」）容易让孩子听不出这是"找到"这个动作的提示，与 EN 模式（"Find the
+  //   dog"完整语义）体验不对等。TL 综合裁定：ZH 找物任务开始播放固定引导语「找到」
+  //   （FIND_PREFIX_AUDIO_ZH，新交付的 audio/phrases/find.zh.m4a）+ 目标词中文词卡音频两段组合
+  //   （playComposite()，见 playFindWordBilingualDefensive()）——这**是**运行时拼接，但与上面
+  //   历史记录里叫停的"预生成整句"路线是两回事：不是新造一条条不可穷举的"找到 X"整句，而是
+  //   复用两段各自独立、已分别验收的固定素材（引导语只有一条、词卡是已交付的 011 素材）组合播放，
+  //   且两段都是纯中文，不产生中英混拼。CN-TASK-DRAFT.md #0 红线（"ZH 禁止运行时拼接"）原本约束
+  //   的是 tasks/words 段落的整句/词卡素材本身，不因本条例外而失效——24 条任务整句、100 条词卡
+  //   依旧各自完整预生成，不受影响。findPrefixAudio 字段只在 lang==='zh' 时被赋值为非空路径，
+  //   EN 模式恒为 null，EN 侧行为完全不变。
   // ---------------------------------------------------------------------
+  var FIND_PREFIX_AUDIO_ZH = 'audio/phrases/find.zh.m4a'; // WTJ-20260707-003 新增，见上方追加说明。
   var wordCardBagStates = {}; // 键为生效语言字符串（'en'|'zh'），值均为 { bag, lastPicked, itemsLength }。
 
   function getSecretWordsPool() {
@@ -814,7 +827,12 @@
       // 恒传 null：这里只借用 playWordBilingual()"必选单文件 + 可选追加第二段"的播放载体语义
       // 播放单一语言，不触发它"EN 后接 ZH 顺序播放"那条双语分支——wordAudioFile 本身已经是按
       // 当前生效语言解析好的路径，不需要再叠加第二段。
-      wordAudioFileZh: null
+      wordAudioFileZh: null,
+      // findPrefixAudio（WTJ-20260707-003 新增）：ZH 模式下播放"找到"引导语 + 词卡组合时，引导语
+      // 的固定路径；EN 模式恒为 null（EN 侧行为不变，playFindWordBilingualDefensive() 据此判断走
+      // playComposite 组合分支还是维持既有 playWordBilingual 单词路径）。见上方语言分支注释「再
+      // 追加」一节。
+      findPrefixAudio: (lang === 'zh') ? FIND_PREFIX_AUDIO_ZH : null
     };
   }
 
@@ -1237,13 +1255,31 @@
   // 读取 voicePrompt 字段的路径，不受本函数影响。audioFileZh 恒读取 example.wordAudioFileZh，
   // 门禁在 011/008 的当前状态下恒为 null，playWordBilingual() 对 null 的既有降级契约是退化为
   // 纯 EN 播放。
+  //
+  // WTJ-20260707-003 新增分支：example.findPrefixAudio 非空（drawWordCardFind() 只在 lang==='zh'
+  // 时赋值，见该函数）时，改走 WTJ_AUDIO.playComposite() 播放「找到」引导语 + 目标词词卡两段组合
+  // （顺序：先引导语、后词卡，playComposite() 自身保证顺序不重叠播放），不再调用 playWordBilingual
+  // ——二者是互斥分支，同一次调用只走其中一条。EN 模式下 findPrefixAudio 恒为 null，完全落到下面
+  // 既有的 playWordBilingual 分支，行为与本卡改动前逐字节一致（EN 侧不动）。
   // ---------------------------------------------------------------------
   function playFindWordBilingualDefensive(example) {
     try {
       if (!example || typeof example.wordAudioFile !== 'string' || !example.wordAudioFile) {
         return; // 12 条固定 example 没有 wordAudioFile 字段，属于正常 no-op。
       }
-      if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWordBilingual === 'function') {
+      if (!window.WTJ_AUDIO) {
+        return;
+      }
+      if (typeof example.findPrefixAudio === 'string' && example.findPrefixAudio) {
+        if (typeof window.WTJ_AUDIO.playComposite === 'function') {
+          window.WTJ_AUDIO.playComposite([
+            { type: 'phrase', key: 'find.zh', path: example.findPrefixAudio },
+            { type: 'word', key: (typeof example.learningWord === 'string' && example.learningWord) ? example.learningWord : 'target', path: example.wordAudioFile }
+          ]);
+        }
+        return; // 与下方 playWordBilingual 分支互斥——找到引导语走过了，不再重复播放词卡本身。
+      }
+      if (typeof window.WTJ_AUDIO.playWordBilingual === 'function') {
         window.WTJ_AUDIO.playWordBilingual({
           word: (typeof example.learningWord === 'string' && example.learningWord) ? example.learningWord : null,
           audioFile: example.wordAudioFile,
