@@ -21,6 +21,22 @@
 > **下方 Kokoro（074/084）内容为历史记录**——其 af_heart/zf_xiaoxiao 产物已被本次 CosyVoice3
 > 全量重生成整体取代（磁盘上的 `.m4a` 现为 CosyVoice3 + Ethan 版本）。
 
+> ## ⚑ WTJ-20260706-008：ASR-gated 修复（apple / banana 固化）
+>
+> 024 全量重生成后 Ethan 驳回部分词条为**文不对题**（CosyVoice3 zero-shot 对短目标不稳，会
+> 复述参考句而非目标词）。修法：`app/scripts/generate-tts-asr-gated.py`（WTJ-011 造的
+> ASR-gated reseed wrapper，见该脚本头注）——每条生成后用 whisper 自证内容正确，不中就换
+> seed 重生成，命中才写盘。本卡把 `docs/assets/008-audio-review/after/` 里 Ethan 已裁决通过
+> 的候选固化为正式 `app/web/audio/words/*.m4a`：
+>
+> | 词 | 采用版本 | sha256（固化后 = app/web 现役文件） |
+> |---|---|---|
+> | apple | `after/apple.m4a`（单候选，ASR 自证「Apple」） | `f32761db…be99ced` |
+> | banana | `after/banana.alt3.m4a`（6 候选中 Ethan 选定 #3，美式发音） | `63ddd08a…266951e` |
+>
+> fox 同批固化（见 secretWords fox 条目 licenseNeed 注记），press-m.zh 仍在 Ethan A/B 候选中
+> （`docs/design-review.html` 008 专区），未固化，不在本次范围。
+
 本文件记录 `audio/words/`、`audio/tasks/`、`audio/phrases/` 下预生成语音的来源、模型、
 许可与可复现方式，满足卡片验收标准 4/5。运行时 app 只播放这些预生成 `.m4a`，**不使用
 Chrome/系统内置实时 TTS**（REQ-AST-07 红线）。

@@ -59,7 +59,7 @@
       "source": "production-pack-b",
       "packBBatch": "ready-v1",
       "packBSpriteStatus": "ready",
-      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。apple.m4a 已由 WTJ-20260706-008 ASR-gated CosyVoice3 重生成的 after 版固化为正式文件（docs/assets/008-audio-review/after/apple.m4a，whisper 自证念‘Apple’），非旧版本。"
     },
     {
       "word": "ant",
@@ -129,7 +129,7 @@
       "source": "production-pack-b",
       "packBBatch": "ready-v1",
       "packBSpriteStatus": "ready",
-      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。"
+      "licenseNeed": "儿童友好发音的固定短句预生成音频（REQ-AST-08），需选定 TTS 供应商/声优并确认商用授权条款；非 Chrome 内置语音（REQ-AST-07 红线）。banana.m4a 已由 WTJ-20260706-008 ASR-gated CosyVoice3 重生成的候选 #3（alt3，Ethan 已批准的美式发音）固化为正式文件（docs/assets/008-audio-review/after/banana.alt3.m4a），非旧版本。"
     },
     {
       "word": "cat",
