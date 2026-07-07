@@ -12,6 +12,7 @@ Suites run:
   - task/reward integration  tests/e2e/task_reward_integration.py
   - app/web input smoke      tests/e2e/appshell_web_smoke.py
   - sprite asset scan        tests/visual/scripts/check_sprite_assets.py
+  - swift daily quota reset  tests/swift/run_daily_quota_reset_test.sh (WTJ-20260707-004)
 
 The deprecated docs-QA suites (docqc_*) are intentionally excluded (WTJ-003
 deprecated). Visual agentic passes (capture_docs / sprite montages / canvas
@@ -86,6 +87,9 @@ def main() -> int:
          ["python3", str(tests / "e2e" / "check_audio_runtime.py"),
           "--app-web", str(app_web), "--report", str(report_path.parent / "audio_runtime_report.json")],
          REPO_ROOT, 180),
+        ("swift-daily-quota-reset",
+         ["bash", str(tests / "swift" / "run_daily_quota_reset_test.sh")],
+         REPO_ROOT, 60),
     ]
 
     # node uses a glob; expand it since shell isn't invoked.
