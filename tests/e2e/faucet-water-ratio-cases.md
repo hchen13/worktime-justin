@@ -1,7 +1,16 @@
 # FAUCET-RATIO 用例集：running 态水柱/出水口像素比像素门（WTJ-20260705-020，P0）
 
-被测：`app/web/` 真实运行版 faucet click-on 任务（frame-anim.js + anim-manifest.js +
+被测：`app/web/` 真实运行版 faucet 任务（frame-anim.js + anim-manifest.js +
 task-templates.js 全栈接线），Ethan 反馈"运行版水柱是细小水线，与出水口视觉比例不匹配"。
+
+> **WTJ-20260706-009 更新**：任务 id 由 `click-faucet-on` 改名为 `click-faucet-off`，
+> 语义翻转——初始画面表现为"水在流"（原来的 `running` 态现在是 **idle**，任务一渲染就能测，
+> 不再需要先点一下才能进入 running），点击后表现为"关水"（active 态从 `running` 改成
+> `closing`，一次性关水过程，播完 clamp 在关水静息帧）。下方「三方比对结论」一节记录的是
+> 020 卡当时的原始测量（那时任务还叫 click-faucet-on，是点击后进入 running），比例数字本身
+> 不受本次改名影响（同一份 running-sheet 资产，只是现在被复用为 idle 态而不是 active 态）；
+> 像素门脚本已改造为对新语义驱动（见下方「像素门」表格），并新增了 FAUCET-CLOSE 门验证
+> "点击后水柱真的消失"。
 
 ## 为什么不能只信 WTJ-20260704-023 的旧 QA pass
 
@@ -39,10 +48,11 @@ canvas 的 CSS 布局尺寸/transform（`getComputedStyle` 全程 `160x160`、`m
 | ID | 测什么 | 怎么算过 |
 |---|---|---|
 | FAUCET-RATIO-no-console-errors | 全程 0 console/page error | 无输出 |
-| FAUCET-RATIO-reached-click-faucet-on-task | 真实问号轮转能到达 click-faucet-on | ≤30 次问号点击内命中该 taskId |
-| FAUCET-RATIO-measured-canvas-pixels | 真实点击后能从 canvas 读到非零出水口宽度 | `getImageData` 在 anchor 行带测得 outletWidth>0 |
-| FAUCET-RATIO-water-to-outlet-ratio-gate | **核心像素门**：水柱宽度 ÷ 出水口宽度 ≥ 0.45 | 见下方阈值推导 |
-| FAUCET-RATIO-water-absolute-width-gate | 水柱绝对宽度 ≥ 15px（256px cell 空间） | 防御"分子分母同时缩小、比例门被绕过"的退化场景 |
+| FAUCET-RATIO-reached-click-faucet-off-task | 真实问号轮转能到达 click-faucet-off | ≤30 次问号点击内命中该 taskId |
+| FAUCET-RATIO-measured-canvas-pixels | 任务渲染后（idle 即 running，不需要点击）能从 canvas 读到非零出水口宽度 | `getImageData` 在 anchor 行带测得 outletWidth>0 |
+| FAUCET-RATIO-water-to-outlet-ratio-gate | **核心像素门**：idle 态水柱宽度 ÷ 出水口宽度 ≥ 0.45 | 见下方阈值推导 |
+| FAUCET-RATIO-water-absolute-width-gate | idle 态水柱绝对宽度 ≥ 15px（256px cell 空间） | 防御"分子分母同时缩小、比例门被绕过"的退化场景 |
+| FAUCET-CLOSE-water-disappears-after-click（WTJ-20260706-009 新增） | 真实点击后（等 closing 动画播完 750ms、抢在 900ms DOM 移除前测量）水柱宽度 < 15px | 复用 `MIN_WATER_WIDTH_PX` 同一把尺子做上界检查；实测点击前 35.0px → 点击后 0.0px |
 
 ### 阈值推导
 

@@ -20,6 +20,17 @@
 //     009 只做"命中即防御式点亮下一个空槽 + 本轮同词去重"这一最小契约，供 010 接管/改造。
 //
 // -----------------------------------------------------------------------
+// 语言感知词音（WTJ-20260706-011，ZH 秘密词二期脚手架第二片，dormant）
+// -----------------------------------------------------------------------
+// playWordDefensive() 前新增 resolveWordAudioEntry()：委托 window.WTJ_VOICE_LANG 的
+// getEffectiveLanguage()/isWordZhAvailable(word) 判断"当前是否该词的中文语音"，是则改播
+// audio/words/<word>.zh.m4a，否则（含 WTJ_VOICE_LANG 缺失/异常等所有防御分支）原样播英文
+// entry.audioFile。当前 ZH_AVAILABLE_WORD 台账（voice-language.js）是空数组——本卡（011）
+// 不生成任何音频，音频生成是 008 卡的范围——故本函数现阶段恒定回退英文，本次改动对现网
+// 行为零影响（byte-identical），仅打好 008 交付时"只需补台账 + 落盘 .zh.m4a，无需再改代码"
+// 的地基。
+//
+// -----------------------------------------------------------------------
 // 匹配引擎设计（逐条对 docs/index.html #secret「命中判定规则」+ manifest.secretWords.matchRules）
 // -----------------------------------------------------------------------
 // 核心思路：**每来一个新字母，把它归一化后追加到 buffer 末尾，然后检查"这个新字母是否使
@@ -263,6 +274,45 @@
   }
 
   // ---------------------------------------------------------------------
+  // 语言感知词音路径解析（WTJ-20260706-011，ZH 秘密词二期脚手架）：命中的词若在 ZH 模式下
+  // 且该词的中文已交付（查 window.WTJ_VOICE_LANG.isWordZhAvailable()），改播 .zh.m4a；
+  // 否则（含语言模式为 en/auto-折算-zh 但该词未交付 ZH、WTJ_VOICE_LANG 未加载/异常等所有
+  // 其它情况）原样播英文 entry.audioFile——与改动前行为逐字节一致。
+  //
+  // NO-SILENT 边界：当前 ZH_AVAILABLE_WORD 台账是空数组，isWordZhAvailable() 对任何词恒
+  // 返回 false，本函数因此**恒定**走"原样返回 entry"分支——不会构造、更不会 fetch 任何一个
+  // 尚未交付的 audio/words/<word>.zh.m4a 路径。deriveZhWordPath() 仅在未来台账真正补上某个
+  // 词之后才会被这条分支实际使用到。
+  //
+  // 防御式：window.WTJ_VOICE_LANG 缺失（脚本未加载/加载顺序问题，如部分单测沙箱）或调用
+  // 抛错，一律静默回退英文，不影响其余命中反馈（sprite/五槽/事件广播）。
+  // ---------------------------------------------------------------------
+  function deriveZhWordPath(enPath) {
+    var m = /^(.*)\.m4a$/i.exec(String(enPath));
+    if (!m) return null;
+    return m[1] + '.zh.m4a';
+  }
+
+  function resolveWordAudioEntry(entry) {
+    try {
+      if (window.WTJ_VOICE_LANG &&
+          typeof window.WTJ_VOICE_LANG.getEffectiveLanguage === 'function' &&
+          typeof window.WTJ_VOICE_LANG.isWordZhAvailable === 'function') {
+        var lang = window.WTJ_VOICE_LANG.getEffectiveLanguage();
+        if (lang === 'zh' && window.WTJ_VOICE_LANG.isWordZhAvailable(entry.word)) {
+          var zhPath = deriveZhWordPath(entry.audioFile);
+          if (zhPath) {
+            return { word: entry.word, spriteFile: entry.spriteFile, audioFile: zhPath };
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[WTJ_SECRET] 语言感知词音解析失败，已捕获，回退英文：', err);
+    }
+    return entry;
+  }
+
+  // ---------------------------------------------------------------------
   // 防御式音效（吸取 013 P2 教训）：AUDIO-API 承诺 playWord 返回的 Promise「永不 reject」，
   // 但为了对不守约的替身/未来实现也稳健，给它挂一个 rejection handler，避免万一 reject 时
   // 冒出 unhandledrejection。用 then(null, fn) 而非 .catch()——Safari 14 两者都支持，此处
@@ -271,8 +321,11 @@
   function playWordDefensive(entry) {
     try {
       if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWord === 'function') {
-        // 对象穿透式：直接把 pool 条目传进去，playWord 会用其 audioFile 字段（见 AUDIO-API.md）。
-        var p = window.WTJ_AUDIO.playWord(entry);
+        // 对象穿透式：直接把（语言感知解析后的）词条传进去，playWord 会用其 audioFile 字段
+        // （见 AUDIO-API.md）。resolveWordAudioEntry() 在 ZH 未交付时原样返回 entry，故此处
+        // 行为与改动前完全一致。
+        var resolvedEntry = resolveWordAudioEntry(entry);
+        var p = window.WTJ_AUDIO.playWord(resolvedEntry);
         if (p && typeof p.then === 'function') {
           p.then(null, function (err) {
             console.error('[WTJ_SECRET] window.WTJ_AUDIO.playWord 返回的 Promise 被 reject（AUDIO-API 契约本不应发生），已捕获：', err);

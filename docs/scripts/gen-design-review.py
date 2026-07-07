@@ -350,13 +350,24 @@ def build_out_index(manifest: dict) -> dict[str, dict[str, str]]:
 
 def render_secret_word_audio_group() -> str:
     pool = parse_secret_word_pool()
-    STATS["per_root"].append(("秘密词英文发音（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
+    STATS["per_root"].append(("秘密词发音 EN+ZH（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
+    _ma = json.loads((REPO_ROOT / "app" / "web" / "audio" / "missing-audio.json").read_text(encoding="utf-8"))
+    zh_delivered = set(e["word"] for e in _ma.get("secretWordsZh", []) if e.get("status") == "delivered")
+    zh_pending = sorted(e["word"] for e in _ma.get("secretWordsZh", []) if e.get("status") != "delivered")
     parts = [
-        f'<h3 id="audio-words">秘密词英文发音 <span class="count">(共 {len(pool)} 词)</span></h3>',
-        '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]（word/spriteFile/audioFile 三元组，'
-        '运行时引擎本身读的就是这份数据，比按文件名猜配对更可靠）。sprite 缩略图 + 对应英文发音，'
-        '用 preload="none" 避免一次性加载 100+ 条音频。</p>',
+        f'<h3 id="audio-words">秘密词发音（英文 + 中文） <span class="count">(共 {len(pool)} 词；中文已交付 {len(zh_delivered)}/{len(pool)})</span></h3>',
+        '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]。每词展示 sprite + <strong>英文发音</strong>'
+        '（audio/words/&lt;word&gt;.m4a）与 <strong>中文发音</strong>（audio/words/&lt;word&gt;.zh.m4a）。'
+        'WTJ-20260706-011 返工后，全部 100 词的中文发音均由 008 ASR-gated CosyVoice3 管线（每条 whisper '
+        '自证念的是目标中文词、不中重 seed）交付，<strong>不存在「中文未交付·回落英文」的可接受态</strong>——'
+        '任何缺失都是回归缺陷。preload="none" 避免一次性加载。</p>',
     ]
+    # 硬门：返工后 ZH 必须 100/100 全交付。若仍有 pending，说明发生回归，醒目报错而非当作可接受态。
+    if zh_pending:
+        parts.append(
+            '<p class="section-note pending-note">⚠ 回归缺陷：以下词的中文发音未交付（返工要求 100/100 全交付，'
+            f'不接受回落英文）：{esc("、".join(zh_pending))}。请重跑 app/scripts/generate-tts-asr-gated.py 补齐。</p>'
+        )
     if not pool:
         parts.append('<p class="section-note pending-note">未能从 manifest.js 解析出 secretWords.pool，请检查该文件结构是否变化。</p>')
         return "\n".join(parts)
@@ -369,18 +380,136 @@ def render_secret_word_audio_group() -> str:
         audio_href = rel_href(audio_relpath)
         ALL_REFS.append((sprite_href, sprite_relpath))
         ALL_REFS.append((audio_href, audio_relpath))
+        if word in zh_delivered:
+            zh_relpath = f"app/web/audio/words/{word}.zh.m4a"
+            zh_href = rel_href(zh_relpath)
+            ALL_REFS.append((zh_href, zh_relpath))
+            zh_block = (
+                '<span class="zh-label">中文</span>'
+                f'<audio controls preload="none" src="{esc(zh_href)}">您的浏览器不支持音频播放。</audio>'
+                f'<code class="path">{esc(zh_relpath)}</code>'
+            )
+        else:
+            # 返工后不应再出现；若出现即回归缺陷（见上方硬门），醒目标注而非「可接受·回落英文」。
+            zh_block = '<span class="zh-na">⚠ 中文未交付（回归缺陷，应 100/100 全交付）</span>'
         items.append(
             '<figure class="item audio-item">'
             f'<a href="{esc(sprite_href)}" target="_blank" rel="noopener" class="thumb-link">'
             f'<img src="{esc(sprite_href)}" loading="lazy" alt="{esc(word)}" /></a>'
             '<figcaption>'
             f'<span class="word-label">{esc(word)}</span>'
+            '<span class="en-label">英文</span>'
             f'<audio controls preload="none" src="{esc(audio_href)}">您的浏览器不支持音频播放。</audio>'
             f'<code class="path">{esc(entry["audio_relpath"])}</code>'
+            f'{zh_block}'
             '</figcaption>'
             '</figure>'
         )
     parts.append(f'<div class="grid">{"".join(items)}</div>')
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# 找物任务候选池 + 随机 N 策略审计（WTJ-20260706-012 第二阶段，TL 定案 2026-07-07）：
+# 不进 App 也能看到"找物任务从哪个候选池抽、EN/ZH 各自的合格池大小、随机 N 落在什么范围、
+# 哪些词因缺中文词卡音频被排除在 ZH 候选池外"。ZH 模型是 word-card（目标词提示音频=该词自己的
+# 中文词卡音频 audio/words/<word>.zh.m4a），不是运行时拼接、也不是预生成整句"找到 X！"（那条
+# 路线已被叫停，未落地任何一条）；no-EN-fallback：缺中文词卡音频的词直接排除出候选池，绝不在
+# ZH 模式下静默回退英文顶替。
+# ---------------------------------------------------------------------------
+
+RANDOM_POOL_RE = re.compile(
+    r"randomPool:\s*\{\s*enabled:\s*(true|false),\s*sampleSize:\s*"
+    r"(?:\{\s*min:\s*(\d+)\s*,\s*max:\s*(\d+)\s*\}|(\d+))",
+    re.S,
+)
+
+
+def parse_find_random_pool_cfg() -> dict | None:
+    """解析 app/web/manifest.js tasks.templates.find.randomPool 配置，取得
+    {enabled, min, max}（min==max 表示历史"纯数字固定值"写法，min<max 表示 012 起的随机范围）。
+    解析失败（manifest.js 结构变化）返回 None，调用方需处理。
+    """
+    path = REPO_ROOT / MANIFEST_JS_RELPATH
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    m = RANDOM_POOL_RE.search(text)
+    if not m:
+        return None
+    enabled = m.group(1) == "true"
+    if m.group(2) is not None and m.group(3) is not None:
+        return {"enabled": enabled, "min": int(m.group(2)), "max": int(m.group(3))}
+    if m.group(4) is not None:
+        v = int(m.group(4))
+        return {"enabled": enabled, "min": v, "max": v}
+    return None
+
+
+def get_zh_delivered_words() -> set[str]:
+    """从 app/web/audio/missing-audio.json 的 secretWordsZh[] 取得已交付中文词卡音频的词集合
+    （与 render_secret_word_audio_group() 用的同一份权威数据源，独立读取避免耦合渲染顺序）。
+    文件缺失/解析失败时返回空集合，调用方按"当前无法判断，视为全部未交付"处理。
+    """
+    ma_path = REPO_ROOT / "app/web/audio/missing-audio.json"
+    if not ma_path.exists():
+        return set()
+    try:
+        data = json.loads(ma_path.read_text(encoding="utf-8"))
+    except Exception:
+        return set()
+    return set(e["word"] for e in data.get("secretWordsZh", []) if e.get("status") == "delivered")
+
+
+def render_find_task_pool_audit_section() -> str:
+    pool = parse_secret_word_pool()
+    total = len(pool)
+    zh_delivered = get_zh_delivered_words()
+    zh_missing = sorted(e["word"] for e in pool if e["word"] not in zh_delivered)
+    cfg = parse_find_random_pool_cfg()
+    STATS["per_root"].append(("找物候选池审计（EN 全量 / ZH 交集）", MANIFEST_JS_RELPATH, total))
+
+    if cfg:
+        enabled_desc = "已启用" if cfg["enabled"] else "已禁用（回退固定 12 条 examples，不走随机抽取）"
+        if cfg["min"] == cfg["max"]:
+            n_desc = f'N（目标 1 个 + 干扰项）恒为 {cfg["min"] + 1}'
+        else:
+            n_desc = f'N（目标 1 个 + 干扰项，随机重掷）落在 {cfg["min"] + 1} ~ {cfg["max"] + 1} 之间'
+    else:
+        enabled_desc = "—（未能从 manifest.js 解析出 randomPool 配置，请检查该文件结构是否变化）"
+        n_desc = "—"
+
+    parts = [
+        f'<h2 id="find-pool-audit">找物任务候选池 + 随机 N 策略审计 '
+        f'<span class="count">(EN 候选池 {total}/{total} 词；ZH 候选池 {len(zh_delivered)}/{total} 词)</span></h2>',
+        '<p class="section-note">卡片 WTJ-20260706-012：找物任务每次问号点击都从"合格候选池"随机抽 1 个目标 + N-1 个'
+        '干扰项（洗牌袋无放回抽取，不再固定 dog/apple 开场）。<strong>EN 模式</strong>候选池 = '
+        f'<code class="inline-code">secretWords.pool</code> 全量（下方逐词核对 sprite + 英文词卡音频均已交付，'
+        f'{total}/{total}，见 <a href="#audio-words">音频试听专区 · 秘密词发音</a>）。<strong>ZH 模式</strong>'
+        f'候选池收窄为"该词已交付中文词卡音频"的子集（运行时查 <code class="inline-code">'
+        f'window.WTJ_VOICE_LANG.isWordZhAvailable()</code>，当前 {len(zh_delivered)}/{total}）——目标词的提示音频'
+        '就是这个词自己已交付的中文词卡音频本身（<code class="inline-code">audio/words/&lt;word&gt;.zh.m4a</code>），'
+        '不是"找到"+词卡的运行时拼接（明确反模式），也不是另外预生成的整句"找到 X！"（该路线已被 TL 叫停，未落地任何'
+        '一条）。</p>',
+        f'<p class="section-note"><strong>no-EN-fallback 硬要求</strong>（Ethan 明确驳回"缺中文就退英文"，与下方'
+        '「秘密词发音」区块里秘密词打字命中反馈这条<em>不同</em>机制的既有 EN 回落行为不是同一回事，互不影响）：'
+        '下方列出的词缺中文词卡音频，在 ZH 模式下直接被排除出候选池，绝不参与随机抽取，也绝不在抽中后静默改播'
+        f'其英文词卡音频顶替。随机 N 策略：{esc(enabled_desc)}，{esc(n_desc)}（见 app/web/manifest.js '
+        'tasks.templates.find.randomPool，逐次问号点击独立重掷）。</p>',
+    ]
+    if zh_missing:
+        items = "".join(f'<code class="inline-code">{esc(w)}</code>' for w in zh_missing)
+        parts.append(
+            f'<p class="pending-note">ZH 候选池外（缺中文词卡音频，共 {len(zh_missing)}/{total} 词，'
+            f'ZH 模式下找物任务不会抽到这些词作为目标或干扰项）：{items}</p>'
+        )
+    else:
+        parts.append('<p class="section-note ok">当前 ZH 候选池已覆盖全部词，无缺口——EN/ZH 两条语言分支候选池等大。</p>')
+    parts.append(
+        '<p class="section-note">逐词 sprite + EN/ZH 词卡音频试听（含上方缺口清单里每个词具体差在哪条文件）见 '
+        '<a href="#audio-words">音频试听专区 · 秘密词发音</a>（同一份数据源，本节不重复渲染 100 张缩略图/音频控件，'
+        '只做候选池口径与随机策略的文字审计）。</p>'
+    )
     return "\n".join(parts)
 
 
@@ -458,6 +587,113 @@ def render_audio_preview_section() -> str:
         render_task_voice_group(zh=True),
         render_task_voice_group(zh=False),
     ]
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# WTJ-20260706-008：CosyVoice3 音频修复 before/after 试听专区（Ethan 主观裁决用）。
+# before = 现役 stage 音频，直接引用其 tracked 实路径（app/web/audio/**，与 dist-stage 的
+# before/ 逐字节一致）；after = 改进的短连续参考重生成候选，committed 到 tracked 的
+# docs/assets/008-audio-review/after/，使本专区自包含、可从任意 origin/stage 检出复现。
+# 纯 <audio> 相对引用，符合 docs 零 JS 约束。
+# ---------------------------------------------------------------------------
+
+AFTER_DIR_008 = "docs/assets/008-audio-review/after"
+
+CLIPS_008 = [
+    {"id": "apple", "kind": "秘密词", "text": "apple",
+     "before": "app/web/audio/words/apple.m4a"},
+    {"id": "banana", "kind": "秘密词（美式发音已验收 = 候选 #3/alt3，已固化为正式 banana.m4a）", "text": "banana",
+     "before": "app/web/audio/words/banana.m4a"},
+    {"id": "yoyo", "kind": "秘密词（Ethan 已验收 after/yoyo.m4a，已固化为正式 yoyo.m4a）", "text": "yoyo",
+     "before": "app/web/audio/words/yoyo.m4a"},
+    # WTJ-20260706-009：原 click-faucet-on「Turn on the water」before/after 对照已整条移除。
+    # faucet EN 任务语义已由 009（已验收）从 turn-on 翻转为 turn-off，"Turn on the water" 音频
+    # 退役、不再随 app 交付（app/web/audio/tasks/click-faucet-on.m4a 已改名删除），该音质对照
+    # 因此作废；008 当时的 after 历史件仍 committed 在 docs/assets/008-audio-review/after/，git
+    # provenance 不丢，这里删掉的只是 live 面板里指向已删除文件的断链引用。新的关水语音
+    # click-faucet-off（EN+ZH）已在本页「英文/中文任务语音」区可试听（那两区目录扫描自动收录）。
+    {"id": "press-m.zh", "kind": "中文任务（第三版·Ethan/PM 已批准 = after/press-m.zh.m4a，已固化为正式 press-m.zh.m4a）", "text": "按下字母 M！",
+     "before": "app/web/audio/tasks/press-m.zh.m4a",
+     "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"],
+     "after_alts_note": "press-m.zh 第三版返工：上方 AFTER = Ethan/PM 已批准的候选 #1（~2.1s 适中语速，避前两版 1.28s 太赶 / "
+                        "3.2s 拖沓），已固化为正式 app/web/audio/tasks/press-m.zh.m4a（010 卡按下字母 M 依赖此版）；下面 3 个为当时备选，仅存档。"},
+    {"id": "fox", "kind": "秘密词（WTJ-20260706-015 新词）", "text": "fox",
+     "before_missing": True},
+]
+
+
+def render_008_audio_fix_section() -> str:
+    parts = [
+        '<h2 id="008-audio-fix">008 音频修复 before/after 对照 '
+        '<span class="count">(P0 · Ethan 主观裁决)</span></h2>',
+        '<p class="section-note">卡片 WTJ-20260706-008：上一版 after 被 Ethan 拒收=<strong>文不对题</strong>'
+        '（念的是 reference 句子而非目标词）。<strong>真因</strong>：CosyVoice3 zero-shot 对「单词/短目标」不稳——'
+        '目标文本远短于 prompt_text 时模型会跑偏/复述参考（cosyvoice.py 的「synthesis text too short than prompt '
+        'text」警告 + llm.py 把 prompt_text 与目标 concat）。<strong>修法</strong>：<strong>ASR-gated 重 seed</strong>'
+        '——每条生成后用 whisper 自证念的是目标文本，不中就换随机种子重生成，命中才写盘；绝不 ship 文不对题音频。</p>',
+        '<p class="section-note">本批<strong>已全部 ASR 自证内容正确</strong>：apple / banana / yoyo / fox → '
+        '「Apple / Banana / Yo yo / Fox」；press-m.zh → 含「按下…M」。'
+        '（原 click-faucet-on「Turn on the water」对照已由 WTJ-20260706-009 移除——faucet 任务语义翻转为'
+        '关水，该英文句退役；新的关水语音见本页「英文/中文任务语音」区。）'
+        'before = 现役 stage 音频（tracked <code class="inline-code">app/web/audio/**</code>）；after = ASR-gated '
+        '重生成（committed 到 <code class="inline-code">docs/assets/008-audio-review/after/</code>）。fox 是 015 新词、'
+        '此前无音频，故只有 after。<strong>TL 不试听；内容已技术自证，请 Ethan 只裁决主观音色/自然度。</strong></p>',
+    ]
+    items = []
+    for c in CLIPS_008:
+        cid = c["id"]
+        after_rel = f"{AFTER_DIR_008}/{cid}.m4a"
+        after_href = rel_href(after_rel)
+        after_block = (
+            '<div class="ab-col">'
+            '<span class="ab-label">AFTER（ASR 自证）</span>'
+            f'<audio controls preload="none" src="{esc(after_href)}">您的浏览器不支持音频播放。</audio>'
+            f'<code class="path">{esc(after_rel)}</code>'
+            '</div>'
+        )
+        if c.get("before_missing"):
+            before_block = (
+                '<div class="ab-col ab-missing">'
+                '<span class="ab-label">BEFORE</span>'
+                '<span class="ab-na">（015 新词，此前无音频）</span>'
+                '</div>'
+            )
+        else:
+            before_rel = c["before"]
+            before_href = rel_href(before_rel)
+            before_block = (
+                '<div class="ab-col"><span class="ab-label">BEFORE</span>'
+                f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
+                f'<code class="path">{esc(before_rel)}</code></div>'
+            )
+        alts_block = ''
+        if c.get("after_alts"):
+            alt_ctrls = ''.join(
+                '<div class="ab-col"><span class="ab-label">候选 ' + str(i + 2) + '</span>'
+                '<audio controls preload="none" src="' + esc(rel_href(AFTER_DIR_008 + "/" + a)) + '">您的浏览器不支持音频播放。</audio>'
+                '<code class="path">' + esc(AFTER_DIR_008 + "/" + a) + '</code></div>'
+                for i, a in enumerate(c["after_alts"])
+            )
+            alts_block = (
+                '<p class="ab-q"><strong>' + esc(c.get("after_alts_note",
+                    "返工多候选：上方 AFTER = 候选 #1（TL 按清晰度选）；下面是其余候选，内容相同、音色/参数不同。"
+                    "请 Ethan 挑最合适的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2 起往下），TL 即定为正式版。")) + '</strong></p>'
+                '<div class="ab-cols">' + alt_ctrls + '</div>'
+            )
+        items.append(
+            '<div class="ab-item">'
+            f'<div class="ab-head"><code class="task-id">{esc(cid)}</code>'
+            f'<span class="task-kind">{esc(c["kind"])}</span>'
+            f'<span class="task-text">{esc(c["text"])}</span></div>'
+            '<div class="ab-cols">'
+            f'{before_block}'
+            f'{after_block}'
+            '</div>'
+            f'{alts_block}'
+            '</div>'
+        )
+    parts.append(f'<div class="ab-list">{"".join(items)}</div>')
     return "\n".join(parts)
 
 
@@ -660,7 +896,7 @@ def render_pack_a_section() -> str:
 def render_pack_b_section() -> str:
     return render_source_root(
         "docs/assets/production-pack-b",
-        "生产素材 Pack B（秘密词词池 100 词）",
+        "生产素材 Pack B（活跃秘密词 99 词）",
         "pack-b",
         note="对应飞书卡 WTJ-20260704-006；stubs/ 下的占位素材已不再被 manifest 引用，标记为「疑似旧版」。",
     )
@@ -807,6 +1043,20 @@ h4 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercas
 .audio-task-item audio { width:100%; height:30px; }
 .audio-task-item .path { grid-column: 1 / -1; }
 @media (max-width: 760px) { .audio-task-item { grid-template-columns: 1fr; } }
+.ab-list { display:flex; flex-direction:column; gap:12px; margin: 6px 0 20px; }
+.ab-item { border:1px solid var(--line); border-radius:8px; padding:11px 13px; background:rgba(255,255,255,.03); }
+.ab-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; margin-bottom:9px; }
+.ab-head .task-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:#cfe3ee; }
+.ab-head .task-kind { font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
+.ab-head .task-text { font-size:14px; color:#fff; }
+.ab-cols { display:grid; grid-template-columns: 1fr 1fr; gap:10px 14px; }
+.ab-col { display:flex; flex-direction:column; gap:5px; border:1px solid var(--line); border-radius:6px; padding:8px 10px; background:rgba(255,255,255,.02); }
+.ab-col .ab-label { font-size:10.5px; font-weight:700; letter-spacing:.08em; color:#9fb3c8; }
+.ab-col audio { width:100%; height:30px; }
+.ab-missing { justify-content:center; align-items:center; color:var(--muted); border-style:dashed; }
+.ab-missing .ab-na { font-size:12px; }
+.ab-q { margin:9px 0 0; font-size:12.5px; color:#e5c07b; line-height:1.55; }
+@media (max-width: 760px) { .ab-cols { grid-template-columns: 1fr; } }
 .inline-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:rgba(255,255,255,.06); padding:1px 5px; border-radius:4px; }
 #broken ul { line-height:1.8; }
 #broken .ok { color: var(--ok); }
@@ -819,6 +1069,8 @@ def build_body_sections() -> list[tuple[str, str]]:
     """只应调用一次：内部会触发 render_item，产生 STATS / ALL_REFS 的副作用。"""
     return [
         ("audio-preview", render_audio_preview_section()),
+        ("find-pool-audit", render_find_task_pool_audit_section()),
+        ("008-audio-fix", render_008_audio_fix_section()),
         ("compare", render_compare_section()),
         ("runtime", render_runtime_section()),
         ("pack-a", render_pack_a_section()),
@@ -858,6 +1110,8 @@ def assemble_html(body_sections: list[tuple[str, str]], broken_html: str, stats_
 
 <nav class="pagenav" aria-label="设计总览页导航">
   <a href="#audio-preview">音频试听专区</a>
+  <a href="#find-pool-audit">找物候选池审计</a>
+  <a href="#008-audio-fix">008 音频修复对照</a>
   <a href="#compare">动效对比专区</a>
   <a href="#runtime">运行时已接入</a>
   <a href="#pack-a">生产素材 Pack A</a>

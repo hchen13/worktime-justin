@@ -1,5 +1,5 @@
 {
-  "_note": "WTJ-20260705-004 Phase A — 中文任务语音骨架（DRAFT，未接线）。镜像 tts-text-manifest.json（074 卡英文任务语音脚本输入）同一 schema：taskId -> {text, out}，供未来 Phase B 的 TTS 生成脚本消费。**红线：每个 task id 必须是一整条独立预生成的完整中文句子**——绝不允许运行时用 audio.js 的 playComposite() 把「找到」这类片段与词条拼接播放（'找到 dog' 这种中英混拼/机械拼接是明确反模式，被 TL 综合裁定禁止；074 英文版的 phrases 段落是英文语境下的合成片段设计，中文语境不能照搬同一模式，因此本文件**没有** phrases 段落，只有 tasks 段落，每条都是完整句）。\n\n状态：DRAFT，待 Ethan 批准文案后才能进入 Phase B 实际接线（生成真实 .m4a、把 manifest.js 对应 example 的 voicePrompt 改指向这里的 out 路径、missing-audio.json 补登记）。本文件当前只是结构 + 文案草稿，**没有**任何一条被生成音频，也**没有**被 app/web/manifest.js 的 voicePrompt 字段引用，不影响 task-voice-path.test.mjs（===8）/ tts-audio-delivery.test.mjs（101/8/10）两个硬编码计数门——那两个门读的是 app/web/audio/missing-audio.json 与磁盘上已交付的英文 .m4a，本文件完全在它们的读取路径之外。\n\nout 路径约定（本卡的一个记录在案的偏离，见 WTJ-20260705-004 回报「偏离/阻塞」一节）：卡片原文示例写的是 'audio/tasks/<id>.m4a'，但这个路径当前已经是对应 taskId 的**英文**语音（如 audio/tasks/drag-apple-to-basket.m4a 是 074/078 已交付的英文 'Put the apple in the basket!'）——中文版直接复用同一路径会覆盖/冲突英文交付物。这里改用 'audio/tasks/<id>.zh.m4a'（同目录、加 .zh 语言后缀）来避免二者冲突，最终采用哪种目录/命名约定仍需 Ethan/TL 在 Phase B 正式定案（例如改成 audio/tasks-zh/ 独立目录），本文件的 out 值届时可能需要跟着调整，不代表最终路径已经拍板。\n\n覆盖范围：镜像 app/web/manifest.js tasks.templates 四类共 24 条 example（drag=2/click=3/find=12(pt2 新增)/press=7(pt3 新增)），逐条一一对应；每条 find 任务的 text 只念 target，绝不念 distractorSprites（与 REQ-TASK-09 既有约束一致，找的过程本身才是任务，语音不能替孩子提前排除干扰项）。完整提案文案的设计说明、扩展词库、distractor 组合、press 字母/数字集见与本文件同一次改动提交的 CN-TASK-DRAFT.md（不进 app 运行时目录，只供 TL/Ethan 审阅）。  | WTJ-20260705-024: 原 tasksPending 的 8 条（025 门/铃/drag）已由 CosyVoice3 全量重生成交付并接入 manifest.js voicePrompt，已并入 tasks。",
+  "_note": "WTJ-20260705-004 Phase A — 中文任务语音骨架（DRAFT，未接线）。镜像 tts-text-manifest.json（074 卡英文任务语音脚本输入）同一 schema：taskId -> {text, out}，供未来 Phase B 的 TTS 生成脚本消费。**红线：每个 task id 必须是一整条独立预生成的完整中文句子**——绝不允许运行时用 audio.js 的 playComposite() 把「找到」这类片段与词条拼接播放（'找到 dog' 这种中英混拼/机械拼接是明确反模式，被 TL 综合裁定禁止；074 英文版的 phrases 段落是英文语境下的合成片段设计，中文语境不能照搬同一模式，因此本文件**没有** phrases 段落，只有 tasks 段落，每条都是完整句）。\n\n状态：DRAFT，待 Ethan 批准文案后才能进入 Phase B 实际接线（生成真实 .m4a、把 manifest.js 对应 example 的 voicePrompt 改指向这里的 out 路径、missing-audio.json 补登记）。本文件当前只是结构 + 文案草稿，**没有**任何一条被生成音频，也**没有**被 app/web/manifest.js 的 voicePrompt 字段引用，不影响 task-voice-path.test.mjs（===8）/ tts-audio-delivery.test.mjs（101/8/10）两个硬编码计数门——那两个门读的是 app/web/audio/missing-audio.json 与磁盘上已交付的英文 .m4a，本文件完全在它们的读取路径之外。\n\nout 路径约定（本卡的一个记录在案的偏离，见 WTJ-20260705-004 回报「偏离/阻塞」一节）：卡片原文示例写的是 'audio/tasks/<id>.m4a'，但这个路径当前已经是对应 taskId 的**英文**语音（如 audio/tasks/drag-apple-to-basket.m4a 是 074/078 已交付的英文 'Put the apple in the basket!'）——中文版直接复用同一路径会覆盖/冲突英文交付物。这里改用 'audio/tasks/<id>.zh.m4a'（同目录、加 .zh 语言后缀）来避免二者冲突，最终采用哪种目录/命名约定仍需 Ethan/TL 在 Phase B 正式定案（例如改成 audio/tasks-zh/ 独立目录），本文件的 out 值届时可能需要跟着调整，不代表最终路径已经拍板。\n\n覆盖范围：镜像 app/web/manifest.js tasks.templates 四类共 24 条 example（drag=2/click=3/find=12(pt2 新增)/press=7(pt3 新增)），逐条一一对应；每条 find 任务的 text 只念 target，绝不念 distractorSprites（与 REQ-TASK-09 既有约束一致，找的过程本身才是任务，语音不能替孩子提前排除干扰项）。完整提案文案的设计说明、扩展词库、distractor 组合、press 字母/数字集见与本文件同一次改动提交的 CN-TASK-DRAFT.md（不进 app 运行时目录，只供 TL/Ethan 审阅）。  | WTJ-20260705-024: 原 tasksPending 的 8 条（025 门/铃/drag）已由 CosyVoice3 全量重生成交付并接入 manifest.js voicePrompt，已并入 tasks。 | WTJ-20260706-011: 新增 words 段落——app/web/manifest.js secretWords.pool 100 个秘密词的中文首过标签（PM/Ethan 待审），schema 同 tasks：word -> {text, out}，out 约定 audio/words/<word>.zh.m4a（与已交付的英文 audio/words/<word>.m4a 不冲突，同 tasks 段落的 .zh.m4a 后缀约定）。**当前没有任何一条被生成音频**，也**没有**被 app/web/audio/missing-audio.json 的 secretWordsZh[] 标记 delivered（全部 100 条 not-delivered，见该文件同名段落）；本段落只是 008（TTS 生成卡）确认后待跑生成脚本的输入草稿，不影响任何既有测试计数门。 | WTJ-20260706-010: 新增 tasks 段落 40 条按键池扩容目标（字母 C-Z 全量、数字 0/1/2/4/6/8/9、符号 comma/period/semicolon/minus/plus、space/enter、方向键 up/down/left/right）——ZH 红线：全部整句预生成，禁止运行时拼接。press-letter-m 沿用 008 已批准的 press-m.zh，本卡不重新生成。当前仅文案草稿，**尚未生成任何音频**：TL 已暂停裸 generate-tts-cosyvoice3.py 生成，改用共享 ASR-gated wrapper（whisper 自证目标文本 + 不中重 seed/多候选选优，字母 C/G/J/K/Q/W/Y 与符号名是已知误读高发区）。生成前 manifest.js 对应 example 的 voicePrompt 保持 ''（no-silent-fallback），不影响既有测试计数门。",
   "tasks": {
     "drag-apple-to-basket": {
       "text": "把苹果放进篮子里！",
@@ -13,9 +13,9 @@
       "text": "点亮小台灯！",
       "out": "audio/tasks/click-lamp-on.zh.m4a"
     },
-    "click-faucet-on": {
-      "text": "打开水龙头！",
-      "out": "audio/tasks/click-faucet-on.zh.m4a"
+    "click-faucet-off": {
+      "text": "关掉水龙头！",
+      "out": "audio/tasks/click-faucet-off.zh.m4a"
     },
     "click-horse-run": {
       "text": "让小马跑起来！",
@@ -128,6 +128,568 @@
     "click-doorbell-ring": {
       "text": "按一下门铃！",
       "out": "audio/tasks/click-doorbell-ring.zh.m4a"
+    },
+    "press-letter-c": {
+      "text": "按下字母 C！",
+      "out": "audio/tasks/press-c.zh.m4a"
+    },
+    "press-letter-d": {
+      "text": "按下字母 D！",
+      "out": "audio/tasks/press-d.zh.m4a"
+    },
+    "press-letter-e": {
+      "text": "按下字母 E！",
+      "out": "audio/tasks/press-e.zh.m4a"
+    },
+    "press-letter-f": {
+      "text": "按下字母 F！",
+      "out": "audio/tasks/press-f.zh.m4a"
+    },
+    "press-letter-g": {
+      "text": "按下字母 G！",
+      "out": "audio/tasks/press-g.zh.m4a"
+    },
+    "press-letter-h": {
+      "text": "按下字母 H！",
+      "out": "audio/tasks/press-h.zh.m4a"
+    },
+    "press-letter-i": {
+      "text": "按下字母 I！",
+      "out": "audio/tasks/press-i.zh.m4a"
+    },
+    "press-letter-j": {
+      "text": "按下字母 J！",
+      "out": "audio/tasks/press-j.zh.m4a"
+    },
+    "press-letter-k": {
+      "text": "按下字母 K！",
+      "out": "audio/tasks/press-k.zh.m4a"
+    },
+    "press-letter-l": {
+      "text": "按下字母 L！",
+      "out": "audio/tasks/press-l.zh.m4a"
+    },
+    "press-letter-n": {
+      "text": "按下字母 N！",
+      "out": "audio/tasks/press-n.zh.m4a"
+    },
+    "press-letter-o": {
+      "text": "按下字母 O！",
+      "out": "audio/tasks/press-o.zh.m4a"
+    },
+    "press-letter-p": {
+      "text": "按下字母 P！",
+      "out": "audio/tasks/press-p.zh.m4a"
+    },
+    "press-letter-q": {
+      "text": "按下字母 Q！",
+      "out": "audio/tasks/press-q.zh.m4a"
+    },
+    "press-letter-r": {
+      "text": "按下字母 R！",
+      "out": "audio/tasks/press-r.zh.m4a"
+    },
+    "press-letter-t": {
+      "text": "按下字母 T！",
+      "out": "audio/tasks/press-t.zh.m4a"
+    },
+    "press-letter-u": {
+      "text": "按下字母 U！",
+      "out": "audio/tasks/press-u.zh.m4a"
+    },
+    "press-letter-v": {
+      "text": "按下字母 V！",
+      "out": "audio/tasks/press-v.zh.m4a"
+    },
+    "press-letter-w": {
+      "text": "按下字母 W！",
+      "out": "audio/tasks/press-w.zh.m4a"
+    },
+    "press-letter-x": {
+      "text": "按下字母 X！",
+      "out": "audio/tasks/press-x.zh.m4a"
+    },
+    "press-letter-y": {
+      "text": "按下字母 Y！",
+      "out": "audio/tasks/press-y.zh.m4a"
+    },
+    "press-letter-z": {
+      "text": "按下字母 Z！",
+      "out": "audio/tasks/press-z.zh.m4a"
+    },
+    "press-digit-0": {
+      "text": "按下数字 0！",
+      "out": "audio/tasks/press-0.zh.m4a"
+    },
+    "press-digit-1": {
+      "text": "按下数字 1！",
+      "out": "audio/tasks/press-1.zh.m4a"
+    },
+    "press-digit-2": {
+      "text": "按下数字 2！",
+      "out": "audio/tasks/press-2.zh.m4a"
+    },
+    "press-digit-4": {
+      "text": "按下数字 4！",
+      "out": "audio/tasks/press-4.zh.m4a"
+    },
+    "press-digit-6": {
+      "text": "按下数字 6！",
+      "out": "audio/tasks/press-6.zh.m4a"
+    },
+    "press-digit-8": {
+      "text": "按下数字 8！",
+      "out": "audio/tasks/press-8.zh.m4a"
+    },
+    "press-digit-9": {
+      "text": "按下数字 9！",
+      "out": "audio/tasks/press-9.zh.m4a"
+    },
+    "press-symbol-comma": {
+      "text": "按下逗号！",
+      "out": "audio/tasks/press-comma.zh.m4a"
+    },
+    "press-symbol-period": {
+      "text": "按下句号！",
+      "out": "audio/tasks/press-period.zh.m4a"
+    },
+    "press-symbol-semicolon": {
+      "text": "按下分号！",
+      "out": "audio/tasks/press-semicolon.zh.m4a"
+    },
+    "press-symbol-minus": {
+      "text": "按下减号！",
+      "out": "audio/tasks/press-minus.zh.m4a"
+    },
+    "press-symbol-plus": {
+      "text": "按下加号！",
+      "out": "audio/tasks/press-plus.zh.m4a"
+    },
+    "press-key-space": {
+      "text": "按下空格键！",
+      "out": "audio/tasks/press-space.zh.m4a"
+    },
+    "press-key-enter": {
+      "text": "按下回车键！",
+      "out": "audio/tasks/press-enter.zh.m4a"
+    },
+    "press-arrow-up": {
+      "text": "按向上方向键！",
+      "out": "audio/tasks/press-up.zh.m4a"
+    },
+    "press-arrow-down": {
+      "text": "按向下方向键！",
+      "out": "audio/tasks/press-down.zh.m4a"
+    },
+    "press-arrow-left": {
+      "text": "按向左方向键！",
+      "out": "audio/tasks/press-left.zh.m4a"
+    },
+    "press-arrow-right": {
+      "text": "按向右方向键！",
+      "out": "audio/tasks/press-right.zh.m4a"
+    }
+  },
+  "words": {
+    "apple": {
+      "text": "苹果",
+      "out": "audio/words/apple.zh.m4a"
+    },
+    "ant": {
+      "text": "蚂蚁",
+      "out": "audio/words/ant.zh.m4a"
+    },
+    "airplane": {
+      "text": "飞机",
+      "out": "audio/words/airplane.zh.m4a"
+    },
+    "alligator": {
+      "text": "鳄鱼",
+      "out": "audio/words/alligator.zh.m4a"
+    },
+    "ball": {
+      "text": "球",
+      "out": "audio/words/ball.zh.m4a"
+    },
+    "basket": {
+      "text": "篮子",
+      "out": "audio/words/basket.zh.m4a"
+    },
+    "bell": {
+      "text": "铃铛",
+      "out": "audio/words/bell.zh.m4a"
+    },
+    "banana": {
+      "text": "香蕉",
+      "out": "audio/words/banana.zh.m4a"
+    },
+    "cat": {
+      "text": "小猫",
+      "out": "audio/words/cat.zh.m4a"
+    },
+    "car": {
+      "text": "汽车",
+      "out": "audio/words/car.zh.m4a"
+    },
+    "cup": {
+      "text": "杯子",
+      "out": "audio/words/cup.zh.m4a"
+    },
+    "cake": {
+      "text": "蛋糕",
+      "out": "audio/words/cake.zh.m4a"
+    },
+    "dog": {
+      "text": "狗",
+      "out": "audio/words/dog.zh.m4a"
+    },
+    "door": {
+      "text": "门",
+      "out": "audio/words/door.zh.m4a"
+    },
+    "duck": {
+      "text": "鸭子",
+      "out": "audio/words/duck.zh.m4a"
+    },
+    "drum": {
+      "text": "鼓",
+      "out": "audio/words/drum.zh.m4a"
+    },
+    "egg": {
+      "text": "鸡蛋",
+      "out": "audio/words/egg.zh.m4a"
+    },
+    "elephant": {
+      "text": "大象",
+      "out": "audio/words/elephant.zh.m4a"
+    },
+    "eye": {
+      "text": "眼睛",
+      "out": "audio/words/eye.zh.m4a"
+    },
+    "envelope": {
+      "text": "信封",
+      "out": "audio/words/envelope.zh.m4a"
+    },
+    "fish": {
+      "text": "小鱼",
+      "out": "audio/words/fish.zh.m4a"
+    },
+    "flower": {
+      "text": "花",
+      "out": "audio/words/flower.zh.m4a"
+    },
+    "frog": {
+      "text": "青蛙",
+      "out": "audio/words/frog.zh.m4a"
+    },
+    "faucet": {
+      "text": "水龙头",
+      "out": "audio/words/faucet.zh.m4a"
+    },
+    "goat": {
+      "text": "山羊",
+      "out": "audio/words/goat.zh.m4a"
+    },
+    "grapes": {
+      "text": "葡萄",
+      "out": "audio/words/grapes.zh.m4a"
+    },
+    "gift": {
+      "text": "礼物",
+      "out": "audio/words/gift.zh.m4a"
+    },
+    "guitar": {
+      "text": "吉他",
+      "out": "audio/words/guitar.zh.m4a"
+    },
+    "horse": {
+      "text": "马",
+      "out": "audio/words/horse.zh.m4a"
+    },
+    "hat": {
+      "text": "帽子",
+      "out": "audio/words/hat.zh.m4a"
+    },
+    "heart": {
+      "text": "爱心",
+      "out": "audio/words/heart.zh.m4a"
+    },
+    "house": {
+      "text": "房子",
+      "out": "audio/words/house.zh.m4a"
+    },
+    "icecream": {
+      "text": "冰淇淋",
+      "out": "audio/words/icecream.zh.m4a"
+    },
+    "igloo": {
+      "text": "冰屋",
+      "out": "audio/words/igloo.zh.m4a"
+    },
+    "insect": {
+      "text": "昆虫",
+      "out": "audio/words/insect.zh.m4a"
+    },
+    "island": {
+      "text": "小岛",
+      "out": "audio/words/island.zh.m4a"
+    },
+    "juice": {
+      "text": "果汁",
+      "out": "audio/words/juice.zh.m4a"
+    },
+    "jam": {
+      "text": "果酱",
+      "out": "audio/words/jam.zh.m4a"
+    },
+    "jar": {
+      "text": "罐子",
+      "out": "audio/words/jar.zh.m4a"
+    },
+    "jellyfish": {
+      "text": "水母",
+      "out": "audio/words/jellyfish.zh.m4a"
+    },
+    "key": {
+      "text": "钥匙",
+      "out": "audio/words/key.zh.m4a"
+    },
+    "kite": {
+      "text": "风筝",
+      "out": "audio/words/kite.zh.m4a"
+    },
+    "koala": {
+      "text": "考拉",
+      "out": "audio/words/koala.zh.m4a"
+    },
+    "kettle": {
+      "text": "水壶",
+      "out": "audio/words/kettle.zh.m4a"
+    },
+    "lamp": {
+      "text": "台灯",
+      "out": "audio/words/lamp.zh.m4a"
+    },
+    "leaf": {
+      "text": "树叶",
+      "out": "audio/words/leaf.zh.m4a"
+    },
+    "lion": {
+      "text": "狮子",
+      "out": "audio/words/lion.zh.m4a"
+    },
+    "lemon": {
+      "text": "柠檬",
+      "out": "audio/words/lemon.zh.m4a"
+    },
+    "moon": {
+      "text": "月亮",
+      "out": "audio/words/moon.zh.m4a"
+    },
+    "mouse": {
+      "text": "老鼠",
+      "out": "audio/words/mouse.zh.m4a"
+    },
+    "milk": {
+      "text": "牛奶",
+      "out": "audio/words/milk.zh.m4a"
+    },
+    "monkey": {
+      "text": "猴子",
+      "out": "audio/words/monkey.zh.m4a"
+    },
+    "nest": {
+      "text": "鸟窝",
+      "out": "audio/words/nest.zh.m4a"
+    },
+    "nose": {
+      "text": "鼻子",
+      "out": "audio/words/nose.zh.m4a"
+    },
+    "net": {
+      "text": "渔网",
+      "out": "audio/words/net.zh.m4a"
+    },
+    "noodle": {
+      "text": "面条",
+      "out": "audio/words/noodle.zh.m4a"
+    },
+    "orange": {
+      "text": "橙子",
+      "out": "audio/words/orange.zh.m4a"
+    },
+    "owl": {
+      "text": "猫头鹰",
+      "out": "audio/words/owl.zh.m4a"
+    },
+    "octopus": {
+      "text": "章鱼",
+      "out": "audio/words/octopus.zh.m4a"
+    },
+    "oven": {
+      "text": "烤箱",
+      "out": "audio/words/oven.zh.m4a"
+    },
+    "pig": {
+      "text": "小猪",
+      "out": "audio/words/pig.zh.m4a"
+    },
+    "pear": {
+      "text": "梨子",
+      "out": "audio/words/pear.zh.m4a"
+    },
+    "pencil": {
+      "text": "铅笔",
+      "out": "audio/words/pencil.zh.m4a"
+    },
+    "pizza": {
+      "text": "披萨",
+      "out": "audio/words/pizza.zh.m4a"
+    },
+    "queen": {
+      "text": "女王",
+      "out": "audio/words/queen.zh.m4a"
+    },
+    "quilt": {
+      "text": "被子",
+      "out": "audio/words/quilt.zh.m4a"
+    },
+    "quail": {
+      "text": "小鹌鹑",
+      "out": "audio/words/quail.zh.m4a"
+    },
+    "quarter": {
+      "text": "硬币",
+      "out": "audio/words/quarter.zh.m4a"
+    },
+    "rocket": {
+      "text": "火箭",
+      "out": "audio/words/rocket.zh.m4a"
+    },
+    "robot": {
+      "text": "机器人",
+      "out": "audio/words/robot.zh.m4a"
+    },
+    "rainbow": {
+      "text": "彩虹",
+      "out": "audio/words/rainbow.zh.m4a"
+    },
+    "ring": {
+      "text": "戒指",
+      "out": "audio/words/ring.zh.m4a"
+    },
+    "star": {
+      "text": "星星",
+      "out": "audio/words/star.zh.m4a"
+    },
+    "sun": {
+      "text": "太阳",
+      "out": "audio/words/sun.zh.m4a"
+    },
+    "shoe": {
+      "text": "鞋子",
+      "out": "audio/words/shoe.zh.m4a"
+    },
+    "spoon": {
+      "text": "勺子",
+      "out": "audio/words/spoon.zh.m4a"
+    },
+    "treasure": {
+      "text": "宝藏",
+      "out": "audio/words/treasure.zh.m4a"
+    },
+    "tree": {
+      "text": "树",
+      "out": "audio/words/tree.zh.m4a"
+    },
+    "train": {
+      "text": "火车",
+      "out": "audio/words/train.zh.m4a"
+    },
+    "turtle": {
+      "text": "乌龟",
+      "out": "audio/words/turtle.zh.m4a"
+    },
+    "umbrella": {
+      "text": "雨伞",
+      "out": "audio/words/umbrella.zh.m4a"
+    },
+    "unicorn": {
+      "text": "独角兽",
+      "out": "audio/words/unicorn.zh.m4a"
+    },
+    "ukulele": {
+      "text": "尤克里里",
+      "out": "audio/words/ukulele.zh.m4a"
+    },
+    "uniform": {
+      "text": "校服",
+      "out": "audio/words/uniform.zh.m4a"
+    },
+    "van": {
+      "text": "面包车",
+      "out": "audio/words/van.zh.m4a"
+    },
+    "vase": {
+      "text": "花瓶",
+      "out": "audio/words/vase.zh.m4a"
+    },
+    "violin": {
+      "text": "小提琴",
+      "out": "audio/words/violin.zh.m4a"
+    },
+    "volcano": {
+      "text": "火山",
+      "out": "audio/words/volcano.zh.m4a"
+    },
+    "whale": {
+      "text": "鲸鱼",
+      "out": "audio/words/whale.zh.m4a"
+    },
+    "watch": {
+      "text": "手表",
+      "out": "audio/words/watch.zh.m4a"
+    },
+    "window": {
+      "text": "窗户",
+      "out": "audio/words/window.zh.m4a"
+    },
+    "wagon": {
+      "text": "小推车",
+      "out": "audio/words/wagon.zh.m4a"
+    },
+    "fox": {
+      "text": "狐狸",
+      "out": "audio/words/fox.zh.m4a"
+    },
+    "yoyo": {
+      "text": "溜溜球",
+      "out": "audio/words/yoyo.zh.m4a"
+    },
+    "yarn": {
+      "text": "毛线",
+      "out": "audio/words/yarn.zh.m4a"
+    },
+    "yak": {
+      "text": "牦牛",
+      "out": "audio/words/yak.zh.m4a"
+    },
+    "zebra": {
+      "text": "斑马",
+      "out": "audio/words/zebra.zh.m4a"
+    },
+    "zipper": {
+      "text": "拉链",
+      "out": "audio/words/zipper.zh.m4a"
+    },
+    "zucchini": {
+      "text": "西葫芦",
+      "out": "audio/words/zucchini.zh.m4a"
+    },
+    "treasurechest": {
+      "text": "宝箱",
+      "out": "audio/words/treasurechest.zh.m4a"
     }
   }
 }

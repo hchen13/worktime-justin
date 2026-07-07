@@ -112,14 +112,16 @@
 /* 无障碍偏好：关闭一切过渡/动画                                        */
 /* ------------------------------------------------------------------ */
 
+/* WTJ-20260706-013：html:not([data-wtj-motion-forced]) 门——kiosk 默认无视 OS 减弱动态，
+   见 hud.css 顶部同名注释与 index.html 内联启动脚本。 */
 @media (prefers-reduced-motion: reduce) {
-  .wtj-tt-prop {
+  html:not([data-wtj-motion-forced]) .wtj-tt-prop {
     transition: none !important;
     -webkit-animation: none !important;
     animation: none !important;
   }
 
-  .wtj-tt-prop.wtj-tt-emphasize {
+  html:not([data-wtj-motion-forced]) .wtj-tt-prop.wtj-tt-emphasize {
     /* 仍需要传达"目标增强"这个事实，只是不用运动表达——保留最终放大状态，去掉过渡感。 */
     transform: translate(-50%, -50%) scale(1.14);
   }

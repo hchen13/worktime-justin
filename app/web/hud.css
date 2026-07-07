@@ -785,17 +785,21 @@
 /* 无障碍偏好：关闭一切过渡/动画（is-on 的一次性 pop 关键帧同样关闭，直接呈现静止终态）。 */
 /* ------------------------------------------------------------------ */
 
+/* WTJ-20260706-013：以下每条规则的选择器均加 html:not([data-wtj-motion-forced]) 前缀门——
+   kiosk 默认（manifest.performance.honorReducedMotion=false）时 <html> 会被 index.html
+   内联启动脚本打上 data-wtj-motion-forced 属性，这里整段 reduced-motion 覆盖因此不生效，
+   过渡/动画照常播放；只有家长设置把 honorReducedMotion 翻回 true（不打属性）时才恢复。 */
 @media (prefers-reduced-motion: reduce) {
-  .wtj-hud-lock,
-  .wtj-hud-question,
-  .wtj-hud-slot,
-  .wtj-hud-light,
-  .wtj-hud-chest,
-  .wtj-hud-terminal {
+  html:not([data-wtj-motion-forced]) .wtj-hud-lock,
+  html:not([data-wtj-motion-forced]) .wtj-hud-question,
+  html:not([data-wtj-motion-forced]) .wtj-hud-slot,
+  html:not([data-wtj-motion-forced]) .wtj-hud-light,
+  html:not([data-wtj-motion-forced]) .wtj-hud-chest,
+  html:not([data-wtj-motion-forced]) .wtj-hud-terminal {
     transition: none !important;
   }
 
-  .wtj-hud-light.is-on {
+  html:not([data-wtj-motion-forced]) .wtj-hud-light.is-on {
     -webkit-animation: none !important;
     animation: none !important;
     transform: scale(1.15) !important;
@@ -803,7 +807,7 @@
 
   /* WTJ-20260704-083 返工：Open 态的呼吸脉冲关键帧同样关闭，直接呈现静止的放大发光终态，
      不因为 reduced-motion 而丢失"当前正在开箱"这个状态区分（仍然是可见的静态高亮）。 */
-  .wtj-hud-chest.is-open {
+  html:not([data-wtj-motion-forced]) .wtj-hud-chest.is-open {
     -webkit-animation: none !important;
     animation: none !important;
     transform: scale(1.05) !important;
@@ -812,7 +816,7 @@
   /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「Reduced motion」）：禁止光标闪烁动画，固定在
      规范给出的 opacity 0.38；Key activity pulse 的过渡已被上面 .wtj-hud-terminal 的
      transition:none 一并关闭（规范允许"完全关闭"这一档）。 */
-  .wtj-hud-terminal-cursor {
+  html:not([data-wtj-motion-forced]) .wtj-hud-terminal-cursor {
     -webkit-animation: none !important;
     animation: none !important;
     opacity: 0.38 !important;
@@ -820,7 +824,7 @@
 
   /* WTJ-20260705-019b：秘密词完成态展示的 320ms pop-in 关键帧同样关闭，直接以终态（完全
      不透明）呈现文字，不做位移/淡入动画——文字本身仍然会出现，只是不带动效。 */
-  .wtj-hud-terminal-word.is-visible {
+  html:not([data-wtj-motion-forced]) .wtj-hud-terminal-word.is-visible {
     -webkit-animation: none !important;
     animation: none !important;
     opacity: 1 !important;

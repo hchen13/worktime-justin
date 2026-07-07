@@ -66,9 +66,13 @@
 `anim-manifest.js` 里 `prop`/`state` 对应的帧序列。
 
 - `opts.loop`（可选 boolean）：显式传入时**覆盖** anim-manifest 里该 state 的默认 `loop`
-  值。这个覆盖能力是 014/011 复用同一份 state 数据表达不同语义的关键：例如 `faucet.running`
-  源数据 `loop:true`（水一直流），014 的点击任务用它表达"完成态"时传 `{loop:false}`，让它
-  播完一整轮后 clamp 在最后一帧定住，而不是无限流下去。
+  值。这个覆盖能力是 014/011 复用同一份 state 数据表达不同语义的关键：例如 `horse.run`
+  源数据 `loop:true`（马原地不停跑），014 的点击任务用它表达"完成态"时传 `{loop:false}`，让它
+  播完一整轮后 clamp 在最后一帧定住，而不是无限跑下去（`bell.ring` 是同一模式的另一例）。
+  WTJ-20260706-009：faucet 反过来利用了这个覆盖能力的"另一半"——`faucet.running` 源数据
+  `loop:true`，被点击任务当作 **idle** 态复用（`createPropEl()` 对 idle 恒传 `{loop:true}`），
+  持续流水；而它的 active 态换成了源数据本就 `loop:false` 的 `faucet.closing`（6 帧一次性
+  关水过程），见 task-templates.js `PROP_ANIM_STATE_MAP`。
 - `opts.onComplete`（可选 function）：仅在**非 loop**播放到达最后一帧时触发一次
   （`completeFired` 标记保证"恰一次"，即使后续还有别的 tick 落在同一 canvas 上）。loop
   播放永不触发 `onComplete`（循环没有"完成"这个概念）。**触发时机在两条代码路径下不完全
@@ -210,7 +214,7 @@ cd app && ./scripts/build-anim-assets.sh
 - **`task-templates.js` 的 `PROP_ANIM_STATE_MAP`**：追加两行映射 —— `door: { idle:'closed',
   active:'opening' }`（click-door-open 点击开门，opening 为 5 帧一次性过程，播完定格）、
   `bell: { idle:'idle', active:'ring' }`（click-doorbell-ring 点击摇铃，ring 源 loop:true，
-  onClick 传 `{loop:false}` 播一轮定格，与 `faucet.running` 同构）。`resolvePropAnimInfo()`
+  onClick 传 `{loop:false}` 播一轮定格，与 `horse.run` 同构）。`resolvePropAnimInfo()`
   对二者不再返回 `null`，`createPropEl()` 用 `<canvas>` 承载真实帧动画（引擎缺失时仍回退静态
   `<img>`，防御式路径不变）。
 - **未来若再暂缓某 prop**：把它加回 `deferred_to_v2` 重跑脚本即可，脚本逻辑无需改动。

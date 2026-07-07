@@ -39,7 +39,7 @@
 | taskId | 中文全句 | 对应英文 learningWord | 用途 |
 |---|---|---|---|
 | `click-lamp-on` | 点亮小台灯！ | lamp | 点一下台灯，帧动画 off→turning-on。 |
-| `click-faucet-on` | 打开水龙头！ | faucet | 点一下水龙头，帧动画 off→running。 |
+| `click-faucet-off` | 关掉水龙头！ | faucet | WTJ-20260706-009 语义翻转：初始画面帧动画 running（水一直流），点一下水龙头，帧动画 running→closing（关水，播完定格在关水帧）。此前 `click-faucet-on`「打开水龙头！」是反的，已改正。 |
 | `click-horse-run` | 让小马跑起来！ | horse | 点一下小马，帧动画 idle→run。 |
 
 ### 1.3 寻找类（find，12 条，REQ-TASK-09 · pt2 从 1 条扩到 12 条）

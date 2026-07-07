@@ -956,3 +956,37 @@ test('17b. 连续命中两个不同词：terminal 秘密词展示区应更新为
 
   assert.deepEqual(Array.from(sb.SECRET.getRoundHits()), ['dog', 'cat']); // Array.from()：跨 vm realm 数组
 });
+
+// ============================================================================================
+// 18.（WTJ-20260706-013）hud.css 静态契约：prefers-reduced-motion 兜底块里的每条规则的选择器
+//     都应该加了 html:not([data-wtj-motion-forced]) 门——kiosk 默认（manifest.performance.
+//     honorReducedMotion=false）时 index.html 内联启动脚本会给 <html> 打上
+//     data-wtj-motion-forced 属性，这条门使整段 reduced-motion 覆盖不生效，状态灯/宝箱 Open
+//     呼吸脉冲/终端光标闪烁/秘密词命中动画全部照常播放；只有家长设置把 honorReducedMotion
+//     翻回 true（不打属性）时才恢复 OS reduced-motion 覆盖。
+// ============================================================================================
+test('18. hud.css 静态契约：prefers-reduced-motion 兜底块内每条规则均应加 html:not([data-wtj-motion-forced]) 门', function () {
+  var css = readFileSync(HUD_CSS_PATH, 'utf8');
+  var reducedMotionBlockMatch = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*)\}\s*$/);
+  assert.ok(reducedMotionBlockMatch, 'hud.css 应包含 prefers-reduced-motion 的兜底块');
+  var blockBody = reducedMotionBlockMatch[1];
+
+  [
+    '.wtj-hud-lock', '.wtj-hud-question', '.wtj-hud-slot', '.wtj-hud-light',
+    '.wtj-hud-chest', '.wtj-hud-terminal', '.wtj-hud-light.is-on',
+    '.wtj-hud-chest.is-open', '.wtj-hud-terminal-cursor', '.wtj-hud-terminal-word.is-visible'
+  ].forEach(function (selector) {
+    var gatedSelector = 'html:not([data-wtj-motion-forced]) ' + selector;
+    assert.ok(
+      blockBody.indexOf(gatedSelector) !== -1,
+      'reduced-motion 兜底块应给 ' + selector + ' 加 html:not([data-wtj-motion-forced]) 门，实际未找到 "' + gatedSelector + '"'
+    );
+  });
+
+  // 回归护栏：兜底块内不应该出现"未加门"的裸选择器（例如漏改、或改了一半）——每处
+  // `.wtj-hud-xxx {` / `.wtj-hud-xxx,` 前面都应紧邻 html:not([data-wtj-motion-forced])，
+  // 用负向前瞻断言块内任意 .wtj-hud- 选择器前面都不是"行首/逗号/`{`/分号 + 空白"这种
+  // 会构成裸选择器的边界（即前面必须是 html:not([data-wtj-motion-forced]) 后的空白）。
+  var bareMatch = blockBody.match(/(^|[,{};]\s*)\.wtj-hud-[a-zA-Z-]+/);
+  assert.equal(bareMatch, null, '兜底块内不应该存在未加 html:not([data-wtj-motion-forced]) 门的裸 .wtj-hud- 选择器，命中：' + (bareMatch && bareMatch[0]));
+});

@@ -22,7 +22,8 @@ secretword/task 的 playWordDefensive 防御式跳过，全栈加载冒烟 0 con
 
 ## 抽样听感 checklist（criterion 3，交付后人工/agentic 试听）
 
-- **任务语音（全部 8）**：drag-apple-to-basket, drag-dog-home, click-lamp-on, click-faucet-on,
+- **任务语音（全部 8）**：drag-apple-to-basket, drag-dog-home, click-lamp-on, click-faucet-off
+  （WTJ-20260706-009 由 click-faucet-on 改名，语义翻转为"关水"），
   click-horse-run, find-the-dog, press-letter-a, press-digit-3。
 - **SFX（每类 ≥1，共 20）**：ui(task-success/light-hint-chime/slot-light-up/keyboard-milestone-chime/
   streak-reward-fanfare) / animal(dog-bark/cat-meow/duck-quack/horse-neigh/pig-oink/frog-croak/

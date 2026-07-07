@@ -41,6 +41,24 @@
        见 app/web/diag.js 顶部注释。 -->
   <script src="diag.js"></script>
   <script src="manifest.js"></script>
+  <!-- WTJ-20260706-013：越早越好（紧跟 manifest.js 之后，早于所有引擎脚本），避免"先按
+       CSS reduce-motion 规则画出静止终态、随后才被强制动画"这种一闪而过的样式跳变。若
+       manifest.performance.honorReducedMotion 不为 true（kiosk 默认无视 OS「减弱动态」，
+       核心学习动画照播），给 <html> 打上 data-wtj-motion-forced 属性——6 份 CSS
+       （hud/parent-controls/reward-chest/task-templates/status-rewards/secretword）的
+       @media (prefers-reduced-motion: reduce) 规则均已加 html:not([data-wtj-motion-forced])
+       门，命中本属性时这些规则整体不生效，过渡/动画照常播放。honorReducedMotion=true 时
+       不设置该属性，CSS 侧的 reduced-motion 覆盖恢复原样。Safari 14 语法基线：仅
+       var/function，不用箭头函数/let/const/模板字符串/可选链。 -->
+  <script>
+    (function () {
+      var m = window.WTJ_MANIFEST;
+      var honor = !!(m && m.performance && m.performance.honorReducedMotion === true);
+      if (!honor) {
+        document.documentElement.setAttribute('data-wtj-motion-forced', '1');
+      }
+    })();
+  </script>
   <!-- voice-language.js（018 家长控制卡：语言/任务语音模式切换，window.WTJ_VOICE_LANG）——
        只需 manifest.js 先加载（读取 MANIFEST.parentControls 的默认值展示用，判定本身用内置
        静态清单，不依赖 manifest）；需在 task.js 之前——task.js 的 playTaskVoiceDefensive()

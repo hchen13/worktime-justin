@@ -48,12 +48,16 @@
 //     （pressOrHoverAlsoCompletes）在本文件的落地方式就是让这两个 target 回调共享同一个完成
 //     函数，不是两套独立判定逻辑。
 // 四、按键（REQ-TASK-10）：不渲染任何 DOM（纯语音 + 键盘判定，见文件头"长什么样"一节）。加载
-//     时注册一个常驻的 WTJ_KEYBOARD.onLetter 处理函数（WTJ_KEYBOARD.onLetter 与 013 对
+//     时注册常驻的 WTJ_KEYBOARD.onLetter/onSymbol/onFunctionKey 三路处理函数（三者都与 013 对
 //     WTJ_KEYBOARD.onEffectiveKey 的处理同一个模式——只支持追加订阅、不支持退订，因此本文件也
 //     采用"常驻处理函数 + 内部状态判断当前是否有进行中的按键任务"这种等价退订写法，见 013
 //     文件头「键盘转移淡出的实现机制」一节的同款设计说明）：当前若存在一个 type==='press' 的
-//     进行中任务，比较传入的大写字符与 taskDef.targetKey（统一转大写比较，兼容 manifest 里
-//     'A'/'3' 这类已是大写/数字的写法）是否相等，相等则判定任务完成。
+//     进行中任务，比较传入的键身份字符串与 taskDef.targetKey（统一转大写比较，兼容 manifest 里
+//     'A'/'3' 这类已是大写/数字的写法，也兼容符号/'Space'/'Enter'/'ArrowUp' 等写法）是否相等，
+//     相等则判定任务完成。WTJ-20260706-010 前 targetKey 只能是字母/数字（onLetter 是唯一接线的
+//     判定通道），symbol（如 ','）/'Space'/'Enter'/方向键作为 targetKey 永远无法完成——010 卡
+//     补齐 onSymbol/onFunctionKey 两路订阅（见下方 handlePressKey()/wireSymbol()/
+//     wireFunctionKey() 的详细说明），三路统一收敛到同一个 handlePressKey() 判定+完成入口。
 //
 // -----------------------------------------------------------------------
 // 任务生成：问号点击 → 洗牌袋（shuffle bag）真随机挑一个任务模板类型 + 具体示例
@@ -153,11 +157,11 @@
 //
 //   | prop   | idle（常驻/静息） | active（onClick 命中后播放）        | 选择理由 |
 //   |--------|-------------------|--------------------------------------|----------|
-//   | faucet | 'off'（水龙头关，单帧静止）      | 'running'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，见下） | 计入 v1_boundary，off 天然是"没人碰"的静息态；running 是唯一有"水在流"视觉意图的 state |
-//   | horse  | 'idle'（源数据 loop:true，马原地小动作）  | 'run'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，与 faucet 的 running 完全同构，见下） | REQ-TASK-08"点一下小马跑起来"要求 onClick 命中后**实际播放奔跑动效**；'run' 正是 anim-manifest.js 里 idle/run/stop_success 三态之一，资源可解析。faucet 已是先例：faucet.active='running' 同为 loop:true 源数据，靠 renderClickTask 传入的 {loop:false} 覆盖成"播一轮定格"，horse 'run' 走的是同一条通用路径，不是新逻辑。**不实现 run→stop_success 链**：068 的 run-sheet 正在返工、资产仍在流动中，run-only 已满足 072 验收 criterion 3（断言 click 后首先播放 run）且与 faucet 保持一致；链式收尾留作 068 定稿后的未来增强评估项，非本卡范围（PM 打回 072：旧版 active=stop_success 会让"点一下跑起来"不成立、也让 068 run-sheet 在运行态看不到，故本卡改回 run，替换掉上一轮"run 无自然终帧"的论证） |
+//   | faucet | 'running'（水一直流，源数据 loop:true，见下方 WTJ-20260706-009 说明） | 'closing'（6 帧，源数据本就 loop:false，一次性关水过程，播完 clamp 在关水末帧） | **WTJ-20260706-009 语义翻转**：产品要求初始态是"水在流"、点击后是"关水"（此前 idle='off'/active='running' 是反的，等于教孩子"把水打开"）。'closing' 正是 DESIGN 当初随 026 卡一起交付、专为"关水动效"生成的序列（见 docs/assets/production-animations-v1/faucet/README.md），只是上一版接线从未用上；现在原样复用，未新增任何素材。 |
+//   | horse  | 'idle'（源数据 loop:true，马原地小动作）  | 'run'（源数据 loop:true，播放时用 opts.loop:false 强制单轮播完 clamp 在最后一帧，与 bell 的 ring 同构，见下） | REQ-TASK-08"点一下小马跑起来"要求 onClick 命中后**实际播放奔跑动效**；'run' 正是 anim-manifest.js 里 idle/run/stop_success 三态之一，资源可解析。**不实现 run→stop_success 链**：068 的 run-sheet 正在返工、资产仍在流动中，run-only 已满足 072 验收 criterion 3（断言 click 后首先播放 run）；链式收尾留作 068 定稿后的未来增强评估项，非本卡范围（PM 打回 072：旧版 active=stop_success 会让"点一下跑起来"不成立、也让 068 run-sheet 在运行态看不到，故本卡改回 run，替换掉上一轮"run 无自然终帧"的论证） |
 //   | lamp   | 'off'（灯灭，单帧静止）          | 'turning-on'（源数据 loop:false，一次性点亮过程）                    | 与卡片原文"lamp active→turning-on"完全一致 |
 //   | door   | 'closed'（门关，单帧静止）        | 'opening'（5 帧，源数据 loop:false，一次性开门过程，播完定格在开门末帧）  | WTJ-20260705-025：click-door-open 点门开门；'opening' 是 anim-manifest.js closed/opening/open 三态里唯一有"开门过程"视觉意图的 state（'open' 是开完的单帧静止终态，不用作 active 过程） |
-//   | bell   | 'idle'（铃静止，单帧）            | 'ring'（6 帧，源数据 loop:true，onClick 传 {loop:false} 播一轮定格，与 faucet.running 同构） | WTJ-20260705-025：click-doorbell-ring 点铃摇铃；'ring' 是 idle/ring/settle 三态里唯一有"摇铃发声"视觉意图的 state（'settle' 是摇完的阻尼收尾，链式收尾留作未来增强，非本卡范围，与 faucet 不接 closing 收尾同理） |
+//   | bell   | 'idle'（铃静止，单帧）            | 'ring'（6 帧，源数据 loop:true，onClick 传 {loop:false} 播一轮定格，与 horse.run 同构） | WTJ-20260705-025：click-doorbell-ring 点铃摇铃；'ring' 是 idle/ring/settle 三态里唯一有"摇铃发声"视觉意图的 state（'settle' 是摇完的阻尼收尾，链式收尾留作未来增强，非本卡范围） |
 //
 // door/bell 由 WTJ-20260705-025 加入本表（v1 动画卡 -030 门 / -031 铃均已 DESIGN 验收 done，
 // 从 v1_boundary.deferred_to_v2 移入 included）。此前它们**有意不在表里**、resolvePropAnimInfo()
@@ -165,15 +169,17 @@
 // 进 anim-manifest.js，故登记映射改走真实分帧动画。FRAME-ANIM-API.md 第 7 节已同步更新。
 //
 // **onClick 播放 activeState 时统一传 { loop:false, onComplete }**：即使某个 state 的源数据
-// 本身 loop:true（如 faucet 的 running），onClick 场景下也要求它"播完一轮后 clamp 定住"而
-// 不是无限循环——这正是 WTJ_FRAME_ANIM.play() 的 opts.loop 覆盖能力存在的原因（同一份 state
-// 数据在 idle 场景下可能被复用为持续循环，在 active/完成场景下被复用为"播一轮定格"）。
+// 本身 loop:true（如 horse 的 run、bell 的 ring），onClick 场景下也要求它"播完一轮后 clamp
+// 定住"而不是无限循环——这正是 WTJ_FRAME_ANIM.play() 的 opts.loop 覆盖能力存在的原因（同一份
+// state 数据在 idle 场景下可能被复用为持续循环，在 active/完成场景下被复用为"播一轮定格"）。
 // onComplete 目前是预留 no-op（详见 renderClickTask() 内联注释）：字面 API 形状要求传它，
 // 但本卡定案的映射表都是"单一 activeState 播完即定格"这一最简单方案，没有实现"完成后再接一段
-// 收尾动画"（例如 faucet 的 running→closing 链）这类更复杂的编排——卡片原文允许这个更简单的
-// 变体（"running（或 running→closing 链）"），本卡选择前者，理由：更少状态、更少可能出错的
-// 编排代码，且 running 本身停在最后一帧（水柱清晰可见）已经足够传达"任务完成"的视觉反馈，不
-// 需要额外用 closing 收尾。若 PM/DESIGN 认为链式收尾是必须的产品体验，属于后续卡的评估项。
+// 收尾动画"（例如 door 的 opening→open 这类更进一步的过渡）这类更复杂的编排——卡片原文允许
+// 这个更简单的变体，本卡选择它，理由：更少状态、更少可能出错的编排代码。faucet 是这条设计
+// 原则下的一个特例：它的 activeState 本身（'closing'，源数据天然 loop:false）就是一段完整的
+// "从流水到关水"过程，播完直接 clamp 在关水静息帧——不需要额外的链式收尾，"单一 activeState
+// 播完即定格"这条通用规则原样适用，只是这一次 activeState 本身就是视觉上的完整转场
+// （WTJ-20260706-009，见上表 faucet 行）。
 //
 // **COMPLETE_VISUAL_HOLD 与 getDuration() 的耦合修正**（P0 红线，卡片原文明确指出"现在
 // 800ms 恰≥success 时长是巧合非契约"）：computeVisualHoldMs() 在完成瞬间用
@@ -209,7 +215,8 @@
 //   REQ-TASK-08  renderClickTask()：accepts:'click' 的 onClick 回调，切换 targetSpriteActive。
 //   REQ-TASK-09  renderFindTask()：accepts:['hover','click']，onHover 与 onClick 共享同一个
 //                完成回调（"点一下也算完成"）。
-//   REQ-TASK-10  setupPressTask() + handlePressLetter()：WTJ_KEYBOARD.onLetter 常驻处理函数。
+//   REQ-TASK-10  setupPressTask() + handlePressKey()：WTJ_KEYBOARD.onLetter/onSymbol/
+//                onFunctionKey 三路常驻处理函数（010 起补齐 symbol/Space/Enter/方向键判定）。
 //   REQ-PTR-02/03 本文件通过 WTJ_POINTER.registerTarget 消费 012 已经实现的点击/拖拽判定，
 //                不重新实现命中测试/弹性跟随算法本身；handleDragMove()/handleDragDropGlobal()
 //                订阅 onDragMove/onDrop 的输出结果渲染跟随视觉/拖错弹回（P1-2）。
@@ -252,7 +259,7 @@
     ],
     click: [
       { id: 'click-lamp-on', targetSprite: 'sprites/lamp.png', targetSpriteActive: 'sprites/lamp.png', voicePrompt: 'audio/tasks/click-lamp-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
-      { id: 'click-faucet-on', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+      { id: 'click-faucet-off', targetSprite: 'sprites/faucet.png', targetSpriteActive: 'sprites/faucet.png', voicePrompt: 'audio/tasks/click-faucet-off.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
       { id: 'click-horse-run', targetSprite: 'sprites/horse.png', targetSpriteActive: 'sprites/horse.png', voicePrompt: 'audio/tasks/click-horse-run.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
     ],
     find: [
@@ -309,6 +316,15 @@
   // tasks.templates.drag.examples 行内注释），同样全部复用 secretWords.pool 已交付 sprite，
   // 这里追加对应的新文件名（egg/nest/flower/vase/leaf/lemon/pear/net/jam/jar/treasure/key/
   // spoon），零新增美术、零逻辑改动，只是扩充这张既有白名单。
+  //
+  // WTJ-20260706-012（EN-side 随机 word-card find driver）：drawWordCardFind() 会从
+  // secretWords.pool 里任意抽取 target/distractor（不再局限于上方 12 条精选 example 手工列举
+  // 过的那一小撮词），因此这里现场核对 manifest.js secretWords.pool 的全部 100 个词条（xylophone
+  // 已在 011 卡删除，现场核对不是 101），把此前未被任何 find/drag example 手工引用过、因此还不
+  // 在白名单里的词条 sprite 文件名一次性补全——否则这些词被随机抽中当 target/distractor 时，
+  // resolveSpritePath() 会走到"未知文件名"的 assets/ 前缀兜底分支噪声警告（路径拼接本身其实还是
+  // 对的，只是会刷 console.warn）。下方新增的这一批全部是 secretWords.pool 已交付的真实素材，
+  // 零新增美术。
   var SPRITES_FILENAMES = [
     'dog.png', 'cat.png', 'ball.png', 'star.png', 'car.png', 'treasure-chest.png',
     'banana.png', 'orange.png', 'moon.png', 'sun.png', 'fish.png', 'frog.png', 'duck.png',
@@ -316,7 +332,32 @@
     'rocket.png', 'robot.png', 'rainbow.png', 'turtle.png', 'unicorn.png', 'zebra.png',
     'whale.png', 'octopus.png',
     'egg.png', 'nest.png', 'flower.png', 'vase.png', 'leaf.png', 'lemon.png', 'pear.png',
-    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png'
+    'net.png', 'jam.png', 'jar.png', 'treasure.png', 'key.png', 'spoon.png',
+    // WTJ-20260706-012 新增：secretWords.pool 里此前从未被任何 drag/find example 引用过的
+    // 剩余词条 sprite 文件名（按 pool 内 A~Z 分组顺序列出，逐一现场核对磁盘文件存在）。
+    'ant.png', 'airplane.png', 'alligator.png',
+    'cup.png', 'cake.png',
+    'drum.png',
+    'eye.png', 'envelope.png',
+    'grapes.png', 'gift.png', 'guitar.png',
+    'hat.png', 'heart.png', 'house.png',
+    'icecream.png', 'igloo.png', 'insect.png', 'island.png',
+    'juice.png', 'jellyfish.png',
+    'kite.png', 'kettle.png',
+    'mouse.png', 'milk.png',
+    'nose.png', 'noodle.png',
+    'owl.png', 'oven.png',
+    'pencil.png', 'pizza.png',
+    'queen.png', 'quilt.png', 'quail.png', 'quarter.png',
+    'ring.png',
+    'shoe.png',
+    'tree.png', 'train.png',
+    'umbrella.png', 'ukulele.png', 'uniform.png',
+    'van.png', 'violin.png', 'volcano.png',
+    'watch.png', 'window.png', 'wagon.png',
+    'fox.png',
+    'yoyo.png', 'yarn.png', 'yak.png',
+    'zipper.png', 'zucchini.png'
   ];
   // 五个"有动效预期但当前只有静态占位"的道具（见文件头「animation state 接口预留」一节）。
   var ANIM_STATE_FILENAMES = ['faucet.png', 'horse.png', 'door.png', 'bell.png', 'lamp.png'];
@@ -389,7 +430,11 @@
   // 方式，不是遗漏。
   // ---------------------------------------------------------------------
   var PROP_ANIM_STATE_MAP = {
-    faucet: { idle: 'off', active: 'running' },
+    // WTJ-20260706-009：语义翻转——idle 现在是 'running'（水一直流），active 是 'closing'
+    // （一次性关水过程，播完 clamp 在关水静息帧）。此前 idle='off'/active='running' 让点击
+    // 结果是"把水打开"，与 Ethan"点一下应该关水"的产品要求相反，本卡改正。见文件头「五、
+    // 动效引擎接入」一节表格与说明。
+    faucet: { idle: 'running', active: 'closing' },
     horse: { idle: 'idle', active: 'run' },
     lamp: { idle: 'off', active: 'turning-on' },
     // WTJ-20260705-025：door/bell 的 v1 动画（卡 -030 门 / -031 铃，均已 DESIGN 验收 done）
@@ -533,6 +578,244 @@
       indices.push(i);
     }
     return drawFromShuffleBag(state, indices);
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260706-012：find 类型的 target/distractor 不再局限于 manifest.js
+  // tasks.templates.find.examples 手工列举过的那 12 条精选组合——改为直接从 secretWords.pool
+  // （现场核对 100 词，见该 domain 行内注释）任意抽取，覆盖面从"12 条手工搭配"扩到"词间任意
+  // 组合"。target 用一个专属的持续洗牌袋（每种生效语言各自一份，见 wordCardBagStates），与
+  // drawTaskType()/drawExampleIndex() 完全同一套 refillShuffleBag()/drawFromShuffleBag() 机制、
+  // 同样的两条契约（一整袋内每个词都恰好当一次 target；跨袋边界不连续选中同一个词）。distractor
+  // 则在每次调用时现搭一个"候选池=pool 里除本次 target 外全部下标"的一次性洗牌袋抽 n 个——用的
+  // 是同一对 helper 函数，只是 state 是每次调用现建的临时对象而不是像 target 那样持续复用：这是
+  // 刻意的，如果 distractor 也复用同一个持续状态、又恰好在同一次调用内触发袋子重新洗牌，重新洗
+  // 出来的新袋子是对整个 pool 重新洗牌（不排除本次已经抽中的 target），会破坏"target 与
+  // distractor 不重复"这条硬要求；本次调用内候选池已经手工排除了 target，refillShuffleBag() 在
+  // 同一次调用内只会触发一次，不会出现"袋子中途重新洗牌"的边界问题。
+  //
+  // 语言分支（012 第二阶段，TL 定案 2026-07-07，推翻本卡最初口径——历史记录见下）：
+  //   历史：本卡最初的 EN-side 落地（commit 1048c0e）只处理了 EN 半部分，ZH 半部分当时的计划是
+  //   "为合格找物池每个 ZH 词预生成一条完整'找到 X！'整句"（理由：中文任务音频不能运行时拼接
+  //   "找到"+词卡，那是明确反模式）。TL 随后依据看板最新裁决叫停了这条整句生成路线：**ZH 模型
+  //   改为 word-card**——目标词的提示音频就是这个词自己已经交付的中文词卡音频本身
+  //   （audio/words/<word>.zh.m4a，011 卡交付），不是"找到"+词卡的运行时拼接（那确实是反模式），
+  //   也不是另外预生成的整句"找到 X！"（这条路线已被叫停，未落地任何一条这类整句）。工程上这just
+  //   是 playWordBilingual() 的 audioFile 参数在 ZH 模式下指向该词的 .zh.m4a 而非 .m4a——见下方
+  //   drawWordCardFind() 与 getFindCandidatePool()。
+  //
+  //   no-EN-fallback（Ethan 明确驳回"缺中文就退英文"）：ZH 模式下的候选池收窄为 secretWords.pool
+  //   中"该词的中文词卡音频已交付"的子集（见 getFindCandidatePool()），缺中文音频的词直接被排除
+  //   出候选池，绝不参与抽取——不存在"抽中了但没有中文音频，于是回退播英文"这条分支。EN 模式则
+  //   维持第一阶段落地的机制不变：候选池 = secretWords.pool 全量（100 词均已交付 EN .m4a）。
+  // ---------------------------------------------------------------------
+  var wordCardBagStates = {}; // 键为生效语言字符串（'en'|'zh'），值均为 { bag, lastPicked, itemsLength }。
+
+  function getSecretWordsPool() {
+    if (MANIFEST && MANIFEST.secretWords && Array.isArray(MANIFEST.secretWords.pool)) {
+      return MANIFEST.secretWords.pool;
+    }
+    return [];
+  }
+
+  // getEffectiveFindLanguage()：委托 window.WTJ_VOICE_LANG.getEffectiveLanguage() 判断当前
+  // 生效语言。防御式：模块缺失/调用抛错时统一回退 'en'——与本卡第一阶段（1048c0e）"find 随机
+  // word-card 抽取"机制在 WTJ_VOICE_LANG 尚未接线时的行为完全一致（那时这套机制根本不检查语言，
+  // 恒等于"当作 en 处理"），保证未加载 voice-language.js 的既有测试/沙箱场景不改变行为。
+  function getEffectiveFindLanguage() {
+    try {
+      if (window.WTJ_VOICE_LANG && typeof window.WTJ_VOICE_LANG.getEffectiveLanguage === 'function') {
+        return (window.WTJ_VOICE_LANG.getEffectiveLanguage() === 'zh') ? 'zh' : 'en';
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 window.WTJ_VOICE_LANG.getEffectiveLanguage 失败，已捕获，回退 en：', err);
+    }
+    return 'en';
+  }
+
+  // isWordZhAvailableDefensive(word)：委托 window.WTJ_VOICE_LANG.isWordZhAvailable()（与
+  // secretword.js resolveWordAudioEntry() 同一委托对象、同一防御式约定）。模块缺失/调用抛错/
+  // 非 true 返回值一律判定为"不可用"——宁可把一个词误判为暂不可找（回退更小的候选池甚至回退
+  // 12 条固定 examples），也不能因为查询本身失败就误把一个实际缺音频的词当作可用（那会导致
+  // no-EN-fallback 的下一道防线——drawWordCardFind() 里的路径推导——真的抽到一个没有中文音频
+  // 的词）。
+  function isWordZhAvailableDefensive(word) {
+    try {
+      if (window.WTJ_VOICE_LANG && typeof window.WTJ_VOICE_LANG.isWordZhAvailable === 'function') {
+        return window.WTJ_VOICE_LANG.isWordZhAvailable(word) === true;
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 window.WTJ_VOICE_LANG.isWordZhAvailable 失败，已捕获：', err);
+    }
+    return false;
+  }
+
+  // getFindCandidatePool(lang)：EN 模式原样返回 secretWords.pool 全量（第一阶段既有行为，
+  // 未改动）；ZH 模式收窄为"中文词卡音频已交付"的子集（isWordZhAvailableDefensive()，见上方
+  // no-EN-fallback 说明）。该子集大小随 voice-language.js 的 ZH_AVAILABLE_WORD 台账增长而自动
+  // 增长（当前 85/100，011 卡后续补齐时无需再改这里一行代码）。
+  function getFindCandidatePool(lang) {
+    var pool = getSecretWordsPool();
+    if (lang !== 'zh') {
+      return pool;
+    }
+    var filtered = [];
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i] && isWordZhAvailableDefensive(pool[i].word)) {
+        filtered.push(pool[i]);
+      }
+    }
+    return filtered;
+  }
+
+  // deriveZhWordAudioPath(enAudioFile)：与 secretword.js deriveZhWordPath() 同一约定（两个
+  // 文件互相独立、不共享私有函数，各自维护一份等价的最小实现）——把 secretWords.pool[].audioFile
+  // 的既有命名约定 "audio/words/<word>.m4a" 换算成 "audio/words/<word>.zh.m4a"。不匹配该形状
+  // 时返回 null（调用方据此判定路径推导失败，fail-fast 拒绝渲染，见 drawWordCardFind()）。
+  function deriveZhWordAudioPath(enAudioFile) {
+    var m = /^(.*)\.m4a$/i.exec(String(enAudioFile));
+    return m ? (m[1] + '.zh.m4a') : null;
+  }
+
+  // drawWordCardTargetIndex(lang, poolLength)：每种语言各自维护一份持续洗牌袋状态（键为 lang），
+  // 与 drawExampleIndex() 同一"itemsLength 变化则重建"防御——ZH 候选池长度会随 011 台账补齐而
+  // 增长，若不检测直接复用旧状态，旧下标语义会错位。
+  function drawWordCardTargetIndex(lang, poolLength) {
+    var state = wordCardBagStates[lang];
+    if (!state || state.itemsLength !== poolLength) {
+      state = { bag: [], lastPicked: null, itemsLength: poolLength };
+      wordCardBagStates[lang] = state;
+    }
+    var indices = [];
+    for (var i = 0; i < poolLength; i++) {
+      indices.push(i);
+    }
+    return drawFromShuffleBag(state, indices);
+  }
+
+  // sampleWordCardsFromPool(pool, lang, n)：从给定候选池（调用方已按语言过滤好）抽 1 个
+  // target + n 个 distractor（互不重复），返回 { target, distractors }（均为 pool 条目对象
+  // 本身，非下标）；pool 为空时返回 null（调用方 drawWordCardFind() 据此回退，且这里不重复
+  // warn——调用方按语言场景决定具体的警示文案）。n 大于 pool.length-1（可用的 distractor 候选
+  // 数）时防御式截断到实际可抽取的最大数量，不抛错、不返回不足额的报错。
+  function sampleWordCardsFromPool(pool, lang, n) {
+    if (!pool.length) {
+      return null;
+    }
+    var indices = [];
+    var i;
+    for (i = 0; i < pool.length; i++) {
+      indices.push(i);
+    }
+    var targetIdx = drawWordCardTargetIndex(lang, pool.length);
+
+    var remaining = [];
+    for (i = 0; i < indices.length; i++) {
+      if (indices[i] !== targetIdx) {
+        remaining.push(indices[i]);
+      }
+    }
+    var count = (typeof n === 'number' && n >= 0) ? Math.min(n, remaining.length) : 0;
+    var distractorState = { bag: [], lastPicked: null }; // 每次调用现建的一次性状态，见上方说明。
+    var distractors = [];
+    for (i = 0; i < count; i++) {
+      var distractorIdx = drawFromShuffleBag(distractorState, remaining);
+      distractors.push(pool[distractorIdx]);
+    }
+    return { target: pool[targetIdx], distractors: distractors };
+  }
+
+  // resolveDistractorCount(randomPoolCfg)：读取 manifest tasks.templates.find.randomPool.
+  // sampleSize，解析出本次调用要抽取的 distractor 数量（WTJ-20260706-012"扩大随机样本"：
+  // sampleSize 是 { min, max } 时每次独立重掷随机整数落在 [min, max]（对应 target+distractor
+  // 总数 N 落在 [min+1, max+1]，manifest 当前配置 {min:2,max:4} 即 N 随机落在 3~5）；仍兼容
+  // 历史的"纯数字"写法（固定值，见既有测试里手写的简化 manifest fixture），非法形状防御式回退
+  // 2 并 warn 一次。
+  function resolveDistractorCount(randomPoolCfg) {
+    var raw = randomPoolCfg.sampleSize;
+    if (typeof raw === 'number' && raw >= 0) {
+      return raw;
+    }
+    if (raw && typeof raw === 'object' && typeof raw.min === 'number' && typeof raw.max === 'number' && raw.max >= raw.min && raw.min >= 0) {
+      var span = raw.max - raw.min + 1;
+      return raw.min + Math.floor(taskRandom() * span);
+    }
+    console.warn('[WTJ_TASK_TEMPLATES] find.randomPool.sampleSize 配置形状非法（应为 number 或 {min,max}），已回退默认 2。');
+    return 2;
+  }
+
+  // drawWordCardFind()：读取 manifest.tasks.templates.find.randomPool 配置，未启用/当前生效
+  // 语言下候选池为空时返回 null（调用方 handleQuestionClicked() 据此回退到 12 条固定 examples，
+  // 见该函数——这 12 条本身经由 task.js/voice-language.js 的既有语言感知 voicePrompt 解析路径
+  // 播放，同样不会违反 no-EN-fallback）。启用时构建一个 SYNTHETIC find example——形状上尽量
+  // 贴近固定 example 的 schema（targetSprite/distractorSprites/hoverSec/
+  // pressOrHoverAlsoCompletes/successAudio/learningWord 字段齐全，renderFindTask()/
+  // handleTemplateComplete() 等既有消费逻辑不需要区分"这是不是随机抽的"），额外带两个只有
+  // synthetic example 才有的字段（wordAudioFile/wordAudioFileZh），供 renderFindTask() 在任务
+  // 开始时播放目标词的词卡音频（见该函数 playFindWordBilingualDefensive() 一节）。voicePrompt
+  // 恒为空字符串——随机抽取的目标词没有对应的预生成"找到 xxx"任务提示句（zh/en 均没有，且词间
+  // 任意组合也不可能穷举预生成），no-silent-fallback 原则下不指向任何语义不匹配的现成语音
+  // 文件，走 wordCardBilingual 的词卡语音播放替代任务语音提示。
+  function drawWordCardFind() {
+    var findCfg = TEMPLATES_CFG ? TEMPLATES_CFG.find : null;
+    var randomPoolCfg = (findCfg && findCfg.randomPool) ? findCfg.randomPool : null;
+    if (!randomPoolCfg || randomPoolCfg.enabled !== true) {
+      return null;
+    }
+    var lang = getEffectiveFindLanguage();
+    var pool = getFindCandidatePool(lang);
+    if (!pool.length) {
+      if (lang === 'zh') {
+        console.error('[WTJ_TASK_TEMPLATES] ZH 模式下没有任何合格找物候选（无中文词卡音频），拒绝渲染随机 word-card find 任务——no-EN-fallback 硬要求，不静默回退英文，本次回退到固定 examples。');
+      } else {
+        console.warn('[WTJ_TASK_TEMPLATES] secretWords.pool 为空/缺失，无法抽取随机 word-card find 目标。');
+      }
+      return null;
+    }
+    var sampleSize = resolveDistractorCount(randomPoolCfg);
+    var sample = sampleWordCardsFromPool(pool, lang, sampleSize);
+    if (!sample) {
+      return null;
+    }
+    var entry = sample.target;
+    var distractorSprites = [];
+    var i;
+    for (i = 0; i < sample.distractors.length; i++) {
+      distractorSprites.push(sample.distractors[i].spriteFile);
+    }
+
+    // wordAudioFile：EN 模式直接用 pool 条目自带的 EN 路径（不变）；ZH 模式换算成该词的中文
+    // 词卡路径——fail-fast：换算失败（entry.audioFile 形状异常，理论边界情况，正常数据不会走到
+    // 这里）时拒绝渲染本次抽取并 console.error，不静默回退英文（no-EN-fallback），调用方按 null
+    // 回退到 12 条固定 examples。
+    var wordAudioFile;
+    if (lang === 'zh') {
+      wordAudioFile = deriveZhWordAudioPath(entry.audioFile);
+      if (!wordAudioFile) {
+        console.error('[WTJ_TASK_TEMPLATES] ZH 模式下目标词 "' + entry.word + '" 的中文词卡音频路径推导失败，拒绝渲染（no-EN-fallback，不回退英文）。');
+        return null;
+      }
+    } else {
+      wordAudioFile = entry.audioFile;
+    }
+
+    return {
+      id: 'find-card-' + entry.word,
+      targetSprite: entry.spriteFile,
+      distractorSprites: distractorSprites,
+      voicePrompt: '',
+      hoverSec: 1,
+      pressOrHoverAlsoCompletes: true,
+      successAudio: 'audio/sfx/task-success.m4a',
+      learningWord: entry.word,
+      // synthetic example 专属字段（12 条固定 example 没有）：renderFindTask() 消费，见该函数。
+      // wordAudioFile 恒为当前生效语言对应的词卡音频路径（EN 模式→ .m4a；ZH 模式→ .zh.m4a）。
+      wordAudioFile: wordAudioFile,
+      // 恒传 null：这里只借用 playWordBilingual()"必选单文件 + 可选追加第二段"的播放载体语义
+      // 播放单一语言，不触发它"EN 后接 ZH 顺序播放"那条双语分支——wordAudioFile 本身已经是按
+      // 当前生效语言解析好的路径，不需要再叠加第二段。
+      wordAudioFileZh: null
+    };
   }
 
   // ---------------------------------------------------------------------
@@ -947,6 +1230,32 @@
   }
 
   // ---------------------------------------------------------------------
+  // WTJ-20260706-012：renderFindTask() 任务渲染开始时（而非完成时——与上面 playLearningWordDefensive()
+  // 的完成态强化播放是两个不同的时机）播放目标词的双语语音。只有 drawWordCardFind() 产出的
+  // synthetic find example 才带 wordAudioFile 字段（见该函数说明）；12 条固定 example 没有这个
+  // 字段，下面第一个分支据此静默 no-op——它们的语音提示走既有 task.js playTaskVoiceDefensive()
+  // 读取 voicePrompt 字段的路径，不受本函数影响。audioFileZh 恒读取 example.wordAudioFileZh，
+  // 门禁在 011/008 的当前状态下恒为 null，playWordBilingual() 对 null 的既有降级契约是退化为
+  // 纯 EN 播放。
+  // ---------------------------------------------------------------------
+  function playFindWordBilingualDefensive(example) {
+    try {
+      if (!example || typeof example.wordAudioFile !== 'string' || !example.wordAudioFile) {
+        return; // 12 条固定 example 没有 wordAudioFile 字段，属于正常 no-op。
+      }
+      if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWordBilingual === 'function') {
+        window.WTJ_AUDIO.playWordBilingual({
+          word: (typeof example.learningWord === 'string' && example.learningWord) ? example.learningWord : null,
+          audioFile: example.wordAudioFile,
+          audioFileZh: (typeof example.wordAudioFileZh === 'string' && example.wordAudioFileZh) ? example.wordAudioFileZh : null
+        });
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] window.WTJ_AUDIO.playWordBilingual 调用失败，已捕获：', err);
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // 当前进行中任务的运行时状态（同一时刻只有一个，与 013 的"同一时刻只允许一个进行中任务"
   // 不变式保持一致——本文件不需要自己再做一次并发保护，013 的 startTask() 已经保证了这点）。
   // ---------------------------------------------------------------------
@@ -1224,6 +1533,10 @@
   // 三、寻找任务（REQ-TASK-09）
   // ---------------------------------------------------------------------
   function renderFindTask(example) {
+    // WTJ-20260706-012：任务渲染开始时防御式播放目标词双语语音（见 playFindWordBilingualDefensive()
+    // 说明）——12 条固定 example 没有 wordAudioFile 字段时是安全 no-op，不影响既有行为。
+    playFindWordBilingualDefensive(example);
+
     var elements = [];
     var pointerIds = [];
 
@@ -1277,15 +1590,47 @@
     return { elements: [], pointerIds: [] };
   }
 
-  function handlePressLetter(charUpper) {
+  // WTJ-20260706-010：原来只有 handlePressLetter(charUpper)，只服务 WTJ_KEYBOARD.onLetter
+  // （字母/数字）。缺口：targetKey 是符号（如 ',' '[' ']' '=' '?' '/'）或 'Space'/'Enter'/
+  // 方向键（'ArrowUp' 等）的按键任务永远无法命中——onSymbol/onFunctionKey 从未接线到这里。
+  // 泛化成 handlePressKey(keyIdentity)，对任意"键身份"字符串统一按 toUpperCase() 比较（与
+  // 原字母任务同一比较方式，字母任务本就转大写比较；符号/Space/Enter/方向键转大写不影响其
+  // 唯一性，'ArrowUp'.toUpperCase() 仍是自身大小写归一化后的唯一值，不会与其它键身份碰撞）。
+  // guard 仍在最前面：只有 activeRuntime.type === 'press' 时才可能完成，杂散的 Enter/方向键/
+  // 符号事件在 drag/click/find 进行中任务时直接短路返回，不会误判其它类型完成。
+  function handlePressKey(keyIdentity) {
     if (!activeRuntime || activeRuntime.type !== 'press') {
       return;
     }
     var example = activeRuntime.example;
     var want = (example && typeof example.targetKey === 'string') ? example.targetKey.toUpperCase() : null;
-    if (want !== null && charUpper === want) {
+    var got = (typeof keyIdentity === 'string') ? keyIdentity.toUpperCase() : null;
+    if (want !== null && got !== null && got === want) {
       handleTemplateComplete('press', example);
     }
+  }
+
+  // 保留旧名字作为别名（内部注释 REQ-TASK-10 索引与历史设计说明引用过这个名字），避免无谓改动
+  // 其它引用点；本文件内目前只有下方 wireKeyboard() 这一处消费者。
+  var handlePressLetter = handlePressKey;
+
+  // WTJ_KEYBOARD.onSymbol(fn) 是 fn(char, intensity) 两个位置参数（不是 payload 对象，
+  // 与 onLetter/onMilestone 同一单参数风格不同——见 keyboard.js 文件头设计说明第 26~33 行）。
+  // 按键任务判定只需要 char 本身，intensity（连打衰减强度）与"是否命中 targetKey"无关，不消费。
+  function handlePressSymbol(char) {
+    handlePressKey(char);
+  }
+
+  // WTJ_KEYBOARD.onFunctionKey(fn) 是 fn({ key, category, intensity }) 单一 payload 对象
+  // （与 onSymbol 两个位置参数的约定不同，见 keyboard.js 文件头设计说明第 23~25 行）。key 已经过
+  // keyboard.js 的 normalizeFunctionKeyName() 归一化——Space 键统一是字符串 'Space'（原始
+  // e.key 是单个空格字符 ' '，本文件不需要再关心这层转换），其余功能键原样透传 e.key（如
+  // 'Enter'/'ArrowUp'/'ArrowDown'/'ArrowLeft'/'ArrowRight'/'Tab'/'Escape'/'Meta' 等）。
+  function handlePressFunctionKey(payload) {
+    if (!payload) {
+      return;
+    }
+    handlePressKey(payload.key);
   }
 
   // ---------------------------------------------------------------------
@@ -1349,17 +1694,26 @@
     }
 
     var type = drawTaskType();
-    var examples = getExamplesForType(type);
-    if (!examples.length) {
-      console.warn('[WTJ_TASK_TEMPLATES] 类型 "' + type + '" 没有任何可用任务示例，已跳过本次问号点击。');
-      questionClickCounter += 1;
-      return;
+
+    // WTJ-20260706-012：find 类型优先走随机 word-card 抽取（drawWordCardFind()，消费
+    // manifest.tasks.templates.find.randomPool 配置）——manifest 缺少该配置 / 显式禁用 /
+    // secretWords.pool 为空时返回 null，下面照旧回退到 12 条固定 examples 这条既有路径，不
+    // 影响 drag/click/press 三类的既有行为（它们从不会命中这个分支）。
+    var example = (type === 'find') ? drawWordCardFind() : null;
+
+    if (!example) {
+      var examples = getExamplesForType(type);
+      if (!examples.length) {
+        console.warn('[WTJ_TASK_TEMPLATES] 类型 "' + type + '" 没有任何可用任务示例，已跳过本次问号点击。');
+        questionClickCounter += 1;
+        return;
+      }
+      // 洗牌袋（见文件头「任务生成」一节与上方 drawExampleIndex() 详细说明）：每个 type 各自
+      // 维护一个 example 下标的洗牌袋，无放回抽取保证该 type 的每个 example 在一轮内都会被抽到
+      // ——这就是 P1-1（Fable 对抗评审）"每个 example 都必须可达"这条硬要求现在的满足方式。
+      var exampleIndex = drawExampleIndex(type, examples.length);
+      example = examples[exampleIndex];
     }
-    // 洗牌袋（见文件头「任务生成」一节与上方 drawExampleIndex() 详细说明）：每个 type 各自维护
-    // 一个 example 下标的洗牌袋，无放回抽取保证该 type 的每个 example 在一轮内都会被抽到——这就
-    // 是 P1-1（Fable 对抗评审）"每个 example 都必须可达"这条硬要求现在的满足方式。
-    var exampleIndex = drawExampleIndex(type, examples.length);
-    var example = examples[exampleIndex];
 
     var taskDef = { id: example.id, type: type, voicePrompt: example.voicePrompt };
 
@@ -1452,6 +1806,31 @@
       }
     } catch (err) {
       console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onLetter 失败，已捕获：', err);
+    }
+  })();
+
+  // WTJ-20260706-010：按键任务此前只能通过 onLetter 命中（targetKey 为字母/数字），symbol /
+  // Space / Enter / 方向键等 targetKey 永远无法完成任务（缺口修复）。这里新增两路订阅，复用
+  // 同一个 handlePressKey() 门禁（见上方 handlePressKey() 注释）——不会误触发其余三类任务的
+  // 完成，也不会写入秘密词 rolling buffer / 有效键计数（那两套状态完全由 keyboard.js/
+  // secretword.js 自己维护，本文件从不碰）。
+  (function wireSymbol() {
+    try {
+      if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onSymbol === 'function') {
+        window.WTJ_KEYBOARD.onSymbol(handlePressSymbol);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onSymbol 失败，已捕获：', err);
+    }
+  })();
+
+  (function wireFunctionKey() {
+    try {
+      if (window.WTJ_KEYBOARD && typeof window.WTJ_KEYBOARD.onFunctionKey === 'function') {
+        window.WTJ_KEYBOARD.onFunctionKey(handlePressFunctionKey);
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 订阅 window.WTJ_KEYBOARD.onFunctionKey 失败，已捕获：', err);
     }
   })();
 

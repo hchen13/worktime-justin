@@ -23,11 +23,19 @@ var __dirname = path.dirname(__filename);
 var LM_JS_PATH = path.resolve(__dirname, '../../app/web/letter-motion.js');
 var LM_SRC = readFileSync(LM_JS_PATH, 'utf8');
 
+// opts.honorReducedMotion: boolean 时挂一份最小 window.WTJ_MANIFEST = { performance:
+// { honorReducedMotion: ... } } 桩（WTJ-20260706-013 kiosk 默认无视 OS 偏好开关，见
+// letter-motion.js 的 prefersReducedMotion() 顶部守卫）。letter-motion.js 本身不消费
+// manifest 的其它字段，最小桩不影响其余断言。缺省（不传该 opt）时 window.WTJ_MANIFEST 保持
+// undefined，等价于真实 manifest.js 默认 honorReducedMotion=false 的防御式回退分支。
 function createSandbox(opts) {
   var options = opts || {};
   var fakeWindow = {};
   if (options.matchMedia !== undefined) {
     fakeWindow.matchMedia = options.matchMedia;
+  }
+  if (options.honorReducedMotion !== undefined) {
+    fakeWindow.WTJ_MANIFEST = { performance: { honorReducedMotion: options.honorReducedMotion } };
   }
   var sandbox = { window: fakeWindow, console: console };
   vm.createContext(sandbox);
@@ -318,18 +326,37 @@ test('computeLetterFrame：reduced-motion 下跳过 pop overshoot/drift，scale 
 
 // --- 7. prefersReducedMotion --------------------------------------------------------------------
 
-test('prefersReducedMotion：委托 window.matchMedia，缺失/异常时安全回退 false', function () {
-  var LMTrue = createSandbox({ matchMedia: function () { return { matches: true }; } });
+test('prefersReducedMotion：honorReducedMotion=true 时委托 window.matchMedia，缺失/异常时安全回退 false', function () {
+  // WTJ-20260706-013：kiosk 默认 honorReducedMotion=false 时本函数恒返回 false（见下方新增的
+  // "默认无视 OS reduce-motion"正向用例）；这里测的是 honorReducedMotion 显式为 true（未来
+  // 家长设置钩子）时委托 matchMedia 的既有回归行为，因此每个子用例都显式传 honorReducedMotion:true。
+  var LMTrue = createSandbox({ matchMedia: function () { return { matches: true }; }, honorReducedMotion: true });
   assert.equal(LMTrue.prefersReducedMotion(), true);
 
-  var LMFalse = createSandbox({ matchMedia: function () { return { matches: false }; } });
+  var LMFalse = createSandbox({ matchMedia: function () { return { matches: false }; }, honorReducedMotion: true });
   assert.equal(LMFalse.prefersReducedMotion(), false);
 
-  var LMMissing = createSandbox();
+  var LMMissing = createSandbox({ honorReducedMotion: true });
   assert.equal(LMMissing.prefersReducedMotion(), false);
 
-  var LMThrows = createSandbox({ matchMedia: function () { throw new Error('boom'); } });
+  var LMThrows = createSandbox({ matchMedia: function () { throw new Error('boom'); }, honorReducedMotion: true });
   assert.equal(LMThrows.prefersReducedMotion(), false);
+});
+
+// WTJ-20260706-013（本卡核心修复，正向断言）：manifest.performance.honorReducedMotion 缺省/
+// false（本文件的 createSandbox 不传 honorReducedMotion 时 window.WTJ_MANIFEST 就是
+// undefined，等价于真实 manifest.js 的默认值）时，即使 OS matchMedia 命中
+// prefers-reduced-motion: reduce，prefersReducedMotion() 也应恒返回 false——kiosk 儿童 app
+// 无视 OS「减弱动态」偏好，核心学习动画（字母诞生/pop/drift）照播。
+test('prefersReducedMotion：默认（honorReducedMotion 缺省/false）无视 OS matchMedia reduce=true，恒返回 false', function () {
+  var LM = createSandbox({ matchMedia: function () { return { matches: true }; } }); // 未传 honorReducedMotion
+  assert.equal(LM.prefersReducedMotion(), false, 'kiosk 默认应无视 OS reduce-motion，动画照播');
+
+  var LM2 = createSandbox({ matchMedia: function () { return { matches: true }; }, honorReducedMotion: false });
+  assert.equal(LM2.prefersReducedMotion(), false, '显式 honorReducedMotion=false 同样应无视 OS reduce-motion');
+
+  var LM3 = createSandbox({ matchMedia: function () { return { matches: true }; }, honorReducedMotion: 'true' });
+  assert.equal(LM3.prefersReducedMotion(), false, 'honorReducedMotion 非严格 === true（例如字符串 "true"）也应当作不尊重处理，不做隐式类型转换');
 });
 
 // --- 8. randomizeLetterCase（WTJ-20260705-002：字母大小写 50/50） --------------------------------

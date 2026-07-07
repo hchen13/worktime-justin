@@ -140,19 +140,21 @@
 /* 内部逐帧绘制内容），展示/移除时机不受影响。                                  */
 /* ------------------------------------------------------------------ */
 
+/* WTJ-20260706-013：html:not([data-wtj-motion-forced]) 门——kiosk 默认无视 OS 减弱动态，
+   见 hud.css 顶部同名注释与 index.html 内联启动脚本。 */
 @media (prefers-reduced-motion: reduce) {
-  .wtj-rc-chest,
-  .wtj-rc-flash {
+  html:not([data-wtj-motion-forced]) .wtj-rc-chest,
+  html:not([data-wtj-motion-forced]) .wtj-rc-flash {
     -webkit-animation: none !important;
     animation: none !important;
   }
 
-  .wtj-rc-chest {
+  html:not([data-wtj-motion-forced]) .wtj-rc-chest {
     opacity: 1 !important;
     transform: scale(1) rotate(0deg) !important;
   }
 
-  .wtj-rc-flash {
+  html:not([data-wtj-motion-forced]) .wtj-rc-flash {
     opacity: 0.3 !important;
   }
 }

@@ -144,18 +144,16 @@
       //
       // 词池扩展记录（本卡 WTJ-20260704-019 第二批，2026-07-04）：pool 已从"首批 8 词"
       // 同步扩展到 Pack B 生产词池（卡 WTJ-20260704-006，源 docs/assets/production-pack-b/
-      // manifest.json + missing-assets.json）。Pack B 曾是活数据源、DESIGN 分批补齐 stub，现已
-      // **全部产出完毕**——现场核对以两个 json 的 updated_at_cst 2026-07-04 10:58 版本为准：
-      // target_word_count=100、production_ready_count=100、stubbed_pending_count=0（卡
-      // WTJ-20260704-054 补齐最后 Z 组 zebra/zipper/zucchini，PM 已验收）。下方 pool 共 101 条，
-      // **全部 ready、无 spriteStub**：Pack B 的 100 词（100 条 ready，每词 spriteFile 指向真实
-      // sprite）+ 1 条非 Pack B 的遗留词 treasurechest（复用已验收 treasure-chest.png，见下方说明）。
+      // manifest.json + missing-assets.json）。Pack B 曾是活数据源、DESIGN 分批补齐 stub，2026-07-06
+      // 按 Ethan 验收裁定移除旧 X 起始词 xylophone/xray，并接入结尾 x 词 fox（WTJ-20260706-015）。
+      // 下方 pool 共 100 条，全部有真实 sprite、无 spriteStub：活跃 Pack B 99 词 + 1 条非 Pack B
+      // 的遗留词 treasurechest（复用已验收 treasure-chest.png，见下方说明）。
       // 曾用于 stub 占位的共享图 sprites/secret-word-placeholder.png 现已无 pool 条目引用，作为
       // "未来若有新 stub 词可复用"的备用素材保留在 app/web/assets/sprites/，不被运行时加载。
       //
       // 已知差异（据实记录，不在本卡自行裁决）：docs/index.html #secret 词池规模段落下方给出的示例词
       // 标签是 dog / cat / apple / ball / moon / star / car / zoo（8 个，仅作规模示意，覆盖不同字母）。
-      // Pack B 100 词已覆盖 dog / cat / apple / ball / star / car / basket（moon 词已在 Pack B M 组
+      // Pack B 活跃词已覆盖 dog / cat / apple / ball / star / car / basket（moon 词已在 Pack B M 组
       // 补齐为正式秘密词；zoo 仍未补齐，Pack B 未提供对应词）。这 7 个词与"首批 8 词"最初
       // 已验收的 v3 baseline sprite（卡 WTJ-20260703-007，REQ-AST-12）同名，但 Pack B 对它们
       // 重新生成了一版不同的 sprite（md5 与 v3 baseline 不同，已现场核对）——本卡按"以已验收为准，
@@ -163,13 +161,12 @@
       // 不切换成 Pack B 重生成版（Pack B 版未拷贝进运行时，仅停留在 docs/assets/production-pack-b/
       // sprites/），下方各条目已用行内注释标注。
       //
-      // treasurechest（101st，非 Pack B 词）：遗留自 004/009 首批 8 词基线，Pack B 100 词范围内
+      // treasurechest（非 Pack B 词）：遗留自 004/009 首批 8 词基线，Pack B 词范围内
       // 用的是不同的词 treasure（T 组，含义相近但字面不同，各自独立词条、互不冲突，均已入池）。
       // treasurechest 对应的 sprite（treasure-chest.png）在 docs/index.html 素材章节原本对应的是
       // REQ-AST-06（宝箱），而非 REQ-AST-04（秘密词对应物体），且不在 Pack B 的 100 词正式清单内。
       // 本卡不删除这个已存在两个批次（004/009、016）都引用过的词（audio/missing-audio.json 已把它
-      // 登记为 additionalManifestOnlyWords: 1、totalNotDelivered 101 的一部分，删除会与该清单的
-      // 既有口径不一致），仅在此如实记录，请 PM / DESIGN 后续裁决是否正式保留 treasurechest 为
+      // 登记为 additionalManifestOnlyWords: 1），仅在此如实记录，请 PM / DESIGN 后续裁决是否正式保留 treasurechest 为
       // 秘密词，或改回任务专用素材。
       pool: [
         // --- A ---
@@ -288,8 +285,7 @@
         { word: 'window', spriteFile: 'sprites/window.png', audioFile: 'audio/words/window.m4a' }, // Pack B ready（batch-04）
         { word: 'wagon', spriteFile: 'sprites/wagon.png', audioFile: 'audio/words/wagon.m4a' }, // Pack B ready（batch-04）
         // --- X ---
-        { word: 'xylophone', spriteFile: 'sprites/xylophone.png', audioFile: 'audio/words/xylophone.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
-        { word: 'xray', spriteFile: 'sprites/xray.png', audioFile: 'audio/words/xray.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-052 期间补齐，本卡执行时现场核对已转 ready）
+        { word: 'fox', spriteFile: 'sprites/fox.png', audioFile: 'audio/words/fox.m4a' }, // Pack B ready（WTJ-20260706-015；按 Ethan 裁定用结尾 x 词替代 xray/xylophone）
         // --- Y ---
         { word: 'yoyo', spriteFile: 'sprites/yoyo.png', audioFile: 'audio/words/yoyo.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
         { word: 'yarn', spriteFile: 'sprites/yarn.png', audioFile: 'audio/words/yarn.m4a' }, // Pack B ready（batch-04，提交时点前已从 stub 转 ready，现场核对已落地）
@@ -298,13 +294,11 @@
         { word: 'zebra', spriteFile: 'sprites/zebra.png', audioFile: 'audio/words/zebra.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
         { word: 'zipper', spriteFile: 'sprites/zipper.png', audioFile: 'audio/words/zipper.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
         { word: 'zucchini', spriteFile: 'sprites/zucchini.png', audioFile: 'audio/words/zucchini.m4a' }, // Pack B ready（batch-04，卡 WTJ-20260704-054 补齐 Z 组，现场核对已落地）
-        // --- 非 Pack B：既有 v3 基线遗留词（101st，见上方说明） ---
-        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' } // 遗留自 004/009 首批 8 词基线；不在 Pack B 100 词范围内（Pack B 用的是 'treasure'，见上方 T 组），PM/DESIGN 尚未裁决是否保留（见 app/web/MANIFEST.md「已知的文档/素材对齐问题」与 app/web/audio/missing-audio.json additionalManifestOnlyWords）
+        // --- 非 Pack B：既有 v3 基线遗留词（见上方说明） ---
+        { word: 'treasurechest', spriteFile: 'sprites/treasure-chest.png', audioFile: 'audio/words/treasurechest.m4a' } // 遗留自 004/009 首批 8 词基线；不在 Pack B 活跃词范围内（Pack B 用的是 'treasure'，见上方 T 组），PM/DESIGN 尚未裁决是否保留（见 app/web/MANIFEST.md「已知的文档/素材对齐问题」与 app/web/audio/missing-audio.json additionalManifestOnlyWords）
       ],
-      // 上述 101 条 audioFile 均为约定路径 stub：授权语音 / 音效素材尚未到位（全部 137 条缺口的一部分，
-      // 见 app/web/audio/missing-audio.json 的 secretWords 段，totalNotDelivered: 101 = Pack B 100 +
-      // 本 manifest 独有的 treasurechest 1 条），由音频供给卡（016，命名沿用本文件 WTJ-20260704-016）
-      // 交付 .m4a 文件后落地，届时无需改动路径，只需补齐对应文件（见 REQ-AST-08 / REQ-AST-09）。
+      // 上述 audioFile 均为约定路径；当前只有 fox.m4a 仍未交付（见 app/web/audio/missing-audio.json，
+      // WTJ-20260706-008/011 音频返工链路），届时无需改动路径，只需补齐对应文件。
       // wtjres:// 加载层（019 第一批，见 shell/main.swift WTJResourceSchemeHandler）已就位：真实
       // .m4a 文件放入对应路径后，audio.js 的 fetch() 即可直接加载播放，无需再改任何代码。
       audioNotDelivered: true,
@@ -372,9 +366,14 @@
         findHoverSec: 1
       },
 
-      // REQ-TASK-10：按键任务仅字母/数字，不做复杂组合键。
+      // REQ-TASK-10：按键任务不做复杂组合键。allowedKeyTypes 纯文档字段（供 PM/QA 对照，
+      // task-templates.js 不读取本字段——它按 targetKey 字面值直接比较，不做类型校验），
+      // WTJ-20260706-010 起 task-templates.js 的 handlePressKey() 已接线 WTJ_KEYBOARD.onLetter/
+      // onSymbol/onFunctionKey 三路判定，targetKey 除字母/数字外也可以是符号（symbol，如 ','）、
+      // 空白类功能键（whitespace，即 'Space'/'Enter'）或方向键（arrow，即 'ArrowUp'/'ArrowDown'/
+      // 'ArrowLeft'/'ArrowRight'），故在此扩列这三类，与运行时判定范围保持一致。
       pressTask: {
-        allowedKeyTypes: ['alpha', 'digit'],
+        allowedKeyTypes: ['alpha', 'digit', 'symbol', 'whitespace', 'arrow'],
         complexComboAllowed: false
       },
 
@@ -568,14 +567,19 @@
               learningWord: 'lamp' // pt5：命中 secretWords.pool 的 'lamp' 词条。
             },
             {
-              id: 'click-faucet-on',
-              // 056 PROP_ANIM_STATE_MAP: faucet idle='off'（关，静止）→active='running'（水流）；
+              id: 'click-faucet-off',
+              // WTJ-20260706-009：语义翻转——初始态表现为"水在流"，点击后表现为"关水/停止流水"
+              // （此前 idle='off'/active='running' 是反的，等于让孩子"把水打开"，与 Ethan 的
+              // 产品要求相反）。现改为 idle='running'（水一直流，loop:true）→active='closing'
+              // （6 帧一次性关水过程，源数据本就 loop:false，播完 clamp 在关水末帧，与
+              // 'closed'/'off' 静态终态视觉一致——这条 closing 序列本就是 DESIGN 当初命名
+              // "关水动效"（WTJ-20260704-026）时准备的，只是上一版接线把它晾在一边没用上）。
               // 两态都指向同一张真实 faucet.png，态变化完全由帧动画驱动，不依赖静态切图。
               targetSprite: 'sprites/faucet.png',
               targetSpriteActive: 'sprites/faucet.png',
-              // WTJ-20260705-004 Phase B：接线 084 中文完整句"打开水龙头！"，
-              // 消解此前"文件暂缺静默兜底"的旧状态。
-              voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a',
+              // WTJ-20260706-009：中文任务句改为完整句"关掉水龙头！"（CosyVoice3 整句预生成，
+              // 不做运行时拼接），替换此前语义相反的"打开水龙头！"。
+              voicePrompt: 'audio/tasks/click-faucet-off.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'faucet' // pt5：命中 secretWords.pool 的 'faucet' 词条。
             },
@@ -772,16 +776,60 @@
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'zebra'
             }
-          ]
+          ],
+          // WTJ-20260706-012：启用后 task-templates.js 的 handleQuestionClicked() 改为从
+          // secretWords.pool（现场核对 100 词，xylophone 已在 011 卡删除，不是 101）里抽 1 个
+          // target + N 个 distractor 合成一个 synthetic find example，取代上方 12 条精选
+          // example 作为主路径——那 12 条不删除，继续作为 randomPool 缺失/禁用/当前生效语言下
+          // 合格候选池为空时的回退路径（见 task-templates.js drawWordCardFind() 的说明）。
+          //
+          // 语言分支（012 第二阶段，TL 定案，推翻本卡最初"EN-only 机制 + ZH 整句预生成"的口径）：
+          //   - EN 模式：候选池 = secretWords.pool 全量（100 词均已交付 EN .m4a），与本卡第一阶段
+          //     （commit 1048c0e）落地的机制逐字节一致，未改动。
+          //   - ZH 模式：候选池收窄为 secretWords.pool 中 window.WTJ_VOICE_LANG.isWordZhAvailable()
+          //     判定为真的子集（即已交付 audio/words/<word>.zh.m4a 的词，当前 85/100，见
+          //     voice-language.js ZH_AVAILABLE_WORD 台账；011 卡后续补齐更多词后此子集随之自动
+          //     增长，无需再改这里）。目标词的提示音频 = 这个词自己的中文词卡音频本身（不是"找到"+
+          //     词卡的运行时拼接句子，也不是另外预生成的中文整句"找到 X！"——那条路线已被 TL 叫停，
+          //     见 task-templates.js drawWordCardFind() 顶部说明）。**禁止 EN fallback**：中文
+          //     词卡音频缺失的词直接被排除出候选池，绝不参与抽取、也绝不在 ZH 模式下静默改播它的
+          //     英文词卡音频顶替（no-silent-fallback 硬要求，Ethan 明确驳回过"缺中文就退英文"）。
+          // sampleSize：分布/干扰项数量随机化（"扩大随机样本"，与本卡标题呼应）——不再是固定
+          // 2（对应固定 3 个候选），改成 { min:2, max:4 }（对应目标+干扰项总数 N 随机落在 3~5 之间，
+          // 每次问号点击独立重掷）。EN/ZH 两条语言分支共用同一份 sampleSize 配置与抽取逻辑，见
+          // task-templates.js resolveDistractorCount()。仍兼容旧的"纯数字"写法（历史遗留/测试用
+          // 固定配置），见该函数向后兼容分支说明。
+          randomPool: {
+            enabled: true,
+            sampleSize: { min: 2, max: 4 },
+            sourcePool: 'secretWords'
+          },
+          // wordCardBilingual：true 表示 renderFindTask() 在任务渲染开始时通过 WTJ_AUDIO.
+          // playWordBilingual() 播放目标词的词卡音频。EN 模式：audioFile = secretWords.pool[].
+          // audioFile（英文发音），audioFileZh 恒传 null——playWordBilingual() 对 null 的既有
+          // 降级契约是退化为单语播放，等价于 playWord()。ZH 模式：audioFile 改传该词的中文词卡
+          // 音频路径（audio/words/<word>.zh.m4a），audioFileZh 仍恒传 null——这里刻意只借用
+          // playWordBilingual() "必选单文件 + 可选追加第二段"的播放载体语义，不触发它"EN 后接
+          // ZH 顺序播放"那条双语分支（该分支专为 EN 模式且词卡本身没有语言切换需求的历史用法保留，
+          // 与 ZH 模式互斥，见 task-templates.js drawWordCardFind() 内联说明）。
+          wordCardBilingual: true
         },
 
         press: {
           reqId: 'REQ-TASK-10',
-          description: '按键类：只要求一个键，且仅限字母/数字，例如 "Press A."、"Press 3."。不做复杂组合键。',
+          // WTJ-20260706-010：按键目标池从"仅字母/数字"扩到全量 47 目标（A-Z 全字母、0-9 全数字、
+          // 5 个符号 comma/period/semicolon/minus/plus、Space/Enter、方向键 up/down/left/right），
+          // 不再是本行原文"仅限字母/数字"——targetKey 现在也可以是符号原始字符（如 ','）或
+          // keyboard.js 归一化后的具名键（'Space'/'Enter'/'ArrowUp' 等）。判定通道见
+          // task-templates.js handlePressKey()：字母/数字/符号/Space/Enter/方向键统一按
+          // toUpperCase() 比较（827a6a6 已把 onSymbol/onFunctionKey 接线到同一判定函数，010 之前
+          // 这些键身份的 targetKey 永远无法完成任务——那是引擎侧缺口，已在本卡之前修复；010 只是
+          // 第一次真正把这些键身份放进 examples 池）。
+          description: '按键类：要求按下一个键——字母/数字/常见符号/空格/回车/方向键，例如 "Press A."、"Press 3."、"Press the comma key."。不做组合键（如 Ctrl+C）。',
           schema: {
             id: 'string',
-            targetKey: 'string，单个字母或数字（KeyboardEvent.key 规范值）',
-            voicePrompt: 'string',
+            targetKey: 'string，单个字母/数字/符号原始字符，或 keyboard.js 归一化后的具名键（"Space"/"Enter"/"ArrowUp"/"ArrowDown"/"ArrowLeft"/"ArrowRight"）',
+            voicePrompt: 'string，为空字符串表示该目标的语音尚未生成/交付（no-silent-fallback：task.js/audio.js 见到空值会跳过播放，不会静默改播其它语音）',
             successAudio: 'string'
           },
           // WTJ-20260705-004 Phase A（pt3）：纯追加——examples[0]/[1]（press-letter-a /
@@ -791,6 +839,15 @@
           // 改接 084 交付的中文完整句 audio/tasks/<key>.zh.m4a（examples[0]/[1] 的 EN 路径不再
           // 是 task-voice-path.test.mjs 用例 2 的断言对象——该用例已同步改为断言 ZH 路径，见该
           // 文件）。
+          // WTJ-20260706-010：新增 40 条（字母 C/D/E/F/G/H/I/J/K/L/N/O/P/Q/R/T/U/V/W/X/Y/Z、数字
+          // 0/1/2/4/6/8/9、符号 comma/period/semicolon/minus/plus、Space/Enter、方向键
+          // up/down/left/right），凑满全量 47 目标（26 字母 + 10 数字 + 5 符号 + 2 特殊键 + 4
+          // 方向键）。这 40 条当前 voicePrompt 均为空字符串 ''——TL 已暂停裸
+          // generate-tts-cosyvoice3.py 生成，改走共享 ASR-gated wrapper（whisper 自证目标文本 +
+          // 不中重 seed/多候选选优；字母 C/G/J/K/Q/W/Y 与符号名是已知误读高发区），音频生成 +
+          // 接线是本卡的后续 commit，不阻塞先把这 40 个目标纳入随机池（handlePressKey() 的判定
+          // 只依赖 targetKey，不依赖 voicePrompt 是否非空）。press-letter-m 沿用 008 已批准的
+          // press-m.zh.m4a，本卡未新增/未重新生成。
           examples: [
             {
               id: 'press-letter-a',
@@ -837,7 +894,58 @@
               targetKey: '7',
               voicePrompt: 'audio/tasks/press-7.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 7！"
               successAudio: 'audio/sfx/task-success.m4a'
-            }
+            },
+            // WTJ-20260706-010：以下 40 条为本卡新增，voicePrompt 恒为 ''（待 ASR-gated 生成
+            // 交付后由后续 commit 接线为 'audio/tasks/press-<key>.zh.m4a'，同一批也会同步补
+            // app/web/audio/missing-audio.json taskVoice/taskVoiceZh 登记 + voice-language.js
+            // ALL_TASK_IDS/EN_AVAILABLE_TASK_IDS 清单——三处必须同批次一起改，否则会出现
+            // "池子里有这个目标但语言可用性清单不知道"的漂移）。
+            { id: 'press-letter-c', targetKey: 'C', voicePrompt: 'audio/tasks/press-c.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-d', targetKey: 'D', voicePrompt: 'audio/tasks/press-d.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-e', targetKey: 'E', voicePrompt: 'audio/tasks/press-e.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-f', targetKey: 'F', voicePrompt: 'audio/tasks/press-f.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-g', targetKey: 'G', voicePrompt: 'audio/tasks/press-g.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-h', targetKey: 'H', voicePrompt: 'audio/tasks/press-h.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-i', targetKey: 'I', voicePrompt: 'audio/tasks/press-i.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-j', targetKey: 'J', voicePrompt: 'audio/tasks/press-j.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-k', targetKey: 'K', voicePrompt: 'audio/tasks/press-k.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-l', targetKey: 'L', voicePrompt: 'audio/tasks/press-l.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-n', targetKey: 'N', voicePrompt: 'audio/tasks/press-n.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-o', targetKey: 'O', voicePrompt: 'audio/tasks/press-o.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-p', targetKey: 'P', voicePrompt: 'audio/tasks/press-p.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-q', targetKey: 'Q', voicePrompt: 'audio/tasks/press-q.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-r', targetKey: 'R', voicePrompt: 'audio/tasks/press-r.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-t', targetKey: 'T', voicePrompt: 'audio/tasks/press-t.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-u', targetKey: 'U', voicePrompt: 'audio/tasks/press-u.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-v', targetKey: 'V', voicePrompt: 'audio/tasks/press-v.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-w', targetKey: 'W', voicePrompt: 'audio/tasks/press-w.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-x', targetKey: 'X', voicePrompt: 'audio/tasks/press-x.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-y', targetKey: 'Y', voicePrompt: 'audio/tasks/press-y.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-z', targetKey: 'Z', voicePrompt: 'audio/tasks/press-z.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-0', targetKey: '0', voicePrompt: 'audio/tasks/press-0.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-1', targetKey: '1', voicePrompt: 'audio/tasks/press-1.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-2', targetKey: '2', voicePrompt: 'audio/tasks/press-2.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-4', targetKey: '4', voicePrompt: 'audio/tasks/press-4.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-6', targetKey: '6', voicePrompt: 'audio/tasks/press-6.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-8', targetKey: '8', voicePrompt: 'audio/tasks/press-8.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-9', targetKey: '9', voicePrompt: 'audio/tasks/press-9.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            // 符号：targetKey 用 KeyboardEvent.key 原始字符（未经归一化——keyboard.js 的
+            // onSymbol(char, intensity) 直接透传原始字符，见该文件文件头 API 列表说明）。
+            { id: 'press-symbol-comma', targetKey: ',', voicePrompt: 'audio/tasks/press-comma.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-period', targetKey: '.', voicePrompt: 'audio/tasks/press-period.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-semicolon', targetKey: ';', voicePrompt: 'audio/tasks/press-semicolon.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-minus', targetKey: '-', voicePrompt: 'audio/tasks/press-minus.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-plus', targetKey: '+', voicePrompt: 'audio/tasks/press-plus.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            // 特殊键：targetKey 用 keyboard.js normalizeFunctionKeyName() 归一化后的具名值——
+            // 'Space'（原始 e.key 是单个空格字符 ' '，归一化后统一为 'Space'）、'Enter'（原样透传）。
+            { id: 'press-key-space', targetKey: 'Space', voicePrompt: 'audio/tasks/press-space.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-key-enter', targetKey: 'Enter', voicePrompt: 'audio/tasks/press-enter.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            // 方向键：targetKey 用浏览器原生 e.key 值（'ArrowUp'/'ArrowDown'/'ArrowLeft'/'ArrowRight'），
+            // keyboard.js 对方向键不做归一化改名，原样透传。
+            { id: 'press-arrow-up', targetKey: 'ArrowUp', voicePrompt: 'audio/tasks/press-up.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-down', targetKey: 'ArrowDown', voicePrompt: 'audio/tasks/press-down.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-left', targetKey: 'ArrowLeft', voicePrompt: 'audio/tasks/press-left.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-right', targetKey: 'ArrowRight', voicePrompt: 'audio/tasks/press-right.zh.m4a', successAudio: 'audio/sfx/task-success.m4a' }
           ]
         }
       }
@@ -1102,7 +1210,23 @@
         ramGB: 4,
         gpu: 'Intel HD5000',
         os: 'macOS Big Sur 11'
-      }
+      },
+      // WTJ-20260706-013：kiosk 儿童 app 是否尊重 OS 的 prefers-reduced-motion（"减弱动态"）
+      // 偏好。默认 false=不尊重，核心学习动画（frame-anim 的 door/faucet/horse/lamp、
+      // letter-motion、keyvisual、reward-fireworks 等）一律照播，不因为 OS 偏好而只画静止的
+      // 首帧/末帧。根因：QA 在旧机（2014 MacBook Air / Big Sur）上确认系统"减弱动态"默认开启
+      // （com.apple.universalaccess reduceMotion=1），这是该系统版本的默认值，并非 Justin
+      // 为这台 kiosk 主动选择的偏好——对一个单一用途、儿童向的学习 kiosk 而言，让核心反馈动画
+      // 因系统默认值而失效是不可接受的（非崩溃非死循环，但等于"核心学习动画不动"）。将来若要
+      // 支持家长在设置面板里主动选择"减弱动态"，把这里改回 true 即可恢复尊重 OS 偏好——四个
+      // 动画模块（frame-anim.js/letter-motion.js/keyvisual.js/reward-fireworks.js）各自的
+      // prefersReducedMotion() 都以此字段为唯一开关（见各文件同名函数顶部的守卫），CSS 侧则由
+      // index.html 内联启动脚本按此字段给 <html> 打 data-wtj-motion-forced 属性、6 份 CSS 的
+      // @media (prefers-reduced-motion: reduce) 规则相应加 html:not([data-wtj-motion-forced])
+      // 门（见 hud.css/parent-controls.css/reward-chest.css/task-templates.css/
+      // status-rewards.css/secretword.css）。diag.js 的 prefersReducedMotionProbe() 不受此
+      // 字段影响，继续如实上报 OS 原始状态供诊断。
+      honorReducedMotion: false
     }
 
   };

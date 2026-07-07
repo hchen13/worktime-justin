@@ -47,22 +47,43 @@
   // 及 task-templates.js 内置兜底样例并集一致，32 条：原 24 + 025 新增 8 条 ZH-only）。
   var ALL_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
-    'click-lamp-on', 'click-faucet-on', 'click-horse-run',
+    'click-lamp-on', 'click-faucet-off', 'click-horse-run',
     'find-the-dog', 'find-the-cat', 'find-the-apple', 'find-the-star',
     'find-the-fish', 'find-the-elephant', 'find-the-pig', 'find-the-rocket',
     'find-the-turtle', 'find-the-unicorn', 'find-the-whale', 'find-the-zebra',
     'press-a', 'press-3', 'press-b', 'press-s', 'press-m', 'press-5', 'press-7',
     // WTJ-20260705-024：025 新增 8 条任务的中文语音已由 CosyVoice3 交付（ZH-only，无 EN 版本，
     // 故不进 EN_AVAILABLE_TASK_IDS）。stem 即 example id（.zh.m4a 无 id/stem 错位）。
-    'drag-egg-to-nest', 'drag-flower-to-vase', 'drag-orange-to-basket', 'drag-fish-to-net', 'drag-jam-to-jar', 'drag-treasure-to-chest', 'click-door-open', 'click-doorbell-ring'
+    'drag-egg-to-nest', 'drag-flower-to-vase', 'drag-orange-to-basket', 'drag-fish-to-net', 'drag-jam-to-jar', 'drag-treasure-to-chest', 'click-door-open', 'click-doorbell-ring',
+    // WTJ-20260706-010：按键池扩容——全部 40 个新增按键目标的中文整句已由 ASR-gated CosyVoice3
+    // 交付（stem = press-<key>，见 manifest.js press.examples voicePrompt / missing-audio.json
+    // taskVoiceZh）。字母 C-Z（含此前 too-short 失败、后经 16-seed reseed 命中的 press-e）、数字
+    // 0/1/2/4/6/8/9、符号 comma/period/semicolon/minus/plus、Space/Enter、方向键 up/down/left/right。
+    'press-c', 'press-d', 'press-e', 'press-f', 'press-g', 'press-h', 'press-i', 'press-j',
+    'press-k', 'press-l', 'press-n', 'press-o', 'press-p', 'press-q', 'press-r', 'press-t',
+    'press-u', 'press-v', 'press-w', 'press-x', 'press-y', 'press-z',
+    'press-0', 'press-1', 'press-2', 'press-4', 'press-6', 'press-8', 'press-9',
+    'press-comma', 'press-period', 'press-semicolon', 'press-minus', 'press-plus',
+    'press-space', 'press-enter', 'press-up', 'press-down', 'press-left', 'press-right'
   ];
 
   // 已交付英文 .m4a 的任务 id（8 条，见 audio/missing-audio.json 的 taskVoice 段落 + 磁盘
   // app/web/audio/tasks/*.m4a 现存文件；不含 .zh.m4a 后缀的那批）。
   var EN_AVAILABLE_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
-    'click-lamp-on', 'click-faucet-on', 'click-horse-run',
-    'find-the-dog', 'press-a', 'press-3'
+    'click-lamp-on', 'click-faucet-off', 'click-horse-run',
+    'find-the-dog', 'press-a', 'press-3',
+    // WTJ-20260706-010：按键池扩容——45 个新增按键目标的 EN 整句（"Press the letter B!" 等）已由
+    // ASR-gated CosyVoice3 交付（磁盘 app/web/audio/tasks/press-<key>.m4a，missing-audio.json
+    // taskVoice）。字母 B-Z（press-a 已在）、数字 0/1/2/4/5/6/7/8/9（press-3 已在）、符号、
+    // Space/Enter、方向键。注意：这只让 EN 侧的按键任务可用；EN 语言整体仍不完整（drag 池扩容
+    // 的 8 条 + 11 条 find 仍无 EN 语音），故设置面板的"英文"选项按 no-silent-fallback 仍禁用。
+    'press-b', 'press-c', 'press-d', 'press-e', 'press-f', 'press-g', 'press-h', 'press-i',
+    'press-j', 'press-k', 'press-l', 'press-m', 'press-n', 'press-o', 'press-p', 'press-q',
+    'press-r', 'press-s', 'press-t', 'press-u', 'press-v', 'press-w', 'press-x', 'press-y', 'press-z',
+    'press-0', 'press-1', 'press-2', 'press-4', 'press-5', 'press-6', 'press-7', 'press-8', 'press-9',
+    'press-comma', 'press-period', 'press-semicolon', 'press-minus', 'press-plus',
+    'press-space', 'press-enter', 'press-up', 'press-down', 'press-left', 'press-right'
   ];
 
   // 中文当前全量交付（24/24），若未来某次交付出现回退缺口，把对应 id 从这里移除即可让
@@ -79,6 +100,87 @@
 
   var EN_AVAILABLE_SET = idSetFrom(EN_AVAILABLE_TASK_IDS);
   var ZH_AVAILABLE_SET = idSetFrom(ZH_AVAILABLE_TASK_IDS);
+
+  // ---------------------------------------------------------------------
+  // 秘密词（words）语言可用性台账——WTJ-20260706-011（ZH 秘密词二期脚手架，第二片）
+  // ---------------------------------------------------------------------
+  // 与上面 TASK 台账同一约定，但方向相反：秘密词英文 .m4a 现在**全量交付**（100/100，见
+  // app/web/audio/missing-audio.json secretWords[] 全部 status:"delivered"，磁盘
+  // app/web/audio/words/*.m4a 现存 100 个文件），中文 .zh.m4a **尚未生成任何一条**（音频
+  // 生成本身是 008 卡的范围，本卡只做不依赖生成音频的脚手架：ZH 文案 + missing-audio.json
+  // 登记 + 本文件的台账 + secretword.js 的语言感知播放分支，全部 dormant/not-delivered）。
+  // 因此这里只需要一份"哪些词的中文已交付"的台账（ZH_AVAILABLE_WORD），不需要像 TASK 那样
+  // 两份都维护——英文永远可用，判定逻辑见 isWordZhAvailable()：不在这份清单里的词一律走
+  // 英文，NO-SILENT 天然满足（从不构造/请求未交付的 .zh.m4a 路径）。
+  //
+  // ALL_WORD_IDS：与 app/web/manifest.js secretWords.pool[].word 完全一致的 100 词清单
+  // （xylophone 已被 WTJ-20260706-011 从池中删除）。tests/unit/voice-language.test.mjs 有
+  // 一条断言核对两者未漂移。
+  var ALL_WORD_IDS = [
+    'apple', 'ant', 'airplane', 'alligator',
+    'ball', 'basket', 'bell', 'banana',
+    'cat', 'car', 'cup', 'cake',
+    'dog', 'door', 'duck', 'drum',
+    'egg', 'elephant', 'eye', 'envelope',
+    'fish', 'flower', 'frog', 'faucet',
+    'goat', 'grapes', 'gift', 'guitar',
+    'horse', 'hat', 'heart', 'house',
+    'icecream', 'igloo', 'insect', 'island',
+    'juice', 'jam', 'jar', 'jellyfish',
+    'key', 'kite', 'koala', 'kettle',
+    'lamp', 'leaf', 'lion', 'lemon',
+    'moon', 'mouse', 'milk', 'monkey',
+    'nest', 'nose', 'net', 'noodle',
+    'orange', 'owl', 'octopus', 'oven',
+    'pig', 'pear', 'pencil', 'pizza',
+    'queen', 'quilt', 'quail', 'quarter',
+    'rocket', 'robot', 'rainbow', 'ring',
+    'star', 'sun', 'shoe', 'spoon',
+    'treasure', 'tree', 'train', 'turtle',
+    'umbrella', 'unicorn', 'ukulele', 'uniform',
+    'van', 'vase', 'violin', 'volcano',
+    'whale', 'watch', 'window', 'wagon',
+    'fox',
+    'yoyo', 'yarn', 'yak',
+    'zebra', 'zipper', 'zucchini',
+    'treasurechest'
+  ];
+
+  // ZH_AVAILABLE_WORD：中文秘密词已交付的 word 清单。**WTJ-20260706-011 返工后为完整 100 词**
+  // （与 app/web/manifest.js secretWords.pool 完全一致，顺序也一致）：全部 100 个 <word>.zh.m4a
+  // 已由 008 ASR-gated CosyVoice3 管线落盘（每条 whisper 自证念的是目标中文词，不中重 seed，命中
+  // 才写盘；同音异字用 toneless-pinyin 救回、繁简用 opencc 归一），missing-audio.json
+  // secretWordsZh[] 对应 100 条 status 均为 "delivered"。**不再存在"中文未交付·回落英文"的
+  // 可接受态**——这份台账即"每个词的中文都可用"，secretword.js 语言感知分支对全部 100 词都切
+  // .zh.m4a（见 tests/unit/secretword-engine.test.mjs 20 号用例与本文件 10. 号用例）。
+  var ZH_AVAILABLE_WORD = [
+    'apple', 'ant', 'airplane', 'alligator', 'ball', 'basket',
+    'bell', 'banana', 'cat', 'car', 'cup', 'cake',
+    'dog', 'door', 'duck', 'drum', 'egg', 'elephant',
+    'eye', 'envelope', 'fish', 'flower', 'frog', 'faucet',
+    'goat', 'grapes', 'gift', 'guitar', 'horse', 'hat',
+    'heart', 'house', 'icecream', 'igloo', 'insect', 'island',
+    'juice', 'jam', 'jar', 'jellyfish', 'key', 'kite',
+    'koala', 'kettle', 'lamp', 'leaf', 'lion', 'lemon',
+    'moon', 'mouse', 'milk', 'monkey', 'nest', 'nose',
+    'net', 'noodle', 'orange', 'owl', 'octopus', 'oven',
+    'pig', 'pear', 'pencil', 'pizza', 'queen', 'quilt',
+    'quail', 'quarter', 'rocket', 'robot', 'rainbow', 'ring',
+    'star', 'sun', 'shoe', 'spoon', 'treasure', 'tree',
+    'train', 'turtle', 'umbrella', 'unicorn', 'ukulele', 'uniform',
+    'van', 'vase', 'violin', 'volcano', 'whale', 'watch',
+    'window', 'wagon', 'fox', 'yoyo', 'yarn', 'yak',
+    'zebra', 'zipper', 'zucchini', 'treasurechest'
+  ];
+
+  var ZH_AVAILABLE_WORD_SET = idSetFrom(ZH_AVAILABLE_WORD);
+
+  // isWordZhAvailable(word)：给 secretword.js 用的最小查询接口——大小写/归一化由调用方负责
+  // （与 pool 条目的 word 字段大小写约定一致，本文件不重复归一化逻辑）。空台账时对任何输入
+  // 恒返回 false。
+  function isWordZhAvailable(word) {
+    return !!(typeof word === 'string' && ZH_AVAILABLE_WORD_SET[word] === true);
+  }
 
   function warnOnce(message) {
     // 与 audio.js 同款轻量去重（避免同一诊断文案在长会话里被打印几十遍），但本文件独立维护
@@ -308,7 +410,14 @@
     // tests/unit/voice-language.test.mjs 能对照磁盘真实文件核对没有漂移。
     getAllTaskIds: function () { return ALL_TASK_IDS.slice(); },
     getEnAvailableTaskIds: function () { return EN_AVAILABLE_TASK_IDS.slice(); },
-    getZhAvailableTaskIds: function () { return ZH_AVAILABLE_TASK_IDS.slice(); }
+    getZhAvailableTaskIds: function () { return ZH_AVAILABLE_TASK_IDS.slice(); },
+
+    // 秘密词（words）语言可用性——WTJ-20260706-011。isWordZhAvailable() 供 secretword.js
+    // 消费；getAllWordIds()/getZhAvailableWordIds() 供测试内省（与上面 TASK 三个 getter 同
+    // 一用途，不参与运行时播放决策）。
+    isWordZhAvailable: isWordZhAvailable,
+    getAllWordIds: function () { return ALL_WORD_IDS.slice(); },
+    getZhAvailableWordIds: function () { return ZH_AVAILABLE_WORD.slice(); }
   };
 
   if (Object.freeze) {

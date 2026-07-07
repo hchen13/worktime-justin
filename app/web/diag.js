@@ -290,6 +290,8 @@
 
   // ---------------------------------------------------------------------
   // prefers-reduced-motion（与 frame-anim.js/reward-chest.js 同款实现，独立探测互不依赖）。
+  // 本探针刻意不受 WTJ-20260706-013 的 honorReducedMotion 开关影响——诊断日志需要如实反映
+  // OS 原始状态，不能被 app 侧"无视 OS 偏好"的产品决策污染，否则旧机诊断会失去这条信号。
   // ---------------------------------------------------------------------
   function prefersReducedMotionProbe() {
     try {
@@ -301,6 +303,28 @@
       return null;
     }
     return null;
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260706-013：manifest.js 的 performance.honorReducedMotion 开关（防御式读取，
+  // 缺失/非 true 都当 false=不尊重 OS 偏好）+ 由此推导出的"生效值"——即 frame-anim.js/
+  // letter-motion.js/keyvisual.js/reward-fireworks.js 的 prefersReducedMotion() 实际会
+  // 返回的值。honorReducedMotion=false（kiosk 默认）时恒为 false，即使 OS 原始探针为
+  // true，供 QA 复验"reducedMotion 标志消失 + 帧推进"这条修复对照。
+  // ---------------------------------------------------------------------
+  function resolveHonorReducedMotion() {
+    try {
+      return !!(window.WTJ_MANIFEST && window.WTJ_MANIFEST.performance && window.WTJ_MANIFEST.performance.honorReducedMotion === true);
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function prefersReducedMotionEffective(rawProbe, honor) {
+    if (!honor) {
+      return false;
+    }
+    return rawProbe;
   }
 
   // ---------------------------------------------------------------------
@@ -371,7 +395,11 @@
       screenSize: (typeof screen !== 'undefined' && screen) ? { width: screen.width, height: screen.height } : null,
       windowInnerSize: { innerWidth: window.innerWidth, innerHeight: window.innerHeight },
       capabilities: probeCapabilities(),
-      prefersReducedMotion: prefersReducedMotionProbe()
+      prefersReducedMotion: prefersReducedMotionProbe(),
+      // WTJ-20260706-013：honorReducedMotion 开关状态 + 由此推导的"生效值"，见上方两个函数
+      // 注释。prefersReducedMotion（上面那个原始探针字段）保持不变，如实反映 OS 状态。
+      honorReducedMotion: resolveHonorReducedMotion(),
+      prefersReducedMotionEffective: prefersReducedMotionEffective(prefersReducedMotionProbe(), resolveHonorReducedMotion())
     });
   }
 

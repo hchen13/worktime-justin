@@ -38,6 +38,7 @@ RUN (from repo root, using the CosyVoice3 python venv):
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time

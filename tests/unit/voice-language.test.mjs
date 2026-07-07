@@ -61,21 +61,23 @@ function makeSandbox(opts) {
 //    的 taskVoice(8)/taskVoiceZh(24) 两段、磁盘 app/web/audio/tasks/ 现存文件一致）。
 // =====================================================================================
 
-test('1. 默认模式为 zh；getAvailability() 如实反映 zh 32/32 完整、en 8/32 不完整（WTJ-20260705-024 交付 8 条新中文任务后）', function () {
+test('1. 默认模式为 zh；getAvailability() 如实反映 zh 72/72 完整、en 53/72 不完整（WTJ-20260706-010 按键池扩容 40 条 ZH + 45 条 EN 交付后）', function () {
   var env = makeSandbox();
   assert.equal(env.api.getMode(), 'zh', '未持久化过选择时默认模式应为 zh（与 manifest.js 当前 voicePrompt 默认值一致）');
 
   var avail = env.api.getAvailability();
-  assert.equal(avail.zh.totalCount, 32);
-  assert.equal(avail.zh.deliveredCount, 32);
+  assert.equal(avail.zh.totalCount, 72);
+  assert.equal(avail.zh.deliveredCount, 72);
   assert.equal(avail.zh.complete, true);
   assert.equal(avail.zh.missingIds.length, 0);
 
-  assert.equal(avail.en.totalCount, 32);
-  assert.equal(avail.en.deliveredCount, 8);
+  // en 仍不完整：按键池 45 条 EN 已交付，但 drag 池扩容的 8 条 + 11 条 find 仍无 EN 语音
+  // （8 + 11 = 19 缺口）——设置面板"英文"选项按 no-silent-fallback 继续禁用。
+  assert.equal(avail.en.totalCount, 72);
+  assert.equal(avail.en.deliveredCount, 53);
   assert.equal(avail.en.complete, false);
-  assert.equal(avail.en.missingIds.length, 24);
-  console.log('PASS 1: 默认 zh，可用性快照 zh=32/32（完整）/ en=8/32（不完整）与磁盘现状一致。');
+  assert.equal(avail.en.missingIds.length, 19);
+  console.log('PASS 1: 默认 zh，可用性快照 zh=72/72（完整）/ en=53/72（不完整）与磁盘现状一致。');
 });
 
 // =====================================================================================
@@ -262,7 +264,7 @@ test('8. 假想英文全量交付场景：setMode("en") 放行、getEffectiveLan
 // 9. 静态清单与磁盘现状 / manifest.js 一致性核对（防漂移）
 // =====================================================================================
 
-test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致（024 交付 8 条新中文任务后）', function () {
+test('9a. ALL_TASK_IDS 恰好 72 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致（WTJ-20260706-010 按键池扩容 40 条 ZH 整句接线后）', function () {
   var env = makeSandbox();
   var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
   var manifestSandbox = {};
@@ -298,7 +300,7 @@ test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 
   });
 
   var allTaskIds = env.api.getAllTaskIds();
-  assert.equal(allTaskIds.length, 32);
+  assert.equal(allTaskIds.length, 72);
   // JSON.stringify 比较（而非 assert.deepEqual/deepStrictEqual 直接比较数组）：allTaskIds 是
   // vm 沙箱（另一个 realm）里创建的数组，其 Array.prototype 与本文件主 realm 的 Array.prototype
   // 不是同一个对象——assert/strict 的 deepEqual 是 deepStrictEqual 的别名，会因"同构但不同
@@ -306,22 +308,22 @@ test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 
   // 数组内容逐项相同。两侧数组元素都是原始字符串（无跨 realm 引用问题），序列化成字符串比较
   // 可以安全绕开这个陷阱。
   assert.equal(JSON.stringify(allTaskIds.slice().sort()), JSON.stringify(stemIds.slice().sort()),
-    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
-  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致。');
+    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 72 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
+  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 72 条 example 的 voicePrompt 文件 stem 集合完全一致。');
 });
 
-test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（32/32）', function () {
+test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（72/72）', function () {
   var env = makeSandbox();
   var zhIds = env.api.getZhAvailableTaskIds();
-  assert.equal(zhIds.length, 32);
+  assert.equal(zhIds.length, 72);
   zhIds.forEach(function (id) {
     var p = path.join(APP_WEB, 'audio/tasks/' + id + '.zh.m4a');
     assert.equal(existsSync(p), true, id + '.zh.m4a 应在磁盘上真实存在');
   });
-  console.log('PASS 9b: ZH_AVAILABLE_TASK_IDS 全部 24 条在磁盘上都有对应 .zh.m4a 文件。');
+  console.log('PASS 9b: ZH_AVAILABLE_TASK_IDS 全部 72 条在磁盘上都有对应 .zh.m4a 文件。');
 });
 
-test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件集合（8 条，防止两个方向的漂移）', function () {
+test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件集合（53 条，防止两个方向的漂移）', function () {
   var env = makeSandbox();
   var enIds = env.api.getEnAvailableTaskIds();
 
@@ -329,10 +331,87 @@ test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件
     .filter(function (f) { return f.endsWith('.m4a') && !f.endsWith('.zh.m4a'); })
     .map(function (f) { return f.slice(0, -'.m4a'.length); });
 
-  assert.equal(enIds.length, 8);
+  assert.equal(enIds.length, 53);
   // 同上一条注释：JSON.stringify 比较绕开 vm 沙箱数组与主 realm 数组的原型不一致陷阱。
   assert.equal(JSON.stringify(enIds.slice().sort()), JSON.stringify(diskFiles.slice().sort()),
     'voice-language.js 的 EN_AVAILABLE_TASK_IDS 必须恰好等于磁盘上现存英文 .m4a 文件集合——多了会导致误报"可用"实则 404，' +
     '少了会导致明明已交付的素材被误判缺失、语言选项被不必要地禁用');
   console.log('PASS 9c: EN_AVAILABLE_TASK_IDS 与磁盘现存英文 .m4a 文件集合完全一致（无漂移）。');
+});
+
+// =====================================================================================
+// 10. 秘密词（words）语言可用性台账——WTJ-20260706-011 返工：ZH 秘密词 100/100 全交付，
+//     0 条 not-delivered（见 app/web/audio/missing-audio.json secretWordsZh[]）。ZH_AVAILABLE_WORD
+//     台账现为完整 100 词，无 EN fallback 占位。
+// =====================================================================================
+
+test('10a. getAllWordIds() 恰好 100 条，与 app/web/manifest.js secretWords.pool 的 word 字段集合完全一致（顺序也一致）', function () {
+  var env = makeSandbox();
+  var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
+  var manifestSandbox = {};
+  manifestSandbox.window = manifestSandbox;
+  vm.createContext(manifestSandbox);
+  vm.runInContext(manifestSrc, manifestSandbox, { filename: 'manifest.js' });
+  var poolWords = manifestSandbox.window.WTJ_MANIFEST.secretWords.pool.map(function (e) { return e.word; });
+
+  var allWordIds = env.api.getAllWordIds();
+  assert.equal(allWordIds.length, 100, 'WTJ-20260706-011 删除 xylophone 后真实词池应为 100 条');
+  assert.equal(poolWords.length, 100);
+  // JSON.stringify 比较：同上文 9a 的跨 vm-realm 数组原型不一致说明。
+  assert.equal(JSON.stringify(allWordIds), JSON.stringify(poolWords),
+    'voice-language.js 的 ALL_WORD_IDS 必须与 manifest.js secretWords.pool 的 word 顺序、内容完全一致，否则秘密词语言台账会脱离真实词池');
+  console.log('PASS 10a: ALL_WORD_IDS 与 manifest.js secretWords.pool 100 词完全一致（顺序 + 内容）。');
+});
+
+// WTJ-20260706-011 返工后 ZH 秘密词 100/100 全交付（008 ASR-gated CosyVoice3 pipeline）；
+// 无 not-delivered 词、无 EN fallback 占位，见 app/web/audio/missing-audio.json secretWordsZh[]
+// 与本文件顶部大段注释。
+var NOT_DELIVERED_ZH_WORDS = [];
+
+test('10b. getZhAvailableWordIds() 应为完整 100 条（返工后 ZH 秘密词全交付，与 manifest.js 词池 1:1，见 missing-audio.json secretWordsZh）', function () {
+  var env = makeSandbox();
+  var zhWordIds = env.api.getZhAvailableWordIds();
+  var allWordIds = env.api.getAllWordIds();
+  assert.equal(zhWordIds.length, 100, 'ZH_AVAILABLE_WORD 台账应为完整 100 条（WTJ-20260706-011 返工交付 100/100 ZH 词音，无 not-delivered）');
+  assert.equal(allWordIds.length, 100, '词池为 100');
+  // JSON.stringify 比较：见 9a 注释——vm 沙箱数组与主 realm 数组原型不同，deepEqual 会误判。
+  assert.equal(JSON.stringify(zhWordIds.slice().sort()), JSON.stringify(allWordIds.slice().sort()),
+    'ZH_AVAILABLE_WORD 台账必须恰好等于全部 100 词（无缺口），否则台账与 missing-audio.json 的交付状态脱节');
+  console.log('PASS 10b: getZhAvailableWordIds() 为完整 100 条，与词池 1:1，无 ZH 缺口。');
+});
+
+test('10c. isWordZhAvailable() 对全部 100 个已交付词返回 true、对非法输入返回 false（与 missing-audio.json secretWordsZh 全交付状态一致）', function () {
+  var env = makeSandbox();
+  var allWordIds = env.api.getAllWordIds();
+  allWordIds.forEach(function (word) {
+    assert.equal(env.api.isWordZhAvailable(word), true,
+      'isWordZhAvailable("' + word + '") 应为 true（返工后全部 100 词中文已交付）');
+  });
+  assert.equal(env.api.isWordZhAvailable('not-a-real-word'), false, '未登记的陌生词也应返回 false（不是抛错或 undefined）');
+  assert.equal(env.api.isWordZhAvailable(null), false, 'null 入参安全返回 false，不抛错');
+  assert.equal(env.api.isWordZhAvailable(undefined), false, 'undefined 入参安全返回 false，不抛错');
+  assert.equal(env.api.isWordZhAvailable(123), false, '非字符串入参安全返回 false，不抛错');
+  console.log('PASS 10c: isWordZhAvailable() 对全部 100 个已交付词返回 true、各类非法输入返回 false。');
+});
+
+test('10d. 回退分支结构验证：从 ZH_AVAILABLE_WORD 移除一个词后，isWordZhAvailable() 对该词返回 false（fallback 到英文的机制仍在，即便返工后生产态无缺口）', function () {
+  // 与 8. 号用例同一手法：只在内存字符串上替换，不触碰磁盘上的真实 voice-language.js。
+  // 返工后台账已是完整 100 词，不再有 not-delivered 词可供"补齐模拟"；改为反向验证——移除
+  // 'net' 模拟"某词中文一旦缺失"，确认语言感知分支仍会把它判为不可用（回退英文的防御路径未死）。
+  // 只在 ZH_AVAILABLE_WORD 数组内部移除 'net'（'net' 也出现在其它词表如 ALL_WORD_IDS，
+  // 故用捕获组把替换范围限定在本数组，避免误删别处）。
+  var patched = VOICE_LANG_SRC.replace(
+    /var ZH_AVAILABLE_WORD = \[([\s\S]*?)\];/,
+    function (match, inner) {
+      return "var ZH_AVAILABLE_WORD = [" + inner.replace(/,\s*'net'/, '') + "];";
+    }
+  );
+  assert.notEqual(patched, VOICE_LANG_SRC, '替换应当命中（否则说明源码结构变了，这条测试需要同步更新正则）');
+
+  var env = makeSandbox({ sourceOverride: patched });
+  assert.equal(env.api.isWordZhAvailable('net'), false, '移除 net 后，该词应判为中文不可用（触发英文回退防御路径）');
+  assert.equal(env.api.isWordZhAvailable('apple'), true, '其它词（apple）不受影响，仍是已交付');
+  assert.equal(env.api.isWordZhAvailable('fish'), true, '其它词（fish）不受影响，仍是已交付');
+  assert.equal(env.api.getZhAvailableWordIds().length, 99, '移除一词后台账应从 100 条变为 99 条');
+  console.log('PASS 10d: 从台账移除一词后 isWordZhAvailable() 正确判为不可用，英文回退防御路径仍在（生产态 100/100 无缺口）。');
 });
