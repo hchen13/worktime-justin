@@ -212,7 +212,7 @@
       "out": "audio/words/envelope.zh.m4a"
     },
     "fish": {
-      "text": "鱼",
+      "text": "小鱼",
       "out": "audio/words/fish.zh.m4a"
     },
     "flower": {
@@ -272,7 +272,7 @@
       "out": "audio/words/insect.zh.m4a"
     },
     "island": {
-      "text": "岛",
+      "text": "小岛",
       "out": "audio/words/island.zh.m4a"
     },
     "juice": {
@@ -348,7 +348,7 @@
       "out": "audio/words/nose.zh.m4a"
     },
     "net": {
-      "text": "网",
+      "text": "渔网",
       "out": "audio/words/net.zh.m4a"
     },
     "noodle": {
@@ -372,11 +372,11 @@
       "out": "audio/words/oven.zh.m4a"
     },
     "pig": {
-      "text": "猪",
+      "text": "小猪",
       "out": "audio/words/pig.zh.m4a"
     },
     "pear": {
-      "text": "梨",
+      "text": "梨子",
       "out": "audio/words/pear.zh.m4a"
     },
     "pencil": {
@@ -396,7 +396,7 @@
       "out": "audio/words/quilt.zh.m4a"
     },
     "quail": {
-      "text": "鹌鹑",
+      "text": "小鹌鹑",
       "out": "audio/words/quail.zh.m4a"
     },
     "quarter": {

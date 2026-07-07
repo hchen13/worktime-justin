@@ -118,6 +118,21 @@ except Exception:
     _T2S = lambda s: s  # opencc not installed in this interpreter; the real ASR-gated run
                          # (cosyvoice_env) has opencc-python-reimplemented installed for this.
 
+try:
+    # Homophone rescue for ZH: Whisper routinely transcribes a correct reading with a WRONG but
+    # identically-pronounced character — 牦牛(yak, máoniú) came back as "毛牛"(máoniú), 猫(māo) as
+    # "毛"(máo). The clip's SOUND is correct (which is all a child hears); only the character
+    # Whisper chose differs. Comparing toneless pinyin syllables catches this: 牦牛/毛牛 both ->
+    # ['mao','niu'] (pass), while a genuine misread stays distinct — 考拉/考了 -> ['kao','la'] vs
+    # ['kao','le'], 鹌鹑/安全 -> ['an','chun'] vs ['an','quan'] (both correctly rejected). Toneless
+    # (not tone-aware) because Whisper's homophone substitution carries the wrong char's tone.
+    from pypinyin import lazy_pinyin as _lazy_pinyin
+    def _pinyin_syllables(s):
+        return [p for p in _lazy_pinyin(_T2S(s)) if re.fullmatch(r"[a-z]+", p)]
+except Exception:
+    def _pinyin_syllables(s):  # pypinyin absent in this interpreter; the real ASR-gated run
+        return []              # (cosyvoice_env) has pypinyin installed, so the rescue is active there.
+
 
 def norm(s):
     return "".join(_KEEP_RE.findall(_T2S(s).lower()))
@@ -141,7 +156,16 @@ def match(target, asr, ref):
         # disguised as a hit. A bare single-word target has no room for legitimate extra
         # characters, so require the normalized ASR text to equal the normalized target exactly.
         crit_ok = crit_ok and (t == a)
-    return (ratio >= RATIO_MIN.get(ref, 0.6) and crit_ok), ratio
+    passed = ratio >= RATIO_MIN.get(ref, 0.6) and crit_ok
+    # Toneless-pinyin homophone rescue (ZH only, and only when the critical ASCII letters/digits
+    # are already present — so it can never paper over a wrong embedded "M"/"3"). An exact
+    # toneless-syllable match means the clip sounds like the target even if Whisper spelled it
+    # with a homophone character; that is a correct reading, so accept it at full confidence.
+    if not passed and crit_ok and ref == "zh":
+        tp = _pinyin_syllables(target)
+        if tp and tp == _pinyin_syllables(asr):
+            passed, ratio = True, 1.0
+    return passed, ratio
 
 
 def pick_best(passing, ref):
