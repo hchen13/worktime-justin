@@ -40,7 +40,7 @@
     },
     "grandTotalNotDelivered": 9,
     "taskVoiceZh": {
-      "totalNotDelivered": 8,
+      "totalNotDelivered": 0,
       "note": "WTJ-20260704-084 全量新生成的 24/24 中文任务完整句（Kokoro zf_xiaoxiao + misaki[zh] G2P，见 taskVoiceZh[] 里 status:delivered 的 24 条与 TTS-PROVENANCE.md「ZH 中文任务语音」一节）仍然保持 24/24 完整，不受影响。WTJ-20260705-025（drag 池扩容 + door/doorbell 点击任务）新增 8 条 taskVoiceZh 条目，status 均为 not-delivered——见本数组末尾 8 条与 app/scripts/tts-text-manifest.zh.json 的 tasksPending 段落（拟定文案已就绪，待 024/084 排期生成）。这 8 条对应的 app/web/manifest.js example 目前 voicePrompt 均为空字符串 ''（no-silent-fallback：不静默复用其他任务的语音），不影响既有硬编码计数门（tts-audio-delivery.test.mjs 的 101/8/10 EN 门与「24 条 delivered ZH」门——deliveredPaths() 按 status==='delivered' 过滤，本次新增的 8 条 not-delivered 不计入该计数；task-voice-path.test.mjs 的 ===8 EN 门同样不受影响）。"
     },
     "secretWordsZh": {
@@ -2045,6 +2045,366 @@
       "status": "delivered",
       "successAudioRef": "sfx:task-success",
       "note": "同上：id 'press-digit-3' 与文件名 'press-3' 不一致。"
+    },
+    {
+      "taskId": "press-letter-b",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-b.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-c",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-c.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-d",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-d.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-e",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-e.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-f",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-f.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-g",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-g.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-h",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-h.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-i",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-i.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-j",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-j.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-k",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-k.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-l",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-l.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-m",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-m.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-n",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-n.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-o",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-o.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-p",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-p.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-q",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-q.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-r",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-r.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-s",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-s.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-t",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-t.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-u",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-u.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-v",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-v.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-w",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-w.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-x",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-x.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-y",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-y.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-z",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-z.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-0",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-0.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-1",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-1.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-2",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-2.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-4",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-4.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-5",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-5.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-6",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-6.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-7",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-7.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-8",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-8.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-9",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-9.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-comma",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-comma.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-period",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-period.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-semicolon",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-semicolon.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-minus",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-minus.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-plus",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-plus.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-key-space",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-space.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-key-enter",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-enter.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-up",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-up.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-down",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-down.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-left",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-left.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-right",
+      "templateReqId": "REQ-TASK-10",
+      "voicePromptPath": "audio/tasks/press-right.m4a",
+      "status": "delivered",
+      "successAudioRef": "sfx:task-success",
+      "note": "WTJ-20260706-010: keypress pool expansion — EN whole-sentence press prompt, ASR-gated CosyVoice3."
     }
   ],
   "taskVoiceZh": [
@@ -2335,6 +2695,366 @@
       "status": "delivered",
       "durationSec": 2.2,
       "note": "WTJ-20260705-024 全量重生成交付：CosyVoice3 + Ethan 自录参考声 zero-shot 克隆（见 audio/TTS-PROVENANCE.md / SOURCE-LICENSES.md）。manifest.js 对应 example 的 voicePrompt 已接到本条 voicePromptPath。"
+    },
+    {
+      "taskId": "press-letter-c",
+      "textZh": "按下字母 C！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-c.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.12,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-d",
+      "textZh": "按下字母 D！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-d.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.68,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-e",
+      "textZh": "按下字母 E！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-e.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.24,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-f",
+      "textZh": "按下字母 F！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-f.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.2,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-g",
+      "textZh": "按下字母 G！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-g.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.24,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-h",
+      "textZh": "按下字母 H！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-h.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.6,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-i",
+      "textZh": "按下字母 I！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-i.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.16,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-j",
+      "textZh": "按下字母 J！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-j.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.76,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-k",
+      "textZh": "按下字母 K！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-k.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.08,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-l",
+      "textZh": "按下字母 L！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-l.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.92,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-n",
+      "textZh": "按下字母 N！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-n.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.24,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-o",
+      "textZh": "按下字母 O！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-o.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.64,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-p",
+      "textZh": "按下字母 P！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-p.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.56,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-q",
+      "textZh": "按下字母 Q！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-q.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.84,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-r",
+      "textZh": "按下字母 R！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-r.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.04,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-t",
+      "textZh": "按下字母 T！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-t.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.56,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-u",
+      "textZh": "按下字母 U！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-u.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.92,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-v",
+      "textZh": "按下字母 V！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-v.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.16,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-w",
+      "textZh": "按下字母 W！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-w.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.36,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-x",
+      "textZh": "按下字母 X！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-x.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.04,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-y",
+      "textZh": "按下字母 Y！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-y.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.96,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-letter-z",
+      "textZh": "按下字母 Z！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-z.zh.m4a",
+      "status": "delivered",
+      "durationSec": 3.2,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-0",
+      "textZh": "按下数字 0！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-0.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.76,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-1",
+      "textZh": "按下数字 1！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-1.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.72,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-2",
+      "textZh": "按下数字 2！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-2.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.88,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-4",
+      "textZh": "按下数字 4！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-4.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.76,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-6",
+      "textZh": "按下数字 6！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-6.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.72,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-8",
+      "textZh": "按下数字 8！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-8.zh.m4a",
+      "status": "delivered",
+      "durationSec": 3.0,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-digit-9",
+      "textZh": "按下数字 9！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-9.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.28,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-comma",
+      "textZh": "按下逗号！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-comma.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.84,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-period",
+      "textZh": "按下句号！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-period.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.96,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-semicolon",
+      "textZh": "按下分号！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-semicolon.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.28,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-minus",
+      "textZh": "按下减号！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-minus.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.72,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-symbol-plus",
+      "textZh": "按下加号！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-plus.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.24,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-key-space",
+      "textZh": "按下空格键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-space.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.12,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-key-enter",
+      "textZh": "按下回车键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-enter.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.4,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-up",
+      "textZh": "按向上方向键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-up.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.2,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-down",
+      "textZh": "按向下方向键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-down.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.88,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-left",
+      "textZh": "按向左方向键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-left.zh.m4a",
+      "status": "delivered",
+      "durationSec": 2.24,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
+    },
+    {
+      "taskId": "press-arrow-right",
+      "textZh": "按向右方向键！",
+      "phonemes": null,
+      "voicePromptPath": "audio/tasks/press-right.zh.m4a",
+      "status": "delivered",
+      "durationSec": 1.56,
+      "note": "WTJ-20260706-010: keypress pool expansion — ZH whole-sentence press prompt (整句预生成，禁止运行时拼接), ASR-gated CosyVoice3."
     }
   ],
   "compositePhrases": [

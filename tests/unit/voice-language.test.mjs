@@ -61,21 +61,23 @@ function makeSandbox(opts) {
 //    的 taskVoice(8)/taskVoiceZh(24) 两段、磁盘 app/web/audio/tasks/ 现存文件一致）。
 // =====================================================================================
 
-test('1. 默认模式为 zh；getAvailability() 如实反映 zh 32/32 完整、en 8/32 不完整（WTJ-20260705-024 交付 8 条新中文任务后）', function () {
+test('1. 默认模式为 zh；getAvailability() 如实反映 zh 72/72 完整、en 53/72 不完整（WTJ-20260706-010 按键池扩容 40 条 ZH + 45 条 EN 交付后）', function () {
   var env = makeSandbox();
   assert.equal(env.api.getMode(), 'zh', '未持久化过选择时默认模式应为 zh（与 manifest.js 当前 voicePrompt 默认值一致）');
 
   var avail = env.api.getAvailability();
-  assert.equal(avail.zh.totalCount, 32);
-  assert.equal(avail.zh.deliveredCount, 32);
+  assert.equal(avail.zh.totalCount, 72);
+  assert.equal(avail.zh.deliveredCount, 72);
   assert.equal(avail.zh.complete, true);
   assert.equal(avail.zh.missingIds.length, 0);
 
-  assert.equal(avail.en.totalCount, 32);
-  assert.equal(avail.en.deliveredCount, 8);
+  // en 仍不完整：按键池 45 条 EN 已交付，但 drag 池扩容的 8 条 + 11 条 find 仍无 EN 语音
+  // （8 + 11 = 19 缺口）——设置面板"英文"选项按 no-silent-fallback 继续禁用。
+  assert.equal(avail.en.totalCount, 72);
+  assert.equal(avail.en.deliveredCount, 53);
   assert.equal(avail.en.complete, false);
-  assert.equal(avail.en.missingIds.length, 24);
-  console.log('PASS 1: 默认 zh，可用性快照 zh=32/32（完整）/ en=8/32（不完整）与磁盘现状一致。');
+  assert.equal(avail.en.missingIds.length, 19);
+  console.log('PASS 1: 默认 zh，可用性快照 zh=72/72（完整）/ en=53/72（不完整）与磁盘现状一致。');
 });
 
 // =====================================================================================
@@ -262,7 +264,7 @@ test('8. 假想英文全量交付场景：setMode("en") 放行、getEffectiveLan
 // 9. 静态清单与磁盘现状 / manifest.js 一致性核对（防漂移）
 // =====================================================================================
 
-test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致（024 交付 8 条新中文任务后）', function () {
+test('9a. ALL_TASK_IDS 恰好 72 条，与 manifest.js 四类模板 example 的 voicePrompt 文件 stem 并集一致（WTJ-20260706-010 按键池扩容 40 条 ZH 整句接线后）', function () {
   var env = makeSandbox();
   var manifestSrc = readFileSync(path.join(APP_WEB, 'manifest.js'), 'utf8');
   var manifestSandbox = {};
@@ -298,7 +300,7 @@ test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 
   });
 
   var allTaskIds = env.api.getAllTaskIds();
-  assert.equal(allTaskIds.length, 32);
+  assert.equal(allTaskIds.length, 72);
   // JSON.stringify 比较（而非 assert.deepEqual/deepStrictEqual 直接比较数组）：allTaskIds 是
   // vm 沙箱（另一个 realm）里创建的数组，其 Array.prototype 与本文件主 realm 的 Array.prototype
   // 不是同一个对象——assert/strict 的 deepEqual 是 deepStrictEqual 的别名，会因"同构但不同
@@ -306,22 +308,22 @@ test('9a. ALL_TASK_IDS 恰好 32 条，与 manifest.js 四类模板 example 的 
   // 数组内容逐项相同。两侧数组元素都是原始字符串（无跨 realm 引用问题），序列化成字符串比较
   // 可以安全绕开这个陷阱。
   assert.equal(JSON.stringify(allTaskIds.slice().sort()), JSON.stringify(stemIds.slice().sort()),
-    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
-  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 32 条 example 的 voicePrompt 文件 stem 集合完全一致。');
+    'voice-language.js 的 ALL_TASK_IDS 必须与 manifest.js 72 条 example 的 voicePrompt 文件 stem 集合完全一致，否则设置面板的可用性判断会脱离真实数据');
+  console.log('PASS 9a: ALL_TASK_IDS 与 manifest.js 72 条 example 的 voicePrompt 文件 stem 集合完全一致。');
 });
 
-test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（32/32）', function () {
+test('9b. ZH_AVAILABLE_TASK_IDS 的每一条在磁盘上都有对应 .zh.m4a 真实文件（72/72）', function () {
   var env = makeSandbox();
   var zhIds = env.api.getZhAvailableTaskIds();
-  assert.equal(zhIds.length, 32);
+  assert.equal(zhIds.length, 72);
   zhIds.forEach(function (id) {
     var p = path.join(APP_WEB, 'audio/tasks/' + id + '.zh.m4a');
     assert.equal(existsSync(p), true, id + '.zh.m4a 应在磁盘上真实存在');
   });
-  console.log('PASS 9b: ZH_AVAILABLE_TASK_IDS 全部 24 条在磁盘上都有对应 .zh.m4a 文件。');
+  console.log('PASS 9b: ZH_AVAILABLE_TASK_IDS 全部 72 条在磁盘上都有对应 .zh.m4a 文件。');
 });
 
-test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件集合（8 条，防止两个方向的漂移）', function () {
+test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件集合（53 条，防止两个方向的漂移）', function () {
   var env = makeSandbox();
   var enIds = env.api.getEnAvailableTaskIds();
 
@@ -329,7 +331,7 @@ test('9c. EN_AVAILABLE_TASK_IDS 恰好等于磁盘上现存的英文 .m4a 文件
     .filter(function (f) { return f.endsWith('.m4a') && !f.endsWith('.zh.m4a'); })
     .map(function (f) { return f.slice(0, -'.m4a'.length); });
 
-  assert.equal(enIds.length, 8);
+  assert.equal(enIds.length, 53);
   // 同上一条注释：JSON.stringify 比较绕开 vm 沙箱数组与主 realm 数组的原型不一致陷阱。
   assert.equal(JSON.stringify(enIds.slice().sort()), JSON.stringify(diskFiles.slice().sort()),
     'voice-language.js 的 EN_AVAILABLE_TASK_IDS 必须恰好等于磁盘上现存英文 .m4a 文件集合——多了会导致误报"可用"实则 404，' +

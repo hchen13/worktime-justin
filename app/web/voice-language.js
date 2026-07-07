@@ -54,7 +54,17 @@
     'press-a', 'press-3', 'press-b', 'press-s', 'press-m', 'press-5', 'press-7',
     // WTJ-20260705-024：025 新增 8 条任务的中文语音已由 CosyVoice3 交付（ZH-only，无 EN 版本，
     // 故不进 EN_AVAILABLE_TASK_IDS）。stem 即 example id（.zh.m4a 无 id/stem 错位）。
-    'drag-egg-to-nest', 'drag-flower-to-vase', 'drag-orange-to-basket', 'drag-fish-to-net', 'drag-jam-to-jar', 'drag-treasure-to-chest', 'click-door-open', 'click-doorbell-ring'
+    'drag-egg-to-nest', 'drag-flower-to-vase', 'drag-orange-to-basket', 'drag-fish-to-net', 'drag-jam-to-jar', 'drag-treasure-to-chest', 'click-door-open', 'click-doorbell-ring',
+    // WTJ-20260706-010：按键池扩容——全部 40 个新增按键目标的中文整句已由 ASR-gated CosyVoice3
+    // 交付（stem = press-<key>，见 manifest.js press.examples voicePrompt / missing-audio.json
+    // taskVoiceZh）。字母 C-Z（含此前 too-short 失败、后经 16-seed reseed 命中的 press-e）、数字
+    // 0/1/2/4/6/8/9、符号 comma/period/semicolon/minus/plus、Space/Enter、方向键 up/down/left/right。
+    'press-c', 'press-d', 'press-e', 'press-f', 'press-g', 'press-h', 'press-i', 'press-j',
+    'press-k', 'press-l', 'press-n', 'press-o', 'press-p', 'press-q', 'press-r', 'press-t',
+    'press-u', 'press-v', 'press-w', 'press-x', 'press-y', 'press-z',
+    'press-0', 'press-1', 'press-2', 'press-4', 'press-6', 'press-8', 'press-9',
+    'press-comma', 'press-period', 'press-semicolon', 'press-minus', 'press-plus',
+    'press-space', 'press-enter', 'press-up', 'press-down', 'press-left', 'press-right'
   ];
 
   // 已交付英文 .m4a 的任务 id（8 条，见 audio/missing-audio.json 的 taskVoice 段落 + 磁盘
@@ -62,7 +72,18 @@
   var EN_AVAILABLE_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
     'click-lamp-on', 'click-faucet-off', 'click-horse-run',
-    'find-the-dog', 'press-a', 'press-3'
+    'find-the-dog', 'press-a', 'press-3',
+    // WTJ-20260706-010：按键池扩容——45 个新增按键目标的 EN 整句（"Press the letter B!" 等）已由
+    // ASR-gated CosyVoice3 交付（磁盘 app/web/audio/tasks/press-<key>.m4a，missing-audio.json
+    // taskVoice）。字母 B-Z（press-a 已在）、数字 0/1/2/4/5/6/7/8/9（press-3 已在）、符号、
+    // Space/Enter、方向键。注意：这只让 EN 侧的按键任务可用；EN 语言整体仍不完整（drag 池扩容
+    // 的 8 条 + 11 条 find 仍无 EN 语音），故设置面板的"英文"选项按 no-silent-fallback 仍禁用。
+    'press-b', 'press-c', 'press-d', 'press-e', 'press-f', 'press-g', 'press-h', 'press-i',
+    'press-j', 'press-k', 'press-l', 'press-m', 'press-n', 'press-o', 'press-p', 'press-q',
+    'press-r', 'press-s', 'press-t', 'press-u', 'press-v', 'press-w', 'press-x', 'press-y', 'press-z',
+    'press-0', 'press-1', 'press-2', 'press-4', 'press-5', 'press-6', 'press-7', 'press-8', 'press-9',
+    'press-comma', 'press-period', 'press-semicolon', 'press-minus', 'press-plus',
+    'press-space', 'press-enter', 'press-up', 'press-down', 'press-left', 'press-right'
   ];
 
   // 中文当前全量交付（24/24），若未来某次交付出现回退缺口，把对应 id 从这里移除即可让
