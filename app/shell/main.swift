@@ -1067,7 +1067,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private func refreshUsageStateForNewDayIfNeeded() -> Bool {
         let today = wtjCurrentLocalDateString()
         // WTJ-20260707-004：日期比较本身抽成 app/shell/DailyQuota.swift 里的纯函数
-        // wtjIsNewLocalDay()，供独立测试覆盖（tests/swift/daily_quota_reset_test.swift），
+        // wtjIsNewLocalDay()，供独立测试覆盖（tests/swift/main.swift，配
+        // tests/swift/run_daily_quota_reset_test.sh），
         // 同时也是本卡新增的"reset 口令"处理（见下方 handleResetPasscodeAttempt()）与本函数
         // 共用的唯一判定条件——两处不会出现"各自写一份、逐渐不同步"的分叉。
         guard wtjIsNewLocalDay(recordedDateString: usageDateString, currentDateString: today) else { return false }
