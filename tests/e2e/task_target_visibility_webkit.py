@@ -83,8 +83,10 @@ CLICKS_PER_VIEWPORT = 24
 
 # The five click examples that must be forced reachable + visible (original three
 # TL named explicitly, plus WTJ-20260705-025's door/doorbell additions).
+# WTJ-20260706-009: click-faucet-on renamed to click-faucet-off (task semantics flipped
+# from "turn the water on" to "turn the water off" — see task-templates.js PROP_ANIM_STATE_MAP).
 ALL_CLICK_EXAMPLE_IDS = {
-    "click-lamp-on", "click-faucet-on", "click-horse-run",
+    "click-lamp-on", "click-faucet-off", "click-horse-run",
     "click-door-open", "click-doorbell-ring"
 }
 
