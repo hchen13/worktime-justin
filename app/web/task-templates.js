@@ -575,21 +575,35 @@
   }
 
   // ---------------------------------------------------------------------
-  // WTJ-20260706-012（EN-side 随机 word-card find driver）：find 类型的 target/distractor
-  // 不再局限于 manifest.js tasks.templates.find.examples 手工列举过的那 12 条精选组合——
-  // 改为直接从 secretWords.pool（现场核对 100 词，见该 domain 行内注释）任意抽取，覆盖面从
-  // "12 条手工搭配"扩到"100 词间任意组合"。target 用一个专属的持续洗牌袋（wordCardBagState，
-  // 候选池是 pool 的下标），与 drawTaskType()/drawExampleIndex() 完全同一套
-  // refillShuffleBag()/drawFromShuffleBag() 机制、同样的两条契约（一整袋内每个词都恰好当一次
-  // target；跨袋边界不连续选中同一个词）。distractor 则在每次调用时现搭一个"候选池=pool 里
-  // 除本次 target 外全部下标"的一次性洗牌袋抽 sampleSize 个——用的是同一对 helper 函数，只是
-  // state 是每次调用现建的临时对象而不是像 target 那样持续复用：这是刻意的，如果 distractor
-  // 也复用同一个持续状态、又恰好在同一次调用内触发袋子重新洗牌，重新洗出来的新袋子是对整个
-  // pool 重新洗牌（不排除本次已经抽中的 target），会破坏"target 与 distractor 不重复"这条
-  // 硬要求；本次调用内候选池已经手工排除了 target，且 pool.length-1 恒 >= sampleSize（100 词
-  // 池子），refillShuffleBag() 在同一次调用内只会触发一次，不会出现"袋子中途重新洗牌"的边界
-  // 问题。
-  var wordCardBagState = { bag: [], lastPicked: null };
+  // WTJ-20260706-012：find 类型的 target/distractor 不再局限于 manifest.js
+  // tasks.templates.find.examples 手工列举过的那 12 条精选组合——改为直接从 secretWords.pool
+  // （现场核对 100 词，见该 domain 行内注释）任意抽取，覆盖面从"12 条手工搭配"扩到"词间任意
+  // 组合"。target 用一个专属的持续洗牌袋（每种生效语言各自一份，见 wordCardBagStates），与
+  // drawTaskType()/drawExampleIndex() 完全同一套 refillShuffleBag()/drawFromShuffleBag() 机制、
+  // 同样的两条契约（一整袋内每个词都恰好当一次 target；跨袋边界不连续选中同一个词）。distractor
+  // 则在每次调用时现搭一个"候选池=pool 里除本次 target 外全部下标"的一次性洗牌袋抽 n 个——用的
+  // 是同一对 helper 函数，只是 state 是每次调用现建的临时对象而不是像 target 那样持续复用：这是
+  // 刻意的，如果 distractor 也复用同一个持续状态、又恰好在同一次调用内触发袋子重新洗牌，重新洗
+  // 出来的新袋子是对整个 pool 重新洗牌（不排除本次已经抽中的 target），会破坏"target 与
+  // distractor 不重复"这条硬要求；本次调用内候选池已经手工排除了 target，refillShuffleBag() 在
+  // 同一次调用内只会触发一次，不会出现"袋子中途重新洗牌"的边界问题。
+  //
+  // 语言分支（012 第二阶段，TL 定案 2026-07-07，推翻本卡最初口径——历史记录见下）：
+  //   历史：本卡最初的 EN-side 落地（commit 1048c0e）只处理了 EN 半部分，ZH 半部分当时的计划是
+  //   "为合格找物池每个 ZH 词预生成一条完整'找到 X！'整句"（理由：中文任务音频不能运行时拼接
+  //   "找到"+词卡，那是明确反模式）。TL 随后依据看板最新裁决叫停了这条整句生成路线：**ZH 模型
+  //   改为 word-card**——目标词的提示音频就是这个词自己已经交付的中文词卡音频本身
+  //   （audio/words/<word>.zh.m4a，011 卡交付），不是"找到"+词卡的运行时拼接（那确实是反模式），
+  //   也不是另外预生成的整句"找到 X！"（这条路线已被叫停，未落地任何一条这类整句）。工程上这just
+  //   是 playWordBilingual() 的 audioFile 参数在 ZH 模式下指向该词的 .zh.m4a 而非 .m4a——见下方
+  //   drawWordCardFind() 与 getFindCandidatePool()。
+  //
+  //   no-EN-fallback（Ethan 明确驳回"缺中文就退英文"）：ZH 模式下的候选池收窄为 secretWords.pool
+  //   中"该词的中文词卡音频已交付"的子集（见 getFindCandidatePool()），缺中文音频的词直接被排除
+  //   出候选池，绝不参与抽取——不存在"抽中了但没有中文音频，于是回退播英文"这条分支。EN 模式则
+  //   维持第一阶段落地的机制不变：候选池 = secretWords.pool 全量（100 词均已交付 EN .m4a）。
+  // ---------------------------------------------------------------------
+  var wordCardBagStates = {}; // 键为生效语言字符串（'en'|'zh'），值均为 { bag, lastPicked, itemsLength }。
 
   function getSecretWordsPool() {
     if (MANIFEST && MANIFEST.secretWords && Array.isArray(MANIFEST.secretWords.pool)) {
@@ -598,16 +612,88 @@
     return [];
   }
 
-  // sampleWordCardsFromPool(n)：从 secretWords.pool 抽 1 个 target + n 个 distractor（互不
-  // 重复），返回 { target, distractors }（均为 pool 条目对象本身，非下标）；pool 为空/缺失时
-  // 返回 null（调用方 drawWordCardFind() 据此回退到固定 examples，并且这里已经 warn 过一次，
-  // 调用方不需要重复 warn）。n 大于 pool.length-1（可用的 distractor 候选数）时防御式截断到
-  // 实际可抽取的最大数量，不抛错、不返回不足额的报错——纯粹的边界防御，正常配置（sampleSize=2,
-  // pool=100 词）不会走到这个分支。
-  function sampleWordCardsFromPool(n) {
+  // getEffectiveFindLanguage()：委托 window.WTJ_VOICE_LANG.getEffectiveLanguage() 判断当前
+  // 生效语言。防御式：模块缺失/调用抛错时统一回退 'en'——与本卡第一阶段（1048c0e）"find 随机
+  // word-card 抽取"机制在 WTJ_VOICE_LANG 尚未接线时的行为完全一致（那时这套机制根本不检查语言，
+  // 恒等于"当作 en 处理"），保证未加载 voice-language.js 的既有测试/沙箱场景不改变行为。
+  function getEffectiveFindLanguage() {
+    try {
+      if (window.WTJ_VOICE_LANG && typeof window.WTJ_VOICE_LANG.getEffectiveLanguage === 'function') {
+        return (window.WTJ_VOICE_LANG.getEffectiveLanguage() === 'zh') ? 'zh' : 'en';
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 window.WTJ_VOICE_LANG.getEffectiveLanguage 失败，已捕获，回退 en：', err);
+    }
+    return 'en';
+  }
+
+  // isWordZhAvailableDefensive(word)：委托 window.WTJ_VOICE_LANG.isWordZhAvailable()（与
+  // secretword.js resolveWordAudioEntry() 同一委托对象、同一防御式约定）。模块缺失/调用抛错/
+  // 非 true 返回值一律判定为"不可用"——宁可把一个词误判为暂不可找（回退更小的候选池甚至回退
+  // 12 条固定 examples），也不能因为查询本身失败就误把一个实际缺音频的词当作可用（那会导致
+  // no-EN-fallback 的下一道防线——drawWordCardFind() 里的路径推导——真的抽到一个没有中文音频
+  // 的词）。
+  function isWordZhAvailableDefensive(word) {
+    try {
+      if (window.WTJ_VOICE_LANG && typeof window.WTJ_VOICE_LANG.isWordZhAvailable === 'function') {
+        return window.WTJ_VOICE_LANG.isWordZhAvailable(word) === true;
+      }
+    } catch (err) {
+      console.error('[WTJ_TASK_TEMPLATES] 读取 window.WTJ_VOICE_LANG.isWordZhAvailable 失败，已捕获：', err);
+    }
+    return false;
+  }
+
+  // getFindCandidatePool(lang)：EN 模式原样返回 secretWords.pool 全量（第一阶段既有行为，
+  // 未改动）；ZH 模式收窄为"中文词卡音频已交付"的子集（isWordZhAvailableDefensive()，见上方
+  // no-EN-fallback 说明）。该子集大小随 voice-language.js 的 ZH_AVAILABLE_WORD 台账增长而自动
+  // 增长（当前 85/100，011 卡后续补齐时无需再改这里一行代码）。
+  function getFindCandidatePool(lang) {
     var pool = getSecretWordsPool();
+    if (lang !== 'zh') {
+      return pool;
+    }
+    var filtered = [];
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i] && isWordZhAvailableDefensive(pool[i].word)) {
+        filtered.push(pool[i]);
+      }
+    }
+    return filtered;
+  }
+
+  // deriveZhWordAudioPath(enAudioFile)：与 secretword.js deriveZhWordPath() 同一约定（两个
+  // 文件互相独立、不共享私有函数，各自维护一份等价的最小实现）——把 secretWords.pool[].audioFile
+  // 的既有命名约定 "audio/words/<word>.m4a" 换算成 "audio/words/<word>.zh.m4a"。不匹配该形状
+  // 时返回 null（调用方据此判定路径推导失败，fail-fast 拒绝渲染，见 drawWordCardFind()）。
+  function deriveZhWordAudioPath(enAudioFile) {
+    var m = /^(.*)\.m4a$/i.exec(String(enAudioFile));
+    return m ? (m[1] + '.zh.m4a') : null;
+  }
+
+  // drawWordCardTargetIndex(lang, poolLength)：每种语言各自维护一份持续洗牌袋状态（键为 lang），
+  // 与 drawExampleIndex() 同一"itemsLength 变化则重建"防御——ZH 候选池长度会随 011 台账补齐而
+  // 增长，若不检测直接复用旧状态，旧下标语义会错位。
+  function drawWordCardTargetIndex(lang, poolLength) {
+    var state = wordCardBagStates[lang];
+    if (!state || state.itemsLength !== poolLength) {
+      state = { bag: [], lastPicked: null, itemsLength: poolLength };
+      wordCardBagStates[lang] = state;
+    }
+    var indices = [];
+    for (var i = 0; i < poolLength; i++) {
+      indices.push(i);
+    }
+    return drawFromShuffleBag(state, indices);
+  }
+
+  // sampleWordCardsFromPool(pool, lang, n)：从给定候选池（调用方已按语言过滤好）抽 1 个
+  // target + n 个 distractor（互不重复），返回 { target, distractors }（均为 pool 条目对象
+  // 本身，非下标）；pool 为空时返回 null（调用方 drawWordCardFind() 据此回退，且这里不重复
+  // warn——调用方按语言场景决定具体的警示文案）。n 大于 pool.length-1（可用的 distractor 候选
+  // 数）时防御式截断到实际可抽取的最大数量，不抛错、不返回不足额的报错。
+  function sampleWordCardsFromPool(pool, lang, n) {
     if (!pool.length) {
-      console.warn('[WTJ_TASK_TEMPLATES] secretWords.pool 为空/缺失，无法抽取随机 word-card find 目标。');
       return null;
     }
     var indices = [];
@@ -615,7 +701,7 @@
     for (i = 0; i < pool.length; i++) {
       indices.push(i);
     }
-    var targetIdx = drawFromShuffleBag(wordCardBagState, indices);
+    var targetIdx = drawWordCardTargetIndex(lang, pool.length);
 
     var remaining = [];
     for (i = 0; i < indices.length; i++) {
@@ -633,24 +719,55 @@
     return { target: pool[targetIdx], distractors: distractors };
   }
 
-  // drawWordCardFind()：读取 manifest.tasks.templates.find.randomPool 配置，未启用/pool 为空
-  // 时返回 null（调用方 handleQuestionClicked() 据此回退到 12 条固定 examples，见该函数）。
-  // 启用时构建一个 SYNTHETIC find example——形状上尽量贴近固定 example 的 schema（targetSprite/
-  // distractorSprites/hoverSec/pressOrHoverAlsoCompletes/successAudio/learningWord 字段齐全，
-  // renderFindTask()/handleTemplateComplete() 等既有消费逻辑不需要区分"这是不是随机抽的"），
-  // 额外带两个只有 synthetic example 才有的字段（wordAudioFile/wordAudioFileZh），供
-  // renderFindTask() 在任务开始时播放目标词双语语音（见该函数 playFindWordBilingualDefensive()
-  // 一节）。voicePrompt 恒为空字符串——随机抽取的目标词没有对应的预生成"找到 xxx"任务提示句
-  // （zh/en 均没有，且 100 词任意组合也不可能穷举预生成），no-silent-fallback 原则下不指向任何
-  // 语义不匹配的现成语音文件，走 wordCardBilingual 的双语词语播放替代任务语音提示。
+  // resolveDistractorCount(randomPoolCfg)：读取 manifest tasks.templates.find.randomPool.
+  // sampleSize，解析出本次调用要抽取的 distractor 数量（WTJ-20260706-012"扩大随机样本"：
+  // sampleSize 是 { min, max } 时每次独立重掷随机整数落在 [min, max]（对应 target+distractor
+  // 总数 N 落在 [min+1, max+1]，manifest 当前配置 {min:2,max:4} 即 N 随机落在 3~5）；仍兼容
+  // 历史的"纯数字"写法（固定值，见既有测试里手写的简化 manifest fixture），非法形状防御式回退
+  // 2 并 warn 一次。
+  function resolveDistractorCount(randomPoolCfg) {
+    var raw = randomPoolCfg.sampleSize;
+    if (typeof raw === 'number' && raw >= 0) {
+      return raw;
+    }
+    if (raw && typeof raw === 'object' && typeof raw.min === 'number' && typeof raw.max === 'number' && raw.max >= raw.min && raw.min >= 0) {
+      var span = raw.max - raw.min + 1;
+      return raw.min + Math.floor(taskRandom() * span);
+    }
+    console.warn('[WTJ_TASK_TEMPLATES] find.randomPool.sampleSize 配置形状非法（应为 number 或 {min,max}），已回退默认 2。');
+    return 2;
+  }
+
+  // drawWordCardFind()：读取 manifest.tasks.templates.find.randomPool 配置，未启用/当前生效
+  // 语言下候选池为空时返回 null（调用方 handleQuestionClicked() 据此回退到 12 条固定 examples，
+  // 见该函数——这 12 条本身经由 task.js/voice-language.js 的既有语言感知 voicePrompt 解析路径
+  // 播放，同样不会违反 no-EN-fallback）。启用时构建一个 SYNTHETIC find example——形状上尽量
+  // 贴近固定 example 的 schema（targetSprite/distractorSprites/hoverSec/
+  // pressOrHoverAlsoCompletes/successAudio/learningWord 字段齐全，renderFindTask()/
+  // handleTemplateComplete() 等既有消费逻辑不需要区分"这是不是随机抽的"），额外带两个只有
+  // synthetic example 才有的字段（wordAudioFile/wordAudioFileZh），供 renderFindTask() 在任务
+  // 开始时播放目标词的词卡音频（见该函数 playFindWordBilingualDefensive() 一节）。voicePrompt
+  // 恒为空字符串——随机抽取的目标词没有对应的预生成"找到 xxx"任务提示句（zh/en 均没有，且词间
+  // 任意组合也不可能穷举预生成），no-silent-fallback 原则下不指向任何语义不匹配的现成语音
+  // 文件，走 wordCardBilingual 的词卡语音播放替代任务语音提示。
   function drawWordCardFind() {
     var findCfg = TEMPLATES_CFG ? TEMPLATES_CFG.find : null;
     var randomPoolCfg = (findCfg && findCfg.randomPool) ? findCfg.randomPool : null;
     if (!randomPoolCfg || randomPoolCfg.enabled !== true) {
       return null;
     }
-    var sampleSize = (typeof randomPoolCfg.sampleSize === 'number' && randomPoolCfg.sampleSize >= 0) ? randomPoolCfg.sampleSize : 2;
-    var sample = sampleWordCardsFromPool(sampleSize);
+    var lang = getEffectiveFindLanguage();
+    var pool = getFindCandidatePool(lang);
+    if (!pool.length) {
+      if (lang === 'zh') {
+        console.error('[WTJ_TASK_TEMPLATES] ZH 模式下没有任何合格找物候选（无中文词卡音频），拒绝渲染随机 word-card find 任务——no-EN-fallback 硬要求，不静默回退英文，本次回退到固定 examples。');
+      } else {
+        console.warn('[WTJ_TASK_TEMPLATES] secretWords.pool 为空/缺失，无法抽取随机 word-card find 目标。');
+      }
+      return null;
+    }
+    var sampleSize = resolveDistractorCount(randomPoolCfg);
+    var sample = sampleWordCardsFromPool(pool, lang, sampleSize);
     if (!sample) {
       return null;
     }
@@ -660,6 +777,22 @@
     for (i = 0; i < sample.distractors.length; i++) {
       distractorSprites.push(sample.distractors[i].spriteFile);
     }
+
+    // wordAudioFile：EN 模式直接用 pool 条目自带的 EN 路径（不变）；ZH 模式换算成该词的中文
+    // 词卡路径——fail-fast：换算失败（entry.audioFile 形状异常，理论边界情况，正常数据不会走到
+    // 这里）时拒绝渲染本次抽取并 console.error，不静默回退英文（no-EN-fallback），调用方按 null
+    // 回退到 12 条固定 examples。
+    var wordAudioFile;
+    if (lang === 'zh') {
+      wordAudioFile = deriveZhWordAudioPath(entry.audioFile);
+      if (!wordAudioFile) {
+        console.error('[WTJ_TASK_TEMPLATES] ZH 模式下目标词 "' + entry.word + '" 的中文词卡音频路径推导失败，拒绝渲染（no-EN-fallback，不回退英文）。');
+        return null;
+      }
+    } else {
+      wordAudioFile = entry.audioFile;
+    }
+
     return {
       id: 'find-card-' + entry.word,
       targetSprite: entry.spriteFile,
@@ -670,9 +803,11 @@
       successAudio: 'audio/sfx/task-success.m4a',
       learningWord: entry.word,
       // synthetic example 专属字段（12 条固定 example 没有）：renderFindTask() 消费，见该函数。
-      wordAudioFile: entry.audioFile,
-      // ZH 半部分门禁在 011（中文秘密词清单）/008，本卡不新增 ZH word-card 列表，恒传 null——
-      // playWordBilingual() 对 null 的既有降级契约是退化为纯 EN 播放。
+      // wordAudioFile 恒为当前生效语言对应的词卡音频路径（EN 模式→ .m4a；ZH 模式→ .zh.m4a）。
+      wordAudioFile: wordAudioFile,
+      // 恒传 null：这里只借用 playWordBilingual()"必选单文件 + 可选追加第二段"的播放载体语义
+      // 播放单一语言，不触发它"EN 后接 ZH 顺序播放"那条双语分支——wordAudioFile 本身已经是按
+      // 当前生效语言解析好的路径，不需要再叠加第二段。
       wordAudioFileZh: null
     };
   }

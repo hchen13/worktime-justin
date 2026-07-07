@@ -772,25 +772,41 @@
               learningWord: 'zebra'
             }
           ],
-          // WTJ-20260706-012（EN-side 随机 word-card find driver；ZH 半部分门禁在 011/008，
-          // 本卡不新增任何 ZH 清单/字段）：启用后 task-templates.js 的 handleQuestionClicked()
-          // 改为从 secretWords.pool（现场核对 100 词，xylophone 已在 011 卡删除，不是 101）里
-          // 抽 1 个 target + sampleSize 个 distractor 合成一个 synthetic find example，取代上方
-          // 12 条精选 example 作为主路径——那 12 条不删除，继续作为 randomPool 缺失/禁用/pool
-          // 为空时的回退路径（见 task-templates.js drawWordCardFind() 的说明）。
-          // sampleSize=2：与上方 12 条既有 find example 的 distractorSprites 数量口径保持一致
-          // （逐条现场核对，均恰好 2 个干扰项），不引入新的干扰项数量约定。
+          // WTJ-20260706-012：启用后 task-templates.js 的 handleQuestionClicked() 改为从
+          // secretWords.pool（现场核对 100 词，xylophone 已在 011 卡删除，不是 101）里抽 1 个
+          // target + N 个 distractor 合成一个 synthetic find example，取代上方 12 条精选
+          // example 作为主路径——那 12 条不删除，继续作为 randomPool 缺失/禁用/当前生效语言下
+          // 合格候选池为空时的回退路径（见 task-templates.js drawWordCardFind() 的说明）。
+          //
+          // 语言分支（012 第二阶段，TL 定案，推翻本卡最初"EN-only 机制 + ZH 整句预生成"的口径）：
+          //   - EN 模式：候选池 = secretWords.pool 全量（100 词均已交付 EN .m4a），与本卡第一阶段
+          //     （commit 1048c0e）落地的机制逐字节一致，未改动。
+          //   - ZH 模式：候选池收窄为 secretWords.pool 中 window.WTJ_VOICE_LANG.isWordZhAvailable()
+          //     判定为真的子集（即已交付 audio/words/<word>.zh.m4a 的词，当前 85/100，见
+          //     voice-language.js ZH_AVAILABLE_WORD 台账；011 卡后续补齐更多词后此子集随之自动
+          //     增长，无需再改这里）。目标词的提示音频 = 这个词自己的中文词卡音频本身（不是"找到"+
+          //     词卡的运行时拼接句子，也不是另外预生成的中文整句"找到 X！"——那条路线已被 TL 叫停，
+          //     见 task-templates.js drawWordCardFind() 顶部说明）。**禁止 EN fallback**：中文
+          //     词卡音频缺失的词直接被排除出候选池，绝不参与抽取、也绝不在 ZH 模式下静默改播它的
+          //     英文词卡音频顶替（no-silent-fallback 硬要求，Ethan 明确驳回过"缺中文就退英文"）。
+          // sampleSize：分布/干扰项数量随机化（"扩大随机样本"，与本卡标题呼应）——不再是固定
+          // 2（对应固定 3 个候选），改成 { min:2, max:4 }（对应目标+干扰项总数 N 随机落在 3~5 之间，
+          // 每次问号点击独立重掷）。EN/ZH 两条语言分支共用同一份 sampleSize 配置与抽取逻辑，见
+          // task-templates.js resolveDistractorCount()。仍兼容旧的"纯数字"写法（历史遗留/测试用
+          // 固定配置），见该函数向后兼容分支说明。
           randomPool: {
             enabled: true,
-            sampleSize: 2,
+            sampleSize: { min: 2, max: 4 },
             sourcePool: 'secretWords'
           },
           // wordCardBilingual：true 表示 renderFindTask() 在任务渲染开始时通过 WTJ_AUDIO.
-          // playWordBilingual() 播放目标词的双语语音。EN 半部分本卡落地（audioFile 直接取自
-          // 抽中的 secretWords.pool[].audioFile，100 词均已交付真实 .m4a）；ZH 半部分
-          // （audioFileZh）门禁在 011（中文秘密词清单）/008，本卡的 synthetic example 恒把
-          // audioFileZh 设为 null——playWordBilingual() 对 null 的既有降级契约是退化为纯 EN
-          // 播放（等价于 playWord()），不是本卡自造的新分支。
+          // playWordBilingual() 播放目标词的词卡音频。EN 模式：audioFile = secretWords.pool[].
+          // audioFile（英文发音），audioFileZh 恒传 null——playWordBilingual() 对 null 的既有
+          // 降级契约是退化为单语播放，等价于 playWord()。ZH 模式：audioFile 改传该词的中文词卡
+          // 音频路径（audio/words/<word>.zh.m4a），audioFileZh 仍恒传 null——这里刻意只借用
+          // playWordBilingual() "必选单文件 + 可选追加第二段"的播放载体语义，不触发它"EN 后接
+          // ZH 顺序播放"那条双语分支（该分支专为 EN 模式且词卡本身没有语言切换需求的历史用法保留，
+          // 与 ZH 模式互斥，见 task-templates.js drawWordCardFind() 内联说明）。
           wordCardBilingual: true
         },
 
