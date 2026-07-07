@@ -353,13 +353,21 @@ def render_secret_word_audio_group() -> str:
     STATS["per_root"].append(("秘密词发音 EN+ZH（manifest.js secretWords.pool）", MANIFEST_JS_RELPATH, len(pool)))
     _ma = json.loads((REPO_ROOT / "app" / "web" / "audio" / "missing-audio.json").read_text(encoding="utf-8"))
     zh_delivered = set(e["word"] for e in _ma.get("secretWordsZh", []) if e.get("status") == "delivered")
+    zh_pending = sorted(e["word"] for e in _ma.get("secretWordsZh", []) if e.get("status") != "delivered")
     parts = [
         f'<h3 id="audio-words">秘密词发音（英文 + 中文） <span class="count">(共 {len(pool)} 词；中文已交付 {len(zh_delivered)}/{len(pool)})</span></h3>',
         '<p class="section-note">来源：app/web/manifest.js secretWords.pool[]。每词展示 sprite + <strong>英文发音</strong>'
-        '（audio/words/&lt;word&gt;.m4a）与 <strong>中文发音</strong>（audio/words/&lt;word&gt;.zh.m4a，WTJ-20260706-011 '
-        f'交付 {len(zh_delivered)}/{len(pool)} 条）。中文未交付的词（CosyVoice3 超短 ZH too-short 限制）标注「中文未交付·'
-        'ZH 模式回落英文」，运行时无静音。preload="none" 避免一次性加载。</p>',
+        '（audio/words/&lt;word&gt;.m4a）与 <strong>中文发音</strong>（audio/words/&lt;word&gt;.zh.m4a）。'
+        'WTJ-20260706-011 返工后，全部 100 词的中文发音均由 008 ASR-gated CosyVoice3 管线（每条 whisper '
+        '自证念的是目标中文词、不中重 seed）交付，<strong>不存在「中文未交付·回落英文」的可接受态</strong>——'
+        '任何缺失都是回归缺陷。preload="none" 避免一次性加载。</p>',
     ]
+    # 硬门：返工后 ZH 必须 100/100 全交付。若仍有 pending，说明发生回归，醒目报错而非当作可接受态。
+    if zh_pending:
+        parts.append(
+            '<p class="section-note pending-note">⚠ 回归缺陷：以下词的中文发音未交付（返工要求 100/100 全交付，'
+            f'不接受回落英文）：{esc("、".join(zh_pending))}。请重跑 app/scripts/generate-tts-asr-gated.py 补齐。</p>'
+        )
     if not pool:
         parts.append('<p class="section-note pending-note">未能从 manifest.js 解析出 secretWords.pool，请检查该文件结构是否变化。</p>')
         return "\n".join(parts)
@@ -382,7 +390,8 @@ def render_secret_word_audio_group() -> str:
                 f'<code class="path">{esc(zh_relpath)}</code>'
             )
         else:
-            zh_block = '<span class="zh-na">中文未交付·ZH 模式回落英文</span>'
+            # 返工后不应再出现；若出现即回归缺陷（见上方硬门），醒目标注而非「可接受·回落英文」。
+            zh_block = '<span class="zh-na">⚠ 中文未交付（回归缺陷，应 100/100 全交付）</span>'
         items.append(
             '<figure class="item audio-item">'
             f'<a href="{esc(sprite_href)}" target="_blank" rel="noopener" class="thumb-link">'
@@ -496,11 +505,11 @@ CLIPS_008 = [
      "before": "app/web/audio/words/yoyo.m4a"},
     {"id": "click-faucet-on", "kind": "英文任务句", "text": "Turn on the water!",
      "before": "app/web/audio/tasks/click-faucet-on.m4a"},
-    {"id": "press-m.zh", "kind": "中文任务（第三版·4 候选待 Ethan 挑）", "text": "按下字母 M！",
+    {"id": "press-m.zh", "kind": "中文任务（第三版·Ethan/PM 已批准 = after/press-m.zh.m4a，已固化为正式 press-m.zh.m4a）", "text": "按下字母 M！",
      "before": "app/web/audio/tasks/press-m.zh.m4a",
      "after_alts": ["press-m.zh.alt2.m4a", "press-m.zh.alt3.m4a", "press-m.zh.alt4.m4a"],
-     "after_alts_note": "press-m.zh 第三版返工：上方 AFTER = TL 按清晰度选的候选 #1（~2.1s 适中语速，避前两版 1.28s 太赶 / "
-                        "3.2s 拖沓）；下面 3 个内容相同、音色略不同。请 Ethan 挑最干净的一版，告诉 TL 候选号（#1 = 上方 AFTER，或 #2~#4）。"},
+     "after_alts_note": "press-m.zh 第三版返工：上方 AFTER = Ethan/PM 已批准的候选 #1（~2.1s 适中语速，避前两版 1.28s 太赶 / "
+                        "3.2s 拖沓），已固化为正式 app/web/audio/tasks/press-m.zh.m4a（010 卡按下字母 M 依赖此版）；下面 3 个为当时备选，仅存档。"},
     {"id": "fox", "kind": "秘密词（WTJ-20260706-015 新词）", "text": "fox",
      "before_missing": True},
 ]

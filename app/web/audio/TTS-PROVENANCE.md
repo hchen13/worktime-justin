@@ -29,13 +29,13 @@
 > seed 重生成，命中才写盘。本卡把 `docs/assets/008-audio-review/after/` 里 Ethan 已裁决通过
 > 的候选固化为正式 `app/web/audio/words/*.m4a`：
 >
-> | 词 | 采用版本 | sha256（固化后 = app/web 现役文件） |
+> | 资产 | 采用版本 | sha256（固化后 = app/web 现役文件） |
 > |---|---|---|
-> | apple | `after/apple.m4a`（单候选，ASR 自证「Apple」） | `f32761db…be99ced` |
-> | banana | `after/banana.alt3.m4a`（6 候选中 Ethan 选定 #3，美式发音） | `63ddd08a…266951e` |
+> | words/apple.m4a | `after/apple.m4a`（单候选，ASR 自证「Apple」） | `f32761db…be99ced` |
+> | words/banana.m4a | `after/banana.alt3.m4a`（6 候选中 Ethan 选定 #3，美式发音） | `63ddd08a…266951e` |
+> | tasks/press-m.zh.m4a | `after/press-m.zh.m4a`（第三版 ~2.1s 适中语速，Ethan/PM 批准；010 卡按下字母 M 依赖此版） | `54aa6f41…42ecc65` |
 >
-> fox 同批固化（见 secretWords fox 条目 licenseNeed 注记），press-m.zh 仍在 Ethan A/B 候选中
-> （`docs/design-review.html` 008 专区），未固化，不在本次范围。
+> fox 同批固化（见 secretWords fox 条目 licenseNeed 注记）。banana 保持 alt3 不动。
 
 本文件记录 `audio/words/`、`audio/tasks/`、`audio/phrases/` 下预生成语音的来源、模型、
 许可与可复现方式，满足卡片验收标准 4/5。运行时 app 只播放这些预生成 `.m4a`，**不使用
@@ -189,3 +189,55 @@ torch）：`uv venv --python 3.12 ttsenv` + `kokoro-onnx==0.5.0` / `onnxruntime=
 kokoro onnx/voices（sha256 见上表）。`ttsenv/` 与 `kokoro_models/` 大文件不入 git（见 `.gitignore`）。
 运行：`PHONEMIZER_ESPEAK_LIBRARY=/opt/homebrew/lib/libespeak-ng.dylib ttsenv/bin/python
 app/scripts/generate-tts-zh.py --model-dir kokoro_models --app-web app/web`。
+
+---
+
+# WTJ-20260706-011：中文秘密词发音（ZH secretWords，100/100）
+
+100 个秘密词的中文发音 `audio/words/<word>.zh.m4a`，与 100 个 EN 词一一对应。**全部 100 条已交付、
+0 缺口、无 EN fallback 占位**（missing-audio.json `secretWordsZh[]` 全 `delivered`，
+`voice-language.js` `ZH_AVAILABLE_WORD` 台账为完整 100 词）。
+
+## 模型 / 管线（ZH 秘密词）
+
+| 项 | 值 |
+|---|---|
+| TTS 模型 | **CosyVoice 3**（`Fun-CosyVoice3-0.5B`，Apache-2.0），Ethan 自录参考声 zero-shot 克隆（`zh.wav`） |
+| 生成脚本 | **`app/scripts/generate-tts-asr-gated.py`**（008 定案的 ASR-gated reseed wrapper；复用 `generate-tts-cosyvoice3.py` 的母带链/参考裁剪，仅加 ASR 门） |
+| 母带链/格式 | **不变**：`loudnorm I=-16 LUFS` + `alimiter limit=0.794:level=false` → 24 kHz mono AAC 64k `.m4a` |
+| **质量门（核心）** | 每条生成后用 **whisper small** 转写自证念的是目标中文词；不中就换随机 seed 重生成（默认 8-12 次），命中才写盘；**绝不 ship 文不对题音频**（no-misread-fallback，失败即非零退出不写盘） |
+| 匹配判定 | 归一后 `difflib` 比率（ZH ≥0.7）**或** toneless-pinyin 音节精确相等；孤立字母/数字须全部命中。**opencc** 繁→简归一（whisper 常输出繁体，如 苹果→蘋果）；**pypinyin** toneless 同音救回（whisper 常输出同音异字，如 牦牛→毛牛、小岛→小刀，声音对仅字不同）。真误读仍拒（考拉→考了、鹌鹑→安全 音不同） |
+| 确定性 | CosyVoice 采样随机，wrapper 记录每条命中 seed；产物 `.m4a` 已落盘，非从 seed 复算 |
+| 审计 | 除新生成/返工外的既有 ZH 词全部过一遍 wrapper `--audit`（仅 ASR 校验、命中即保留）；ASR 判为误读的旧词就地重生成（本轮修正若干旧批误读，如 car 汽车→旧误读機車、egg 鸡蛋→奇滩、lemon 柠檬→你忙、nest 鸟窝→鳥屋 等） |
+
+## 儿童友好文本返工（单字/同音困难词）
+
+CosyVoice3 对单字/超短 ZH 目标不稳：whisper 或转空、或判为同音字。按 008 已确立的「猫→小猫」先例，
+以下词改用**儿童友好的更长标签**（EN 词与 `<word>.zh.m4a` 文件名不变，仅中文标签/朗读文本变），
+使 clip 够长可被 ASR 转写：
+
+| word | 原标签 | 现标签 | 原因 |
+|---|---|---|---|
+| cat | 猫 | 小猫 | whisper 判同音「毛」(máo) |
+| fish | 鱼 | 小鱼 | 单字太短 whisper 转空 |
+| pig | 猪 | 小猪 | 单字太短 whisper 转空 |
+| pear | 梨 | 梨子 | 单字太短 whisper 转空 |
+| net | 网 | 渔网 | 单字太短 whisper 转空 |
+| island | 岛 | 小岛 | 单字太短 whisper 转空 |
+| quail | 鹌鹑 | 小鹌鹑 | whisper 误判「安全」，加字后可转写 |
+
+（其余同音困难词如 yak 牦牛、zucchini 西葫芦、ukulele 尤克里里 由 toneless-pinyin 救回，标签不变。）
+
+## 已知局限（须人工把关，ZH 秘密词）
+
+**TL 无法试听**：内容正确性已由 whisper ASR + pinyin/opencc 技术自证（念的是目标词），但音色自然度、
+儿童友好度、同音救回词的实际听感（如 小岛 clip whisper 听成「小刀」——声音对但请 Ethan 确认发音清晰）
+仍需 **Ethan / QA-076 主观验收**，逐条见 `docs/design-review.html` 秘密词发音区（全 100 词 EN+ZH 试听）。
+
+## 复现（ZH 秘密词）
+
+见 `app/scripts/generate-tts-asr-gated.py` 顶部 RUN 注释。env 复用 024 的 `cosyvoice_env`
+（+ 本卡新增 `opencc-python-reimplemented`、`pypinyin` 两个纯 Python 依赖 + `openai-whisper`）。
+运行（持共享锁 `/private/tmp/wtj-024/.cosy.lock`）：
+`cosyvoice_env/bin/python app/scripts/generate-tts-asr-gated.py --model-dir <Fun-CosyVoice3-0.5B>
+--ref-dir <024 参考声目录> --only zhword: --out-web app/web --report <json>`。
