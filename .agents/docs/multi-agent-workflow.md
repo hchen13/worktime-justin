@@ -61,7 +61,7 @@ Required fields:
 - `测试资产路径`: reusable test script, fixture, or agentic test case prompt path.
 - `测试覆盖范围`: what behavior, visual state, or regression surface the test covers.
 - `对抗评审`: adversarial review status or evidence for the test case/test script.
-- `阻塞负责人`: role expected to unblock, when relevant.
+- `阻塞负责人`: PM or Ethan only, when `状态 = blocking`.
 - `阻塞问题`: exact question or missing decision, when blocked.
 - `依赖`: upstream card IDs or dependencies. Prefix blocking dependencies with `Hard:` and non-blocking coordination dependencies with `Soft:`. If the field contains unqualified card IDs, PM must clarify them before the owner treats them as a stop condition.
 - `分支`: target or delivery branch, if any. During `in progress`, this may be the intended branch and can still move. During `review`, it must identify the actual delivery branch and final commit must appear in `产物/证据`. After PM accepts a runtime-impacting or docs-preview-impacting delivery for integrated Ethan validation, this field or `产物/证据` must also name the TL-integrated `stage` commit, unless PM records an explicit integration deferral.
@@ -210,7 +210,7 @@ PM review can route to:
 - `done` when the card is accepted.
 - `todo` for real rework, with PM assigning the owner and acceptance condition.
 - `in progress` for rework only when a named live executor has already acknowledged and accepted the returned work.
-- `blocking` when another role or Ethan must unblock it.
+- `blocking` only when PM or Ethan must unblock it. If TL, DESIGN, or QA should act, PM routes the card to `todo`, `in progress`, `review`, or `testing` with that role instead of using `blocking`.
 - `_deprecated` when the card is no longer needed.
 
 QA testing returns to PM review:
@@ -219,7 +219,7 @@ QA testing returns to PM review:
 
 Allowed side paths:
 
-- Any active status may move to `blocking` when progress needs another role or Ethan.
+- Any active status may move to `blocking` only as `blocking/PM` or `blocking/Ethan`. TL, DESIGN, and QA do not own `blocking` cards; role-executable work stays in `todo`, `in progress`, `review`, or `testing`.
 - `blocking` must move back to `todo` or `in progress` after the blocker is resolved.
 - `review` may move back to `todo` if changes are required; it may move directly to `in progress` only under the named-live-executor rule above.
 - `testing` must move back to `review` after QA reports pass/fail. PM decides whether defects go to `todo`, `in progress`, `blocking`, or `_deprecated`.
@@ -232,7 +232,7 @@ Allowed side paths:
 - `in progress`: a concrete live executor has claimed the card in `最新进展` with label, stable identity, start time, and touched scope; stakeholders should be able to treat it as actively owned without watching session transcripts.
 - `review`: work is delivered and awaiting PM routing or acceptance.
 - `testing`: QA is validating a delivered change; after validation it returns to PM review.
-- `blocking`: progress is stopped by a named blocker.
+- `blocking`: progress is stopped by a PM- or Ethan-owned blocker; it is not a waiting room for TL, DESIGN, or QA.
 - `done`: accepted and no further work remains on this card.
 - `_deprecated`: intentionally retired, not silently abandoned.
 
@@ -261,7 +261,7 @@ Additional rules:
 - A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`.
 - Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
-- A card in `blocking` must have `阻塞负责人`, `阻塞问题`, and `下一步动作`.
+- A card in `blocking` must have `负责人` and `阻塞负责人` set to `PM` or `Ethan`, plus `阻塞问题` and `下一步动作`. `blocking/TL`, `blocking/DESIGN`, and `blocking/QA` are invalid routing states that PM must correct.
 - A dependency only blocks intake when it is explicitly marked `Hard:` and its required condition is unmet. `Soft:` dependencies are coordination or merge-order notes; the owner may start work, use stubs, or prepare implementation while preserving the stated integration boundary.
 - When PM wants parallel work despite an upstream card still being active, PM must write that permission directly in `依赖`, `下一步动作`, or `最新进展`. Role agents should not infer this permission silently.
 - An implementation card in `in progress` is not a delivery. PM must not block it solely because the shared worktree contains untracked files, dirty files, generated files, or a moving branch ref. Those are development-state observations, not acceptance evidence.
@@ -272,7 +272,7 @@ Additional rules:
 - A card that changes product behavior must either reference existing test coverage or create/update a QA card for test asset work.
 - A blocked card cannot be used as storage for vague uncertainty. If the next step is obvious, assign it and move the card back to `todo` or `in progress`.
 - A card that is no longer worth doing must become `_deprecated` with a short reason in `最新进展`.
-- A role receiving a card must either accept it, return it with a concrete reason, or block it with a precise question. Do not leave it ambiguous.
+- A role receiving a card must either accept it, return it with a concrete reason, or route a precise blocker to PM. Do not leave it ambiguous.
 
 ## 8. Card Intake And Handoff
 
@@ -284,11 +284,11 @@ Minimum handling rules:
 - `in progress`: keep `最新进展` and `下一步动作` current.
 - `review`: PM must accept, reject with required changes, route to QA, route to another role, block, or deprecate.
 - `testing`: QA owns execution and result reporting.
-- `blocking`: the named `负责人` or `阻塞负责人` owns unblocking. The owner must either do the named unblock action, route a precise blocker back to PM, or convert the card back to `todo`/`review` when it is no longer truly blocked. `blocking` is not a waiting room for vague dependency notes.
+- `blocking`: only PM or Ethan may be the named `负责人` and `阻塞负责人`. PM either decides/reroutes, prepares a stakeholder question, or assigns a true stakeholder blocker to Ethan. Ethan answers the named validation or decision question. `blocking` is not a waiting room for TL/DESIGN/QA or vague dependency notes.
 
 Current board fields are authoritative. Session chat, older wakeup prompts, and previous local scans are only hints. If a card says the current role should act and also says not to wait for Ethan or another role, the current role must act and must not rely on an obsolete wakeup prompt to defer work.
 
-If a role-owned card remains in `todo`, `review`, or `blocking` for one full owner loop with no claim, no refusal, and no precise blocker written back to the card, PM treats that as a role-loop failure. PM must record the observed failure, route a takeover or restart, and stop pretending the card is merely waiting normally.
+If a role-owned card remains in `todo` or `review` for one full owner loop with no claim, no refusal, and no precise blocker written back to the card, PM treats that as a role-loop failure. If a `blocking` card is owned by TL, DESIGN, or QA, PM treats it as invalid routing and corrects it to PM/Ethan ownership or executable role work. PM must record the observed failure, route a takeover or restart, and stop pretending the card is merely waiting normally.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
 
@@ -452,9 +452,11 @@ Runtime loop and automation protocol: [.agents/docs/agent-runtime-loops.md](agen
 
 ## 14. Blocker Handling
 
-Use `blocking` only when progress genuinely requires another role or Ethan.
+Use `blocking` only when progress genuinely requires PM triage or Ethan's answer.
 
-Non-PM roles do not assign blockers directly to Ethan, TL, DESIGN, or QA. When TL, DESIGN, or QA cannot continue, they set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact blocker. PM owns triage and may then reassign the blocker to Ethan or another role.
+Owner invariant: every `blocking` card must have `负责人` and `阻塞负责人` set to `PM` or `Ethan`. TL, DESIGN, and QA never own `blocking`; if they can unblock the issue themselves, it is normal executable work, not a blocker.
+
+Non-PM roles do not assign blockers directly to Ethan, TL, DESIGN, or QA. When TL, DESIGN, or QA cannot continue, they set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact blocker. PM owns triage and may then decide, route executable work to another role in a non-blocking status, or reassign a true stakeholder blocker to Ethan.
 
 Only PM may assign a blocker to Ethan/stakeholder. A non-PM card update that sets `负责人 = Ethan`, `阻塞负责人 = Ethan`, or equivalent stakeholder ownership is invalid routing even if the underlying question is legitimate. PM must correct the owner back to PM or write the validated Ethan blocker personally.
 
@@ -467,7 +469,8 @@ Stakeholder blocker rules:
 
 Blocking card requirements:
 
-- `阻塞负责人`: who must act.
+- `负责人`: `PM` or `Ethan` only.
+- `阻塞负责人`: `PM` or `Ethan` only.
 - `阻塞问题`: exact question or missing decision.
 - `下一步动作`: what the blocker owner should do.
 - `截止/检查点`: when PM should inspect it again.
@@ -476,7 +479,7 @@ Resolution:
 
 - Ethan answer received: PM updates requirement and moves card to `todo`, or to `in progress` only if a named live executor has already accepted the work.
 - PM decision made: PM records decision and moves card forward using the same `todo` versus `in progress` ownership signal.
-- Technical/design/QA issue resolved by owner: owner records evidence and moves card forward only if that owner is still the active executor; otherwise PM routes the next work to `todo`.
+- Technical/design/QA issue identified by PM: PM routes executable work to the responsible role using `todo`, `in progress`, `review`, or `testing`; it does not remain `blocking` under that execution role.
 - Work no longer needed: PM moves card to `_deprecated`.
 
 ## 15. Local Skills

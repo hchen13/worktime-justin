@@ -68,13 +68,13 @@ Scheduled wakeup prompts must not encode mutable stakeholder blockers as durable
 A nonterminal card assigned to a role is an intake obligation on that role's next loop:
 
 - `todo` with `负责人 = <role>` means that role must claim it in the next loop by moving it to `in progress` and writing the concrete executor, or immediately return/block it with a specific reason.
-- `blocking` with `负责人 = <role>` or `阻塞负责人 = <role>` means that role owns unblocking. It must either remove the blocker by doing the named action, route a precise blocker back to PM, or explain why the blocker is impossible to resolve.
+- `blocking` is valid only when `负责人` and `阻塞负责人` are `PM` or `Ethan`. A `blocking` card assigned to TL, DESIGN, or QA is invalid routing, not a normal intake obligation. If the role can unblock the issue itself, the card belongs in `todo`, `in progress`, or `review`; if it cannot continue, it must route the card to `blocking` with `负责人 = PM` and `阻塞负责人 = PM`.
 - `review` with `负责人 = TL` is TL-owned correction work and must be processed before ordinary `todo`.
 - `in progress` with `负责人 = <role>` is valid only while the named executor in `最新进展` is actually working or expected to continue. If PM observes that no such session is active, PM must route takeover or downgrade the card to `todo` instead of leaving a fake active state.
 
 If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
 
-When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment. TL, DESIGN, and QA must never set `负责人 = Ethan` or `阻塞负责人 = Ethan`; if they do, the card is misrouted and PM must correct it before normal loop work continues.
+When a non-PM role is blocked, it routes the card to PM, not directly to Ethan or another non-PM role: set `状态 = blocking`, `负责人 = PM`, `阻塞负责人 = PM`, and write the exact question, missing asset, branch, test path, or decision needed. PM performs the downstream assignment. TL, DESIGN, and QA must never set `负责人 = Ethan`, `阻塞负责人 = Ethan`, or keep themselves as `blocking` owner/blocker; if they do, the card is misrouted and PM must correct it before normal loop work continues.
 
 Ethan feedback and validation gates:
 
@@ -144,7 +144,7 @@ PM automation also owns session-surface hygiene:
 - If PM cannot inspect the external session, the card must say so and require the role to summarize blockers in `最新进展`; PM should not rely on Ethan monitoring role chats.
 - PM must classify stakeholder feedback before routing: approval, rejection, true unanswered decision, or technical blocker. A rejection becomes concrete rework. A true Ethan decision becomes `blocking/Ethan` with exact validation path/question. It must not be parked as TL/DESIGN/QA `todo`.
 - When PM asks Ethan to validate audio, video, animation, or visual quality, the card must name the exact HTML entry point, section or file list, expected before/after comparison, and the answer that unblocks the card. If Ethan already said the output is bad or wrong, PM routes repair instead of asking for the same validation again.
-- If a role-owned `todo`, `review`, or `blocking` card survives the role's next loop without a claim, refusal, or precise blocker, PM records that as a role-loop failure and routes a takeover/restart/escalation. PM does not keep the card in place with the same next action.
+- If a role-owned `todo` or `review` card survives the role's next loop without a claim, refusal, or precise blocker, PM records that as a role-loop failure and routes a takeover/restart/escalation. If `blocking` is assigned to TL, DESIGN, or QA, PM records it as invalid routing and corrects owner/blocker to PM or routes executable work. PM does not keep the card in place with the same next action.
 
 For implementation cards in `in progress`, PM automation should treat local branch and worktree observations as informational only. Do not move a card to `blocking` or repeatedly rewrite its next action just because a shared worktree is dirty, has untracked files, or the TL branch has advanced.
 
@@ -212,7 +212,7 @@ QA loop:
 
 Loop accountability:
 
-- A role loop that sees a `todo`, `review`, or `blocking` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card before stopping.
+- A role loop that sees a `todo` or `review` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card and route the blocker to PM before stopping. A `blocking` card assigned to TL, DESIGN, or QA is a routing defect; the role must correct or report it to PM instead of treating itself as blocker owner.
 - A role loop that previously scheduled a wakeup must still obey the latest board on wake. The wakeup text is a reminder, not a source of truth.
 - A role loop must not claim that Ethan needs to decide unless the card is routed to PM with the exact question and validation path, or PM has already routed it onward to Ethan. If the card owner is the role, the default assumption is that the role must act. Non-PM roles may not route directly to Ethan.
 
@@ -221,7 +221,7 @@ Loop accountability:
 A loop should stop and report when:
 
 - there are no actionable cards for that role
-- all remaining cards are blocked by PM/Ethan/another role
+- all remaining cards are blocked by PM/Ethan, or are assigned to another role in a non-blocking active state
 - required credentials or board access are unavailable
 - the role would need to violate PM central routing or branch ownership rules
 - the next step is destructive or outside the assigned card

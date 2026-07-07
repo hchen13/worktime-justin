@@ -39,6 +39,7 @@ STATUSES = [
 ]
 
 ROLES = ["PM", "TL", "DESIGN", "QA", "Ethan"]
+BLOCKER_ROLES = ["PM", "Ethan"]
 ROLE_BOARD_VIEWS = {
     "PM": "PM 看板",
     "TL": "TL 看板",
@@ -82,7 +83,7 @@ SELECT_FIELDS = {
     "QA结果": ["N/A", "Not Started", "Planned", "Running", "Pass", "Fail"],
     "测试方式": ["N/A", "Scripted", "Agentic", "Hybrid"],
     "测试类型": ["N/A", "Unit", "Frontend E2E", "Visual", "API E2E", "Integration"],
-    "阻塞负责人": ROLES,
+    "阻塞负责人": BLOCKER_ROLES,
 }
 
 SELECT_FIELD_OPTION_COLORS = {
@@ -448,7 +449,13 @@ def ensure_select_option_colors(token: str, app_token: str) -> None:
             "multiple": False,
             "options": select_options_v3(name, SELECT_FIELDS[name]),
         }
-        body = update_field_v3(token, app_token, existing["field_id"], payload)
+        try:
+            body = update_field_v3(token, app_token, existing["field_id"], payload)
+        except RuntimeError as exc:
+            if "800070003" in str(exc):
+                print(f"select field colors already current {name}")
+                continue
+            raise
         if body.get("code") == 1254606:
             print(f"select field colors already current {name}")
         else:
