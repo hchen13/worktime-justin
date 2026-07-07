@@ -796,11 +796,19 @@
 
         press: {
           reqId: 'REQ-TASK-10',
-          description: '按键类：只要求一个键，且仅限字母/数字，例如 "Press A."、"Press 3."。不做复杂组合键。',
+          // WTJ-20260706-010：按键目标池从"仅字母/数字"扩到全量 47 目标（A-Z 全字母、0-9 全数字、
+          // 5 个符号 comma/period/semicolon/minus/plus、Space/Enter、方向键 up/down/left/right），
+          // 不再是本行原文"仅限字母/数字"——targetKey 现在也可以是符号原始字符（如 ','）或
+          // keyboard.js 归一化后的具名键（'Space'/'Enter'/'ArrowUp' 等）。判定通道见
+          // task-templates.js handlePressKey()：字母/数字/符号/Space/Enter/方向键统一按
+          // toUpperCase() 比较（827a6a6 已把 onSymbol/onFunctionKey 接线到同一判定函数，010 之前
+          // 这些键身份的 targetKey 永远无法完成任务——那是引擎侧缺口，已在本卡之前修复；010 只是
+          // 第一次真正把这些键身份放进 examples 池）。
+          description: '按键类：要求按下一个键——字母/数字/常见符号/空格/回车/方向键，例如 "Press A."、"Press 3."、"Press the comma key."。不做组合键（如 Ctrl+C）。',
           schema: {
             id: 'string',
-            targetKey: 'string，单个字母或数字（KeyboardEvent.key 规范值）',
-            voicePrompt: 'string',
+            targetKey: 'string，单个字母/数字/符号原始字符，或 keyboard.js 归一化后的具名键（"Space"/"Enter"/"ArrowUp"/"ArrowDown"/"ArrowLeft"/"ArrowRight"）',
+            voicePrompt: 'string，为空字符串表示该目标的语音尚未生成/交付（no-silent-fallback：task.js/audio.js 见到空值会跳过播放，不会静默改播其它语音）',
             successAudio: 'string'
           },
           // WTJ-20260705-004 Phase A（pt3）：纯追加——examples[0]/[1]（press-letter-a /
@@ -810,6 +818,15 @@
           // 改接 084 交付的中文完整句 audio/tasks/<key>.zh.m4a（examples[0]/[1] 的 EN 路径不再
           // 是 task-voice-path.test.mjs 用例 2 的断言对象——该用例已同步改为断言 ZH 路径，见该
           // 文件）。
+          // WTJ-20260706-010：新增 40 条（字母 C/D/E/F/G/H/I/J/K/L/N/O/P/Q/R/T/U/V/W/X/Y/Z、数字
+          // 0/1/2/4/6/8/9、符号 comma/period/semicolon/minus/plus、Space/Enter、方向键
+          // up/down/left/right），凑满全量 47 目标（26 字母 + 10 数字 + 5 符号 + 2 特殊键 + 4
+          // 方向键）。这 40 条当前 voicePrompt 均为空字符串 ''——TL 已暂停裸
+          // generate-tts-cosyvoice3.py 生成，改走共享 ASR-gated wrapper（whisper 自证目标文本 +
+          // 不中重 seed/多候选选优；字母 C/G/J/K/Q/W/Y 与符号名是已知误读高发区），音频生成 +
+          // 接线是本卡的后续 commit，不阻塞先把这 40 个目标纳入随机池（handlePressKey() 的判定
+          // 只依赖 targetKey，不依赖 voicePrompt 是否非空）。press-letter-m 沿用 008 已批准的
+          // press-m.zh.m4a，本卡未新增/未重新生成。
           examples: [
             {
               id: 'press-letter-a',
@@ -856,7 +873,58 @@
               targetKey: '7',
               voicePrompt: 'audio/tasks/press-7.zh.m4a', // WTJ-20260705-004 Phase B：接线 084 中文完整句"按下数字 7！"
               successAudio: 'audio/sfx/task-success.m4a'
-            }
+            },
+            // WTJ-20260706-010：以下 40 条为本卡新增，voicePrompt 恒为 ''（待 ASR-gated 生成
+            // 交付后由后续 commit 接线为 'audio/tasks/press-<key>.zh.m4a'，同一批也会同步补
+            // app/web/audio/missing-audio.json taskVoice/taskVoiceZh 登记 + voice-language.js
+            // ALL_TASK_IDS/EN_AVAILABLE_TASK_IDS 清单——三处必须同批次一起改，否则会出现
+            // "池子里有这个目标但语言可用性清单不知道"的漂移）。
+            { id: 'press-letter-c', targetKey: 'C', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-d', targetKey: 'D', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-e', targetKey: 'E', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-f', targetKey: 'F', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-g', targetKey: 'G', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-h', targetKey: 'H', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-i', targetKey: 'I', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-j', targetKey: 'J', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-k', targetKey: 'K', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-l', targetKey: 'L', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-n', targetKey: 'N', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-o', targetKey: 'O', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-p', targetKey: 'P', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-q', targetKey: 'Q', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-r', targetKey: 'R', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-t', targetKey: 'T', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-u', targetKey: 'U', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-v', targetKey: 'V', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-w', targetKey: 'W', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-x', targetKey: 'X', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-y', targetKey: 'Y', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-letter-z', targetKey: 'Z', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-0', targetKey: '0', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-1', targetKey: '1', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-2', targetKey: '2', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-4', targetKey: '4', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-6', targetKey: '6', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-8', targetKey: '8', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-digit-9', targetKey: '9', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            // 符号：targetKey 用 KeyboardEvent.key 原始字符（未经归一化——keyboard.js 的
+            // onSymbol(char, intensity) 直接透传原始字符，见该文件文件头 API 列表说明）。
+            { id: 'press-symbol-comma', targetKey: ',', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-period', targetKey: '.', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-semicolon', targetKey: ';', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-minus', targetKey: '-', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-symbol-plus', targetKey: '+', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            // 特殊键：targetKey 用 keyboard.js normalizeFunctionKeyName() 归一化后的具名值——
+            // 'Space'（原始 e.key 是单个空格字符 ' '，归一化后统一为 'Space'）、'Enter'（原样透传）。
+            { id: 'press-key-space', targetKey: 'Space', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-key-enter', targetKey: 'Enter', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            // 方向键：targetKey 用浏览器原生 e.key 值（'ArrowUp'/'ArrowDown'/'ArrowLeft'/'ArrowRight'），
+            // keyboard.js 对方向键不做归一化改名，原样透传。
+            { id: 'press-arrow-up', targetKey: 'ArrowUp', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-down', targetKey: 'ArrowDown', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-left', targetKey: 'ArrowLeft', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' },
+            { id: 'press-arrow-right', targetKey: 'ArrowRight', voicePrompt: '', successAudio: 'audio/sfx/task-success.m4a' }
           ]
         }
       }

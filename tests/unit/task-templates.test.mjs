@@ -1820,14 +1820,22 @@ test('洗牌袋契约②：example 洗牌袋——真实洗牌下 drag/click/pre
   var env = createSandbox({ randomFn: mulberry32(2024) });
   var seenByType = { drag: {}, click: {}, press: {} };
   var seenFindIds = {};
-  // N=200：结构性上限（与具体种子无关的数学保证，不是针对 2024 这个种子调出来的运气值）——
-  // TASK_TYPES.length=4 的 type 洗牌袋保证任意连续窗口内某个类型的出现次数下限
-  // floor((N-4)/4)+1；examples.length 最大的固定-example 类型是 drag（8 条），需要该类型至少
-  // 连续出现 2*8-1=15 次才能结构性保证覆盖一整袋，换算总点击数只需 N>=64；200 次留了两倍以上
-  // 余量，其余两个固定-example 类型（click=5/press=7）需要的总点击数下限更低。find 类型自
-  // WTJ-20260706-012 起改走随机 word-card 抽取，不再纳入本"覆盖固定 example id"断言（见下方
-  // 说明与「12.」一节的专属全覆盖契约）。
-  var N = 200;
+  // N=400（WTJ-20260706-010 上调，原为 200——见下方推导）：结构性上限（与具体种子无关的数学
+  // 保证，不是针对 2024 这个种子调出来的运气值）。关键前提：本用例的 example 洗牌袋是从**全新
+  // sandbox**（createSandbox() 刚创建，任何 type 都还没抽过）开始观察的，不是从任意历史时刻切入
+  // 的连续窗口——因此不需要「防御 mid-bag 起点」那种更保守的 2*len-1 下限，只需要该 type 的**
+  // 抽取次数**达到 examples.length 即可结构性保证第一整袋无重复覆盖全部 id（洗牌袋定义：满袋是
+  // 一个不放回的排列，从头开始数 len 次必然覆盖全部 len 个候选）。
+  // 又因为 TASK_TYPES.length=4 的 type 洗牌袋每满一袋就是 ['drag','click','find','press'] 的一个
+  // 排列，N 取 4 的倍数时每个 type 的抽取次数**恰好**是 N/4（不是概率下限，是排列结构决定的确
+  // 定值）——所以只需 N/4 >= examples.length 的最大值。
+  // WTJ-20260706-010 按键池扩容后，examples.length 最大的固定-example 类型已从 drag（8 条）变为
+  // press（47 条，字母 26 + 数字 10 + 符号 5 + 特殊键 2 + 方向键 4），需要 N/4 >= 47，即
+  // N >= 188；取 400（N/4=100）留出一倍以上余量，drag(8)/click(5) 的需求远低于此，同时也给未来
+  // press 池继续扩容留出缓冲，不必每次扩池都回来调整这个数字。find 类型自 WTJ-20260706-012 起
+  // 改走随机 word-card 抽取，不再纳入本"覆盖固定 example id"断言（见下方说明与「12.」一节的专属
+  // 全覆盖契约）。
+  var N = 400;
   for (var i = 0; i < N; i++) {
     env.taskStub.clickQuestion();
     var info = env.TT.getActiveTaskInfo();
