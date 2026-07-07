@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. Take one actionable card at a time, update Feishu status fields, do the work, and hand completed work back to PM review. Do not touch main. Touch stage only when the card or PM route explicitly asks for TL stage integration.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. You may coordinate multiple TL-owned cards in parallel as technical scheduler: claim each card separately in 最新进展, give each card an isolated branch/worktree or explicitly non-overlapping file scope, run the PM-selected light/full workflow per card, and hand completed work back to PM review with branch/commit/evidence. Do not touch main. For runtime-impacting or docs-preview-impacting delivery, integrate to stage before PM review unless the card explicitly says branch-only preliminary review; record the integrated stage commit plus project-directory artifact paths before Ethan-facing validation.
 
 When doing feature work, use a TL-owned branch/worktree. Do not switch `/Users/claire/Documents/worktime-justin` away from `stage` or `main` as a scratch checkout. If the shared checkout is already on a feature/design/test branch, first preserve any dirty work and route or move it to the correct branch/worktree before using the shared checkout for stage validation.
 ```
@@ -40,7 +40,7 @@ You are DESIGN for WorkTime Justin. Your session label is DESIGN-A and your stab
 Example PM start prompt:
 
 ```text
-You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, route PM-accepted runtime/docs-preview work to TL for stage integration when Ethan should validate the integrated app/docs, run the whole-board completion notification check, and own main promotion decisions.
+You are PM for WorkTime Justin. Your stable session identity is CodexThread:<thread-id> or Automation:<automation-id>. Read AGENTS.md and all .agents/docs protocols. Use the PM Feishu app identity from .env. Start your PM loop: triage backlog, create official cards, route review cards, handle blockers, enforce no-stale rules, require runtime/docs-preview TL deliveries to include stage integration unless explicitly branch-only preliminary review, run the whole-board completion notification check, and own main promotion decisions.
 ```
 
 ## 3. Loop Algorithm
@@ -51,13 +51,13 @@ Each role loop repeats this sequence:
 2. Use that role's app credentials from `.env` for Feishu writes.
 3. Read board cards where `负责人` is the current role.
 4. Prioritize in this order: `blocking`, `review`, `in progress`, `testing`, `todo`, `backlog`.
-5. Pick one actionable card and update `最新进展` before meaningful work begins.
+5. Pick one actionable card and update `最新进展` before meaningful work begins, unless the role protocol explicitly allows a parallel workstream such as TL technical scheduling or QA tester review. In parallel mode, every claimed card or test scope must have its own executor/workstream label and stable identity in `最新进展`.
 6. Do the work required by the card, using the PM-selected review depth: `轻量流程` for small clear cards and `完整流程` for complex or high-risk cards.
 7. Update `状态`, `负责人`, `下一步动作`, `产物/证据`, and role-specific fields.
 8. If the role is not PM and the assigned work is finished, return the card to `review` with `负责人 = PM`.
 9. Continue until no actionable cards remain or a real blocker prevents progress.
 
-Do not process multiple cards in parallel inside one role session unless the role protocol explicitly calls for subagents, such as TL technical review or QA tester review.
+Do not process multiple cards in parallel inside one role session unless the role protocol explicitly allows it. TL is the technical exception: TL may coordinate multiple TL-owned cards in parallel through independent branches/worktrees and subagents, while keeping each card's board fields, evidence, and handoff independent. QA may parallelize tester/reviewer subagents inside a named QA scope, but DESIGN and QA role sessions should still claim only one card or explicit asset/test scope at a time unless PM splits the scope.
 
 Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
 
@@ -127,7 +127,7 @@ Recommended PM cron responsibilities:
 - scan `review` cards and route them
 - inspect `blocking` cards and ensure `阻塞负责人`, `阻塞问题`, and `下一步动作` are clear
 - find stale `in progress`, `testing`, or `review` cards missing required fields
-- keep `stage` current by routing PM-accepted runtime/docs-preview work to TL, or write a concrete `stage` integration deferral onto the card
+- keep `stage` current by requiring runtime/docs-preview TL deliveries to include `stage` integration unless the card is explicitly branch-only preliminary review, or write a concrete `stage` integration deferral onto the card
 - ensure Ethan validation requests name `/Users/claire/Documents/worktime-justin` on the recorded `stage` commit, or an app/DMG/docs artifact built or copied from that exact directory and commit; ensure QA validation requests name the exact branch/package/worktree under test and say whether the result is stakeholder-visible `stage` integration validation or target-specific testing
 - before marking any user-facing runtime, visual, audio, packaging, production-asset, or docs-preview card `done`, verify the card names `/Users/claire/Documents/worktime-justin` on the recorded `stage` commit, or a package built/copied from that directory, where Ethan can immediately see the accepted change; branch-only review, auxiliary-worktree preview, or target-specific QA pass is not enough
 - groom `backlog` proposals into official cards or `_deprecated`
@@ -156,7 +156,7 @@ Automation should be bounded:
 
 - do not run open-ended implementation work
 - do not merge to `main` unless the card explicitly calls for PM release/stable-line work and evidence is complete
-- do not merge code into `stage` as PM; route PM-accepted runtime/docs-preview work to TL for `stage` integration when Ethan should see it in the integrated app/docs
+- do not merge code into `stage` as PM; require TL to integrate runtime/docs-preview deliveries into `stage` when Ethan should see them in the integrated app/docs
 - if a `stage` or `stage` to `main` conflict is code/build/test/package related, write the exact conflict/blocker back to the card and assign TL; PM may resolve only PM-owned docs/protocol conflicts
 - do not ask Ethan to validate anything outside `/Users/claire/Documents/worktime-justin`. The shared project checkout must be on the named `stage` state, and app/DMG/docs artifacts must be built or copied from that directory and commit. If the checkout is dirty in a validation-relevant way or on another branch, keep the card active and route a shared-checkout/package handoff.
 - do not create duplicate cards when an existing card can be updated
