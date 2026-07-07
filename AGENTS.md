@@ -18,6 +18,7 @@ Core rules:
 1. Use Chinese for project discussion unless a task explicitly requires another language.
 2. Do obvious next steps that belong to the assigned card; do not stop for avoidable permission checks.
 3. All work must be represented by a Feishu card with `编号`, `负责人`, `状态`, `下一步动作`, and `验收标准`.
+3a. Valid `状态` values are exactly `backlog`, `todo`, `in progress`, `review`, `testing`, `blocking`, `done`, and `_deprecated`. `doing` and any other alias are invalid. If PM sees `doing`, normalize it immediately to `in progress` only when `最新进展` names a concrete live executor; otherwise normalize it to `todo`.
 4. No stale cards: a card in `in progress`, `review`, `testing`, or `blocking` must name the next accountable role and the condition for moving forward.
 5. PM owns official card creation, cross-role routing, and final acceptance. Non-PM roles submit completed work to PM review instead of assigning follow-up work directly to other roles.
 6. PM owns `main` and the product acceptance gate. TL owns implementation branches and the runnable integration branch `stage`. Do not merge to `main` outside the PM workflow; do not touch `stage` except through TL stage-integration work routed or accepted by PM.

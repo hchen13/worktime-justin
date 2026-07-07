@@ -46,7 +46,7 @@ Required fields:
 
 - `编号`: stable card identifier. Format: `WTJ-YYYYMMDD-NNN`, for example `WTJ-20260703-001`. `WTJ` is the project prefix, the middle segment is the card creation date, and the final segment is a three-digit daily increment.
 - `标题`: short card title.
-- `状态`: one of `backlog`, `todo`, `in progress`, `review`, `testing`, `blocking`, `done`, `_deprecated`.
+- `状态`: one of `backlog`, `todo`, `in progress`, `review`, `testing`, `blocking`, `done`, `_deprecated`. Status aliases are invalid; `doing` must never be created, selected, or written.
 - `负责人`: current accountable role: `PM`, `TL`, `DESIGN`, `QA`, `Ethan`.
 - `卡片类型`: `Requirement`, `Task`, `Design`, `Dev`, `QA`, `Blocker`, `Decision`, `Chore`.
 - `优先级`: `P0`, `P1`, `P2`, `P3`.
@@ -235,6 +235,8 @@ Allowed side paths:
 - `blocking`: progress is stopped by a PM- or Ethan-owned blocker; it is not a waiting room for TL, DESIGN, or QA.
 - `done`: accepted and no further work remains on this card.
 - `_deprecated`: intentionally retired, not silently abandoned.
+
+There is no `doing` status. If it appears, PM treats it as a board hygiene defect and corrects it immediately: use `in progress` only when `最新进展` already names a concrete live executor; otherwise use `todo` so the owner role must claim it properly on the next loop.
 
 Whole-board completion:
 

@@ -105,6 +105,12 @@ SELECT_FIELD_OPTION_COLORS = {
     },
 }
 
+SELECT_VALUE_ALIASES = {
+    "状态": {
+        "doing": "in progress",
+    },
+}
+
 TEXT_FIELDS = [
     "编号",
     "概要",
@@ -338,10 +344,17 @@ def request_view_config_v3(token: str, app_token: str, view_id: str, resource: s
             request("PUT", path, token=token, payload=payload)
             return
         except RuntimeError as exc:
-            if "800070003" in str(exc):
+            message = str(exc)
+            if "800070003" in message:
                 print(f"skipped {resource} for {view_id}: no operation produced")
                 return
-            if "800030501" not in str(exc) or attempt == 2:
+            if "800004135" in message:
+                if attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                print(f"skipped {resource} for {view_id}: OpenAPI method limited")
+                return
+            if "800030501" not in message or attempt == 2:
                 raise
             time.sleep(1)
 
@@ -368,6 +381,33 @@ def select_options_v3(field_name: str, options: list[str]) -> list[dict]:
 
 def option_names(field: dict) -> list[str]:
     return [option.get("name") for option in (field.get("property") or {}).get("options", [])]
+
+
+def normalized_select_value(field_name: str, value: object) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    return SELECT_VALUE_ALIASES.get(field_name, {}).get(value, value)
+
+
+def snapshot_select_values(
+    token: str,
+    app_token: str,
+    source_field_name: str,
+    target_field_name: str,
+    valid_options: list[str],
+) -> dict[str, str]:
+    valid = set(valid_options)
+    snapshot: dict[str, str] = {}
+    for record in list_records(token, app_token):
+        value = normalized_select_value(target_field_name, record.get("fields", {}).get(source_field_name))
+        if value in valid:
+            snapshot[record["record_id"]] = value
+    return snapshot
+
+
+def restore_select_values(token: str, app_token: str, field_name: str, snapshot: dict[str, str]) -> None:
+    for record_id, value in snapshot.items():
+        update_record(token, app_token, record_id, {field_name: value})
 
 
 def find_field(by_name: dict[str, dict], canonical_name: str) -> dict | None:
@@ -400,7 +440,15 @@ def ensure_fields(token: str, app_token: str) -> None:
                 or option_names(existing) != options
             )
             if needs_update:
+                select_snapshot = snapshot_select_values(
+                    token,
+                    app_token,
+                    existing["field_name"],
+                    name,
+                    options,
+                )
                 update_field(token, app_token, existing["field_id"], payload)
+                restore_select_values(token, app_token, name, select_snapshot)
                 print(f"updated select field {name}")
             else:
                 print(f"select field already current {name}")
@@ -449,6 +497,7 @@ def ensure_select_option_colors(token: str, app_token: str) -> None:
             "multiple": False,
             "options": select_options_v3(name, SELECT_FIELDS[name]),
         }
+        select_snapshot = snapshot_select_values(token, app_token, name, name, SELECT_FIELDS[name])
         try:
             body = update_field_v3(token, app_token, existing["field_id"], payload)
         except RuntimeError as exc:
@@ -459,6 +508,7 @@ def ensure_select_option_colors(token: str, app_token: str) -> None:
         if body.get("code") == 1254606:
             print(f"select field colors already current {name}")
         else:
+            restore_select_values(token, app_token, name, select_snapshot)
             print(f"updated select field colors {name}")
 
 
