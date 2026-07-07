@@ -57,6 +57,8 @@ Each role loop repeats this sequence:
 8. If the role is not PM and the assigned work is finished, return the card to `review` with `负责人 = PM`.
 9. Continue until no actionable cards remain or a real blocker prevents progress.
 
+Use only the exact board status values defined in the workflow. `doing` is not a valid synonym for `in progress`; role loops must never create, select, or write it.
+
 Do not process multiple cards in parallel inside one role session unless the role protocol explicitly allows it. TL is the technical exception: TL may coordinate multiple TL-owned cards in parallel through independent branches/worktrees and subagents, while keeping each card's board fields, evidence, and handoff independent. QA may parallelize tester/reviewer subagents inside a named QA scope, but DESIGN and QA role sessions should still claim only one card or explicit asset/test scope at a time unless PM splits the scope.
 
 Every role loop turn must start from a fresh board read. This applies to scheduled wakeups, task notifications, and human status questions. Do not answer whether a card belongs to a role from a previous scan, cached memory, or a stale local list.
@@ -110,6 +112,7 @@ Known failure pattern:
 To avoid two agents working the same card:
 
 - Before starting a `todo` card, set `状态 = in progress`, keep `负责人` as the current role, and write `最新进展` with the session label, stable identity, start time, current action, and touched scope.
+- Do not use `doing` when claiming work. The only active claimed-work status is `in progress`.
 - Treat `in progress` as a strong stakeholder-facing signal: a concrete live session has accepted responsibility and is actively expected to continue. If a card is merely ready for a role but no session has acknowledged it yet, it belongs in `todo`.
 - Use a stable session label, for example `DESIGN-A`, `DESIGN-2`, `QA-Visual`, or `QA-Audio`, plus a stable identity such as `CodexThread:<thread-id>`, `ClaudeSession:<session-id>`, or `Automation:<automation-id>`. Both must appear in the first line of the claiming update: `执行者：<label>；身份ID：<runtime-id>；开始：<time>；范围：<asset/test scope>`.
 - If the role session does not know its stable identity, it may read the board but should not claim formal work until the launcher/PM provides the Codex thread ID, Claude Code session ID, or automation ID.
