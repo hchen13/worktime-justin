@@ -201,6 +201,40 @@ def main() -> int:
                dbg_key_late.strip().lower() == "z" and not console_errors,
                f"late dbg-key={dbg_key_late!r} console_errors={len(console_errors)}")
 
+        # APPSHELL-07 (WTJ-20260707-008): the main rAF render loop actually parks after
+        # manifest.performance.idleStopSec of no input *and* no pending render activity
+        # (letters/trail/rings/keyvisual feedback from the earlier cases all have
+        # lifetimes far under idleStopSec, so they will have decayed and been pruned by
+        # the time this window elapses), and resumes immediately on the next keypress.
+        # Uses window.WTJ_APP_DIAG (this card's own diagnostic API: tickCount/running) —
+        # this is the real-browser counterpart to the Node vm unit tests in
+        # tests/unit/app-idle-park-008.test.mjs (those stub WTJ_KEYVISUAL/WTJ_POINTER/
+        # WTJ_FRAME_ANIM; this one exercises the actual production engines).
+        has_app_diag = page.evaluate(
+            "() => typeof window.WTJ_APP_DIAG !== 'undefined' && "
+            "typeof window.WTJ_APP_DIAG.getState === 'function'")
+        idle_ms = page.evaluate(
+            "() => ((window.WTJ_MANIFEST && window.WTJ_MANIFEST.performance && "
+            "window.WTJ_MANIFEST.performance.idleStopSec) || 5) * 1000")
+        page.wait_for_timeout(int(idle_ms) + 500)  # clear the idle-stop window, no input
+        running_a = page.evaluate("() => window.WTJ_APP_DIAG.getState().running")
+        tick_a = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        page.wait_for_timeout(300)  # if still ticking, this would move tick_b
+        tick_b = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        parked_ok = has_app_diag and running_a is False and tick_a == tick_b
+
+        page.keyboard.press("k")
+        page.wait_for_timeout(80)
+        running_c = page.evaluate("() => window.WTJ_APP_DIAG.getState().running")
+        tick_c = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        resumed_ok = running_c is True and tick_c > tick_b
+
+        record("APPSHELL-07-raf-idle-park",
+               parked_ok and resumed_ok and not console_errors,
+               f"idle_ms={idle_ms} running_a={running_a} tick_a={tick_a} tick_b={tick_b} "
+               f"parked={parked_ok} | running_c={running_c} tick_c={tick_c} "
+               f"resumed={resumed_ok} console_errors={len(console_errors)}")
+
         browser.close()
 
     passed = sum(1 for c in cases.values() if c["pass"])
