@@ -1,5 +1,23 @@
 # TTS 音频包 provenance（WTJ-20260704-074 EN + WTJ-20260704-084 ZH）
 
+> ## ⚑ WTJ-20260707-003：新增 ZH「找到」组合引导语 find.zh.m4a
+>
+> 修复"ZH 问号找物任务开始只念词卡本身、没有找到该动作的语义"——见 `CN-TASK-DRAFT.md` #0
+> 一节「追加（WTJ-20260707-003）」的完整理由与边界（唯一例外，不影响 24 条任务整句/100 条
+> 词卡本身仍各自完整预生成的红线）。
+>
+> | 项 | 值 |
+> |---|---|
+> | 资产 | `audio/phrases/find.zh.m4a`（新增，此前不存在） |
+> | 文本 | 「找到」（`app/scripts/tts-text-manifest.zh.json` 新增 `phrases.find`） |
+> | 生成脚本 | `app/scripts/generate-tts-asr-gated.py --only zh-phrase:find`（`build_worklist_ext()` 新增读取 `tts-text-manifest.zh.json` 的 `phrases` 段落，tag `zh-phrase:<k>`） |
+> | 模型/音色/母带链 | 与上方 CosyVoice3 当前路线完全一致（CosyVoice3 zero-shot 克隆 Ethan 自录 `zh.wav` 参考声，`loudnorm`+`alimiter`→24kHz mono AAC 64k），未引入新依赖 |
+> | ASR 自证 | whisper `small`，5 次尝试内 3 个候选通过（seed 42/44/46 转写均为「找到」，ratio=1.00），按贴近 ZH 短句节奏目标（1.1-2.2s 窗口）择优，采用 seed=46（dur=1.08s——与同为 2 字的 `secretWordsZh.apple` 词卡同一时长量级，非仓促朗读） |
+> | 客观 QC | ffprobe：aac/24000Hz/mono/1.08s；`volumedetect`：mean -25.0dB（非静音）、max -2.0dB（peak ≤ -0.1dBFS，无削波）；前置静音 ~0.35s，与同管线其它已交付素材（如 `apple.zh.m4a` 前置静音 ~0.14s、EN `find.m4a` 前置静音 ~0.44s）同一量级，非回归 |
+> | sha256 | `8e170d25d77163ea826a472088c51320c5772e139387297d83b64cec698cab2b` |
+> | 登记 | `app/web/audio/missing-audio.json` 新增顶层 `compositePhrasesZh`（1 条，status delivered）+ `summary.compositePhrasesZh`；与既有 `compositePhrases`（EN，10 条）各自独立数组，不影响 `tts-audio-delivery.test.mjs` 既有的 10-phrases EN 门 |
+> | 主观验收 | TL 不试听；Ethan/QA 在主目录 `docs/design-review.html` 试听把关（本卡未把 `audio/phrases/` 目录接入该生成器的自动扫描区，find.zh.m4a 暂不会出现在试听专区缩略图列表里——与既有 10 条 EN phrases 同一现状，非本卡引入的新缺口） |
+>
 > ## ⚑ 当前路线（WTJ-20260705-024，2026-07-06 全量重生成，取代下方 Kokoro 历史）
 >
 > Ethan 拒绝 Kokoro 音色后选定 **CosyVoice 3 + 他本人自录参考声**。本目录下全部
