@@ -409,6 +409,110 @@ def render_secret_word_audio_group() -> str:
     return "\n".join(parts)
 
 
+# ---------------------------------------------------------------------------
+# 找物任务候选池 + 随机 N 策略审计（WTJ-20260706-012 第二阶段，TL 定案 2026-07-07）：
+# 不进 App 也能看到"找物任务从哪个候选池抽、EN/ZH 各自的合格池大小、随机 N 落在什么范围、
+# 哪些词因缺中文词卡音频被排除在 ZH 候选池外"。ZH 模型是 word-card（目标词提示音频=该词自己的
+# 中文词卡音频 audio/words/<word>.zh.m4a），不是运行时拼接、也不是预生成整句"找到 X！"（那条
+# 路线已被叫停，未落地任何一条）；no-EN-fallback：缺中文词卡音频的词直接排除出候选池，绝不在
+# ZH 模式下静默回退英文顶替。
+# ---------------------------------------------------------------------------
+
+RANDOM_POOL_RE = re.compile(
+    r"randomPool:\s*\{\s*enabled:\s*(true|false),\s*sampleSize:\s*"
+    r"(?:\{\s*min:\s*(\d+)\s*,\s*max:\s*(\d+)\s*\}|(\d+))",
+    re.S,
+)
+
+
+def parse_find_random_pool_cfg() -> dict | None:
+    """解析 app/web/manifest.js tasks.templates.find.randomPool 配置，取得
+    {enabled, min, max}（min==max 表示历史"纯数字固定值"写法，min<max 表示 012 起的随机范围）。
+    解析失败（manifest.js 结构变化）返回 None，调用方需处理。
+    """
+    path = REPO_ROOT / MANIFEST_JS_RELPATH
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    m = RANDOM_POOL_RE.search(text)
+    if not m:
+        return None
+    enabled = m.group(1) == "true"
+    if m.group(2) is not None and m.group(3) is not None:
+        return {"enabled": enabled, "min": int(m.group(2)), "max": int(m.group(3))}
+    if m.group(4) is not None:
+        v = int(m.group(4))
+        return {"enabled": enabled, "min": v, "max": v}
+    return None
+
+
+def get_zh_delivered_words() -> set[str]:
+    """从 app/web/audio/missing-audio.json 的 secretWordsZh[] 取得已交付中文词卡音频的词集合
+    （与 render_secret_word_audio_group() 用的同一份权威数据源，独立读取避免耦合渲染顺序）。
+    文件缺失/解析失败时返回空集合，调用方按"当前无法判断，视为全部未交付"处理。
+    """
+    ma_path = REPO_ROOT / "app/web/audio/missing-audio.json"
+    if not ma_path.exists():
+        return set()
+    try:
+        data = json.loads(ma_path.read_text(encoding="utf-8"))
+    except Exception:
+        return set()
+    return set(e["word"] for e in data.get("secretWordsZh", []) if e.get("status") == "delivered")
+
+
+def render_find_task_pool_audit_section() -> str:
+    pool = parse_secret_word_pool()
+    total = len(pool)
+    zh_delivered = get_zh_delivered_words()
+    zh_missing = sorted(e["word"] for e in pool if e["word"] not in zh_delivered)
+    cfg = parse_find_random_pool_cfg()
+    STATS["per_root"].append(("找物候选池审计（EN 全量 / ZH 交集）", MANIFEST_JS_RELPATH, total))
+
+    if cfg:
+        enabled_desc = "已启用" if cfg["enabled"] else "已禁用（回退固定 12 条 examples，不走随机抽取）"
+        if cfg["min"] == cfg["max"]:
+            n_desc = f'N（目标 1 个 + 干扰项）恒为 {cfg["min"] + 1}'
+        else:
+            n_desc = f'N（目标 1 个 + 干扰项，随机重掷）落在 {cfg["min"] + 1} ~ {cfg["max"] + 1} 之间'
+    else:
+        enabled_desc = "—（未能从 manifest.js 解析出 randomPool 配置，请检查该文件结构是否变化）"
+        n_desc = "—"
+
+    parts = [
+        f'<h2 id="find-pool-audit">找物任务候选池 + 随机 N 策略审计 '
+        f'<span class="count">(EN 候选池 {total}/{total} 词；ZH 候选池 {len(zh_delivered)}/{total} 词)</span></h2>',
+        '<p class="section-note">卡片 WTJ-20260706-012：找物任务每次问号点击都从"合格候选池"随机抽 1 个目标 + N-1 个'
+        '干扰项（洗牌袋无放回抽取，不再固定 dog/apple 开场）。<strong>EN 模式</strong>候选池 = '
+        f'<code class="inline-code">secretWords.pool</code> 全量（下方逐词核对 sprite + 英文词卡音频均已交付，'
+        f'{total}/{total}，见 <a href="#audio-words">音频试听专区 · 秘密词发音</a>）。<strong>ZH 模式</strong>'
+        f'候选池收窄为"该词已交付中文词卡音频"的子集（运行时查 <code class="inline-code">'
+        f'window.WTJ_VOICE_LANG.isWordZhAvailable()</code>，当前 {len(zh_delivered)}/{total}）——目标词的提示音频'
+        '就是这个词自己已交付的中文词卡音频本身（<code class="inline-code">audio/words/&lt;word&gt;.zh.m4a</code>），'
+        '不是"找到"+词卡的运行时拼接（明确反模式），也不是另外预生成的整句"找到 X！"（该路线已被 TL 叫停，未落地任何'
+        '一条）。</p>',
+        f'<p class="section-note"><strong>no-EN-fallback 硬要求</strong>（Ethan 明确驳回"缺中文就退英文"，与下方'
+        '「秘密词发音」区块里秘密词打字命中反馈这条<em>不同</em>机制的既有 EN 回落行为不是同一回事，互不影响）：'
+        '下方列出的词缺中文词卡音频，在 ZH 模式下直接被排除出候选池，绝不参与随机抽取，也绝不在抽中后静默改播'
+        f'其英文词卡音频顶替。随机 N 策略：{esc(enabled_desc)}，{esc(n_desc)}（见 app/web/manifest.js '
+        'tasks.templates.find.randomPool，逐次问号点击独立重掷）。</p>',
+    ]
+    if zh_missing:
+        items = "".join(f'<code class="inline-code">{esc(w)}</code>' for w in zh_missing)
+        parts.append(
+            f'<p class="pending-note">ZH 候选池外（缺中文词卡音频，共 {len(zh_missing)}/{total} 词，'
+            f'ZH 模式下找物任务不会抽到这些词作为目标或干扰项）：{items}</p>'
+        )
+    else:
+        parts.append('<p class="section-note ok">当前 ZH 候选池已覆盖全部词，无缺口——EN/ZH 两条语言分支候选池等大。</p>')
+    parts.append(
+        '<p class="section-note">逐词 sprite + EN/ZH 词卡音频试听（含上方缺口清单里每个词具体差在哪条文件）见 '
+        '<a href="#audio-words">音频试听专区 · 秘密词发音</a>（同一份数据源，本节不重复渲染 100 张缩略图/音频控件，'
+        '只做候选池口径与随机策略的文字审计）。</p>'
+    )
+    return "\n".join(parts)
+
+
 def list_task_audio_files(zh: bool) -> list[str]:
     """列出 app/web/audio/tasks/ 下的 .m4a 文件名（不含目录），按 zh 参数筛选
     .zh.m4a（中文完整句）或非 .zh 的 .m4a（英文）。排序后返回，纯目录扫描，不硬编码文件名。
@@ -959,6 +1063,7 @@ def build_body_sections() -> list[tuple[str, str]]:
     """只应调用一次：内部会触发 render_item，产生 STATS / ALL_REFS 的副作用。"""
     return [
         ("audio-preview", render_audio_preview_section()),
+        ("find-pool-audit", render_find_task_pool_audit_section()),
         ("008-audio-fix", render_008_audio_fix_section()),
         ("compare", render_compare_section()),
         ("runtime", render_runtime_section()),
@@ -999,6 +1104,7 @@ def assemble_html(body_sections: list[tuple[str, str]], broken_html: str, stats_
 
 <nav class="pagenav" aria-label="设计总览页导航">
   <a href="#audio-preview">音频试听专区</a>
+  <a href="#find-pool-audit">找物候选池审计</a>
   <a href="#008-audio-fix">008 音频修复对照</a>
   <a href="#compare">动效对比专区</a>
   <a href="#runtime">运行时已接入</a>
