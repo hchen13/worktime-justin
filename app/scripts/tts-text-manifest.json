@@ -4,7 +4,7 @@
     "drag-apple-to-basket": {"text": "Put the apple in the basket!", "out": "audio/tasks/drag-apple-to-basket.m4a"},
     "drag-dog-home": {"text": "Take the dog home!", "out": "audio/tasks/drag-dog-home.m4a"},
     "click-lamp-on": {"text": "Turn on the lamp!", "out": "audio/tasks/click-lamp-on.m4a"},
-    "click-faucet-on": {"text": "Turn on the water!", "out": "audio/tasks/click-faucet-on.m4a"},
+    "click-faucet-off": {"text": "Turn off the water!", "out": "audio/tasks/click-faucet-off.m4a"},
     "click-horse-run": {"text": "Make the horse run!", "out": "audio/tasks/click-horse-run.m4a"},
     "find-the-dog": {"text": "Find the dog!", "out": "audio/tasks/find-the-dog.m4a"},
     "press-letter-a": {"text": "Press the letter A!", "out": "audio/tasks/press-a.m4a"},

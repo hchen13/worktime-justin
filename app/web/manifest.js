@@ -567,14 +567,19 @@
               learningWord: 'lamp' // pt5：命中 secretWords.pool 的 'lamp' 词条。
             },
             {
-              id: 'click-faucet-on',
-              // 056 PROP_ANIM_STATE_MAP: faucet idle='off'（关，静止）→active='running'（水流）；
+              id: 'click-faucet-off',
+              // WTJ-20260706-009：语义翻转——初始态表现为"水在流"，点击后表现为"关水/停止流水"
+              // （此前 idle='off'/active='running' 是反的，等于让孩子"把水打开"，与 Ethan 的
+              // 产品要求相反）。现改为 idle='running'（水一直流，loop:true）→active='closing'
+              // （6 帧一次性关水过程，源数据本就 loop:false，播完 clamp 在关水末帧，与
+              // 'closed'/'off' 静态终态视觉一致——这条 closing 序列本就是 DESIGN 当初命名
+              // "关水动效"（WTJ-20260704-026）时准备的，只是上一版接线把它晾在一边没用上）。
               // 两态都指向同一张真实 faucet.png，态变化完全由帧动画驱动，不依赖静态切图。
               targetSprite: 'sprites/faucet.png',
               targetSpriteActive: 'sprites/faucet.png',
-              // WTJ-20260705-004 Phase B：接线 084 中文完整句"打开水龙头！"，
-              // 消解此前"文件暂缺静默兜底"的旧状态。
-              voicePrompt: 'audio/tasks/click-faucet-on.zh.m4a',
+              // WTJ-20260706-009：中文任务句改为完整句"关掉水龙头！"（CosyVoice3 整句预生成，
+              // 不做运行时拼接），替换此前语义相反的"打开水龙头！"。
+              voicePrompt: 'audio/tasks/click-faucet-off.zh.m4a',
               successAudio: 'audio/sfx/task-success.m4a',
               learningWord: 'faucet' // pt5：命中 secretWords.pool 的 'faucet' 词条。
             },

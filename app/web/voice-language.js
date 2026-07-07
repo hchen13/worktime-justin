@@ -47,7 +47,7 @@
   // 及 task-templates.js 内置兜底样例并集一致，32 条：原 24 + 025 新增 8 条 ZH-only）。
   var ALL_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
-    'click-lamp-on', 'click-faucet-on', 'click-horse-run',
+    'click-lamp-on', 'click-faucet-off', 'click-horse-run',
     'find-the-dog', 'find-the-cat', 'find-the-apple', 'find-the-star',
     'find-the-fish', 'find-the-elephant', 'find-the-pig', 'find-the-rocket',
     'find-the-turtle', 'find-the-unicorn', 'find-the-whale', 'find-the-zebra',
@@ -61,7 +61,7 @@
   // app/web/audio/tasks/*.m4a 现存文件；不含 .zh.m4a 后缀的那批）。
   var EN_AVAILABLE_TASK_IDS = [
     'drag-apple-to-basket', 'drag-dog-home',
-    'click-lamp-on', 'click-faucet-on', 'click-horse-run',
+    'click-lamp-on', 'click-faucet-off', 'click-horse-run',
     'find-the-dog', 'press-a', 'press-3'
   ];
 
