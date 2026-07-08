@@ -201,6 +201,72 @@ def main() -> int:
                dbg_key_late.strip().lower() == "z" and not console_errors,
                f"late dbg-key={dbg_key_late!r} console_errors={len(console_errors)}")
 
+        # APPSHELL-07 (WTJ-20260707-008): the main rAF render loop actually parks after
+        # manifest.performance.idleStopSec of no input *and* no pending render activity
+        # (letters/trail/rings/keyvisual feedback from the earlier cases all have
+        # lifetimes far under idleStopSec, so they will have decayed and been pruned by
+        # the time this window elapses), and resumes immediately on the next keypress.
+        # Uses window.WTJ_APP_DIAG (this card's own diagnostic API: tickCount/running) —
+        # this is the real-browser counterpart to the Node vm unit tests in
+        # tests/unit/app-idle-park-008.test.mjs (those stub WTJ_KEYVISUAL/WTJ_POINTER/
+        # WTJ_FRAME_ANIM; this one exercises the actual production engines).
+        has_app_diag = page.evaluate(
+            "() => typeof window.WTJ_APP_DIAG !== 'undefined' && "
+            "typeof window.WTJ_APP_DIAG.getState === 'function'")
+        idle_ms = page.evaluate(
+            "() => ((window.WTJ_MANIFEST && window.WTJ_MANIFEST.performance && "
+            "window.WTJ_MANIFEST.performance.idleStopSec) || 5) * 1000")
+        page.wait_for_timeout(int(idle_ms) + 500)  # clear the idle-stop window, no input
+        running_a = page.evaluate("() => window.WTJ_APP_DIAG.getState().running")
+        tick_a = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        page.wait_for_timeout(300)  # if still ticking, this would move tick_b
+        tick_b = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        parked_ok = has_app_diag and running_a is False and tick_a == tick_b
+
+        page.keyboard.press("k")
+        page.wait_for_timeout(80)
+        running_c = page.evaluate("() => window.WTJ_APP_DIAG.getState().running")
+        tick_c = page.evaluate("() => window.WTJ_APP_DIAG.getState().tickCount")
+        resumed_ok = running_c is True and tick_c > tick_b
+
+        record("APPSHELL-07-raf-idle-park",
+               parked_ok and resumed_ok and not console_errors,
+               f"idle_ms={idle_ms} running_a={running_a} tick_a={tick_a} tick_b={tick_b} "
+               f"parked={parked_ok} | running_c={running_c} tick_c={tick_c} "
+               f"resumed={resumed_ok} console_errors={len(console_errors)}")
+
+        # APPSHELL-08 (WTJ-20260707-010): diag.js's WTJ-20260705-017 rAF ticking probe used to
+        # be a permanent per-frame requestAnimationFrame self-chain with no idle判定 at all —
+        # unlike app.js's main loop (APPSHELL-07 above), it ran at full browser frame rate for
+        # the entire process lifetime regardless of activity, in *every* load path (normal app /
+        # WTJ_APP_DIAG / QA real-machine diagnosis all share this same unconditional
+        # <script src="diag.js">), making it a more suspicious old-Mac heat/fan source than the
+        # already-parking app.js loop. The fix gates it to a low-frequency baseline (one rAF
+        # sample per HEARTBEAT_MS=5000ms window, see diag.js「rAF 探针发热 gate」) by default,
+        # with manifest.performance.diagRafFullRate=true as the opt-in for a real deep-diagnosis
+        # build that needs the original continuous timeline back. Production manifest.js leaves
+        # the flag unset/false, so this smoke exercises the *default* path exactly as kiosk
+        # ships it — no full-rate opt-in here.
+        has_diag = page.evaluate(
+            "() => typeof window.WTJ_DIAG !== 'undefined' && "
+            "typeof window.WTJ_DIAG.getState === 'function'")
+        raf_mode = page.evaluate("() => window.WTJ_DIAG && window.WTJ_DIAG.getState().rafMode")
+        ticks_t0 = page.evaluate("() => window.WTJ_DIAG.getState().rafTotalTicks")
+        page.wait_for_timeout(700)  # well under the 5000ms heartbeat window
+        ticks_t1 = page.evaluate("() => window.WTJ_DIAG.getState().rafTotalTicks")
+        short_delta = ticks_t1 - ticks_t0
+        page.wait_for_timeout(5200)  # cross at least one heartbeat boundary
+        ticks_t2 = page.evaluate("() => window.WTJ_DIAG.getState().rafTotalTicks")
+        long_delta = ticks_t2 - ticks_t1
+        # Old always-on 60Hz behavior would show ~42 ticks over 700ms and ~312 over 5.2s;
+        # the idle-gated default should show at most a couple of heartbeat-aligned samples.
+        idle_gated_ok = has_diag and raf_mode == "idle" and short_delta <= 2 and long_delta <= 4
+        record("APPSHELL-08-diag-raf-idle-gate",
+               idle_gated_ok and not console_errors,
+               f"rafMode={raf_mode} short(700ms)_delta={short_delta} "
+               f"long(5.2s)_delta={long_delta} (pre-010 always-on-60Hz baseline would be "
+               f"~42 and ~312 respectively) console_errors={len(console_errors)}")
+
         browser.close()
 
     passed = sum(1 for c in cases.values() if c["pass"])

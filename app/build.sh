@@ -12,7 +12,7 @@ set -euo pipefail
 
 APP_NAME="WorkTimeJustin"
 BUNDLE_ID="com.worktime.justin"
-VERSION="0.1.0"
+VERSION="1.0.0"
 MIN_OS="11.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,12 +61,15 @@ UNIVERSAL_BIN="$MACOS_DIR/${APP_NAME}"
 # -swift-version 5：钉死 Swift 5 语言模式，防止未来默认切到 Swift 6 语言模式后
 # 引入 @MainActor 隐式并发（Big Sur 缺 _Concurrency 回退库，启动即崩）。
 echo "==> 编译 x86_64 slice（交付目标：Intel 2014 MacBook Air / Big Sur 11）"
+# shell/DailyQuota.swift（WTJ-20260707-004）：跨日重置纯逻辑，除 main.swift 外唯一的
+# 额外源文件，本身只含函数声明、无顶层语句（Swift 多文件编译规则：顶层可执行语句只能出现
+# 在名为 main.swift 的文件里），一并传给 swiftc 即视为同一模块，main.swift 无需 import。
 swiftc -O -swift-version 5 -target "x86_64-apple-macosx${MIN_OS}" -sdk "$SDK" \
-  -o "$X64_BIN" shell/main.swift
+  -o "$X64_BIN" shell/main.swift shell/DailyQuota.swift
 
 echo "==> 编译 arm64 slice（本机 Apple Silicon 原生冒烟用）"
 swiftc -O -swift-version 5 -target "arm64-apple-macosx${MIN_OS}" -sdk "$SDK" \
-  -o "$ARM64_BIN" shell/main.swift
+  -o "$ARM64_BIN" shell/main.swift shell/DailyQuota.swift
 
 echo "==> lipo 合成 universal 二进制"
 lipo -create -output "$UNIVERSAL_BIN" "$X64_BIN" "$ARM64_BIN"
@@ -75,6 +78,19 @@ chmod +x "$UNIVERSAL_BIN"
 echo "==> 拷贝 web 资源到 Resources/web/"
 mkdir -p "$RESOURCES_DIR/web"
 cp -R "$SCRIPT_DIR/web/"* "$RESOURCES_DIR/web/"
+
+# WTJ-20260708-002：接入 macOS app icon。app/AppIcon.icns 由 DESIGN 已验收源图
+# docs/assets/app-icon/worktime-justin-icon-1024.png（WTJ-20260708-001 第七版，
+# DESIGN commit 5a86f61）经 sips + iconutil 生成（10 尺寸 iconset，16~512@1x/@2x）。
+# 复制到 Resources/ 并由下方 Info.plist 的 CFBundleIconFile 引用，Dock/Finder/
+# Application surfaces 即显示新图标。图标改版时按 docs/assets/app-icon/worktime-justin-icon-source.md
+# 「TL 集成」节的 sips + iconutil 命令从 1024 源图重生成 app/AppIcon.icns。
+echo "==> 拷贝 app icon 到 Resources/AppIcon.icns"
+if [ ! -f "$SCRIPT_DIR/AppIcon.icns" ]; then
+  echo "错误：缺少 app/AppIcon.icns（app 图标资源）" >&2
+  exit 1
+fi
+cp "$SCRIPT_DIR/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
 echo "==> 写入 Info.plist"
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -88,6 +104,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
     <string>${BUNDLE_ID}</string>
     <key>CFBundleName</key>
     <string>${APP_NAME}</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -168,6 +186,15 @@ if [ -z "$PLIST_COMMIT" ]; then
 fi
 echo "WTJBuildCommit=$PLIST_COMMIT"
 [ "$PLIST_COMMIT" = "$GIT_COMMIT" ] || { echo "错误：Info.plist 里的 WTJBuildCommit 与构建期采集值不一致" >&2; exit 1; }
+
+echo ""
+echo "--- app icon（WTJ-20260708-002：CFBundleIconFile + Resources/AppIcon.icns 均须就位）---"
+PLIST_ICON=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$CONTENTS_DIR/Info.plist" 2>/dev/null || true)
+[ "$PLIST_ICON" = "AppIcon" ] || { echo "错误：Info.plist 的 CFBundleIconFile 应为 AppIcon（实测 '$PLIST_ICON'）" >&2; exit 1; }
+[ -f "$RESOURCES_DIR/AppIcon.icns" ] || { echo "错误：bundle 缺少 Resources/AppIcon.icns" >&2; exit 1; }
+ICON_TYPE=$(file "$RESOURCES_DIR/AppIcon.icns" | grep -c "Mac OS X icon") || true
+[ "$ICON_TYPE" = "1" ] || { echo "错误：Resources/AppIcon.icns 不是有效的 Mac OS X icon 文件" >&2; exit 1; }
+echo "CFBundleIconFile=$PLIST_ICON, Resources/AppIcon.icns=$(du -h "$RESOURCES_DIR/AppIcon.icns" | cut -f1) 有效"
 
 echo ""
 echo "--- codesign -v ---"

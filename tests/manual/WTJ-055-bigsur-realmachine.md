@@ -48,7 +48,24 @@ Ethan **只**验收从**主项目目录 `/Users/claire/Documents/worktime-justin
 |---|---|---|---|
 | 灯开关 / 宝箱开启 | 点 click-lamp-on / 填满卡槽 | 点亮过渡、开盖+粒子在动 | |
 | 马 / 水龙头任务 | click-horse-run / click-faucet-off（WTJ-20260706-009 改名+语义翻转：初始即出水，点击后应关水） | 奔跑帧真的播放（水柱为最新加粗版）；水龙头任务打开时应已经在出水，点一下后应播关水过程并定格在无水画面（不再是点击后才出水） | |
+| **门 / 门铃任务（WTJ-20260707-007）** | 反复点问号直到出现 click-door-open / click-doorbell-ring（点击类，五选一，可能要点多次）。**每次任务一出现先别碰鼠标、盯屏 2~3 秒**（复现旧机「首帧解码慢」窗口） | 门/门铃 sprite **一出现就可见**（不是空白占位、不是要等点了才出现）——这是本卡根因（旧机上位图解码慢时首帧画成透明、单帧快路径永久停重试导致「不显示」，已在 frame-anim.js 修复）；点门→播开门过程定格开门末帧；点门铃→摇铃一轮定格。点击后短暂停留可见 active 态，随后任务完成（左下角状态灯点亮 / 成功反馈）。**若门/门铃一出现就空白 → 打回 007，附 justin.local console 里 `window.WTJ_FRAME_ANIM.getState().activePlaybacks`（看对应 prop 的 hasDrawnOnce）+ 截图** | |
 | 字母拖尾 / 星光 / 火箭成功反馈 | 打字 / 完成任务 | 流星拖尾、pointer 星光、成功爆点在动 | |
+
+## diag.js rAF 探针发热 gate（WTJ-20260707-010，无法自动化的真机部分）
+
+> 起因：008 排查发热时发现 `app/web/diag.js`（017）的 rAF ticking 探针从上线起就是**永久
+> requestAnimationFrame 自链、无 idle 判定**——不受 app.js 主循环的 idleStopSec park 影响，
+> 且正常 App/WTJ_APP_DIAG/QA 真机诊断三条路径都无条件加载同一份 diag.js（没有独立的"诊断
+> 模式"开关），比 app.js 主循环更可疑。010 卡把它 gate 成默认低频基线（每个心跳窗口
+> `HEARTBEAT_MS=5000ms` 只采 1 帧，而不是持续 60Hz），`manifest.performance.diagRafFullRate`
+> 开关默认 `false`。Chromium headless 下的 `tests/e2e/appshell_web_smoke.py`
+> APPSHELL-08-diag-raf-idle-gate 已验证该 gate 生效（idle 模式下 700ms 窗口 tick 增量=0、
+> 跨心跳窗口 5.2s 增量仅 1，对比旧版应有的 ~42/~312），以下两项需要真机才能验证。
+
+| 项 | 操作 | 期望 | 结果 | 证据 |
+|---|---|---|---|---|
+| 默认低频基线真机发热对照 | kiosk 默认启动（不动键鼠），`Activity Monitor` 看 WorkTimeJustin 进程 CPU%/风扇；对照本卡改动前的旧 DMG 跑同样步骤 | 新版本闲置 CPU% 明显低于旧版本（旧版本闲置时仍有 diag.js 永久 60Hz rAF 自链贡献的额外唤醒）；`~/Library/Logs/WorkTimeJustin/animation-diagnostics.log` 里每 5s 仍有一条 `heartbeat`，`rafTicksSinceLast` 应为 0 或 1（不再是几十上百） | | |
+| 诊断构建满频回退可用性 | 改 `app/web/manifest.js` `performance.diagRafFullRate` 为 `true` 后重新 `./build.sh`，安装跑起来，Web Inspector（或 `console.log(window.WTJ_DIAG.getState())`）确认 `rafMode==='full'` | 满频模式下心跳日志的 `rafTicksSinceLast` 恢复到接近"窗口时长×刷新率"的量级（如 5s×60Hz≈300），证明 017 原始满帧诊断能力未被删除、仅是默认关闭 | | |
 
 ## 退出机制（SECURITY.md §1.2/§1.3，018 更新后）
 

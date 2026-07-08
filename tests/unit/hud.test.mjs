@@ -305,25 +305,30 @@ test('3. manifest.slots.count=5 时：托盘使用已验收的 five-slot-tray.pn
 });
 
 // ============================================================================================
-// 4.（WTJ-20260704-083 返工，PM 打回②）非 5 槽数（如默认的 3）：没有对应的已验收托盘底图
-//    构图，不应该继续贴一张为 5 槽构图的图（那样会出现槽位圆点与底图凹槽错位——验收②反馈的
-//    缺陷本体），也**不应该**再是上一版被 PM 打回的纯色占位胶囊（旧 .wtj-hud-tray-bg-fallback）
-//    ——应该是 DESIGN 082 规则的可交付 footer 背景条（.wtj-hud-footer-bar）。
+// 4.（WTJ-20260707-011 验收反馈①）非 5 槽数（如默认的 3）：没有对应的已验收托盘底图构图，
+//    不应该继续贴一张为 5 槽构图的图（那样会出现槽位圆点与底图凹槽错位）；也不应再有横向背景
+//    长条——Ethan 反馈①要求改为参考图二 keyboard-hint-preview 的三个独立圆圈（无长条底）。故
+//    generic 分支现在只挂 --generic 修饰类 + 三个 .wtj-hud-slot 圆圈，不再渲染 .wtj-hud-footer-bar
+//    背景条（该 DOM 节点与其 CSS 规则均已删除）。
 // ============================================================================================
-test('4. manifest.slots.count=3（默认值）时：不使用 five-slot-tray.png，改用 082 规则的可交付 footer 背景条（不是旧的粗糙占位胶囊）', function () {
+test('4. manifest.slots.count=3（默认值）时：不使用 five-slot-tray.png，也不渲染横向背景长条（反馈①：三个独立圆圈，无 footer-bar）', function () {
   var sb = createSandbox(); // 真实默认 manifest，count=3
 
   var tray = trayWrap(sb);
-  assert.ok(tray.className.indexOf('wtj-hud-tray-wrap--generic') !== -1, 'count=3 时 tray-wrap 应挂 --generic 修饰类');
+  assert.ok(tray.className.indexOf('wtj-hud-tray-wrap--generic') !== -1, 'count=3 时 tray-wrap 应挂 --generic 修饰类（供 hud.css 锁定槽径与容器几何）');
 
   var bg = tray.children.filter(function (el) { return el.className === 'wtj-hud-tray-bg'; })[0];
   assert.equal(bg, undefined, 'count=3 时不应该使用 five-slot-tray.png（那是按 5 槽构图的最终资产，套在 3 槽上会错位）');
 
   var oldFallback = tray.children.filter(function (el) { return el.className === 'wtj-hud-tray-bg-fallback'; })[0];
-  assert.equal(oldFallback, undefined, 'PM 打回②：不能再是上一版的纯色占位胶囊（.wtj-hud-tray-bg-fallback 应已被移除/替换，不能用旧占位断言冒充完成）');
+  assert.equal(oldFallback, undefined, '不能再是上一版的纯色占位胶囊（.wtj-hud-tray-bg-fallback 应已被移除）');
 
   var footerBar = tray.children.filter(function (el) { return el.className === 'wtj-hud-footer-bar'; })[0];
-  assert.ok(footerBar, 'count=3 时应该渲染 082 规则的可交付 footer 背景条（.wtj-hud-footer-bar）');
+  assert.equal(footerBar, undefined, 'WTJ-20260707-011 反馈①：不应再渲染横向背景长条 .wtj-hud-footer-bar（应为三个独立圆圈）');
+
+  // 三个独立圆圈应实际渲染出来（Empty 视觉由 .wtj-hud-slot.is-empty::after 给出）。
+  var slots = tray.children.filter(function (el) { return el.className && el.className.indexOf('wtj-hud-slot') !== -1; });
+  assert.equal(slots.length, 3, 'count=3 时应渲染恰好 3 个 .wtj-hud-slot 圆圈');
 });
 
 // ============================================================================================
@@ -581,14 +586,10 @@ test('12. hud.css 静态契约：082 footer 背景条数值、宝箱三态视觉
   assert.ok(/rgba\(5,\s*10,\s*18,\s*0\.82\)/.test(footerMatch[0]), 'footer 本体背景应使用提亮后的可交付数值 rgba(5, 10, 18, 0.82)（原 082 doc 建议值 0.78 被 083 首版错放在小胶囊上，这里进一步提亮确保真正全宽的通栏本身清晰可辨）');
   assert.ok(/rgba\(156,\s*180,\s*220,\s*0\.2\)/.test(footerMatch[0]), 'footer 本体顶部分界线应提亮到 rgba(156, 180, 220, 0.2)');
 
-  // footer-bar 本身仍应存在（槽位分区提示层），但不应该再携带让它读成独立浮起卡片的强对比
-  // 数值（083 首版的 0.78 深色背景 + 内发光 box-shadow）——现在应该是全宽 tray-wrap 内一条
-  // 几乎不可见的浅色叠加。
-  var footerBarMatch = css.match(/\.wtj-hud-footer-bar\s*\{[^}]*\}/);
-  assert.ok(footerBarMatch, 'hud.css 应包含 .wtj-hud-footer-bar 规则块');
-  assert.equal(/rgba\(5,\s*10,\s*18,\s*0\.78\)/.test(footerBarMatch[0]), false, 'footer-bar 不应再携带 083 首版的高对比度深色背景（应已迁移到 .wtj-hud-footer 本体，见上）');
-  assert.equal(/box-shadow/.test(footerBarMatch[0]), false, 'footer-bar 不应再有让它看起来像独立浮起卡片的内发光 box-shadow');
-  assert.ok(/left:\s*0/.test(footerBarMatch[0]) && /right:\s*0/.test(footerBarMatch[0]), 'footer-bar 应横向铺满其父级 tray-wrap（0/0，不再是 4%/96% 的内缩胶囊）');
+  // WTJ-20260707-011 反馈①：横向背景长条 .wtj-hud-footer-bar 已整体移除（DOM 节点见测试 4，
+  // CSS 规则块此处核对已删除）——不应再有任何 `.wtj-hud-footer-bar { ... }` 规则声明（注释里
+  // 提及类名的说明性文字不算，正则要求选择器后紧跟 `{`）。
+  assert.equal(/\.wtj-hud-footer-bar\s*\{/.test(css), false, 'WTJ-20260707-011 反馈①：横向背景长条 .wtj-hud-footer-bar 规则块应已删除（改为三个独立圆圈，无长条底）');
 
   // b) 旧占位胶囊的规则块不应该再出现在 CSS 里（防止"新增了 footer-bar 但没删旧的"两套并存）；
   //    只匹配实际的规则声明（选择器 + `{`），不匹配注释里提及这个旧类名的说明性文字。
@@ -601,8 +602,10 @@ test('12. hud.css 静态契约：082 footer 背景条数值、宝箱三态视觉
   assert.ok(/\.wtj-hud-slot\.is-ghost::after\s*\{/.test(css), '应包含 Ghost 态的暗色底圈规则');
   assert.ok(/\.wtj-hud-slot-ghost-plus\s*\{/.test(css), '应包含 Ghost 态的加号子元素规则');
 
-  // d) 宝箱三态（Disabled/Active/Open）CSS 均应存在，且 Open 态应有具名 animation（呼吸脉冲），
-  //    对应的 @keyframes 也应定义（延续测试 6 的具名动画核对手法）。
+  // d) 宝箱三态（Disabled/Active/Open）CSS 规则块均应存在。WTJ-20260707-011 反馈④：Open 态不再
+  //    是"静态宝箱 + 呼吸脉冲"——它现在把 footer 常驻指示器隐藏（visibility:hidden），让
+  //    reward-chest.js 的开箱 Canvas 动画成为唯一开箱视觉，消除双层叠加。故 is-open 规则块应声明
+  //    visibility:hidden，且不应再声明具名 animation（呼吸脉冲已删除）。
   ['is-disabled', 'is-active', 'is-open'].forEach(function (stateClass) {
     var re = new RegExp('\\.wtj-hud-chest\\.' + stateClass + '\\s*\\{');
     assert.ok(re.test(css), 'hud.css 应包含 .wtj-hud-chest.' + stateClass + ' 规则块');
@@ -610,15 +613,14 @@ test('12. hud.css 静态契约：082 footer 背景条数值、宝箱三态视觉
 
   var chestOpenBlockMatch = css.match(/\.wtj-hud-chest\.is-open\s*\{[^}]*\}/);
   assert.ok(chestOpenBlockMatch, '应能定位到 .wtj-hud-chest.is-open 规则块');
-  var chestAnimNameMatch = chestOpenBlockMatch[0].match(/animation:\s*([a-zA-Z0-9_-]+)/);
-  assert.ok(chestAnimNameMatch, '.wtj-hud-chest.is-open 应声明一个具名 animation（打开态呼吸脉冲，与静止的 Active 区分）');
-  var chestKeyframesRe = new RegExp('@keyframes\\s+' + chestAnimNameMatch[1] + '\\s*\\{');
-  assert.ok(chestKeyframesRe.test(css), 'hud.css 应定义 @keyframes ' + chestAnimNameMatch[1] + ' 对应的关键帧');
+  assert.ok(/visibility:\s*hidden/.test(chestOpenBlockMatch[0]), 'WTJ-20260707-011 反馈④：.wtj-hud-chest.is-open 应 visibility:hidden 隐藏 footer 静态宝箱（开箱动画为唯一视觉，消除双层叠加）');
+  assert.equal(/animation:\s*[a-zA-Z]/.test(chestOpenBlockMatch[0]), false, '反馈④：is-open 不应再声明呼吸脉冲 animation（旧双层叠加成因之一，已随隐藏静态宝箱移除）');
+  assert.equal(/@keyframes\s+wtj-hud-chest-open-pulse\s*\{/.test(css), false, '反馈④：旧的 @keyframes wtj-hud-chest-open-pulse 应已删除（不再需要打开态脉冲）');
 
-  // e) prefers-reduced-motion 应同时覆盖状态灯（既有）与新增的宝箱 Open 呼吸脉冲。
+  // e) prefers-reduced-motion 应覆盖 .wtj-hud-chest（既有 transition 关闭 + Open 态保持隐藏）。
   var reducedMotionBlockMatch = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*)\}\s*$/);
   assert.ok(reducedMotionBlockMatch, 'hud.css 应包含 prefers-reduced-motion 的兜底块');
-  assert.ok(reducedMotionBlockMatch[1].indexOf('.wtj-hud-chest') !== -1, 'prefers-reduced-motion 块应覆盖 .wtj-hud-chest（关闭打开态呼吸脉冲）');
+  assert.ok(reducedMotionBlockMatch[1].indexOf('.wtj-hud-chest') !== -1, 'prefers-reduced-motion 块应覆盖 .wtj-hud-chest');
 });
 
 // ============================================================================================
@@ -714,17 +716,21 @@ test('14. buildTopbar() 渲染标题组（.wtj-hud-title-group），内含英文
 });
 
 // ============================================================================================
-// 15.（WTJ-20260705-019b，Ethan 截图反馈②：三槽卡槽坐在全宽 footer 上，不是独立小 container
-//     悬空）CSS 静态契约——generic（非五槽底图）tray-wrap 不应再是历史遗留的 260~380px 小方形
-//     留白画布，宽度应显著放宽到接近 footer 可用宽度；槽径改用与容器尺寸解耦的绝对 clamp()。
+// 15.（WTJ-20260707-011 验收反馈①：三个独立圆圈、间距更紧凑居中）CSS 静态契约——generic（非五槽
+//     底图）tray-wrap 宽度应收窄以把三个卡槽（18%/50%/82%）聚成紧凑居中的一簇（间距 = 32%*宽），
+//     不再是反馈前那条把圆圈铺得很开的 min(720px,82vw) 宽版；槽径仍用与容器尺寸解耦的绝对 clamp()。
 // ============================================================================================
-test('15. hud.css 静态契约：--generic tray-wrap 宽度显著放宽（不再是 clamp(260px,30vw,380px) 小方块），槽径改用与容器尺寸解耦的 clamp()', function () {
+test('15. hud.css 静态契约：--generic tray-wrap 宽度收窄以紧凑居中三圆圈（反馈①，不再是 min(720px,82vw) 宽版），槽径仍用与容器尺寸解耦的 clamp()', function () {
   var css = readFileSync(HUD_CSS_PATH, 'utf8');
 
   var genericWrapMatch = css.match(/\.wtj-hud-tray-wrap--generic\s*\{[^}]*\}/);
   assert.ok(genericWrapMatch, 'hud.css 应包含 .wtj-hud-tray-wrap--generic 独立尺寸覆盖规则块');
-  assert.equal(/clamp\(260px/.test(genericWrapMatch[0]), false, '--generic tray-wrap 不应再沿用五槽底图专用的 clamp(260px,...) 小方形尺寸');
-  assert.match(genericWrapMatch[0], /width:\s*min\(/, '--generic tray-wrap 宽度应改用 min() 表达式放宽到接近 footer 可用宽度');
+  assert.equal(/min\(720px/.test(genericWrapMatch[0]), false, 'WTJ-20260707-011 反馈①：--generic tray-wrap 不应再用把圆圈铺得很开的 min(720px,82vw) 宽版');
+  assert.match(genericWrapMatch[0], /width:\s*clamp\(/, '反馈①：--generic tray-wrap 宽度应改用收窄的 clamp() 上限（紧凑居中三圆圈）');
+  // 收窄契约：桌面档宽度上限应显著小于旧宽版（<=400px），保证三圆圈聚拢而非散开。
+  var wrapMaxMatch = genericWrapMatch[0].match(/width:\s*clamp\([^,]+,[^,]+,\s*(\d+)px\s*\)/);
+  assert.ok(wrapMaxMatch, '--generic tray-wrap width 应是三段 clamp(min, vw, max) 形式');
+  assert.ok(parseInt(wrapMaxMatch[1], 10) <= 400, '反馈①：clamp 上限应 <=400px（紧凑一簇），实测 ' + wrapMaxMatch[1] + 'px');
 
   var genericSlotMatch = css.match(/\.wtj-hud-tray-wrap--generic \.wtj-hud-slot\s*\{[^}]*\}/);
   assert.ok(genericSlotMatch, '应能找到 .wtj-hud-tray-wrap--generic .wtj-hud-slot 规则块');

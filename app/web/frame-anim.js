@@ -103,6 +103,24 @@
 // 修复后两条路径均不再永久空白）。
 //
 // -----------------------------------------------------------------------
+// WTJ-20260707-007：首帧透明不算画过（014 残留缺陷，door/bell 旧机不显示的真实根因）
+// -----------------------------------------------------------------------
+// 014 的 hasDrawnOnce 判据有一个未覆盖的窗口：它把「drawImage() 调用没抛错」等同于「画出了
+// 一帧内容」。但 isEntryReady() 的同步兜底判据是 `img.complete && naturalWidth>0`——WebKit 在
+// 图片字节已加载完（complete=true、naturalWidth 已知）、但位图**尚未解码**出来的那段窗口里，
+// 这个判据就已经返回 true 了。此时 drawImage 会静默画出**全透明**（不抛任何错），旧 drawFrame()
+// 却据此把 hasDrawnOnce 置真——于是单帧快路径（door 的 closed / bell 的 idle / lamp 的 off /
+// faucet 的 off/closed）永久停止重试，canvas 从此彻底空白。旧机（2014 MBA + `wtjres://` 主线程
+// 同步读盘 + 多道具首帧解码互相抢占解码线程）上这个「complete 早于 decode 完成」的窗口足够宽，
+// 门/门铃恰好落在里面，就表现为 Ethan 报的「门铃/门任务不显示」——而资产、映射、命中链路其实
+// 全是对的（用干净页面直接 play() door/bell 单帧态 100% 画得出，只有在满负载解码竞争下才复现）。
+// 修复：drawFrame() 在把 hasDrawnOnce 置真之前，用 firstPaintDepositedContent() 采样这一帧是否
+// 真的落下了非透明像素；透明则保持 hasDrawnOnce=false，让既有的 tick/retry 循环在下一拍（解码
+// 完成后）重画，直到画出真内容为止（或到 FIRST_PAINT_CONFIRM_MAX_RETRIES 安全上限、或确认加载
+// 失败才收敛）。采样只发生在 hasDrawnOnce 翻真之前，稳态零开销；环境无法采样（测试 stub ctx /
+// 跨源污染）时按可信放行，不回归 014 行为。这条修复对全部单帧 idle 道具通用，不只 door/bell。
+//
+// -----------------------------------------------------------------------
 // prefers-reduced-motion
 // -----------------------------------------------------------------------
 // 命中时不跑 tick 循环（不消耗 CPU），改为只画一次"终帧"：loop 动画定格在第 0 帧（呼应
@@ -401,6 +419,51 @@
     return rawFrame;
   }
 
+  // WTJ-20260707-007 根因修复：确认"刚画的这一帧真的落下了非透明像素"。isEntryReady() 的同步
+  // 兜底判据（img.complete && naturalWidth>0）在 WebKit「已 complete、但位图尚未解码完成」的
+  // 窗口里会返回 true——尤其在旧机（2014 MBA / `wtjres://` 主线程同步读盘 + 多道具首帧解码互相
+  // 抢占解码线程）上，这个窗口足够宽，drawImage 会静默画出**全透明**（不抛错）。若据此把
+  // hasDrawnOnce 置 true，单帧快路径（frameCount<=1，如 door 的 closed、bell 的 idle）就会永久
+  // 停止重试，canvas 从此彻底空白——这正是 Justin 旧机上门/门铃任务「不显示」的根因。014 只修
+  // 了「首帧真正 drawImage 之前不放弃/不 idle-stop」，但没覆盖「drawImage 调用成功、画的却是
+  // 透明」这一步——drawFrame() 旧实现只要 drawImage 不抛错就无条件置位 hasDrawnOnce。
+  //
+  // 采样只在 hasDrawnOnce 翻真之前发生（正常只有开头一两拍，一旦确认落像素即永不再采），不是每帧
+  // 常驻开销，不违反 PERFORMANCE.md「禁每帧 getImageData」的稳态红线。防御式：环境无法采样时
+  // （单元测试的 fake ctx 无 getImageData / canvas 尚无尺寸 / 跨源污染 security 抛错）一律当作
+  // 「可信」返回 true，绝不因为无法核验就把一个本来画好的帧误判为空白、陷入无谓重绘——即"宁可
+  // 漏判空白（退回 014 既有行为），不可误判已画好的帧为空白"。见 tests/unit/frame-anim.test.mjs
+  // 新增用例与 tests/e2e/door_bell_click_webkit.py。
+  function firstPaintDepositedContent(pb) {
+    try {
+      if (!pb.ctx || typeof pb.ctx.getImageData !== 'function') {
+        return true; // 无法采样（如测试 stub ctx）：不阻塞，退回 014 既有语义。
+      }
+      var w = pb.canvasEl.width;
+      var h = pb.canvasEl.height;
+      if (!(w > 0 && h > 0)) {
+        return true; // canvas 尚无像素尺寸，无从采样：同样不阻塞。
+      }
+      var data = pb.ctx.getImageData(0, 0, w, h).data;
+      var i;
+      for (i = 3; i < data.length; i += 4) {
+        if (data[i] !== 0) {
+          return true; // 找到任一非透明像素：这一帧确实画上了内容。
+        }
+      }
+      return false; // 全透明：drawImage 画了个寂寞（位图多半尚未解码），本帧不算数。
+    } catch (err) {
+      // getImageData 因跨源污染/安全策略/stub 不完整抛错——无法核验，按可信处理（不回归、不空转）。
+      return true;
+    }
+  }
+
+  // 采样确认首帧的安全上限（~10s @16ms tick）：真实素材解码完成后必然落下非透明像素，远早于此；
+  // 这个上限只是兜底防止「加载成功却解码成全透明」这种理论上不该出现的坏素材导致无限重绘 tick。
+  // 到达上限即认定「画过一次」放行收敛（与 014「确认 img.onerror 失败后放弃」同属有界收敛，只是
+  // 这条针对的是「加载成功但始终画不出像素」这条 014 未覆盖的退化路径）。
+  var FIRST_PAINT_CONFIRM_MAX_RETRIES = 600;
+
   function drawFrame(pb, frameIndex) {
     if (!isEntryReady(pb.imgEntry)) {
       return; // 帧未就绪：静默跳过（不抛错），下次再试，见文件头「帧未就绪」一节。
@@ -410,10 +473,17 @@
     try {
       pb.ctx.clearRect(0, 0, pb.canvasEl.width, pb.canvasEl.height);
       pb.ctx.drawImage(pb.imgEntry.img, sx, 0, cell, cell, 0, 0, pb.canvasEl.width, pb.canvasEl.height);
-      // WTJ-20260705-014 根因修复：标记"这个 canvas 至少真正画出过一次内容"。tick()/
-      // retryDrawUntilReady() 用这个标记决定是否还能安全地放弃/暂停重试——见两者内联注释与
-      // 文件头「WTJ-20260705-014：首帧未画出前不放弃」一节。
-      pb.hasDrawnOnce = true;
+      // WTJ-20260705-014 + WTJ-20260707-007 根因修复：只有当这一帧**真的落下了非透明像素**（或
+      // 环境无法采样、或已到安全上限）时，才标记"这个 canvas 至少真正画出过一次内容"。tick()/
+      // retryDrawUntilReady() 用 hasDrawnOnce 决定是否还能安全地放弃/暂停重试——见两者内联注释、
+      // firstPaintDepositedContent() 上方说明，与文件头「WTJ-20260707-007：首帧透明不算画过」一节。
+      if (!pb.hasDrawnOnce) {
+        if (firstPaintDepositedContent(pb) || pb.blankPaintRetries >= FIRST_PAINT_CONFIRM_MAX_RETRIES) {
+          pb.hasDrawnOnce = true;
+        } else {
+          pb.blankPaintRetries++;
+        }
+      }
     } catch (err) {
       console.error('[WTJ_FRAME_ANIM] drawImage 失败，已捕获：', err);
     }
@@ -658,7 +728,11 @@
       // WTJ-20260705-014：这个 canvas 是否已经真正成功 drawImage 过至少一次——见 drawFrame()/
       // tick()/retryDrawUntilReady() 三处的根因修复说明。图片已经就绪（例如复用 preload() 或
       // 上一次 play() 留下的缓存）时会在下面的首次 drawFrame() 调用里立即变 true。
+      // WTJ-20260707-007：hasDrawnOnce 现在要求首帧真的落下非透明像素才置位（见 drawFrame()/
+      // firstPaintDepositedContent()），blankPaintRetries 记录「isEntryReady 已 true、drawImage
+      // 也调用了、却画出全透明」的次数，到达 FIRST_PAINT_CONFIRM_MAX_RETRIES 安全上限后放行收敛。
       hasDrawnOnce: false,
+      blankPaintRetries: 0,
       reducedMotion: prefersReducedMotion()
     };
     playbacks.push(pb);

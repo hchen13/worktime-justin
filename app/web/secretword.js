@@ -20,15 +20,13 @@
 //     009 只做"命中即防御式点亮下一个空槽 + 本轮同词去重"这一最小契约，供 010 接管/改造。
 //
 // -----------------------------------------------------------------------
-// 语言感知词音（WTJ-20260706-011，ZH 秘密词二期脚手架第二片，dormant）
+// 秘密词完成音：恒定英文（WTJ-20260707-011 验收反馈②）
 // -----------------------------------------------------------------------
-// playWordDefensive() 前新增 resolveWordAudioEntry()：委托 window.WTJ_VOICE_LANG 的
-// getEffectiveLanguage()/isWordZhAvailable(word) 判断"当前是否该词的中文语音"，是则改播
-// audio/words/<word>.zh.m4a，否则（含 WTJ_VOICE_LANG 缺失/异常等所有防御分支）原样播英文
-// entry.audioFile。当前 ZH_AVAILABLE_WORD 台账（voice-language.js）是空数组——本卡（011）
-// 不生成任何音频，音频生成是 008 卡的范围——故本函数现阶段恒定回退英文，本次改动对现网
-// 行为零影响（byte-identical），仅打好 008 交付时"只需补台账 + 落盘 .zh.m4a，无需再改代码"
-// 的地基。
+// playWordDefensive() 前的 resolveWordAudioEntry() 现恒定返回英文 entry.audioFile。曾经的
+// "语言感知词音"脚手架（WTJ-20260706-011）会在 zh 叙述 + 该词 ZH 已交付时改播 .zh.m4a，随
+// 008/011 音频卡补全 ZH 台账 + DEFAULT_MODE 改 'zh' 后变为活跃并导致默认中文叙述下秘密词念
+// 中文——Ethan 验收反馈②要求秘密词（键盘拼出的英文单词）完成发音固定英文、与任务叙述语言
+// 解耦。详见 resolveWordAudioEntry() 处的完整说明。
 //
 // -----------------------------------------------------------------------
 // 匹配引擎设计（逐条对 docs/index.html #secret「命中判定规则」+ manifest.secretWords.matchRules）
@@ -274,41 +272,24 @@
   }
 
   // ---------------------------------------------------------------------
-  // 语言感知词音路径解析（WTJ-20260706-011，ZH 秘密词二期脚手架）：命中的词若在 ZH 模式下
-  // 且该词的中文已交付（查 window.WTJ_VOICE_LANG.isWordZhAvailable()），改播 .zh.m4a；
-  // 否则（含语言模式为 en/auto-折算-zh 但该词未交付 ZH、WTJ_VOICE_LANG 未加载/异常等所有
-  // 其它情况）原样播英文 entry.audioFile——与改动前行为逐字节一致。
-  //
-  // NO-SILENT 边界：当前 ZH_AVAILABLE_WORD 台账是空数组，isWordZhAvailable() 对任何词恒
-  // 返回 false，本函数因此**恒定**走"原样返回 entry"分支——不会构造、更不会 fetch 任何一个
-  // 尚未交付的 audio/words/<word>.zh.m4a 路径。deriveZhWordPath() 仅在未来台账真正补上某个
-  // 词之后才会被这条分支实际使用到。
-  //
-  // 防御式：window.WTJ_VOICE_LANG 缺失（脚本未加载/加载顺序问题，如部分单测沙箱）或调用
-  // 抛错，一律静默回退英文，不影响其余命中反馈（sprite/五槽/事件广播）。
+  // 秘密词完成音：恒定英文（WTJ-20260707-011 验收反馈②）
   // ---------------------------------------------------------------------
-  function deriveZhWordPath(enPath) {
-    var m = /^(.*)\.m4a$/i.exec(String(enPath));
-    if (!m) return null;
-    return m[1] + '.zh.m4a';
-  }
-
+  // Ethan 最终验收反馈②：「通过键盘拼出秘密词后得到的标签/卡片/卡槽对象，其完成反馈发音固定
+  // 使用英文单词音频，不受中文任务叙述设置影响。」
+  //
+  // 历史背景：WTJ-20260706-011 曾加入"语言感知词音"脚手架——当 WTJ_VOICE_LANG
+  // .getEffectiveLanguage()==='zh' 且该词 ZH 已交付时改播 audio/words/<word>.zh.m4a。当时
+  // ZH_AVAILABLE_WORD 台账是空数组、DEFAULT_MODE 也未默认 zh，故该分支 dormant、行为等价英文。
+  // 但后续音频卡（008/011 秘密词 ZH 音）把 ZH_AVAILABLE_WORD 补成了完整 100 词台账、且
+  // voice-language.js 的 DEFAULT_MODE 现为 'zh'——于是该分支变为**活跃**，默认中文叙述下每次
+  // 秘密词命中都播中文词音，正是 Ethan 反馈的缺陷。
+  //
+  // 秘密词是孩子在 QWERTY 键盘上逐字母拼出的**英文**单词（dog/cat/apple…），其完成发音应恒定
+  // 念英文单词本身，与"任务叙述语言"（中文/英文旁白）这个独立设置解耦。故本函数恒定返回英文
+  // entry（entry.audioFile），不再查 WTJ_VOICE_LANG。任务叙述语言路径（voice-language.js
+  // resolveTaskVoicePath / task-templates 的 FIND 学习词双语）是另一条独立链路，本改动不触及。
+  // ---------------------------------------------------------------------
   function resolveWordAudioEntry(entry) {
-    try {
-      if (window.WTJ_VOICE_LANG &&
-          typeof window.WTJ_VOICE_LANG.getEffectiveLanguage === 'function' &&
-          typeof window.WTJ_VOICE_LANG.isWordZhAvailable === 'function') {
-        var lang = window.WTJ_VOICE_LANG.getEffectiveLanguage();
-        if (lang === 'zh' && window.WTJ_VOICE_LANG.isWordZhAvailable(entry.word)) {
-          var zhPath = deriveZhWordPath(entry.audioFile);
-          if (zhPath) {
-            return { word: entry.word, spriteFile: entry.spriteFile, audioFile: zhPath };
-          }
-        }
-      }
-    } catch (err) {
-      console.error('[WTJ_SECRET] 语言感知词音解析失败，已捕获，回退英文：', err);
-    }
     return entry;
   }
 
@@ -321,9 +302,9 @@
   function playWordDefensive(entry) {
     try {
       if (window.WTJ_AUDIO && typeof window.WTJ_AUDIO.playWord === 'function') {
-        // 对象穿透式：直接把（语言感知解析后的）词条传进去，playWord 会用其 audioFile 字段
-        // （见 AUDIO-API.md）。resolveWordAudioEntry() 在 ZH 未交付时原样返回 entry，故此处
-        // 行为与改动前完全一致。
+        // 对象穿透式：直接把词条传进去，playWord 会用其 audioFile 字段（见 AUDIO-API.md）。
+        // resolveWordAudioEntry() 现恒定返回英文 entry（WTJ-20260707-011 反馈②），故此处始终
+        // 播英文单词音，不受任务叙述语言影响。
         var resolvedEntry = resolveWordAudioEntry(entry);
         var p = window.WTJ_AUDIO.playWord(resolvedEntry);
         if (p && typeof p.then === 'function') {

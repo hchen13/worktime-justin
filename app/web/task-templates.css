@@ -126,3 +126,445 @@
     transform: translate(-50%, -50%) scale(1.14);
   }
 }
+
+/* ==================================================================== */
+/* WTJ-20260707-009 —— press 问号任务屏幕键盘提示                                            */
+/*                                                                                            */
+/* 消费 WTJ-20260707-005（Designer 1）设计规格：                                              */
+/*   docs/design/wtj-20260707-005-keyboard-task-hint-spec.md                                  */
+/*   docs/keyboard-task-hint-preview.html                                                     */
+/* TL 核实提示：接手时该设计文档状态仍是"提交 PM review"，非 accepted 终稿；规格本身（MacBook   */
+/* Air ANSI 布局 / 气泡内容规则 / 配色 token）已具体到可以直接实装，本卡按其字面内容落地。若     */
+/* 后续设计评审改写规格，需要回头核对本节与 task-templates.js buildKeyHintKeyboard() 等函数。   */
+/*                                                                                            */
+/* 独立于上面 .wtj-tt-root（drag/click/find 共用叠层，z-index:6）的一层 .wtj-key-hint-root      */
+/* （z-index:7），只在 press 任务激活期间存在——task-templates.js setupPressTask()/              */
+/* buildKeyHintDom() 创建，随 activeRuntime.elements 一起走既有 handleTemplateComplete()/       */
+/* cleanupActiveRuntime() 清理路径，本节样式不引入独立的 DOM 移除逻辑。                          */
+/* ==================================================================== */
+
+.wtj-key-hint-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* 高于 HUD（5）与本文件上方任务道具叠层（6），低于秘密词命中叠层（8）与 debug/esc 叠层
+     （10）——005 spec「Root」一节明确的层级要求。 */
+  z-index: 7;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  animation: wtj-kh-fade-in 0.14s ease-out;
+}
+
+@-webkit-keyframes wtj-kh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes wtj-kh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wtj-kh-coach {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--wtj-footer-height, 96px) + 22px);
+  transform: translateX(-50%);
+  width: clamp(620px, 74vw, 920px);
+}
+
+.wtj-kh-keyboard {
+  position: relative;
+  padding: 14px;
+  border: 1px solid rgba(156, 180, 220, 0.22);
+  border-radius: 18px;
+  background: rgba(5, 10, 18, 0.54);
+  box-shadow:
+    0 16px 52px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.wtj-kh-row {
+  display: grid;
+  grid-template-columns: repeat(60, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 5px;
+  align-items: stretch;
+}
+
+.wtj-kh-row:last-child {
+  margin-bottom: 0;
+}
+
+.wtj-kh-row--fn {
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+}
+
+.wtj-kh-key {
+  --wtj-kh-u: 4;
+  position: relative;
+  grid-column: span var(--wtj-kh-u);
+  min-width: 0;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(156, 180, 220, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(245, 248, 255, 0.42);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  text-align: center;
+  line-height: 1.08;
+}
+
+.wtj-kh-row--fn .wtj-kh-key {
+  /* 修复：功能行栅格是 repeat(14, ...)，键帽若沿用默认 --wtj-kh-u:4 会在 14 列里每 3 颗就
+     挤不下换行（14/4=3.5），整条功能行被拆成多行——必须把每颗键收窄到 --wtj-kh-u:1，与
+     005 预览 HTML 的 .key-row.function-row .key{--u:1} 对应规则一致。 */
+  --wtj-kh-u: 1;
+  height: 27px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* 默认线框态：全部键出场即是这个低透明度模样，只有命中当前 example.targetKey 的那一颗键会在
+   创建时直接带 --target/--soft-target class 而不带这个 modifier（见 task-templates.js
+   createKeyHintKeyEl()，一次性决定最终 class，不走"先 ghost 再 remove"这条路径）。 */
+.wtj-kh-key--ghost {
+  opacity: 0.42;
+}
+
+.wtj-kh-key--w15   { --wtj-kh-u: 6; }
+.wtj-kh-key--w17   { --wtj-kh-u: 8; }
+.wtj-kh-key--w185  { --wtj-kh-u: 7; }
+.wtj-kh-key--w21   { --wtj-kh-u: 9; }
+.wtj-kh-key--w225  { --wtj-kh-u: 9; }
+.wtj-kh-key--w26   { --wtj-kh-u: 11; }
+.wtj-kh-key--w125  { --wtj-kh-u: 5; }
+.wtj-kh-key--space { --wtj-kh-u: 20; }
+
+.wtj-kh-key-shift {
+  position: absolute;
+  right: 7px;
+  top: 5px;
+  color: rgba(168, 182, 204, 0.62);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.wtj-kh-key-main {
+  position: relative;
+  top: 3px;
+  font-size: 15px;
+}
+
+.wtj-kh-key-icon {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.wtj-kh-key-label {
+  display: block;
+  font-size: 11px;
+  color: rgba(245, 248, 255, 0.54);
+}
+
+/* 普通高亮键（字母/数字/符号）：暖黄填充，005 spec「Keycap」一节 keyTargetFill token（#ffd84c）。 */
+.wtj-kh-key--target {
+  color: #17223a;
+  border-color: rgba(255, 216, 76, 0.96);
+  background:
+    radial-gradient(circle at 40% 22%, rgba(255, 255, 255, 0.62), transparent 26%),
+    linear-gradient(180deg, #ffe986, #ffd84c);
+  box-shadow:
+    0 0 0 4px rgba(255, 216, 76, 0.18),
+    0 0 24px rgba(255, 216, 76, 0.38),
+    inset 0 -3px 0 rgba(96, 66, 8, 0.16);
+  -webkit-animation: wtj-kh-key-pop 0.16s ease-out;
+  animation: wtj-kh-key-pop 0.16s ease-out;
+}
+
+/* 特殊高亮键（Space / Enter / 方向键）：青色填充，避免和奖励黄混淆，keySpecialFill token（#3ce7ff）。 */
+.wtj-kh-key--soft-target {
+  color: #08242d;
+  border-color: rgba(60, 231, 255, 0.78);
+  background:
+    radial-gradient(circle at 42% 22%, rgba(255, 255, 255, 0.5), transparent 28%),
+    linear-gradient(180deg, #9cf5ff, #3ce7ff);
+  box-shadow: 0 0 0 4px rgba(60, 231, 255, 0.14), 0 0 22px rgba(60, 231, 255, 0.26);
+  -webkit-animation: wtj-kh-key-pop 0.16s ease-out;
+  animation: wtj-kh-key-pop 0.16s ease-out;
+}
+
+@-webkit-keyframes wtj-kh-key-pop {
+  0%   { -webkit-transform: scale(0.86); transform: scale(0.86); }
+  60%  { -webkit-transform: scale(1.05); transform: scale(1.05); }
+  100% { -webkit-transform: scale(1); transform: scale(1); }
+}
+
+@keyframes wtj-kh-key-pop {
+  0%   { transform: scale(0.86); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.wtj-kh-arrow-cluster {
+  grid-column: span 9;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  align-items: stretch;
+}
+
+.wtj-kh-arrow-stack {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* 方向键簇/上下堆叠内部各自另起子栅格，键帽的 grid-column:span var(--wtj-kh-u) 是给外层 60 列
+   行栅格用的，嵌进这两个子栅格后必须重置成 auto，否则会继续尝试跨 4 列（默认 --wtj-kh-u:4）撑
+   爆只有 3/1 列的子栅格。 */
+.wtj-kh-arrow-cluster > .wtj-kh-key,
+.wtj-kh-arrow-stack .wtj-kh-key {
+  grid-column: auto;
+}
+
+.wtj-kh-arrow-stack .wtj-kh-key {
+  width: auto;
+  height: auto;
+  min-height: 0;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------- */
+/* 气泡：固定居中，只显示目标键本身，不出现解释文字（005 spec「Bubble」一节硬要求）。            */
+/* -------------------------------------------------------------------- */
+
+.wtj-kh-bubble {
+  position: absolute;
+  top: -104px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(132px, 18vw, 192px);
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 216, 76, 0.42);
+  border-radius: 20px;
+  background: rgba(12, 18, 30, 0.9);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.42), 0 0 22px rgba(255, 216, 76, 0.12);
+  -webkit-animation: wtj-kh-bubble-in 0.16s ease-out 0.08s both;
+  animation: wtj-kh-bubble-in 0.16s ease-out 0.08s both;
+}
+
+.wtj-kh-bubble:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  width: 18px;
+  height: 18px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(12, 18, 30, 0.9);
+  border-right: 1px solid rgba(255, 216, 76, 0.42);
+  border-bottom: 1px solid rgba(255, 216, 76, 0.42);
+}
+
+@-webkit-keyframes wtj-kh-bubble-in {
+  from { opacity: 0; -webkit-transform: translateX(-50%) translateY(6px); transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; -webkit-transform: translateX(-50%) translateY(0); transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes wtj-kh-bubble-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.wtj-kh-bubble-target {
+  font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1;
+  font-weight: 900;
+  color: #ffd84c;
+  text-shadow: 0 0 18px rgba(255, 216, 76, 0.42);
+}
+
+.wtj-kh-bubble-combo {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wtj-kh-bubble-main {
+  font-size: clamp(34px, 5vw, 54px);
+  color: #ffd84c;
+  font-weight: 900;
+}
+
+.wtj-kh-bubble-shift {
+  font-size: 24px;
+  color: #3ce7ff;
+  font-weight: 900;
+}
+
+/* -------------------------------------------------------------------- */
+/* 交互节奏：15s 轻提示只闪高亮键本身、30s 目标增强只加强高亮键 + 气泡（005 spec「交互节奏」）。   */
+/* wtj-tt-hint / wtj-tt-emphasize 两个 class 由 task-templates.js handleTaskPhase() 通用地加到  */
+/* activeRuntime.elements[0]（即 .wtj-key-hint-root 本身，emphasizeElements 未提供时回退到同一   */
+/* 个 elements 数组）——与 drag/click/find 三类共用同一段 JS，本节靠后代选择器把"只强调高亮键"    */
+/* 这条 press 专属要求收敛在 CSS 里，不需要 JS 侧再为 press 写一条特殊分支。                      */
+/* -------------------------------------------------------------------- */
+
+@-webkit-keyframes wtj-kh-hint-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+@keyframes wtj-kh-hint-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.wtj-key-hint-root.wtj-tt-hint .wtj-kh-key--target,
+.wtj-key-hint-root.wtj-tt-hint .wtj-kh-key--soft-target {
+  -webkit-animation: wtj-kh-hint-blink 0.4s ease-in-out 1;
+  animation: wtj-kh-hint-blink 0.4s ease-in-out 1;
+}
+
+.wtj-key-hint-root.wtj-tt-emphasize .wtj-kh-key--target {
+  box-shadow: 0 0 0 6px rgba(255, 216, 76, 0.22), 0 0 30px rgba(255, 216, 76, 0.46), inset 0 -3px 0 rgba(96, 66, 8, 0.16);
+}
+
+.wtj-key-hint-root.wtj-tt-emphasize .wtj-kh-key--soft-target {
+  box-shadow: 0 0 0 6px rgba(60, 231, 255, 0.2), 0 0 28px rgba(60, 231, 255, 0.34);
+}
+
+.wtj-key-hint-root.wtj-tt-emphasize .wtj-kh-bubble {
+  border-color: rgba(255, 216, 76, 0.65);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.42), 0 0 34px rgba(255, 216, 76, 0.22);
+}
+
+/* 命中成功：220ms 一次性成功闪光，然后交给既有任务完成奖励链路（不在屏幕键盘里点亮五槽，
+   005 spec「交互节奏·完成」一节）。task-templates.js flashKeyHintSuccess() 在 handlePressKey()
+   命中判定通过、调用 handleTemplateComplete() 之前加上这个 class。 */
+@-webkit-keyframes wtj-kh-success-flash {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255, 216, 76, 0.18), 0 0 24px rgba(255, 216, 76, 0.38); }
+  50%      { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.6), 0 0 46px rgba(255, 255, 255, 0.8); }
+}
+
+@keyframes wtj-kh-success-flash {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255, 216, 76, 0.18), 0 0 24px rgba(255, 216, 76, 0.38); }
+  50%      { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.6), 0 0 46px rgba(255, 255, 255, 0.8); }
+}
+
+.wtj-kh-key--success {
+  -webkit-animation: wtj-kh-success-flash 0.22s ease-out;
+  animation: wtj-kh-success-flash 0.22s ease-out;
+}
+
+/* -------------------------------------------------------------------- */
+/* 紧凑桌面窗口兜底（005 spec「布局」一节，2014 MacBook Air 一类矮屏窗口）：沿用 hud.css 同款     */
+/* max-height:700px 断点——本项目"紧凑桌面/矮屏"迄今唯一的既有数值定义（见 hud.css 该断点上方       */
+/* 「短屏 / 2014 MacBook Air」注释）。真实 --wtj-footer-height 在这个断点下不变（hud.css 只在      */
+/* max-width:640px 移动端断点才改高度），因此这里 fallback 仍用 96px，只收紧额外间距（22px→18px）  */
+/* 与键帽尺寸，不跟着挪用移动端的 78px 数字。没有额外 max-width 断点：不是移动端需求。             */
+/* -------------------------------------------------------------------- */
+
+@media (max-height: 700px) {
+  .wtj-kh-coach {
+    width: calc(100vw - 20px);
+    bottom: calc(var(--wtj-footer-height, 96px) + 18px);
+  }
+
+  .wtj-kh-keyboard {
+    padding: 10px;
+    border-radius: 15px;
+  }
+
+  .wtj-kh-row {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .wtj-kh-key {
+    height: 28px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .wtj-kh-row--fn .wtj-kh-key {
+    height: 19px;
+    font-size: 7px;
+  }
+
+  .wtj-kh-key-shift {
+    right: 4px;
+    top: 3px;
+    font-size: 7px;
+  }
+
+  .wtj-kh-key-main {
+    font-size: 11px;
+    top: 2px;
+  }
+
+  .wtj-kh-key-label {
+    font-size: 8px;
+  }
+
+  .wtj-kh-arrow-cluster {
+    gap: 4px;
+  }
+
+  .wtj-kh-arrow-stack {
+    gap: 3px;
+  }
+
+  .wtj-kh-arrow-stack .wtj-kh-key {
+    font-size: 8px;
+  }
+
+  .wtj-kh-bubble {
+    top: -84px;
+    min-height: 66px;
+    width: 134px;
+    border-radius: 16px;
+  }
+
+  .wtj-kh-bubble-target {
+    font-size: 34px;
+  }
+}
+
+/* -------------------------------------------------------------------- */
+/* 无障碍偏好：关闭 pop / 闪烁 / 淡入运动，高亮键改为一次性 <=120ms 的 opacity 变化（005 spec      */
+/* 「Reduced motion」一节："禁用 pop、漂移、循环闪烁；高亮键只做一次 opacity change，时长 120ms    */
+/* 内"）。emphasize 的外环放大/气泡提亮是静态 box-shadow 数值切换（非动画/非循环），不受本条规则   */
+/* 影响，仍然保留——它传达的是"目标增强"这个事实状态，不是运动。kiosk 默认无视 OS 减弱动态，见      */
+/* hud.css 顶部同名注释与 index.html 内联启动脚本的 data-wtj-motion-forced 门。                   */
+/* -------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-wtj-motion-forced]) .wtj-key-hint-root,
+  html:not([data-wtj-motion-forced]) .wtj-key-hint-root .wtj-kh-bubble,
+  html:not([data-wtj-motion-forced]) .wtj-key-hint-root .wtj-kh-key {
+    -webkit-animation: none !important;
+    animation: none !important;
+    transition: opacity 0.12s ease !important;
+  }
+}

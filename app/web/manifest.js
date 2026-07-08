@@ -1226,7 +1226,19 @@
       // 门（见 hud.css/parent-controls.css/reward-chest.css/task-templates.css/
       // status-rewards.css/secretword.css）。diag.js 的 prefersReducedMotionProbe() 不受此
       // 字段影响，继续如实上报 OS 原始状态供诊断。
-      honorReducedMotion: false
+      honorReducedMotion: false,
+      // WTJ-20260707-010：diag.js（017）rAF ticking 探针的采样频率开关。008 卡发现该探针
+      // 自 017 起就是"永久 requestAnimationFrame 自链"——不受 app.js 自己的 idle park 影响，
+      // 每次启动都以浏览器满帧率（通常 60Hz）空转到进程退出，是比 app.js 主循环更可疑的旧机
+      // 发热/风扇负载来源（app.js 至少有 idleStopSec 秒无活动后 park，这个探针从不 park）。
+      // 默认 false=低频基线：探针只在每个心跳窗口（HEARTBEAT_MS=5000ms）采一帧样本，用来
+      // 回答"浏览器本身还能不能推进 rAF 回调"这个是/否问题，代价是把这条探针自身造成的合成器
+      // 唤醒次数从"每秒 60 次"降到"每 5 秒 1 次"，同时仍能如实报告 rafTicksSinceLast=0（浏览器
+      // 确实无法推进）。设为 true=满频：探针恢复 017 原始的持续自链行为（适合真机深度诊断时
+      // 需要逐帧时序，而不只是"能不能动"这个粗粒度信号）——诊断构建可临时改这里为 true 再
+      // build，日常 kiosk 构建保持 false。见 app/web/diag.js「requestAnimationFrame ticking
+      // 探测」一节。
+      diagRafFullRate: false
     }
 
   };

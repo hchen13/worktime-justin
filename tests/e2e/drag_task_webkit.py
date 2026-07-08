@@ -111,13 +111,26 @@ def main() -> int:
                 out["error"] = "engines not present (WTJ_TASK/TEMPLATES/POINTER)"
                 print("FAIL", out["error"]); report_path.write_text(json.dumps(out, ensure_ascii=False, indent=2)); return 1
 
-            # instrument: completion sink + native-drag counter + find question button
+            # instrument: completion sink + native-drag counter + find question button.
+            # Force the first spawned task to be a `drag` deterministically: since
+            # WTJ-20260706-002 the task TYPE is drawn from a Fisher-Yates shuffle bag over
+            # taskRandom() (real Math.random in production), so a single question click yields
+            # a RANDOM type — clicking once and asserting "drag" is inherently flaky and started
+            # FAILing once true randomization landed. We inject the SAME deterministic RNG the
+            # unit suite uses (task-templates.test.mjs makeIdentityRandom() -> constant 0.9999):
+            # with taskRandom()==0.9999, Math.floor(0.9999*(i+1))==i so the shuffle degenerates
+            # to declaration order and TASK_TYPES[0]=='drag' is drawn first. This keeps the
+            # test's unique value (a REAL webkit pointer exercising the WTJ-080 native-drag
+            # preemption defense, which unit tests structurally cannot) while making it a stable
+            # regression lock instead of a 1-in-4 gamble.
             pg.evaluate("""() => {
               window.__done = [];
               if (window.WTJ_TASK_TEMPLATES && WTJ_TASK_TEMPLATES.onTaskComplete)
                 WTJ_TASK_TEMPLATES.onTaskComplete(function(e){ window.__done.push(e); });
               window.__dragstart = 0;
               window.addEventListener('dragstart', function(){ window.__dragstart++; }, true);
+              if (window.WTJ_TASK_TEMPLATES && typeof WTJ_TASK_TEMPLATES._setRandom === 'function')
+                WTJ_TASK_TEMPLATES._setRandom(function(){ return 0.9999; });
             }""")
 
             qbtn = pg.query_selector(".wtj-hud-question")
@@ -130,7 +143,7 @@ def main() -> int:
             info = pg.evaluate("() => (window.WTJ_TASK_TEMPLATES.getActiveTaskInfo && WTJ_TASK_TEMPLATES.getActiveTaskInfo()) || null")
             out["spawned"] = info
             if not info or info.get("type") != "drag":
-                out["error"] = f"expected a drag task on first question click, got {info}"
+                out["error"] = f"expected a drag task on first question click (forced via _setRandom-> 0.9999), got {info}"
                 print("FAIL", out["error"]); report_path.write_text(json.dumps(out, ensure_ascii=False, indent=2)); return 1
 
             obj_sel, tgt_sel = ".wtj-tt-drag-object", ".wtj-tt-drag-target"

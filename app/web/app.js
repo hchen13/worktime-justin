@@ -646,12 +646,25 @@
   }, false);
 
   // ---------------------------------------------------------------------
-  // 渲染循环：rAF + 5 秒无输入自动停止（节能），有输入立即恢复
+  // 渲染循环：rAF + 5 秒无输入自动停止（节能），有输入/待渲染活动立即恢复
+  //
+  // WTJ-20260707-008（P0 perf，app/PERFORMANCE.md 3.1 节"旧 Mac 发热/风扇负载"）：本节自
+  // 004 卡起就有 lastActivity/IDLE_TIMEOUT_MS 那套"距上次原始输入事件超过 idleStopSec 秒后
+  // 完全停止 rAF"的机制（见 draw() 尾部），但原判据只看"原始输入事件多久前发生过"，没有对
+  // "此刻画布上是否真的还有内容在变化"做显式核对。字母/标点/尾迹/圆环寿命都远短于默认 5 秒的
+  // idleStopSec，实践中不会被这条纯时间线卡出可见 bug，但为了让"idle"判定名副其实（而不是
+  // 恰好因为数值凑巧没暴露问题）、也为了正确处理"该恢复"这一侧（新输入/任务动画/奖励/状态
+  // 变化要立即恢复满帧），本卡新增 needsRender()（见下方，紧邻 draw()）作为并列条件：
+  // 原始输入超时 OR 仍需要渲染，任一为真都继续满帧跑，两者都为假才真正 park——只会比原实现
+  // 更晚 park、不会更早，因此不改变任何既有可见行为，只堵住"输入超时但还有东西没画完"这个
+  // 理论缺口。mainLoopTickCount 是新增诊断计数器（见文件尾 window.WTJ_APP_DIAG），供 QA/
+  // 单测观察 park 是否真的生效（空闲时计数停止推进、活动后立即恢复推进）。
   // ---------------------------------------------------------------------
 
   var running = false;
   var lastFrameTime = performance.now();
   var fps = 0;
+  var mainLoopTickCount = 0; // WTJ-20260707-008：draw() 真正跑帧的次数，park 期间应停止增长。
   var IDLE_TIMEOUT_MS = IDLE_STOP_SEC * 1000; // manifest: performance.idleStopSec
 
   // WTJ-20260705-003（需求5）：拖拽中查询当前 drop target（.wtj-tt-drag-target，
@@ -924,7 +937,63 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // WTJ-20260707-008 — 是否存在"需要继续重绘"的活动，见上方「渲染循环」小节头注释。
+  //
+  // 与 007（door/bell）等经由 window.WTJ_FRAME_ANIM 播放的动效道具（faucet/horse/lamp/
+  // door/bell/宝箱 opening）交叉协调：这些道具各自有专属 <canvas> + 自己的 setTimeout 计时链
+  // （frame-anim.js 文件头「计时驱动方式」一节），不经过本文件的 draw()/#stage canvas，严格
+  // 说本文件是否 park 不会影响它们的显示——但为了不让"idle"判定漏判任何一个正在播的活动任务
+  // （宁可主循环多跑一会儿，也不能 park 掉正在显示的 door/bell 等活动任务），这里仍然把
+  // window.WTJ_FRAME_ANIM.getState().activePlaybacks 里"既没被引擎自己 idle-stop（idlePaused）
+  // 也没播完（completeFired）"的项当成"非真空闲"信号之一。任一子系统查询异常都保守地当作
+  // "需要渲染"处理，不静默判定为空闲（宁可多跑、不可漏跑）。
+  // ---------------------------------------------------------------------
+  function needsRender() {
+    if (letters.length > 0 || symbolPops.length > 0 || trail.length > 0 || rings.length > 0) {
+      return true; // 字母衰减 / 标点弹出 / 鼠标尾迹 / 点击圆环仍有内容需要淡出
+    }
+
+    if (hasKeyVisual && typeof window.WTJ_KEYVISUAL.getActiveCount === 'function') {
+      try {
+        if (window.WTJ_KEYVISUAL.getActiveCount() > 0) {
+          return true; // 非字母键视觉反馈（Space/Enter 提亮、数字描边等）仍在播放
+        }
+      } catch (e) {
+        return true; // 查询异常：保守当作仍需渲染，不误 park
+      }
+    }
+
+    if (window.WTJ_POINTER && typeof window.WTJ_POINTER.getPointerState === 'function') {
+      try {
+        if (window.WTJ_POINTER.getPointerState().dragging) {
+          return true; // 指针正处于拖拽交互中
+        }
+      } catch (e) {
+        return true;
+      }
+    }
+
+    if (window.WTJ_FRAME_ANIM && typeof window.WTJ_FRAME_ANIM.getState === 'function') {
+      try {
+        var fa = window.WTJ_FRAME_ANIM.getState();
+        var pbs = (fa && fa.activePlaybacks) || [];
+        var i;
+        for (i = 0; i < pbs.length; i++) {
+          if (!pbs[i].idlePaused && !pbs[i].completeFired) {
+            return true; // 有活动任务道具（含 007 door/bell）正在播放帧动画
+          }
+        }
+      } catch (e) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function draw(now) {
+    mainLoopTickCount++; // WTJ-20260707-008：真正跑一帧才计数，park 期间不再调用 draw()，见文件尾诊断。
     var dt = now - lastFrameTime;
     lastFrameTime = now;
     if (dt > 0) {
@@ -974,10 +1043,15 @@
       }
     }
 
-    if (Date.now() - lastActivity < IDLE_TIMEOUT_MS) {
+    // WTJ-20260707-008：原始输入超时 OR 仍有内容需要渲染，任一为真都继续满帧跑；两者都为假
+    // 才是真正的空闲（无字母衰减/无指针交互/无 active playback「含 007 door/bell」/无待渲染
+    // 动画），此时才真正停止 rAF。下一次 poke()（新输入）或 resize() 会经 ensureRunning() 立即
+    // 满帧唤醒；needsRender() 变为 true（如某个活动任务开始播放）在满帧循环仍在跑的时候会被
+    // 下一帧立刻感知到，无需额外唤醒路径。
+    if (Date.now() - lastActivity < IDLE_TIMEOUT_MS || needsRender()) {
       requestAnimationFrame(draw);
     } else {
-      running = false; // 停止重绘，等待下一次输入唤醒
+      running = false; // 真正空闲：停止重绘，等待下一次输入/活动唤醒
     }
   }
 
@@ -986,6 +1060,44 @@
     running = true;
     lastFrameTime = performance.now();
     requestAnimationFrame(draw);
+  }
+
+  // ---------------------------------------------------------------------
+  // WTJ-20260707-008 — 空闲 park 诊断（window.WTJ_APP_DIAG）：暴露主循环是否在跑 + 真正跑帧
+  // 的计数器，供 QA/单测/旧机复验观察"idle 时 tickCount 明显下降或停止、有活动时立即恢复推进"
+  // （用法：间隔采样两次 getState().tickCount 算 delta，空闲窗口应约等于 0，活动窗口应约等于
+  // 采样间隔 × 帧率）。不复用 window.WTJ_DIAG（017）：那是诊断上行通道 + 一个刻意"永不 park"
+  // 的独立 rAF 探针，专门用来证明"浏览器本身是否具备推进 rAF 回调的能力"（与 app 自己是否选择
+  // park 是两件事，若混用会让那条探针失去"区分浏览器不支持 rAF vs app 自己 park"的原始诊断
+  // 目的）——因此本卡新开一个专用最小接口，不改动 diag.js。
+  // ---------------------------------------------------------------------
+  function getAppLoopState() {
+    return {
+      running: running,
+      tickCount: mainLoopTickCount,
+      lastTickAt: lastFrameTime,
+      idleTimeoutMs: IDLE_TIMEOUT_MS,
+      needsRender: needsRender()
+    };
+  }
+
+  var APP_DIAG_API = {
+    VERSION: '0.1.0',
+    CARD_ID: 'WTJ-20260707-008',
+    getState: getAppLoopState
+  };
+  if (Object.freeze) {
+    Object.freeze(APP_DIAG_API);
+  }
+  if (!window.WTJ_APP_DIAG && Object.defineProperty) {
+    Object.defineProperty(window, 'WTJ_APP_DIAG', {
+      value: APP_DIAG_API,
+      writable: false,
+      configurable: false,
+      enumerable: true
+    });
+  } else if (!window.WTJ_APP_DIAG) {
+    window.WTJ_APP_DIAG = APP_DIAG_API;
   }
 
   // 初始画布尺寸 + resize 监听（此时渲染循环状态变量已初始化完毕，

@@ -92,6 +92,34 @@ test('084: delivered ZH paths follow the audio/tasks/<id>.zh.m4a convention (no 
 });
 
 // =====================================================================================
+// WTJ-20260707-003 — ZH find-prefix composite phrase ("找到"). A separate, additive array
+// (compositePhrasesZh) from the EN compositePhrases above — does not affect the 10-phrases
+// EN gate. This is the one sanctioned exception to the ZH no-runtime-concat red line (see
+// CN-TASK-DRAFT.md #0 amendment): the find.zh phrase is combined at runtime with a word-card
+// via WTJ_AUDIO.playComposite(), never with itself constituting a mixed EN/ZH utterance.
+// =====================================================================================
+
+const compositePhrasesZh = deliveredPaths(manifest.compositePhrasesZh, 'path');
+
+test('003: compositePhrasesZh has exactly 1 delivered entry — find.zh (audio/phrases/find.zh.m4a)', () => {
+  assert.equal(Array.isArray(manifest.compositePhrasesZh), true, 'missing-audio.json must have a compositePhrasesZh array');
+  assert.equal(compositePhrasesZh.length, 1, 'exactly 1 ZH composite phrase delivered (find.zh)');
+  assert.equal(compositePhrasesZh[0], 'audio/phrases/find.zh.m4a');
+  const entry = manifest.compositePhrasesZh.find((e) => e.phraseKey === 'find.zh');
+  assert.ok(entry, 'compositePhrasesZh must have a find.zh entry');
+  assert.equal(entry.status, 'delivered');
+});
+
+test('003: find.zh.m4a exists on disk, is non-empty, and follows the audio/phrases/<key>.m4a convention', () => {
+  for (const rel of compositePhrasesZh) {
+    assert.match(rel, /^audio\/phrases\/[^/]+\.m4a$/, rel);
+    const abs = join(APP_WEB, rel);
+    assert.ok(existsSync(abs), `delivered ZH composite phrase must exist on disk: ${rel}`);
+    assert.ok(statSync(abs).size > 0, `delivered ZH composite phrase must be non-empty: ${rel}`);
+  }
+});
+
+// =====================================================================================
 // WTJ-20260706-011 — ZH secret-word audio delivery. FULL 100/100 delivered via the 008-approved
 // CosyVoice3 ASR-gated reseed pipeline (generate-tts-asr-gated.py): every clip whisper-verified
 // to read the target ZH word (reseed on miss; toneless-pinyin homophone rescue + opencc

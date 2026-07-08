@@ -265,7 +265,12 @@
 .wtj-hud-tray-wrap--generic {
   left: 50%;
   bottom: 8px;
-  width: min(720px, 82vw); /* 1440px 桌面目标下与右侧宝箱 lane（见 .wtj-hud-chest-lane）留出 >=200px 间距，不做无意义的贴边 */
+  /* WTJ-20260707-011 验收反馈①：反馈前的宽版把 3 个槽位（18%/50%/82%）铺开到 ~460px+，三圆圈
+     散得很开、又坐在一条横向长条上。反馈要求改成参考图二那样"三个独立圆圈、间距更紧凑居中"。
+     收窄容器宽度即收紧圆心间距（间距 = 32% * 容器宽），配合已删除的横向长条背景，得到紧凑居中
+     的三圆圈。left:50%+translateX(-50%) 保持居中；只覆盖 --generic 分支，count===5 的 --imaged
+     底图路径与共享的 18/82 百分比常量均不受影响。 */
+  width: clamp(260px, 24vw, 340px);
   height: 80px;
   transform: translateX(-50%);
 }
@@ -284,32 +289,13 @@
   opacity: 0.96;
 }
 
-/* WTJ-20260704-083 返工（PM 打回②，DESIGN 082 验收资产接入）：五槽底图（five-slot-tray.png）
-   按 5 槽构图，只在 SLOT_COUNT===5 时使用（见 hud.js resolveTrayBgFile()，.wtj-hud-tray-wrap
-   会额外挂 --imaged 修饰类）。其余槽数（如默认 3）没有对应的已验收托盘底图美术，改用这条
-   DESIGN 082 规则的 footer 背景条。
-   WTJ-20260705-019b（Ethan 截图反馈②，续）：083 返工版把 082 doc 建议的"可交付 footer 背景"
-   数值（rgba(5,10,18,0.78) 深色背景 + 圆角 18px + 内发光 box-shadow）整套搬到了这个只有
-   260~380px 宽的小胶囊上——效果是画出一张比外层真正全宽的 `.wtj-hud-footer` 本体更显眼、
-   更"像卡片"的独立小面板，正是 Ethan 反馈"三槽卡槽像悬浮在一个独立小 container 里"的视觉
-   成因（对照 tests/reports/hud-visual-rework-019b/before/03-chest-active.png）。
-   本次返工把 082 那组高对比度数值移到了上面的 `.wtj-hud-footer` 本体（现在是真正全宽、清晰
-   可辨的通栏），这里反过来降级成一条不抢戏的"搁板高光"：去掉圆角卡片感（大幅收窄
-   border-radius）、去掉让它看起来"浮起来"的内发光 box-shadow、背景改成极低对比度的浅色叠加
-   （而不是比外层 footer 更深/更不透明的独立色块），且横向铺满新的 --generic 宽版
-   tray-wrap（left/right 由 4%/96% 改为 0/0）——现在它只是外层全宽 footer 上一条几乎不可见的
-   "槽位分区提示"，视觉重心完全交给外层 `.wtj-hud-footer`，三个卡槽读起来是"坐在 footer 上"
-   而不是"浮在一个独立小盒子里"。 */
-.wtj-hud-footer-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 30%;
-  height: 44%;
-  border-radius: 10px;
-  background: rgba(148, 180, 220, 0.05);
-  border-top: 1px solid rgba(156, 180, 220, 0.12);
-}
+/* WTJ-20260707-011 验收反馈①：非五槽（默认 3 槽）路径下的 `.wtj-hud-footer-bar` 横向背景条
+   已整体移除（DOM 节点在 hud.js buildTray() 的 generic 分支删除，本 CSS 规则块一并删除）。
+   Ethan 反馈底部发现卡槽的横向长条背景观感不佳，要求改为参考图二 keyboard-hint-preview 的三个
+   独立圆圈（无长条底、间距紧凑居中）。现在 --generic 分支只渲染三个 .wtj-hud-slot 圆圈（Empty
+   视觉见 .wtj-hud-slot.is-empty::after，本就与参考图二一致），坐落在全宽 `.wtj-hud-footer` 通栏
+   之上；卡槽紧凑居中由 .wtj-hud-tray-wrap--generic 收窄后的宽度实现。历史：该条曾是 083/019b
+   为无底图槽数提供的 082「搁板高光」背景，019b 已把高对比度移交给 `.wtj-hud-footer` 本体。 */
 
 .wtj-hud-slot {
   position: absolute;
@@ -452,27 +438,20 @@
   filter: drop-shadow(0 0 10px rgba(255, 196, 102, 0.55)) brightness(1.05);
 }
 
-/* Open：不是第三张静态图（082 明确交代）——复用 Active 的 chest-active.png，用一个持续的
-   呼吸式脉冲把它和静止的 Active 区分开，呼应"011 的开箱 Canvas 序列正在播放"这个事实。
-   由 hud.js 的 setChestOpen(true) 在序列开始时挂上，序列结束/reset() 后移除（见该文件
-   「footer 常驻宝箱指示器」一节）。 */
+/* Open：序列播放期间隐藏 footer 常驻宝箱指示器（WTJ-20260707-011 验收反馈④）。
+   反馈④：三卡槽装满后曾出现"footer 静态宝箱（chest-active.png，本 is-open 态）+ reward-chest.js
+   的开箱 Canvas 动画"双层叠加——二者共用同一右下锚点（hud.css .wtj-hud-chest-lane 与
+   reward-chest.css .wtj-rc-chest 都是 right:clamp(16px,4vw,32px); bottom:14px），Canvas 在
+   z-index 9、footer 指示器在 z-index 5，于是整段开箱序列里静态宝箱透出在动画后面。反馈要求
+   只保留一种视觉、优先保留开箱动画：故 is-open 期间把 footer 静态指示器隐藏，开箱 Canvas 成为
+   唯一的"开箱"视觉。序列结束/reset() 后 setChestOpen(false) 移除 is-open，指示器回到
+   Disabled/Active 正常显示。
+   用 visibility:hidden 而非 opacity:0：.wtj-hud-chest 带 transition: opacity 0.25s（见上），
+   opacity:0 会有 0.25s 淡出、期间仍与动画叠加露出若干帧；visibility:hidden 立即隐藏、零叠帧。
+   hud.js setChestOpen/renderChest 仍照常置 chestState='open' + src=chest-active.png（状态记账与
+   QA/reduced-motion 契约不变），只是本 CSS 抑制其绘制。 */
 .wtj-hud-chest.is-open {
-  opacity: 1;
-  filter: drop-shadow(0 0 16px rgba(255, 196, 102, 0.85)) brightness(1.15);
-  -webkit-animation: wtj-hud-chest-open-pulse 0.9s ease-in-out infinite;
-  animation: wtj-hud-chest-open-pulse 0.9s ease-in-out infinite;
-}
-
-@-webkit-keyframes wtj-hud-chest-open-pulse {
-  0%   { -webkit-transform: scale(1); transform: scale(1); }
-  50%  { -webkit-transform: scale(1.08); transform: scale(1.08); }
-  100% { -webkit-transform: scale(1); transform: scale(1); }
-}
-
-@keyframes wtj-hud-chest-open-pulse {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.08); }
-  100% { transform: scale(1); }
+  visibility: hidden;
 }
 
 /* ------------------------------------------------------------------ */
@@ -510,22 +489,27 @@
      光标，按 13px 等宽字体估算需要约 260px~300px，遠超 220px。改用 min-width（idle 态最小
      舒适宽度）+ max-width（放宽到能装下最长词，而不是任意长）+ width:auto 按内容自适应，
      宽度仍然是"有限的一句提示"，不是无边界的输入长条。 */
-  min-width: clamp(150px, 16vw, 190px);
-  max-width: clamp(240px, 30vw, 360px);
+  /* WTJ-20260707-011 验收反馈③：Ethan 反馈左下角 justin@worktime 提示"过小"，要求整体放大、
+     文字更清晰可读。桌面档整体放大一档：高度 24→34、圆角随高度保持药丸感、内边距加大、min/max
+     宽度上调以容纳放大后的文字、idle 不透明度 0.72→0.88 提升可读性。盒子是底锚（bottom 固定），
+     增高只向上（朝画布空白角）扩张、绝不向下压到 footer/卡槽；left:32px 左锚 + 上调后的 max-width
+     右缘仍远在居中卡槽组左侧，无重叠（详见反馈①卡槽居中收窄后二者仍分属不同纵带）。 */
+  min-width: clamp(190px, 20vw, 240px);
+  max-width: clamp(280px, 30vw, 380px);
   width: auto;
-  height: 24px;
-  border-radius: 12px;
+  height: 34px;
+  border-radius: 17px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 10px;
+  padding: 0 14px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis; /* 防御式兜底：极端情况下（未来词池混入更长词）截断而不撑破布局 */
   background: rgba(5, 10, 18, 0.48); /* tokens.color.background */
   border: 1px solid rgba(156, 180, 220, 0.20); /* tokens.color.border */
-  opacity: 0.72; /* tokens.motion.idleOpacity */
+  opacity: 0.88; /* WTJ-20260707-011 反馈③：0.72→0.88 提升可读性（原 tokens.motion.idleOpacity 0.72） */
   pointer-events: none;
   /* Key activity pulse（140ms 边框/背景微亮，见 hud.js pulseTerminalKeyActivity()）：过渡时长
      取远小于 140ms，让 class 切入/切出的观感接近规范描述的"一次 140ms 的边框微亮"，而不是
@@ -552,9 +536,9 @@
   display: inline-flex;
   align-items: baseline;
   font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
-  font-size: 13px; /* tokens.typography.fontSizePx（桌面档） */
+  font-size: 16px; /* WTJ-20260707-011 反馈③：13→16 放大提示文字（原 tokens.typography.fontSizePx 桌面档 13） */
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: 0.2px; /* WTJ-20260707-011 反馈③：微增字距提升等宽提示的可读性 */
   line-height: 1;
   padding-right: 10px;
   margin-right: 8px;
@@ -577,7 +561,7 @@
 /* "justin@worktime:" 前缀——恒定文本，永不改变、永不含真实系统信息（见文件头「WTJ-20260705-
    019b」说明）。颜色沿用 011 tokens 的 promptGlyph 绿色。 */
 .wtj-hud-terminal-prefix {
-  color: rgba(101, 240, 141, 0.82); /* tokens.color.promptGlyph */
+  color: rgba(101, 240, 141, 0.95); /* WTJ-20260707-011 反馈③：0.82→0.95 提升前缀清晰度（tokens.color.promptGlyph 绿） */
 }
 
 /* 秘密词完成态展示区：idle 时 textContent 为空字符串，宽度为 0，不占位、不影响前缀+光标的
@@ -608,7 +592,7 @@
 /* "光标"：恒定的静态 "_" 字符，只做 CSS opacity 呼吸动画，不是可输入的文本光标，也不会被追加
    任何其它字符（见 hud.js buildTerminalPrompt() 的结构性保证）。 */
 .wtj-hud-terminal-cursor {
-  color: rgba(60, 231, 255, 0.42); /* tokens.color.cursor */
+  color: rgba(60, 231, 255, 0.55); /* WTJ-20260707-011 反馈③：0.42→0.55 让光标更清晰（tokens.color.cursor） */
   -webkit-animation: wtj-hud-terminal-cursor-pulse 1100ms ease-in-out infinite;
   animation: wtj-hud-terminal-cursor-pulse 1100ms ease-in-out infinite;
 }
@@ -653,13 +637,15 @@
   .wtj-hud-terminal {
     left: 24px;
     bottom: calc(var(--wtj-footer-height, 78px) + 10px);
-    width: 136px;
-    height: 22px;
-    border-radius: 11px;
+    /* WTJ-20260707-011 反馈③（矮屏同比放大）：136→180（固定 136px 会裁掉放大后的文字）、
+       22→28、圆角 11→14，与桌面档整体放大保持一致。 */
+    width: 180px;
+    height: 28px;
+    border-radius: 14px;
   }
 
   .wtj-hud-terminal-glyph {
-    font-size: 12px;
+    font-size: 14px; /* WTJ-20260707-011 反馈③：矮屏 12→14 */
   }
 }
 
@@ -676,13 +662,11 @@
     --wtj-footer-height: clamp(76px, 20vw, 88px);
   }
 
-  /* WTJ-20260705-019b（Ethan 反馈②，续）：--generic 容器在窄屏下也要收窄宽度，避免与右侧
-     收缩后的宝箱 lane（见下方 .wtj-hud-chest-lane 覆盖值）重叠——桌面档的
-     min(720px, 82vw) 在 640px 视口下会算出约 524px，逼近宝箱 lane 左边缘，这里单独给一档
-     更保守的宽度。槽径沿用桌面档的 clamp(64px, 6.4vw, 92px)（已经在下限 64px 附近，与 082
-     doc 移动端目标一致，不需要再单独覆写）。 */
+  /* WTJ-20260707-011 验收反馈①（承桌面档收窄）：窄屏下同样把三圆圈收紧居中，且宽度需 <= 桌面
+     新档，避免与右侧收缩后的宝箱 lane（见下方 .wtj-hud-chest-lane 覆盖值）重叠。槽径沿用桌面档
+     的 clamp(64px, 6.4vw, 92px)（已在下限 64px 附近，与 082 doc 移动端目标一致，不需再覆写）。 */
   .wtj-hud-tray-wrap--generic {
-    width: min(420px, 66vw);
+    width: clamp(220px, 44vw, 270px);
   }
 
   .wtj-hud-chest-lane {
@@ -699,14 +683,15 @@
      .wtj-hud-terminal 的 text-overflow:ellipsis 兜底截断，不会撑破布局），同时仍隐藏 activity
      pip 与分界线降低视觉噪音，不把装饰条挪到画布中央（规范明确禁止）。 */
   .wtj-hud-terminal {
-    min-width: 96px;
-    max-width: 160px;
-    height: 22px;
-    padding: 0 8px;
+    /* WTJ-20260707-011 反馈③（窄屏同比放大）：96→120 / 160→200 / 22→26 / padding 8→10。 */
+    min-width: 120px;
+    max-width: 200px;
+    height: 26px;
+    padding: 0 10px;
   }
 
   .wtj-hud-terminal-glyph {
-    font-size: 11px;
+    font-size: 13px; /* WTJ-20260707-011 反馈③：窄屏 11→13 */
   }
 
   .wtj-hud-terminal-pip {
@@ -805,12 +790,12 @@
     transform: scale(1.15) !important;
   }
 
-  /* WTJ-20260704-083 返工：Open 态的呼吸脉冲关键帧同样关闭，直接呈现静止的放大发光终态，
-     不因为 reduced-motion 而丢失"当前正在开箱"这个状态区分（仍然是可见的静态高亮）。 */
+  /* WTJ-20260707-011 反馈④：Open 态的 footer 静态宝箱指示器现已在基础规则里 visibility:hidden
+     （由 reward-chest.js 的开箱 Canvas 动画作为唯一开箱视觉），reduced-motion 下同样保持隐藏，
+     不再需要"静止放大发光终态"那套脉冲降级（它作用在一个已隐藏的元素上，无意义）。此处显式保持
+     隐藏即可。 */
   html:not([data-wtj-motion-forced]) .wtj-hud-chest.is-open {
-    -webkit-animation: none !important;
-    animation: none !important;
-    transform: scale(1.05) !important;
+    visibility: hidden !important;
   }
 
   /* WTJ-20260705-019（移植 001 Phase B，DESIGN 011「Reduced motion」）：禁止光标闪烁动画，固定在
