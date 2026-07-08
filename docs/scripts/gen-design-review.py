@@ -27,7 +27,8 @@
 返工（WTJ-20260705-021b，Ethan 原话「不用跑 app 就能试听所有发音/任务语音」）：
     - 新增「音频试听专区」（见 render_audio_preview_section 及其三个子函数），置于页面最顶部，
       不复制音频、只引用现有相对路径，用原生 <audio controls preload="none">（非 <script>，
-      符合 docs 零 JS 约束）。
+      符合 docs 零 JS 约束）；同时为每条音频预计算静态 SVG 波形，标出明显静音/低能量段，
+      便于 Ethan 不跑 app 直接定位停顿。
     - 秘密词英文发音：直接解析 app/web/manifest.js 里 secretWords.pool 数组（唯一权威的
       word → spriteFile → audioFile 三元组来源，运行时引擎本身也读这份数据），而不是靠文件名
       猜测配对——pool 里有 sprite 文件名与音频文件名对不上的已知例外（如 treasurechest 词对应
@@ -43,8 +44,11 @@ from __future__ import annotations
 
 import html
 import json
+import math
 import os
 import re
+import subprocess
+from array import array
 from pathlib import Path
 
 SCRIPT_PATH = Path(__file__).resolve()
@@ -79,6 +83,181 @@ def esc(s: str) -> str:
 def rel_href(repo_relpath: str) -> str:
     target = REPO_ROOT / repo_relpath
     return os.path.relpath(target, start=DOCS_DIR).replace(os.sep, "/")
+
+
+AUDIO_WAVEFORM_CACHE: dict[str, dict] = {}
+AUDIO_WAVEFORM_RATE = 8000
+AUDIO_WAVEFORM_BARS = 120
+
+
+def _fmt_num(v: float) -> str:
+    return f"{v:.2f}".rstrip("0").rstrip(".")
+
+
+def _fmt_time(v: float) -> str:
+    return f"{v:.2f}s"
+
+
+def audio_waveform_summary(repo_relpath: str) -> dict:
+    """把音频解码成轻量波形摘要，供静态 HTML 内嵌 SVG 使用。
+
+    不把原始 PCM 写盘；只保留归一化峰值和 >=120ms 的低能量段。
+    """
+    if repo_relpath in AUDIO_WAVEFORM_CACHE:
+        return AUDIO_WAVEFORM_CACHE[repo_relpath]
+    path = REPO_ROOT / repo_relpath
+    if not path.exists():
+        out = {"error": "文件不存在"}
+        AUDIO_WAVEFORM_CACHE[repo_relpath] = out
+        return out
+
+    cmd = [
+        "ffmpeg",
+        "-v", "error",
+        "-i", str(path),
+        "-ac", "1",
+        "-ar", str(AUDIO_WAVEFORM_RATE),
+        "-f", "s16le",
+        "pipe:1",
+    ]
+    try:
+        proc = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        out = {"error": "ffmpeg 不可用"}
+        AUDIO_WAVEFORM_CACHE[repo_relpath] = out
+        return out
+    if proc.returncode != 0 or not proc.stdout:
+        msg = proc.stderr.decode("utf-8", errors="ignore").strip() or "ffmpeg 解码失败"
+        out = {"error": msg[:160]}
+        AUDIO_WAVEFORM_CACHE[repo_relpath] = out
+        return out
+
+    samples = array("h")
+    samples.frombytes(proc.stdout)
+    total = len(samples)
+    if total == 0:
+        out = {"error": "音频为空"}
+        AUDIO_WAVEFORM_CACHE[repo_relpath] = out
+        return out
+
+    duration = total / AUDIO_WAVEFORM_RATE
+    bars = AUDIO_WAVEFORM_BARS
+    peaks: list[float] = []
+    for i in range(bars):
+        start = int(i * total / bars)
+        end = max(start + 1, int((i + 1) * total / bars))
+        peak = max(abs(v) for v in samples[start:end]) / 32768.0
+        peaks.append(round(min(1.0, peak), 4))
+
+    frame = max(1, int(AUDIO_WAVEFORM_RATE * 0.02))
+    rms_values: list[float] = []
+    for start in range(0, total, frame):
+        chunk = samples[start:start + frame]
+        if not chunk:
+            continue
+        rms = math.sqrt(sum((v / 32768.0) ** 2 for v in chunk) / len(chunk))
+        rms_values.append(rms)
+    max_rms = max(rms_values) if rms_values else 0.0
+    threshold = max(0.006, min(0.035, max_rms * 0.12))
+    min_gap_frames = max(1, int(0.12 / 0.02))
+    silences: list[dict[str, float]] = []
+    gap_start: int | None = None
+    for idx, rms in enumerate(rms_values + [1.0]):
+        is_low = rms < threshold
+        if is_low and gap_start is None:
+            gap_start = idx
+        elif not is_low and gap_start is not None:
+            if idx - gap_start >= min_gap_frames:
+                s = gap_start * 0.02
+                e = min(duration, idx * 0.02)
+                silences.append({
+                    "start": round(s, 2),
+                    "end": round(e, 2),
+                    "duration": round(max(0.0, e - s), 2),
+                })
+            gap_start = None
+
+    out = {
+        "duration": round(duration, 3),
+        "peaks": peaks,
+        "maxPeak": round(max(peaks) if peaks else 0.0, 4),
+        "threshold": round(threshold, 4),
+        "silences": silences,
+    }
+    AUDIO_WAVEFORM_CACHE[repo_relpath] = out
+    return out
+
+
+def render_waveform_component(repo_relpath: str) -> str:
+    summary = audio_waveform_summary(repo_relpath)
+    if summary.get("error"):
+        return (
+            '<span class="waveform-widget waveform-error">'
+            f'波形不可用：{esc(summary["error"])}</span>'
+        )
+
+    duration = float(summary["duration"])
+    peaks = summary["peaks"]
+    max_peak = max(float(summary["maxPeak"]), 0.001)
+    width = 160.0
+    height = 46.0
+    mid = height / 2
+    amp = 18.0
+    if len(peaks) == 1:
+        xs = [0.0]
+    else:
+        xs = [i * width / (len(peaks) - 1) for i in range(len(peaks))]
+    top = []
+    bottom = []
+    for x, p in zip(xs, peaks):
+        scaled = min(1.0, float(p) / max_peak)
+        y = max(2.0, mid - scaled * amp)
+        y2 = min(height - 2.0, mid + scaled * amp)
+        top.append(f'{_fmt_num(x)},{_fmt_num(y)}')
+        bottom.append(f'{_fmt_num(x)},{_fmt_num(y2)}')
+    path = "M " + " L ".join(top + list(reversed(bottom))) + " Z"
+
+    gap_rects = []
+    for gap in summary["silences"]:
+        if duration <= 0:
+            continue
+        x = (float(gap["start"]) / duration) * width
+        w = max(0.8, (float(gap["duration"]) / duration) * width)
+        gap_rects.append(
+            f'<rect class="waveform-gap-band" x="{_fmt_num(x)}" y="1" '
+            f'width="{_fmt_num(w)}" height="{_fmt_num(height - 2)}" rx="1.5" />'
+        )
+    if summary["silences"]:
+        labels = [
+            f'{_fmt_time(float(g["start"]))}-{_fmt_time(float(g["end"]))}'
+            for g in summary["silences"][:4]
+        ]
+        more = "" if len(summary["silences"]) <= 4 else f' 等 {len(summary["silences"])} 段'
+        gap_text = f'<span class="waveform-gap-text">低能量段：{esc("、".join(labels) + more)}</span>'
+    else:
+        gap_text = '<span class="waveform-ok-text">未检出 >=120ms 明显低能量段</span>'
+
+    return (
+        '<span class="waveform-widget" aria-label="音频波形与低能量段">'
+        '<svg class="waveform-svg" viewBox="0 0 160 46" preserveAspectRatio="none" role="img">'
+        '<rect class="waveform-bg" x="0" y="0" width="160" height="46" rx="4" />'
+        f'{"".join(gap_rects)}'
+        '<line class="waveform-mid" x1="0" y1="23" x2="160" y2="23" />'
+        f'<path class="waveform-fill" d="{path}" />'
+        '</svg>'
+        f'<span class="waveform-meta"><span>波形 {_fmt_time(duration)}</span>{gap_text}</span>'
+        '</span>'
+    )
+
+
+def render_audio_control(repo_relpath: str, href: str | None = None) -> str:
+    audio_href = href or rel_href(repo_relpath)
+    return (
+        '<span class="audio-control">'
+        f'<audio controls preload="none" src="{esc(audio_href)}">您的浏览器不支持音频播放。</audio>'
+        f'{render_waveform_component(repo_relpath)}'
+        '</span>'
+    )
 
 
 def list_files(root_relpath: str, exclude_top_subdirs: set[str] | None = None) -> list[str]:
@@ -393,7 +572,7 @@ def render_secret_word_audio_group() -> str:
             zh_word_block = (
                 '<span class="zh-mode zh-word">'
                 '<span class="zh-label">中文词卡</span>'
-                f'<audio controls preload="none" src="{esc(zh_href)}">您的浏览器不支持音频播放。</audio>'
+                f'{render_audio_control(zh_relpath, zh_href)}'
                 f'<code class="path">{esc(zh_relpath)}</code>'
                 '</span>'
             )
@@ -403,7 +582,7 @@ def render_secret_word_audio_group() -> str:
                 zh_combo_block = (
                     '<span class="zh-mode zh-combo">'
                     '<span class="zh-label">找到 + 词卡</span>'
-                    f'<audio controls preload="none" src="{esc(combo_href)}">您的浏览器不支持音频播放。</audio>'
+                    f'{render_audio_control(combo_relpath, combo_href)}'
                     f'<code class="path">{esc(combo_relpath)}</code>'
                     '</span>'
                 )
@@ -424,7 +603,7 @@ def render_secret_word_audio_group() -> str:
             '<figcaption>'
             f'<span class="word-label">{esc(word)}</span>'
             '<span class="en-label">英文</span>'
-            f'<audio controls preload="none" src="{esc(audio_href)}">您的浏览器不支持音频播放。</audio>'
+            f'{render_audio_control(audio_relpath, audio_href)}'
             f'<code class="path">{esc(entry["audio_relpath"])}</code>'
             f'{zh_block}'
             '</figcaption>'
@@ -535,8 +714,8 @@ def render_find_task_pool_audit_section() -> str:
         '（<code class="inline-code">audio/words/&lt;word&gt;.zh.m4a</code>）——即问号找物的「找到X」体验'
         '（task-templates.js <code class="inline-code">playComposite</code>，WTJ-20260707-003）。运行时是这两条'
         '文件的顺序播放，<strong>不使用</strong>另外预生成的整句"找到 X！"单文件（该单文件路线已被 TL 叫停，未落地）。'
-        '（<code class="inline-code">docs/assets/audio-preview/find-&lt;word&gt;.zh.m4a</code> 是为满足 docs 零 JS 约束、'
-        '让本页能不跑 App 直接试听同一组合而<em>另行预拼接</em>的 HTML 验收预览片段——见 '
+        '（<code class="inline-code">docs/assets/audio-preview/find-&lt;word&gt;.zh.m4a</code> 是为让本页能不跑 App、'
+        '不依赖浏览器本地文件解码权限就直接试听同一组合而<em>另行预拼接</em>的 HTML 验收预览片段——见 '
         '<a href="#audio-words">音频试听专区 · 秘密词发音</a> 的「找到 + 词卡」开关，源自 WTJ-20260708-004 裁剪后同一批'
         '资产，<strong>非运行时资产</strong>。）</p>',
         f'<p class="section-note"><strong>no-EN-fallback 硬要求</strong>（Ethan 明确驳回"缺中文就退英文"，与下方'
@@ -607,7 +786,7 @@ def render_task_voice_group(zh: bool) -> str:
             '<div class="audio-task-item">'
             f'<code class="task-id">{esc(task_id)}</code>'
             f'<span class="task-text">{esc(text)}</span>'
-            f'<audio controls preload="none" src="{esc(href)}">您的浏览器不支持音频播放。</audio>'
+            f'{render_audio_control(repo_relpath, href)}'
             f'<code class="path">{esc(repo_relpath)}</code>'
             '</div>'
         )
@@ -623,8 +802,9 @@ def render_audio_preview_section() -> str:
         '<h2 id="audio-preview">音频试听专区 '
         f'<span class="count">(秘密词发音 {total_words} + 中文任务语音 {total_zh} + 英文任务语音 {total_en})</span></h2>',
         '<p class="section-note">Ethan 原话「不用跑 app 就能试听所有发音/任务语音」——本区不复制任何音频文件，'
-        '只用原生 <code class="inline-code">&lt;audio controls preload="none"&gt;</code> 引用现有相对路径'
-        '（非 &lt;script&gt;，符合 docs 零 JS 约束）。三组均为目录/manifest 自动扫描结果，新增音频后重跑'
+        '只用原生 <code class="inline-code">&lt;audio controls preload="none"&gt;</code> 引用现有相对路径；'
+        '每条音频下方新增静态波形图和低能量段标记，用生成器预计算后内嵌，避免 file:// 打开时 JS 无法稳定读取本地 m4a。'
+        '三组均为目录/manifest 自动扫描结果，新增音频后重跑'
         '<code class="inline-code">docs/scripts/gen-design-review.py</code> 即自动出现。</p>',
         '<div class="subnav">'
         '<a href="#audio-words">秘密词英文发音</a>'
@@ -693,10 +873,11 @@ def render_008_audio_fix_section() -> str:
         cid = c["id"]
         after_rel = f"{AFTER_DIR_008}/{cid}.m4a"
         after_href = rel_href(after_rel)
+        ALL_REFS.append((after_href, after_rel))
         after_block = (
             '<div class="ab-col">'
             '<span class="ab-label">AFTER（ASR 自证）</span>'
-            f'<audio controls preload="none" src="{esc(after_href)}">您的浏览器不支持音频播放。</audio>'
+            f'{render_audio_control(after_rel, after_href)}'
             f'<code class="path">{esc(after_rel)}</code>'
             '</div>'
         )
@@ -710,16 +891,17 @@ def render_008_audio_fix_section() -> str:
         else:
             before_rel = c["before"]
             before_href = rel_href(before_rel)
+            ALL_REFS.append((before_href, before_rel))
             before_block = (
                 '<div class="ab-col"><span class="ab-label">BEFORE</span>'
-                f'<audio controls preload="none" src="{esc(before_href)}">您的浏览器不支持音频播放。</audio>'
+                f'{render_audio_control(before_rel, before_href)}'
                 f'<code class="path">{esc(before_rel)}</code></div>'
             )
         alts_block = ''
         if c.get("after_alts"):
             alt_ctrls = ''.join(
                 '<div class="ab-col"><span class="ab-label">候选 ' + str(i + 2) + '</span>'
-                '<audio controls preload="none" src="' + esc(rel_href(AFTER_DIR_008 + "/" + a)) + '">您的浏览器不支持音频播放。</audio>'
+                + render_audio_control(AFTER_DIR_008 + "/" + a, rel_href(AFTER_DIR_008 + "/" + a)) +
                 '<code class="path">' + esc(AFTER_DIR_008 + "/" + a) + '</code></div>'
                 for i, a in enumerate(c["after_alts"])
             )
@@ -1082,6 +1264,19 @@ h4 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercas
 .compare-row { display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:22px; }
 .compare-col { border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.02); }
 @media (max-width: 860px) { .compare-row { grid-template-columns: 1fr; } }
+.audio-control { display:block; width:100%; }
+.waveform-widget { display:block; margin:5px 0 2px; border:1px solid rgba(255,255,255,.12); border-radius:6px;
+  padding:5px 6px 6px; background:rgba(7,12,20,.55); }
+.waveform-svg { display:block; width:100%; height:46px; }
+.waveform-bg { fill:rgba(255,255,255,.035); }
+.waveform-fill { fill:rgba(94,231,255,.55); stroke:rgba(94,231,255,.88); stroke-width:.55; vector-effect:non-scaling-stroke; }
+.waveform-mid { stroke:rgba(255,255,255,.14); stroke-width:.5; vector-effect:non-scaling-stroke; }
+.waveform-gap-band { fill:rgba(255,96,96,.32); stroke:rgba(255,144,120,.58); stroke-width:.45; vector-effect:non-scaling-stroke; }
+.waveform-meta { display:flex; flex-wrap:wrap; gap:5px 8px; align-items:center; margin-top:4px;
+  font-size:9.5px; line-height:1.35; color:#a9bbca; }
+.waveform-gap-text { color:#ffcab8; }
+.waveform-ok-text { color:#9ed9b5; }
+.waveform-error { font-size:10px; color:#ffb86c; }
 .audio-item .word-label { font-weight:600; color:#fff; font-size:12.5px; }
 .audio-item audio { width:100%; height:30px; margin:2px 0; }
 /* WTJ-20260708-004 找到+词卡组合试听开关（纯 CSS，零 JS） */
