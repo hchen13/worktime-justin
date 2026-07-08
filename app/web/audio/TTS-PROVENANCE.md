@@ -313,3 +313,17 @@ find.zh 尾静音（0.12s）+ 词卡首静音（部分词达 0.18s）≈ 0.20-0.
   改回 plain concat）的「找到X」衔接空隙由此统一到 ~0.10s 自然短语间隔（实测 find-apple/bell/cup/
   grapes/van/violin join≈0.10-0.13s，find.zh 内部≈0.10s）。词卡自身音节内部间隙（如 苹果的苹—果）
   属既有词卡录音、非「找到↔词卡」连接，未触碰。100 条 docs/assets/audio-preview/find-*.zh.m4a 重生成。
+
+### 返工（WTJ-20260708-004 三轮，Ethan 波形算法）
+
+Ethan 基于 design-review 波形给出精确算法，二轮 rework 仍被拒（leading 裁剪对 blip/多段红区不精确）。
+三轮按 Ethan 算法从干净原始音频（b9affb4）一次成型（app/scripts/trim-leading-prefix.py）：
+- **检测**：峰值 -40dB 阈值（非波形的 RMS-12%——那会把软音节如 find.zh 的「找」~-25dB 误判为红区而裁掉，
+  违反 rule 4）。onset = 首个 above 帧且后续 150ms 窗口内 ≥3 个 above 帧（密度法）——能捕获短促/中间有 dip
+  的软音节（找 在 20ms 帧下 0.34*0.36*[0.38dip]0.40*），同时排除孤立 blip（rule 1 马的前置杂波、rule 2
+  sun/zucchini 切分红区的短噪，均 <3 帧密度被跳过）。
+- **裁剪**：词卡只裁 leading prefix 到 onset-0.03s（保留 0.03s 余量,不裁 trailing）；find.zh 裁 leading +
+  **trailing**（尾静音是「找到↔词卡」join 的一半）。rule 3：onset≤0.04s（开头即发音,如 envelope/fox/gift/
+  island/kettle/lion/monkey/nest/nose/whale 等 10 词）不裁开头。rule 4：找/到 等有效发音完整保留（复测无裁）。
+- find.zh 内部「找—到」间隙（~0.2s）按 Ethan 明确的 leading+trailing 范围**保留自然录音、不动**（覆盖二轮的
+  内部收紧）。90/100 词卡裁 leading,10 词 rule-3 跳过。combo=忠实 plain concat,实测 find→词卡 join≈0.10s。
