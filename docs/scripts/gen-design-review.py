@@ -450,12 +450,14 @@ def render_secret_word_audio_group() -> str:
 
 
 # ---------------------------------------------------------------------------
-# 找物任务候选池 + 随机 N 策略审计（WTJ-20260706-012 第二阶段，TL 定案 2026-07-07）：
-# 不进 App 也能看到"找物任务从哪个候选池抽、EN/ZH 各自的合格池大小、随机 N 落在什么范围、
-# 哪些词因缺中文词卡音频被排除在 ZH 候选池外"。ZH 模型是 word-card（目标词提示音频=该词自己的
-# 中文词卡音频 audio/words/<word>.zh.m4a），不是运行时拼接、也不是预生成整句"找到 X！"（那条
-# 路线已被叫停，未落地任何一条）；no-EN-fallback：缺中文词卡音频的词直接排除出候选池，绝不在
-# ZH 模式下静默回退英文顶替。
+# 找物任务候选池 + 随机 N 策略审计（WTJ-20260706-012 第二阶段；ZH 提示口径更新见 WTJ-20260707-003
+# / WTJ-20260708-004）：不进 App 也能看到"找物任务从哪个候选池抽、EN/ZH 各自的合格池大小、随机 N
+# 落在什么范围、哪些词因缺中文词卡音频被排除在 ZH 候选池外"。ZH 模式下目标词提示由运行时**顺序播放**
+# 「找到」引导语 audio/phrases/find.zh.m4a + 该词中文词卡 audio/words/<word>.zh.m4a 两段组成
+# （task-templates.js playComposite，即「找到X」体验）；运行时是这两条文件的顺序播放，不使用另外
+# 预生成的整句"找到 X！"单文件（该单文件路线已被 TL 叫停，未落地）。docs/assets/audio-preview/
+# find-<word>.zh.m4a 是为零 JS HTML 验收另行预拼接的预览片段（非运行时资产）。no-EN-fallback：缺中文
+# 词卡音频的词直接排除出候选池，绝不在 ZH 模式下静默回退英文顶替。
 # ---------------------------------------------------------------------------
 
 RANDOM_POOL_RE = re.compile(
@@ -527,10 +529,16 @@ def render_find_task_pool_audit_section() -> str:
         f'<code class="inline-code">secretWords.pool</code> 全量（下方逐词核对 sprite + 英文词卡音频均已交付，'
         f'{total}/{total}，见 <a href="#audio-words">音频试听专区 · 秘密词发音</a>）。<strong>ZH 模式</strong>'
         f'候选池收窄为"该词已交付中文词卡音频"的子集（运行时查 <code class="inline-code">'
-        f'window.WTJ_VOICE_LANG.isWordZhAvailable()</code>，当前 {len(zh_delivered)}/{total}）——目标词的提示音频'
-        '就是这个词自己已交付的中文词卡音频本身（<code class="inline-code">audio/words/&lt;word&gt;.zh.m4a</code>），'
-        '不是"找到"+词卡的运行时拼接（明确反模式），也不是另外预生成的整句"找到 X！"（该路线已被 TL 叫停，未落地任何'
-        '一条）。</p>',
+        f'window.WTJ_VOICE_LANG.isWordZhAvailable()</code>，当前 {len(zh_delivered)}/{total}）。ZH 模式下找物任务'
+        '开始时的目标词提示，由运行时<strong>顺序播放</strong>两段独立音频组成：「找到」引导语'
+        '（<code class="inline-code">audio/phrases/find.zh.m4a</code>）+ 该词已交付的中文词卡音频'
+        '（<code class="inline-code">audio/words/&lt;word&gt;.zh.m4a</code>）——即问号找物的「找到X」体验'
+        '（task-templates.js <code class="inline-code">playComposite</code>，WTJ-20260707-003）。运行时是这两条'
+        '文件的顺序播放，<strong>不使用</strong>另外预生成的整句"找到 X！"单文件（该单文件路线已被 TL 叫停，未落地）。'
+        '（<code class="inline-code">docs/assets/audio-preview/find-&lt;word&gt;.zh.m4a</code> 是为满足 docs 零 JS 约束、'
+        '让本页能不跑 App 直接试听同一组合而<em>另行预拼接</em>的 HTML 验收预览片段——见 '
+        '<a href="#audio-words">音频试听专区 · 秘密词发音</a> 的「找到 + 词卡」开关，源自 WTJ-20260708-004 裁剪后同一批'
+        '资产，<strong>非运行时资产</strong>。）</p>',
         f'<p class="section-note"><strong>no-EN-fallback 硬要求</strong>（Ethan 明确驳回"缺中文就退英文"，与下方'
         '「秘密词发音」区块里秘密词打字命中反馈这条<em>不同</em>机制的既有 EN 回落行为不是同一回事，互不影响）：'
         '下方列出的词缺中文词卡音频，在 ZH 模式下直接被排除出候选池，绝不参与随机抽取，也绝不在抽中后静默改播'
