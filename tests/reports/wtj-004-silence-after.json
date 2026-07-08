@@ -1,0 +1,165 @@
+{
+  "after": [
+    {
+      "file": "app/web/audio/phrases/find.zh.m4a",
+      "duration_s": 0.776,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.575
+    },
+    {
+      "file": "app/web/audio/words/airplane.zh.m4a",
+      "duration_s": 0.928,
+      "lead_silence_s": 0.061,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.746
+    },
+    {
+      "file": "app/web/audio/words/alligator.zh.m4a",
+      "duration_s": 0.634,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.434
+    },
+    {
+      "file": "app/web/audio/words/bell.zh.m4a",
+      "duration_s": 1.174,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.102,
+      "speech_span_s": 0.992
+    },
+    {
+      "file": "app/web/audio/words/cat.zh.m4a",
+      "duration_s": 1.302,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 1.102
+    },
+    {
+      "file": "app/web/audio/words/cup.zh.m4a",
+      "duration_s": 0.588,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.388
+    },
+    {
+      "file": "app/web/audio/words/dog.zh.m4a",
+      "duration_s": 1.406,
+      "lead_silence_s": 0.081,
+      "trail_silence_s": 0.075,
+      "speech_span_s": 1.251
+    },
+    {
+      "file": "app/web/audio/words/door.zh.m4a",
+      "duration_s": 1.0,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.8
+    },
+    {
+      "file": "app/web/audio/words/egg.zh.m4a",
+      "duration_s": 1.312,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.118,
+      "speech_span_s": 1.114
+    },
+    {
+      "file": "app/web/audio/words/faucet.zh.m4a",
+      "duration_s": 2.069,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 1.868
+    },
+    {
+      "file": "app/web/audio/words/goat.zh.m4a",
+      "duration_s": 0.847,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.647
+    },
+    {
+      "file": "app/web/audio/words/grapes.zh.m4a",
+      "duration_s": 0.519,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.319
+    },
+    {
+      "file": "app/web/audio/words/icecream.zh.m4a",
+      "duration_s": 1.423,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.052,
+      "speech_span_s": 1.291
+    },
+    {
+      "file": "app/web/audio/words/lamp.zh.m4a",
+      "duration_s": 1.552,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 1.352
+    },
+    {
+      "file": "app/web/audio/words/leaf.zh.m4a",
+      "duration_s": 1.062,
+      "lead_silence_s": 0.081,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.86
+    },
+    {
+      "file": "app/web/audio/words/noodle.zh.m4a",
+      "duration_s": 0.902,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.702
+    },
+    {
+      "file": "app/web/audio/words/pizza.zh.m4a",
+      "duration_s": 1.471,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.123,
+      "speech_span_s": 1.268
+    },
+    {
+      "file": "app/web/audio/words/ukulele.zh.m4a",
+      "duration_s": 0.947,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.747
+    },
+    {
+      "file": "app/web/audio/words/van.zh.m4a",
+      "duration_s": 0.71,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.51
+    },
+    {
+      "file": "app/web/audio/words/vase.zh.m4a",
+      "duration_s": 0.682,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.483
+    },
+    {
+      "file": "app/web/audio/words/violin.zh.m4a",
+      "duration_s": 2.117,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.118,
+      "speech_span_s": 1.919
+    },
+    {
+      "file": "app/web/audio/words/volcano.zh.m4a",
+      "duration_s": 1.765,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 1.564
+    },
+    {
+      "file": "app/web/audio/words/wagon.zh.m4a",
+      "duration_s": 1.262,
+      "lead_silence_s": 0.08,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 1.062
+    }
+  ]
+}

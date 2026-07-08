@@ -1,0 +1,742 @@
+{
+  "params": {
+    "noise": "-40dB",
+    "min_d": 0.06,
+    "lead_thresh": 0.25,
+    "trail_thresh": 0.25
+  },
+  "files": [
+    {
+      "file": "app/web/audio/phrases/find.zh.m4a",
+      "duration_s": 1.08,
+      "lead_silence_s": 0.348,
+      "trail_silence_s": 0.156,
+      "speech_span_s": 0.575
+    },
+    {
+      "file": "app/web/audio/words/airplane.zh.m4a",
+      "duration_s": 1.08,
+      "lead_silence_s": 0.061,
+      "trail_silence_s": 0.272,
+      "speech_span_s": 0.746
+    },
+    {
+      "file": "app/web/audio/words/alligator.zh.m4a",
+      "duration_s": 0.88,
+      "lead_silence_s": 0.256,
+      "trail_silence_s": 0.19,
+      "speech_span_s": 0.434
+    },
+    {
+      "file": "app/web/audio/words/ant.zh.m4a",
+      "duration_s": 1.16,
+      "lead_silence_s": 0.172,
+      "trail_silence_s": 0.175,
+      "speech_span_s": 0.813
+    },
+    {
+      "file": "app/web/audio/words/apple.zh.m4a",
+      "duration_s": 1.08,
+      "lead_silence_s": 0.143,
+      "trail_silence_s": 0.179,
+      "speech_span_s": 0.758
+    },
+    {
+      "file": "app/web/audio/words/ball.zh.m4a",
+      "duration_s": 0.76,
+      "lead_silence_s": 0.102,
+      "trail_silence_s": 0.166,
+      "speech_span_s": 0.492
+    },
+    {
+      "file": "app/web/audio/words/banana.zh.m4a",
+      "duration_s": 1.24,
+      "lead_silence_s": 0.158,
+      "trail_silence_s": 0.178,
+      "speech_span_s": 0.904
+    },
+    {
+      "file": "app/web/audio/words/basket.zh.m4a",
+      "duration_s": 0.8,
+      "lead_silence_s": 0.213,
+      "trail_silence_s": 0.213,
+      "speech_span_s": 0.374
+    },
+    {
+      "file": "app/web/audio/words/bell.zh.m4a",
+      "duration_s": 2.4,
+      "lead_silence_s": 1.306,
+      "trail_silence_s": 0.102,
+      "speech_span_s": 0.992
+    },
+    {
+      "file": "app/web/audio/words/cake.zh.m4a",
+      "duration_s": 0.92,
+      "lead_silence_s": 0.084,
+      "trail_silence_s": 0.213,
+      "speech_span_s": 0.623
+    },
+    {
+      "file": "app/web/audio/words/car.zh.m4a",
+      "duration_s": 1.4,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.137,
+      "speech_span_s": 1.263
+    },
+    {
+      "file": "app/web/audio/words/cat.zh.m4a",
+      "duration_s": 1.52,
+      "lead_silence_s": 0.257,
+      "trail_silence_s": 0.161,
+      "speech_span_s": 1.102
+    },
+    {
+      "file": "app/web/audio/words/cup.zh.m4a",
+      "duration_s": 1.68,
+      "lead_silence_s": 1.111,
+      "trail_silence_s": 0.181,
+      "speech_span_s": 0.388
+    },
+    {
+      "file": "app/web/audio/words/dog.zh.m4a",
+      "duration_s": 1.6,
+      "lead_silence_s": 0.274,
+      "trail_silence_s": 0.075,
+      "speech_span_s": 1.251
+    },
+    {
+      "file": "app/web/audio/words/door.zh.m4a",
+      "duration_s": 1.32,
+      "lead_silence_s": 0.317,
+      "trail_silence_s": 0.203,
+      "speech_span_s": 0.8
+    },
+    {
+      "file": "app/web/audio/words/drum.zh.m4a",
+      "duration_s": 1.36,
+      "lead_silence_s": 0.147,
+      "trail_silence_s": 0.165,
+      "speech_span_s": 1.048
+    },
+    {
+      "file": "app/web/audio/words/duck.zh.m4a",
+      "duration_s": 1.64,
+      "lead_silence_s": 0.136,
+      "trail_silence_s": 0.167,
+      "speech_span_s": 1.337
+    },
+    {
+      "file": "app/web/audio/words/egg.zh.m4a",
+      "duration_s": 1.68,
+      "lead_silence_s": 0.448,
+      "trail_silence_s": 0.118,
+      "speech_span_s": 1.114
+    },
+    {
+      "file": "app/web/audio/words/elephant.zh.m4a",
+      "duration_s": 0.96,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 0.871
+    },
+    {
+      "file": "app/web/audio/words/envelope.zh.m4a",
+      "duration_s": 1.36,
+      "lead_silence_s": 0.107,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 1.253
+    },
+    {
+      "file": "app/web/audio/words/eye.zh.m4a",
+      "duration_s": 1.24,
+      "lead_silence_s": 0.15,
+      "trail_silence_s": 0.168,
+      "speech_span_s": 0.922
+    },
+    {
+      "file": "app/web/audio/words/faucet.zh.m4a",
+      "duration_s": 2.48,
+      "lead_silence_s": 0.453,
+      "trail_silence_s": 0.158,
+      "speech_span_s": 1.868
+    },
+    {
+      "file": "app/web/audio/words/fish.zh.m4a",
+      "duration_s": 1.6,
+      "lead_silence_s": 0.145,
+      "trail_silence_s": 0.151,
+      "speech_span_s": 1.304
+    },
+    {
+      "file": "app/web/audio/words/flower.zh.m4a",
+      "duration_s": 0.96,
+      "lead_silence_s": 0.088,
+      "trail_silence_s": 0.134,
+      "speech_span_s": 0.738
+    },
+    {
+      "file": "app/web/audio/words/fox.zh.m4a",
+      "duration_s": 0.92,
+      "lead_silence_s": 0.096,
+      "trail_silence_s": 0.075,
+      "speech_span_s": 0.749
+    },
+    {
+      "file": "app/web/audio/words/frog.zh.m4a",
+      "duration_s": 1.36,
+      "lead_silence_s": 0.147,
+      "trail_silence_s": 0.172,
+      "speech_span_s": 1.04
+    },
+    {
+      "file": "app/web/audio/words/gift.zh.m4a",
+      "duration_s": 1.28,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.123,
+      "speech_span_s": 1.157
+    },
+    {
+      "file": "app/web/audio/words/goat.zh.m4a",
+      "duration_s": 1.152,
+      "lead_silence_s": 0.322,
+      "trail_silence_s": 0.183,
+      "speech_span_s": 0.647
+    },
+    {
+      "file": "app/web/audio/words/grapes.zh.m4a",
+      "duration_s": 1.36,
+      "lead_silence_s": 0.884,
+      "trail_silence_s": 0.157,
+      "speech_span_s": 0.319
+    },
+    {
+      "file": "app/web/audio/words/guitar.zh.m4a",
+      "duration_s": 0.76,
+      "lead_silence_s": 0.084,
+      "trail_silence_s": 0.109,
+      "speech_span_s": 0.566
+    },
+    {
+      "file": "app/web/audio/words/hat.zh.m4a",
+      "duration_s": 1.08,
+      "lead_silence_s": 0.15,
+      "trail_silence_s": 0.149,
+      "speech_span_s": 0.78
+    },
+    {
+      "file": "app/web/audio/words/heart.zh.m4a",
+      "duration_s": 1.16,
+      "lead_silence_s": 0.134,
+      "trail_silence_s": 0.124,
+      "speech_span_s": 0.902
+    },
+    {
+      "file": "app/web/audio/words/horse.zh.m4a",
+      "duration_s": 1.28,
+      "lead_silence_s": 0.207,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 1.073
+    },
+    {
+      "file": "app/web/audio/words/house.zh.m4a",
+      "duration_s": 1.72,
+      "lead_silence_s": 0.108,
+      "trail_silence_s": 0.154,
+      "speech_span_s": 1.458
+    },
+    {
+      "file": "app/web/audio/words/icecream.zh.m4a",
+      "duration_s": 1.64,
+      "lead_silence_s": 0.297,
+      "trail_silence_s": 0.052,
+      "speech_span_s": 1.291
+    },
+    {
+      "file": "app/web/audio/words/igloo.zh.m4a",
+      "duration_s": 1.28,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.115,
+      "speech_span_s": 1.076
+    },
+    {
+      "file": "app/web/audio/words/insect.zh.m4a",
+      "duration_s": 1.24,
+      "lead_silence_s": 0.111,
+      "trail_silence_s": 0.182,
+      "speech_span_s": 0.947
+    },
+    {
+      "file": "app/web/audio/words/island.zh.m4a",
+      "duration_s": 0.854,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.177,
+      "speech_span_s": 0.677
+    },
+    {
+      "file": "app/web/audio/words/jam.zh.m4a",
+      "duration_s": 1.56,
+      "lead_silence_s": 0.149,
+      "trail_silence_s": 0.18,
+      "speech_span_s": 1.231
+    },
+    {
+      "file": "app/web/audio/words/jar.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.215,
+      "trail_silence_s": 0.143,
+      "speech_span_s": 0.762
+    },
+    {
+      "file": "app/web/audio/words/jellyfish.zh.m4a",
+      "duration_s": 1.52,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.155,
+      "speech_span_s": 1.276
+    },
+    {
+      "file": "app/web/audio/words/juice.zh.m4a",
+      "duration_s": 1.04,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.139,
+      "speech_span_s": 0.812
+    },
+    {
+      "file": "app/web/audio/words/kettle.zh.m4a",
+      "duration_s": 1.44,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 1.44
+    },
+    {
+      "file": "app/web/audio/words/key.zh.m4a",
+      "duration_s": 1.68,
+      "lead_silence_s": 0.132,
+      "trail_silence_s": 0.159,
+      "speech_span_s": 1.389
+    },
+    {
+      "file": "app/web/audio/words/kite.zh.m4a",
+      "duration_s": 2.16,
+      "lead_silence_s": 0.16,
+      "trail_silence_s": 0.165,
+      "speech_span_s": 1.835
+    },
+    {
+      "file": "app/web/audio/words/koala.zh.m4a",
+      "duration_s": 1.64,
+      "lead_silence_s": 0.189,
+      "trail_silence_s": 0.055,
+      "speech_span_s": 1.397
+    },
+    {
+      "file": "app/web/audio/words/lamp.zh.m4a",
+      "duration_s": 2.04,
+      "lead_silence_s": 0.471,
+      "trail_silence_s": 0.217,
+      "speech_span_s": 1.352
+    },
+    {
+      "file": "app/web/audio/words/leaf.zh.m4a",
+      "duration_s": 1.44,
+      "lead_silence_s": 0.408,
+      "trail_silence_s": 0.17,
+      "speech_span_s": 0.862
+    },
+    {
+      "file": "app/web/audio/words/lemon.zh.m4a",
+      "duration_s": 1.84,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.203,
+      "speech_span_s": 1.637
+    },
+    {
+      "file": "app/web/audio/words/lion.zh.m4a",
+      "duration_s": 0.88,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.128,
+      "speech_span_s": 0.752
+    },
+    {
+      "file": "app/web/audio/words/milk.zh.m4a",
+      "duration_s": 1.24,
+      "lead_silence_s": 0.153,
+      "trail_silence_s": 0.208,
+      "speech_span_s": 0.879
+    },
+    {
+      "file": "app/web/audio/words/monkey.zh.m4a",
+      "duration_s": 1.4,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 1.4
+    },
+    {
+      "file": "app/web/audio/words/moon.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.154,
+      "trail_silence_s": 0.162,
+      "speech_span_s": 0.803
+    },
+    {
+      "file": "app/web/audio/words/mouse.zh.m4a",
+      "duration_s": 1.4,
+      "lead_silence_s": 0.085,
+      "trail_silence_s": 0.133,
+      "speech_span_s": 1.182
+    },
+    {
+      "file": "app/web/audio/words/nest.zh.m4a",
+      "duration_s": 1.4,
+      "lead_silence_s": 0.14,
+      "trail_silence_s": 0.196,
+      "speech_span_s": 1.064
+    },
+    {
+      "file": "app/web/audio/words/net.zh.m4a",
+      "duration_s": 1.6,
+      "lead_silence_s": 0.193,
+      "trail_silence_s": 0.166,
+      "speech_span_s": 1.241
+    },
+    {
+      "file": "app/web/audio/words/noodle.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.267,
+      "trail_silence_s": 0.151,
+      "speech_span_s": 0.702
+    },
+    {
+      "file": "app/web/audio/words/nose.zh.m4a",
+      "duration_s": 0.92,
+      "lead_silence_s": 0.079,
+      "trail_silence_s": 0.144,
+      "speech_span_s": 0.697
+    },
+    {
+      "file": "app/web/audio/words/octopus.zh.m4a",
+      "duration_s": 0.8,
+      "lead_silence_s": 0.242,
+      "trail_silence_s": 0.064,
+      "speech_span_s": 0.494
+    },
+    {
+      "file": "app/web/audio/words/orange.zh.m4a",
+      "duration_s": 1.0,
+      "lead_silence_s": 0.15,
+      "trail_silence_s": 0.176,
+      "speech_span_s": 0.674
+    },
+    {
+      "file": "app/web/audio/words/oven.zh.m4a",
+      "duration_s": 1.6,
+      "lead_silence_s": 0.211,
+      "trail_silence_s": 0.151,
+      "speech_span_s": 1.239
+    },
+    {
+      "file": "app/web/audio/words/owl.zh.m4a",
+      "duration_s": 1.52,
+      "lead_silence_s": 0.15,
+      "trail_silence_s": 0.174,
+      "speech_span_s": 1.196
+    },
+    {
+      "file": "app/web/audio/words/pear.zh.m4a",
+      "duration_s": 2.4,
+      "lead_silence_s": 0.185,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 2.215
+    },
+    {
+      "file": "app/web/audio/words/pencil.zh.m4a",
+      "duration_s": 1.72,
+      "lead_silence_s": 0.195,
+      "trail_silence_s": 0.158,
+      "speech_span_s": 1.367
+    },
+    {
+      "file": "app/web/audio/words/pig.zh.m4a",
+      "duration_s": 1.96,
+      "lead_silence_s": 0.195,
+      "trail_silence_s": 0.227,
+      "speech_span_s": 1.537
+    },
+    {
+      "file": "app/web/audio/words/pizza.zh.m4a",
+      "duration_s": 1.84,
+      "lead_silence_s": 0.402,
+      "trail_silence_s": 0.167,
+      "speech_span_s": 1.272
+    },
+    {
+      "file": "app/web/audio/words/quail.zh.m4a",
+      "duration_s": 1.56,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.212,
+      "speech_span_s": 1.259
+    },
+    {
+      "file": "app/web/audio/words/quarter.zh.m4a",
+      "duration_s": 1.2,
+      "lead_silence_s": 0.237,
+      "trail_silence_s": 0.12,
+      "speech_span_s": 0.843
+    },
+    {
+      "file": "app/web/audio/words/queen.zh.m4a",
+      "duration_s": 1.08,
+      "lead_silence_s": 0.152,
+      "trail_silence_s": 0.071,
+      "speech_span_s": 0.857
+    },
+    {
+      "file": "app/web/audio/words/quilt.zh.m4a",
+      "duration_s": 0.92,
+      "lead_silence_s": 0.084,
+      "trail_silence_s": 0.163,
+      "speech_span_s": 0.673
+    },
+    {
+      "file": "app/web/audio/words/rainbow.zh.m4a",
+      "duration_s": 1.36,
+      "lead_silence_s": 0.14,
+      "trail_silence_s": 0.2,
+      "speech_span_s": 1.02
+    },
+    {
+      "file": "app/web/audio/words/ring.zh.m4a",
+      "duration_s": 1.64,
+      "lead_silence_s": 0.084,
+      "trail_silence_s": 0.124,
+      "speech_span_s": 1.432
+    },
+    {
+      "file": "app/web/audio/words/robot.zh.m4a",
+      "duration_s": 0.92,
+      "lead_silence_s": 0.084,
+      "trail_silence_s": 0.177,
+      "speech_span_s": 0.658
+    },
+    {
+      "file": "app/web/audio/words/rocket.zh.m4a",
+      "duration_s": 2.04,
+      "lead_silence_s": 0.187,
+      "trail_silence_s": 0.18,
+      "speech_span_s": 1.673
+    },
+    {
+      "file": "app/web/audio/words/shoe.zh.m4a",
+      "duration_s": 1.6,
+      "lead_silence_s": 0.185,
+      "trail_silence_s": 0.076,
+      "speech_span_s": 1.339
+    },
+    {
+      "file": "app/web/audio/words/spoon.zh.m4a",
+      "duration_s": 1.68,
+      "lead_silence_s": 0.185,
+      "trail_silence_s": 0.074,
+      "speech_span_s": 1.421
+    },
+    {
+      "file": "app/web/audio/words/star.zh.m4a",
+      "duration_s": 1.56,
+      "lead_silence_s": 0.148,
+      "trail_silence_s": 0.121,
+      "speech_span_s": 1.29
+    },
+    {
+      "file": "app/web/audio/words/sun.zh.m4a",
+      "duration_s": 1.44,
+      "lead_silence_s": 0.104,
+      "trail_silence_s": 0.173,
+      "speech_span_s": 1.163
+    },
+    {
+      "file": "app/web/audio/words/train.zh.m4a",
+      "duration_s": 2.4,
+      "lead_silence_s": 0.149,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 2.251
+    },
+    {
+      "file": "app/web/audio/words/treasure.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.075,
+      "trail_silence_s": 0.176,
+      "speech_span_s": 0.87
+    },
+    {
+      "file": "app/web/audio/words/treasurechest.zh.m4a",
+      "duration_s": 1.56,
+      "lead_silence_s": 0.137,
+      "trail_silence_s": 0.203,
+      "speech_span_s": 1.22
+    },
+    {
+      "file": "app/web/audio/words/tree.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.078,
+      "trail_silence_s": 0.135,
+      "speech_span_s": 0.907
+    },
+    {
+      "file": "app/web/audio/words/turtle.zh.m4a",
+      "duration_s": 1.52,
+      "lead_silence_s": 0.147,
+      "trail_silence_s": 0.128,
+      "speech_span_s": 1.244
+    },
+    {
+      "file": "app/web/audio/words/ukulele.zh.m4a",
+      "duration_s": 1.32,
+      "lead_silence_s": 0.442,
+      "trail_silence_s": 0.131,
+      "speech_span_s": 0.747
+    },
+    {
+      "file": "app/web/audio/words/umbrella.zh.m4a",
+      "duration_s": 1.48,
+      "lead_silence_s": 0.15,
+      "trail_silence_s": 0.216,
+      "speech_span_s": 1.114
+    },
+    {
+      "file": "app/web/audio/words/unicorn.zh.m4a",
+      "duration_s": 1.64,
+      "lead_silence_s": 0.166,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 1.474
+    },
+    {
+      "file": "app/web/audio/words/uniform.zh.m4a",
+      "duration_s": 1.12,
+      "lead_silence_s": 0.124,
+      "trail_silence_s": 0.124,
+      "speech_span_s": 0.873
+    },
+    {
+      "file": "app/web/audio/words/van.zh.m4a",
+      "duration_s": 1.2,
+      "lead_silence_s": 0.527,
+      "trail_silence_s": 0.163,
+      "speech_span_s": 0.51
+    },
+    {
+      "file": "app/web/audio/words/vase.zh.m4a",
+      "duration_s": 1.52,
+      "lead_silence_s": 0.856,
+      "trail_silence_s": 0.182,
+      "speech_span_s": 0.483
+    },
+    {
+      "file": "app/web/audio/words/violin.zh.m4a",
+      "duration_s": 2.32,
+      "lead_silence_s": 0.148,
+      "trail_silence_s": 0.255,
+      "speech_span_s": 1.917
+    },
+    {
+      "file": "app/web/audio/words/volcano.zh.m4a",
+      "duration_s": 2.0,
+      "lead_silence_s": 0.259,
+      "trail_silence_s": 0.176,
+      "speech_span_s": 1.564
+    },
+    {
+      "file": "app/web/audio/words/wagon.zh.m4a",
+      "duration_s": 1.4,
+      "lead_silence_s": 0.083,
+      "trail_silence_s": 0.255,
+      "speech_span_s": 1.062
+    },
+    {
+      "file": "app/web/audio/words/watch.zh.m4a",
+      "duration_s": 1.48,
+      "lead_silence_s": 0.147,
+      "trail_silence_s": 0.191,
+      "speech_span_s": 1.142
+    },
+    {
+      "file": "app/web/audio/words/whale.zh.m4a",
+      "duration_s": 0.88,
+      "lead_silence_s": 0.0,
+      "trail_silence_s": 0.0,
+      "speech_span_s": 0.88
+    },
+    {
+      "file": "app/web/audio/words/window.zh.m4a",
+      "duration_s": 1.8,
+      "lead_silence_s": 0.159,
+      "trail_silence_s": 0.121,
+      "speech_span_s": 1.519
+    },
+    {
+      "file": "app/web/audio/words/yak.zh.m4a",
+      "duration_s": 1.96,
+      "lead_silence_s": 0.178,
+      "trail_silence_s": 0.168,
+      "speech_span_s": 1.614
+    },
+    {
+      "file": "app/web/audio/words/yarn.zh.m4a",
+      "duration_s": 1.04,
+      "lead_silence_s": 0.089,
+      "trail_silence_s": 0.23,
+      "speech_span_s": 0.722
+    },
+    {
+      "file": "app/web/audio/words/yoyo.zh.m4a",
+      "duration_s": 1.72,
+      "lead_silence_s": 0.11,
+      "trail_silence_s": 0.196,
+      "speech_span_s": 1.414
+    },
+    {
+      "file": "app/web/audio/words/zebra.zh.m4a",
+      "duration_s": 0.84,
+      "lead_silence_s": 0.17,
+      "trail_silence_s": 0.152,
+      "speech_span_s": 0.518
+    },
+    {
+      "file": "app/web/audio/words/zipper.zh.m4a",
+      "duration_s": 1.16,
+      "lead_silence_s": 0.159,
+      "trail_silence_s": 0.113,
+      "speech_span_s": 0.889
+    },
+    {
+      "file": "app/web/audio/words/zucchini.zh.m4a",
+      "duration_s": 1.84,
+      "lead_silence_s": 0.085,
+      "trail_silence_s": 0.159,
+      "speech_span_s": 1.596
+    }
+  ],
+  "flagged": [
+    "app/web/audio/phrases/find.zh.m4a",
+    "app/web/audio/words/airplane.zh.m4a",
+    "app/web/audio/words/alligator.zh.m4a",
+    "app/web/audio/words/bell.zh.m4a",
+    "app/web/audio/words/cat.zh.m4a",
+    "app/web/audio/words/cup.zh.m4a",
+    "app/web/audio/words/dog.zh.m4a",
+    "app/web/audio/words/door.zh.m4a",
+    "app/web/audio/words/egg.zh.m4a",
+    "app/web/audio/words/faucet.zh.m4a",
+    "app/web/audio/words/goat.zh.m4a",
+    "app/web/audio/words/grapes.zh.m4a",
+    "app/web/audio/words/icecream.zh.m4a",
+    "app/web/audio/words/lamp.zh.m4a",
+    "app/web/audio/words/leaf.zh.m4a",
+    "app/web/audio/words/noodle.zh.m4a",
+    "app/web/audio/words/pizza.zh.m4a",
+    "app/web/audio/words/ukulele.zh.m4a",
+    "app/web/audio/words/van.zh.m4a",
+    "app/web/audio/words/vase.zh.m4a",
+    "app/web/audio/words/violin.zh.m4a",
+    "app/web/audio/words/volcano.zh.m4a",
+    "app/web/audio/words/wagon.zh.m4a"
+  ]
+}

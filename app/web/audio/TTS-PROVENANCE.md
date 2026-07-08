@@ -277,3 +277,26 @@ Ethan 验收反馈原 island.zh 听成「小刀」(xiāo dāo 1声)。根因：w
 本卡用**更严的声调门**重生成：whisper-small 须精确输出「岛」(非「刀") + tone-aware pypinyin
 须为 3 声 (dǎo)。交付 clip whisper-small asr=「小岛」、pinyin=[xiao3, dao3]、峰值 -2.2dB、
 无前置空白、非静音。另有 alt2/alt3 过同门候选可供 Ethan 择优。主观清晰度/语速交 Ethan design-review。
+
+## WTJ-20260708-004：find.zh + 中文词卡静音裁剪（缩短「找到 + 词卡」组合等待）
+
+Ethan 反馈问号找物任务的「找到」引导语 + 部分中文词卡音频前后空白/换气过长，组合播放等待感明显。
+本卡**只裁边缘静音，不改文案/发音内容/文件名/音量**，不重生成、不回落英文。
+
+**方法**（可复现，见 `app/scripts/measure-audio-silence.py` + `trim-audio-silence.py`）：
+- 关键工程判定：这批录音的**室噪峰值约 -45dB**，真实语音峰值 -2~-30dB。故静音检测阈值定为
+  **-40dB**（明确高于室噪、低于语音）——-45/-50dB 会卡在室噪带里给出不可靠边界（实测 -45dB 把
+  grapes/van 的室噪 lead-in 误判为语音起点而欠裁，-50dB 又漏掉 cup 的 1.1s 室噪前导）。
+- 对 `lead>0.25s 或 trail>0.25s`（明显过长）的文件裁到 `[speech_start-0.08s, speech_end+0.12s]`，
+  保留自然 pad；≤0.25s 的正常边距文件不动（避免全量重编码/重听）。重编码 AAC 24kHz mono 96k。
+- **不切语音不变量**：pad>0 故 -40dB 语音区间恒完整包含在裁剪窗口内；裁后逐文件复测 speech span，
+  23/23 与裁前一致（delta ≤0.004s，见下）。
+
+**裁剪清单（23 个，含 find.zh）**：find, airplane, alligator, bell, cat, cup, dog, door, egg, faucet,
+goat, grapes, icecream, lamp, leaf, noodle, pizza, ukulele, van, vase, violin, volcano, wagon（词卡为
+`words/<word>.zh.m4a`，引导语为 `phrases/find.zh.m4a`）。典型：find.zh 1.080→0.776s（前导 0.348→0.080）、
+bell 2.400→1.174s（省 1.226s）、cup 1.680→0.588s、grapes 1.360→0.519s。裁前/裁后/裁剪明细报告见
+`tests/reports/wtj-004-silence-{before,after}.json` 与 `wtj-004-trim-report.json`。
+
+`docs/design-review.html` 音频预览按同路径引用，直接播放裁剪后版本。主观听感（是否仍自然、无截断感）
+交 **Ethan / QA 抽听**——TL 不试听（技术上已核实 speech span 无损、峰值/内容未改）。
