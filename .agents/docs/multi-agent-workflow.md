@@ -260,8 +260,8 @@ Additional rules:
 
 - For cards owned by a role with multiple live sessions, `最新进展` must name the concrete active executor label plus stable identity, or say why no session has claimed it yet.
 - A card in `in progress` must name the concrete active executor label plus stable identity and a current next action. If PM returns a card for rework and no live session has acknowledged the return, the card must be `todo`, not `in progress`.
-- A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`.
-- Exception: if PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM may keep `状态 = review` and set `负责人 = TL` for a narrow handoff correction. `下一步动作` must say this is metadata-only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns `负责人 = PM` while keeping `状态 = review`.
+- A card in `review` must have `负责人 = PM`, `评审负责人 = PM`, `下一步动作`, and `产物/证据`. There is no `review/TL`, `review/DESIGN`, or `review/QA` queue.
+- If PM review finds only missing or inconsistent handoff metadata, not a code or behavior defect, PM routes a metadata-only correction to `todo` with `负责人 = TL`. `下一步动作` must say this is handoff/stage evidence correction only and must list the exact missing branch/commit/evidence fields. After TL updates the evidence, TL returns the card to `review` with `负责人 = PM`.
 - A card in `testing` must have `负责人 = QA`, `QA结果`, `测试方式`, and `产物/证据`.
 - A card in `blocking` must have `负责人` and `阻塞负责人` set to `PM` or `Ethan`, plus `阻塞问题` and `下一步动作`. `blocking/TL`, `blocking/DESIGN`, and `blocking/QA` are invalid routing states that PM must correct.
 - A dependency only blocks intake when it is explicitly marked `Hard:` and its required condition is unmet. `Soft:` dependencies are coordination or merge-order notes; the owner may start work, use stubs, or prepare implementation while preserving the stated integration boundary.
@@ -284,13 +284,13 @@ Minimum handling rules:
 
 - `todo`: the assigned `负责人` must accept the card on that role's next loop by moving it to `in progress` and writing the concrete executor, or return/block it with a concrete reason. A card may not sit in `todo` across repeated owner loops with no claim or written refusal.
 - `in progress`: keep `最新进展` and `下一步动作` current.
-- `review`: PM must accept, reject with required changes, route to QA, route to another role, block, or deprecate.
+- `review`: PM must accept, reject with required changes, route to QA, route to another role, block, or deprecate. If `review` is assigned to a non-PM role, it is invalid routing and must be normalized before normal loop work continues.
 - `testing`: QA owns execution and result reporting.
 - `blocking`: only PM or Ethan may be the named `负责人` and `阻塞负责人`. PM either decides/reroutes, prepares a stakeholder question, or assigns a true stakeholder blocker to Ethan. Ethan answers the named validation or decision question. `blocking` is not a waiting room for TL/DESIGN/QA or vague dependency notes.
 
 Current board fields are authoritative. Session chat, older wakeup prompts, and previous local scans are only hints. If a card says the current role should act and also says not to wait for Ethan or another role, the current role must act and must not rely on an obsolete wakeup prompt to defer work.
 
-If a role-owned card remains in `todo` or `review` for one full owner loop with no claim, no refusal, and no precise blocker written back to the card, PM treats that as a role-loop failure. If a `blocking` card is owned by TL, DESIGN, or QA, PM treats it as invalid routing and corrects it to PM/Ethan ownership or executable role work. PM must record the observed failure, route a takeover or restart, and stop pretending the card is merely waiting normally.
+If a role-owned `todo` card remains for one full owner loop with no claim, no refusal, and no precise blocker written back to the card, PM treats that as a role-loop failure. If a `review` card is owned by TL, DESIGN, or QA, or if a `blocking` card is owned by TL, DESIGN, or QA, PM treats it as invalid routing and corrects it to PM/Ethan ownership or executable role work. PM must record the observed failure, route a takeover or restart, and stop pretending the card is merely waiting normally.
 
 When moving a card between roles or statuses, the acting role must update `最新进展`, `下一步动作`, and `产物/证据` when evidence exists. Feishu row comments may be used for detailed discussion, but the table fields must still summarize the current state so the board remains scannable.
 
@@ -303,7 +303,7 @@ Implementation handoff contract:
 - Before TL moves implementation work to `review`, TL must run `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>`. If it fails, TL fixes the branch/evidence in the same active loop and does not hand off yet.
 - When TL judges the work ready and preflight passes, TL moves the card to `review`, sets `负责人 = PM`, and records the final branch, final commit, preflight output, build/run evidence, residual risks, and recommended next route.
 - PM performs branch/commit verification after review handoff.
-- If final branch, final commit, or evidence is missing or inconsistent, but PM has not found a real product/code defect, PM keeps the card in `review`, sets `负责人 = TL`, and writes a metadata-only correction. This is not a development rejection.
+- If final branch, final commit, or evidence is missing or inconsistent, but PM has not found a real product/code defect, PM routes the card to `todo` with `负责人 = TL` and writes a metadata-only correction. This is not a development rejection; it is a narrow handoff/stage evidence fix. TL must claim it, fill the missing evidence, then return it to `review` with `负责人 = PM`.
 - If PM finds a real code, behavior, security, packaging, or acceptance defect, PM routes the card back to `todo` with the required rework. PM may use `in progress` only if a named live executor has acknowledged and accepted that rework immediately.
 
 Non-PM handoff rule:
@@ -380,7 +380,7 @@ PM branch discipline:
 - QA may validate a combined app build from `stage` when the card asks for integrated-app QA, but QA may also run target-specific tests from a named branch/package/worktree. PM must not treat a target-specific QA pass as Ethan acceptance of `stage`.
 - PM must not resolve code/build/test/package conflicts on `stage` or during `stage` to `main` promotion. Route those to TL with exact files and target baseline. PM may resolve PM-owned documentation, requirement wording, or workflow-protocol conflicts.
 - Dirty or untracked files in the shared worktree are not accepted deliverables and are not by themselves a reason to block an in-progress card.
-- In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should stay in the review lane as a narrow TL correction; actual defects should be routed as rework.
+- In `review`, distinguish handoff metadata correction from technical rework. Missing final commit/evidence should become a narrow metadata-only `todo/TL` correction; actual defects should be routed as rework with explicit acceptance checks. In both cases, the next PM quality decision happens only after TL returns the card to `review/PM`.
 
 ## 11. TL Workflow
 
@@ -406,7 +406,7 @@ TL is allowed, and often expected, to act as a technical scheduler rather than a
 
 When TL work is ready, TL moves the card to `review`, assigns PM, records evidence, and recommends either QA, acceptance, or rework. PM decides the route.
 
-`review` does not always mean the card belongs to PM. If PM keeps a card in `review` but sets `负责人 = TL`, TL owns the next action. This is the handoff-correction queue, used for missing or inconsistent final branch, final commit, `stage` commit, shared-checkout evidence, package path, or other delivery metadata. TL must pick these cards during its normal board scan, write a TL session claim in `最新进展`, perform only the requested correction unless PM identified a real defect, and return the card to `review` with `负责人 = PM` when the correction is complete. TL should not move these cards to `in progress` merely to acknowledge ownership; `review/TL` already means active TL correction is required.
+`review` always means the card belongs to PM. It is the isolation point where TL's delivered work stops and PM decides the project-wide route. If PM needs missing or inconsistent final branch, final commit, `stage` commit, shared-checkout evidence, package path, or other delivery metadata corrected, PM routes that narrow correction to `todo/TL` and says it is metadata-only. TL must pick it during the normal `todo` intake, write a TL session claim in `最新进展`, perform only the requested correction unless PM identified a real defect, and return the card to `review` with `负责人 = PM` when the correction is complete.
 
 TL handoff must include:
 
@@ -419,7 +419,7 @@ TL handoff must include:
 - whether TL recommends PM acceptance, QA testing, or further TL work
 - whether the branch is ready for TL `stage` integration, already integrated to `stage`, or should not be integrated yet
 
-If PM returns a review card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
+If PM returns a card to TL for handoff metadata correction, TL should not restart implementation unless the PM explicitly found a real defect. TL only fills the missing final branch/commit/evidence and returns the card to PM in `review`.
 
 ## 12. DESIGN Workflow
 

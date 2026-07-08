@@ -20,7 +20,7 @@ When starting a Claude Code or Codex role session, give it a role and ask it to 
 Example TL start prompt:
 
 ```text
-You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status, including `review`. A card with `状态 = review` and `负责人 = TL` is TL-owned handoff/stage-evidence correction, not PM review; claim it in 最新进展, fix only the requested correction unless PM named a real defect, and return it to `review` with `负责人 = PM`. You may coordinate multiple TL-owned cards in parallel as technical scheduler: claim each card separately in 最新进展, give each card an isolated branch/worktree or explicitly non-overlapping file scope, run the PM-selected light/full workflow per card, and hand completed work back to PM review with branch/commit/evidence. Do not touch main. For runtime-impacting or docs-preview-impacting delivery, integrate to stage before PM review unless the card explicitly says branch-only preliminary review; record the integrated stage commit plus project-directory artifact paths before Ethan-facing validation.
+You are TL for WorkTime Justin. Your session label is TL-A and your stable session identity is ClaudeSession:<session-id>. Read AGENTS.md and the docs it references. Use the TL Feishu app identity from .env. Start your role loop: scan cards assigned to TL in every active status. `review` is PM-owned; if a card is assigned to TL with `状态 = review`, treat it as invalid routing, write that fact in 最新进展, normalize executable TL correction to `todo` or route a precise blocker to `blocking/PM`, then proceed from the corrected status. You may coordinate multiple TL-owned cards in parallel as technical scheduler: claim each card separately in 最新进展, give each card an isolated branch/worktree or explicitly non-overlapping file scope, run the PM-selected light/full workflow per card, and hand completed work back to PM review with branch/commit/evidence. Do not touch main. For runtime-impacting or docs-preview-impacting delivery, integrate to stage before PM review unless the card explicitly says branch-only preliminary review; record the integrated stage commit plus project-directory artifact paths before Ethan-facing validation.
 
 When doing feature work, use a TL-owned branch/worktree. Do not switch `/Users/claire/Documents/worktime-justin` away from `stage` or `main` as a scratch checkout. If the shared checkout is already on a feature/design/test branch, first preserve any dirty work and route or move it to the correct branch/worktree before using the shared checkout for stage validation.
 ```
@@ -71,7 +71,7 @@ A nonterminal card assigned to a role is an intake obligation on that role's nex
 
 - `todo` with `负责人 = <role>` means that role must claim it in the next loop by moving it to `in progress` and writing the concrete executor, or immediately return/block it with a specific reason.
 - `blocking` is valid only when `负责人` and `阻塞负责人` are `PM` or `Ethan`. A `blocking` card assigned to TL, DESIGN, or QA is invalid routing, not a normal intake obligation. If the role can unblock the issue itself, the card belongs in `todo`, `in progress`, or `review`; if it cannot continue, it must route the card to `blocking` with `负责人 = PM` and `阻塞负责人 = PM`.
-- `review` with `负责人 = TL` is TL-owned correction work and must be processed before ordinary `todo`.
+- `review` must be PM-owned. A `review` card assigned to TL, DESIGN, or QA is invalid routing; normalize executable work to `todo/<role>` or route a precise blocker to `blocking/PM` before normal loop work continues.
 - `in progress` with `负责人 = <role>` is valid only while the named executor in `最新进展` is actually working or expected to continue. If PM observes that no such session is active, PM must route takeover or downgrade the card to `todo` instead of leaving a fake active state.
 
 If a role loop needs a document, screenshot, sprite sheet, audio source, branch, or test path that is not named on the card, it must not leave that request only in chat. It must write the exact missing item or question into `最新进展` or `阻塞问题`, and return the card to PM review/blocking if the missing information prevents progress.
@@ -147,11 +147,11 @@ PM automation also owns session-surface hygiene:
 - If PM cannot inspect the external session, the card must say so and require the role to summarize blockers in `最新进展`; PM should not rely on Ethan monitoring role chats.
 - PM must classify stakeholder feedback before routing: approval, rejection, true unanswered decision, or technical blocker. A rejection becomes concrete rework. A true Ethan decision becomes `blocking/Ethan` with exact validation path/question. It must not be parked as TL/DESIGN/QA `todo`.
 - When PM asks Ethan to validate audio, video, animation, or visual quality, the card must name the exact HTML entry point, section or file list, expected before/after comparison, and the answer that unblocks the card. If Ethan already said the output is bad or wrong, PM routes repair instead of asking for the same validation again.
-- If a role-owned `todo` or `review` card survives the role's next loop without a claim, refusal, or precise blocker, PM records that as a role-loop failure and routes a takeover/restart/escalation. If `blocking` is assigned to TL, DESIGN, or QA, PM records it as invalid routing and corrects owner/blocker to PM or routes executable work. PM does not keep the card in place with the same next action.
+- If a role-owned `todo` card survives the role's next loop without a claim, refusal, or precise blocker, PM records that as a role-loop failure and routes a takeover/restart/escalation. If `review` or `blocking` is assigned to TL, DESIGN, or QA, PM records it as invalid routing and corrects owner/blocker to PM or routes executable work. PM does not keep the card in place with the same next action.
 
 For implementation cards in `in progress`, PM automation should treat local branch and worktree observations as informational only. Do not move a card to `blocking` or repeatedly rewrite its next action just because a shared worktree is dirty, has untracked files, or the TL branch has advanced.
 
-For implementation cards in `review`, PM automation first checks the handoff metadata: final branch, final commit, evidence, risks, and recommended route. If only handoff metadata is missing or inconsistent, keep `状态 = review`, set `负责人 = TL`, and ask for a narrow metadata correction. Do not route it as technical rework unless PM found a real defect.
+For implementation cards in `review`, PM automation first checks the handoff metadata: final branch, final commit, evidence, risks, and recommended route. If only handoff metadata is missing or inconsistent, route a narrow metadata-only correction to `todo` with `负责人 = TL`. Do not route it as technical rework unless PM found a real defect. TL returns the card to `review` with `负责人 = PM` after filling the missing evidence.
 
 When PM automation rejects a delivered card for real rework, route it to `todo` with the fixing role as `负责人` unless a named live executor has already acknowledged and accepted the returned work. Only use `in progress` for rejected work when that concrete session label and stable identity are written in `最新进展`.
 
@@ -178,14 +178,14 @@ Whole-board completion notification:
 TL loop:
 
 - works only cards assigned to TL
-- treats `review` cards assigned to TL as actionable TL work, not PM-owned review; these cards normally require handoff metadata or `stage`/shared-checkout evidence correction
+- treats any TL-owned `review` card as invalid routing; executable correction must first be normalized to `todo/TL`, and true blockers must be routed to `blocking/PM`
 - owns implementation branches and TL-routed `stage` integration work
 - may spawn technical review/dev/review subagents as defined in the workflow
 - uses `轻量流程` when PM marks a card as small, clear, and low risk; do not run three-way technical review for obvious small fixes unless the work reveals hidden complexity
 - may use shared-worktree mechanics during `in progress`, but must keep `main` history untouched and touch `stage` only for explicit PM-routed integration; provide final branch/commit evidence at `review`
 - resolves code/build/test/package/asset conflicts for `stage` integration, then records the integrated `stage` commit plus clean-stage-checkout build/package evidence before returning to PM review
 - before moving implementation work to `review`, runs `.agents/tools/tl_handoff_check.py --card <编号> --branch <分支>` and fixes any failure in the same loop
-- when correcting a `review/TL` card, keeps the card in `review` unless PM explicitly routed real rework; writes a TL session claim in `最新进展`, fixes the requested metadata/evidence, then sets `负责人 = PM` for PM review
+- when correcting metadata or `stage` handoff evidence, claims the `todo/TL` card, fixes only the requested evidence unless PM explicitly routed real rework, then sets `状态 = review` and `负责人 = PM`
 - returns finished work to PM review
 
 DESIGN loop:
@@ -215,7 +215,7 @@ QA loop:
 
 Loop accountability:
 
-- A role loop that sees a `todo` or `review` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card and route the blocker to PM before stopping. A `blocking` card assigned to TL, DESIGN, or QA is a routing defect; the role must correct or report it to PM instead of treating itself as blocker owner.
+- A role loop that sees a `todo` card assigned to itself must not stop as idle. If it cannot do the card, it must write the exact reason to the card and route the blocker to PM before stopping. A `review` or `blocking` card assigned to TL, DESIGN, or QA is a routing defect; the role must correct executable `review` work to `todo/<role>` or report/block it to PM instead of treating it as a normal queue.
 - A role loop that previously scheduled a wakeup must still obey the latest board on wake. The wakeup text is a reminder, not a source of truth.
 - A role loop must not claim that Ethan needs to decide unless the card is routed to PM with the exact question and validation path, or PM has already routed it onward to Ethan. If the card owner is the role, the default assumption is that the role must act. Non-PM roles may not route directly to Ethan.
 
