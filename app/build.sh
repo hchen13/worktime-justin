@@ -12,7 +12,7 @@ set -euo pipefail
 
 APP_NAME="WorkTimeJustin"
 BUNDLE_ID="com.worktime.justin"
-VERSION="0.1.0"
+VERSION="1.0.0"
 MIN_OS="11.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
