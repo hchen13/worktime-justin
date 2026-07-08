@@ -95,7 +95,7 @@ test('084: delivered ZH paths follow the audio/tasks/<id>.zh.m4a convention (no 
 // WTJ-20260707-003 — ZH find-prefix composite phrase ("找到"). A separate, additive array
 // (compositePhrasesZh) from the EN compositePhrases above — does not affect the 10-phrases
 // EN gate. This is the one sanctioned exception to the ZH no-runtime-concat red line (see
-// CN-TASK-DRAFT.md #0 amendment): the find.zh phrase is combined at runtime with a word-card
+// docs/design-notes/CN-TASK-DRAFT.md #0 amendment): the find.zh phrase is combined at runtime with a word-card
 // via WTJ_AUDIO.playComposite(), never with itself constituting a mixed EN/ZH utterance.
 // =====================================================================================
 

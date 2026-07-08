@@ -17,11 +17,11 @@ MODEL / LICENSE (verify before shipping; mirrors generate-tts.py's EN header):
   - Determinism: fixed voice, no sampling/seed -> reproducible byte-for-byte re-runs (same as EN).
   Project is non-commercial (Ethan): personal/non-commercial licensing is acceptable.
 
-RED LINE (CN-TASK-84-DRAFT / TL ruling, see CN-TASK-DRAFT.md #0): every taskId here is ONE
+RED LINE (CN-TASK-84-DRAFT / TL ruling, see docs/design-notes/CN-TASK-DRAFT.md #0): every taskId here is ONE
 independent, pre-generated, COMPLETE Chinese sentence. There is NO phrases/composite table for
 Chinese and this script must never be used to synthesize a fragment intended for runtime
 playComposite() concatenation (that pattern is English-only, e.g. "Find the" + "dog"; Chinese
-"找到" + "小狗" splicing is banned — see CN-TASK-DRAFT.md and tts-text-manifest.zh.json header).
+"找到" + "小狗" splicing is banned — see docs/design-notes/CN-TASK-DRAFT.md and tts-text-manifest.zh.json header).
 
 Text source of truth: app/scripts/tts-text-manifest.zh.json  tasks{taskId:{text,out}}
 (24 entries; out paths use the <id>.zh.m4a convention to avoid colliding with the EN

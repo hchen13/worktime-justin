@@ -646,7 +646,7 @@
           // WTJ-20260705-004 Phase A（pt2）：此前本类型只有 'find-the-dog' 一条写死示例
           // （TL 综合裁定：孩子应该能见到多样化的寻找目标，不是永远只找小狗）。这里手写 12 条
           // 精选 example（保持 Phase B 中文语音句子数可控——每条 find example 未来对应且仅对应
-          // 一条预生成中文句，见 app/scripts/tts-text-manifest.zh.json 骨架与 CN-TASK-DRAFT.md），
+          // 一条预生成中文句，见 app/scripts/tts-text-manifest.zh.json 骨架与 docs/design-notes/CN-TASK-DRAFT.md），
           // target/distractor 全部复用 secretWords.pool 已交付的 101 词英文 sprite（103 张真实
           // 素材，零新增美术，见 task-templates.js SPRITES_FILENAMES 白名单同步扩展）。voicePrompt
           // WTJ-20260705-004 Phase B 更新：此前"除 find-the-dog 首条外，新增 11 条暂无预生成

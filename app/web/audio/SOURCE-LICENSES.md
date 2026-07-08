@@ -208,7 +208,7 @@ EN 侧（af_heart，119 文件）本卡确定性复跑核实与已交付 074/078
 | 中文 G2P | **misaki 0.9.4 [zh]**（MIT；jieba 0.42.1 + pypinyin 0.55.0 + cn2an）。中文不经 espeak-ng。 |
 | espeak-ng | 1.52（Homebrew，GPLv3）——**仅 EN 用**，构建期音素化工具，不链接进、不随 app 分发；中文侧完全不用它 |
 | 确定性 | 固定音色 + 无采样 + **无需 seed** → 可复现字节一致 |
-| 文案来源 | `CN-TASK-DRAFT.md` v1（PM 已批），24 条逐条对齐 `app/scripts/tts-text-manifest.zh.json` |
+| 文案来源 | `docs/design-notes/CN-TASK-DRAFT.md` v1（PM 已批），24 条逐条对齐 `app/scripts/tts-text-manifest.zh.json` |
 | 生成脚本 | `app/scripts/generate-tts-zh.py` |
 | 授权口径 | 全部模型 / G2P / 依赖均为宽松许可（Apache-2.0 / MIT），无第三方录音素材、无署名要求、无水印。中文语音产物 `.zh.m4a` 可随 app 分发。 |
 
