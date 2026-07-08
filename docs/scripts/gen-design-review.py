@@ -384,11 +384,36 @@ def render_secret_word_audio_group() -> str:
             zh_relpath = f"app/web/audio/words/{word}.zh.m4a"
             zh_href = rel_href(zh_relpath)
             ALL_REFS.append((zh_href, zh_relpath))
-            zh_block = (
-                '<span class="zh-label">中文</span>'
+            # WTJ-20260708-004：中文播放的「词卡」↔「找到 + 词卡」组合切换（由本组顶部的
+            # #zh-combo-toggle 纯 CSS 开关控制显隐，零 JS）。组合片段是 audio/phrases/find.zh.m4a +
+            # audio/words/<word>.zh.m4a 两段 004 裁剪后资产的真实拼接（预生成，见
+            # app/scripts/gen-find-combo-preview.py），复刻问号找物任务 ZH 组合播放的「找到X」体验。
+            combo_relpath = f"docs/assets/audio-preview/find-{word}.zh.m4a"
+            combo_exists = (REPO_ROOT / combo_relpath).exists()
+            zh_word_block = (
+                '<span class="zh-mode zh-word">'
+                '<span class="zh-label">中文词卡</span>'
                 f'<audio controls preload="none" src="{esc(zh_href)}">您的浏览器不支持音频播放。</audio>'
                 f'<code class="path">{esc(zh_relpath)}</code>'
+                '</span>'
             )
+            if combo_exists:
+                combo_href = rel_href(combo_relpath)
+                ALL_REFS.append((combo_href, combo_relpath))
+                zh_combo_block = (
+                    '<span class="zh-mode zh-combo">'
+                    '<span class="zh-label">找到 + 词卡</span>'
+                    f'<audio controls preload="none" src="{esc(combo_href)}">您的浏览器不支持音频播放。</audio>'
+                    f'<code class="path">{esc(combo_relpath)}</code>'
+                    '</span>'
+                )
+            else:
+                zh_combo_block = (
+                    '<span class="zh-mode zh-combo zh-na">⚠ 组合片段缺失：请重跑 '
+                    'app/scripts/gen-find-combo-preview.py 生成 '
+                    f'{esc(combo_relpath)}</span>'
+                )
+            zh_block = zh_word_block + zh_combo_block
         else:
             # 返工后不应再出现；若出现即回归缺陷（见上方硬门），醒目标注而非「可接受·回落英文」。
             zh_block = '<span class="zh-na">⚠ 中文未交付（回归缺陷，应 100/100 全交付）</span>'
@@ -405,7 +430,22 @@ def render_secret_word_audio_group() -> str:
             '</figcaption>'
             '</figure>'
         )
-    parts.append(f'<div class="grid">{"".join(items)}</div>')
+    # WTJ-20260708-004：中文播放模式全局开关（纯 CSS，零 JS）。未勾选=每词只显示「中文词卡」
+    # 播放器（如 苹果）；勾选=显示「找到 + 词卡」真实拼接组合（如 找到 + 苹果），用于目视/试听验证
+    # 问号找物任务的「找到X」组合体验。checkbox 是下方 .zh-word-grid 的前置兄弟，CSS 用
+    # `#zh-combo-toggle:checked ~ .zh-word-grid` 切换两组播放器显隐（见 CSS）。
+    # checkbox 必须是 .zh-word-grid 的**直接前置兄弟**，CSS `~` 通用兄弟选择器才能跨到 grid；故把
+    # <input> 提为裸兄弟（原生 input off-screen 但保留可聚焦），label 用 for= 关联并画自定义勾选框。
+    parts.append('<input type="checkbox" id="zh-combo-toggle" class="zh-combo-toggle" />')
+    parts.append(
+        '<label for="zh-combo-toggle" class="zh-combo-toggle-row">'
+        '<span class="cbx" aria-hidden="true"></span>'
+        '<span class="txt">🔊 中文播放：勾选后把每词的「中文词卡」切换为'
+        '「<strong>找到 + 词卡</strong>」真实拼接组合（复刻问号找物任务的「找到X」体验；'
+        '组合片段为 find.zh + 该词中文词卡的预拼接，均引用 WTJ-20260708-004 裁剪后同一批资产）。</span>'
+        '</label>'
+    )
+    parts.append(f'<div class="grid zh-word-grid">{"".join(items)}</div>')
     return "\n".join(parts)
 
 
@@ -1036,6 +1076,23 @@ h4 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercas
 @media (max-width: 860px) { .compare-row { grid-template-columns: 1fr; } }
 .audio-item .word-label { font-weight:600; color:#fff; font-size:12.5px; }
 .audio-item audio { width:100%; height:30px; margin:2px 0; }
+/* WTJ-20260708-004 找到+词卡组合试听开关（纯 CSS，零 JS） */
+.zh-combo-toggle { position:absolute; opacity:0; width:0; height:0; }  /* off-screen 但保留可聚焦，由 label 触发 */
+.zh-combo-toggle-row { display:flex; align-items:flex-start; gap:9px; margin:4px 0 14px; padding:10px 12px;
+  border:1px solid var(--line); border-radius:8px; background:rgba(94,231,255,.06); cursor:pointer; }
+.zh-combo-toggle-row .cbx { width:17px; height:17px; margin-top:1px; flex-shrink:0; border:1.5px solid #6cf;
+  border-radius:4px; display:inline-block; position:relative; background:rgba(255,255,255,.04); }
+.zh-combo-toggle-row .txt { font-size:12.5px; color:#cfe3ee; line-height:1.5; }
+.zh-combo-toggle-row .txt strong { color:#ffd84c; }
+.zh-combo-toggle:checked ~ .zh-combo-toggle-row .cbx { background:#5ee7ff; border-color:#5ee7ff; }
+.zh-combo-toggle:checked ~ .zh-combo-toggle-row .cbx::after { content:"✓"; position:absolute; top:-2px; left:2px;
+  font-size:13px; font-weight:800; color:#04222b; }
+.zh-combo-toggle:focus-visible ~ .zh-combo-toggle-row .cbx { outline:2px solid #5ee7ff; outline-offset:2px; }
+.audio-item .zh-mode { display:block; }          /* 词卡模式默认可见 */
+.audio-item .zh-mode.zh-combo { display:none; }   /* 组合模式默认隐藏 */
+/* 勾选后：整组词卡切到「找到 + 词卡」组合（checkbox 是 .zh-word-grid 的前置兄弟，~ 生效） */
+.zh-combo-toggle:checked ~ .zh-word-grid .zh-mode.zh-word { display:none; }
+.zh-combo-toggle:checked ~ .zh-word-grid .zh-mode.zh-combo { display:block; }
 .audio-task-list { display:flex; flex-direction:column; gap:8px; margin: 6px 0 20px; }
 .audio-task-item { display:grid; grid-template-columns: 150px 1fr 260px; gap:10px 14px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:9px 12px; background:rgba(255,255,255,.03); }
 .audio-task-item .task-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:#cfe3ee; }
