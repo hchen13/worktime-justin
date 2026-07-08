@@ -26,6 +26,10 @@ WORDS_DIR = REPO / "app/web/audio/words"
 OUT_DIR = REPO / "docs/assets/audio-preview"
 MISSING = REPO / "app/web/audio/missing-audio.json"
 
+# WTJ-20260708-004 返工（Ethan 拒收组合中间停顿）：组合的中间空隙 = 运行时空隙 = find.zh 尾静音 +
+# 词卡首静音。修法在**源文件**收紧这两处（find.zh 尾 + 词卡首留白 → ~0.05s，见本卡返工 trim 步骤），
+# 使 app 运行时与本预览的「找到X」衔接都变自然（~0.10s 自然短语间隔），本脚本只做忠实的顺序拼接。
+
 
 def zh_delivered_words() -> list[str]:
     data = json.loads(MISSING.read_text(encoding="utf-8"))
@@ -33,7 +37,12 @@ def zh_delivered_words() -> list[str]:
 
 
 def concat(find_zh: Path, word_zh: Path, out: Path) -> bool:
-    # concat filter: decode both, join, re-encode AAC 24k mono 96k (matches source family).
+    # Plain sequential concat of the EXACT runtime clips (find.zh then word.zh) — the combo
+    # preview is a faithful reproduction of what task-templates.js playComposite plays at
+    # runtime. The natural mid-combo gap therefore equals the runtime gap = find.zh's trailing
+    # silence + the word's leading silence; both are trimmed at the source (WTJ-20260708-004
+    # 返工: find.zh trail and word-card leads re-tightened to ~0.05s so this join is ~0.10s,
+    # not the ~0.30s Ethan rejected). Re-encode AAC 24k mono 96k (matches source family).
     fd, tmp = tempfile.mkstemp(suffix=".m4a", dir=str(out.parent)); os.close(fd)
     proc = subprocess.run(
         ["ffmpeg", "-hide_banner", "-nostats", "-y", "-i", str(find_zh), "-i", str(word_zh),
