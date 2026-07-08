@@ -327,3 +327,14 @@ Ethan 基于 design-review 波形给出精确算法，二轮 rework 仍被拒（
   island/kettle/lion/monkey/nest/nose/whale 等 10 词）不裁开头。rule 4：找/到 等有效发音完整保留（复测无裁）。
 - find.zh 内部「找—到」间隙（~0.2s）按 Ethan 明确的 leading+trailing 范围**保留自然录音、不动**（覆盖二轮的
   内部收紧）。90/100 词卡裁 leading,10 词 rule-3 跳过。combo=忠实 plain concat,实测 find→词卡 join≈0.10s。
+
+### 返工（WTJ-20260708-004 四轮）+ 根本矛盾升级
+
+r3 被拒（sun 类被 blip 骗、真词漏裁）。r4 改用波形红区(RMS-12%,对齐 audio_waveform_summary)定
+leading 边界 + rule2 合并短 blip + **软音节保护 guard**（红区内有 -40dB≥60ms run 后跟 gap 的独立
+软音节如 find.zh「找」保留,rule4）。ZH 词 95/100、find.zh(首+尾)、EN 词 36 处理。真静音裁剪较 r3
+更干净。**但暴露根本矛盾**：波形红区用**相对阈值**（该 clip max_rms 的 12%），凡起始音节比该词最响
+部分软（find.zh「找」比「到」软、dog/cat/ant 等软词整词、多帧峰值 -30~-48dB 但确是真发音）都被标红。
+「裁掉所有开头红区」与 rule4「不裁有效发音」对这些 clip 矛盾：裁 = 删软音节/整词（find.zh→「到」、
+dog→空）。~111 clip 裁后仍显开头红区,均为软发音、非静音（已核实峰值/-40dB 帧占比）。需 Ethan 决策
+（见看板 blocking）：保留软发音接受波形残红 / 裁穿软起音接受发音改变 / 视作录音响度问题重生成(TTS,另范围)。

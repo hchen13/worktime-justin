@@ -65,38 +65,146 @@ def peak_frames(path: Path):
     return peaks, dur
 
 
-# Density-based onset: a real syllable (even a soft/choppy one like find.zh's 「找」, which
-# is brief and dips below -40dB mid-syllable at 20ms resolution) shows several above-threshold
-# frames clustered within a short window; an isolated blip (rule 1: 马's pre-red-zone spike;
-# rule 2: the short noise that splits sun/zucchini's leading silence) shows only 1-2. So the
-# onset = first above-threshold frame that has >= ONSET_MIN_COUNT above-threshold frames within
-# the following ONSET_WINDOW. This captures 「找」and rejects blips without a fragile
-# sustained-run length that would either skip soft syllables or accept blips.
-ONSET_WINDOW_S = 0.15
-ONSET_MIN_COUNT = 3
+# Bridged-sustained-run onset. A real syllable (even a soft/choppy one like find.zh's 「找」,
+# which dips below -40dB mid-syllable at 20ms resolution: 0.34* 0.36* [0.38 dip] 0.40*) is a
+# CONTIGUOUS above-threshold run once short internal dips (<= BRIDGE) are bridged, and it spans
+# >= MIN_RUN. Isolated blips (rule 1: 马 pre-spike; rule 2: the short noises that split
+# sun/zucchini's leading silence into segments) are short (<= a couple frames) and separated by
+# gaps > BRIDGE, so each bridged run stays < MIN_RUN and is skipped — the onset lands on the real
+# word, not on a leading blip (which a plain density window would falsely accept). Verified:
+# find.zh 「找」(80ms bridged) -> onset kept; sun's leading blips -> skipped, onset at the real
+# word (~0.74).
+BRIDGE_S = 0.04     # bridge above-threshold runs separated by dips up to this (within-syllable)
+MIN_RUN_S = 0.06    # a bridged run this long counts as real speech (a syllable), not a blip
+
+
+def _first_real_run_start(peaks, thr):
+    n = len(peaks)
+    bridge = max(1, int(BRIDGE_S / FRAME_S))
+    need = max(1, int(MIN_RUN_S / FRAME_S))
+    i = 0
+    while i < n:
+        if peaks[i] >= thr:
+            run_start = i
+            j = i
+            gap = 0
+            last_above = i
+            while j < n:
+                if peaks[j] >= thr:
+                    last_above = j
+                    gap = 0
+                else:
+                    gap += 1
+                    if gap > bridge:
+                        break
+                j += 1
+            if (last_above - run_start + 1) >= need:
+                return run_start
+            i = last_above + 1
+        else:
+            i += 1
+    return None
 
 
 def onset_frame(peaks, thr):
-    win = max(1, int(ONSET_WINDOW_S / FRAME_S))
-    n = len(peaks)
-    for i in range(n):
-        if peaks[i] >= thr:
-            cnt = sum(1 for k in range(i, min(n, i + win)) if peaks[k] >= thr)
-            if cnt >= ONSET_MIN_COUNT:
-                return i
-    return None
+    return _first_real_run_start(peaks, thr)
 
 
 def offset_frame(peaks, thr):
-    """Mirror of onset_frame from the end: index+1 of the last real-speech frame."""
-    win = max(1, int(ONSET_WINDOW_S / FRAME_S))
-    n = len(peaks)
-    for i in range(n - 1, -1, -1):
+    """Mirror: index+1 of the last real-speech frame (run reversed)."""
+    rev = list(reversed(peaks))
+    r = _first_real_run_start(rev, thr)
+    if r is None:
+        return None
+    return len(peaks) - r
+
+
+# ---- RMS-12%-of-max red zones: EXACT replica of gen-design-review.py audio_waveform_summary,
+#      so this trim's "leading red zone" == the red zone Ethan sees in the design-review waveform.
+RMS_FRAME_S = 0.02
+RED_MIN_S = 0.12          # a red (low-energy) zone must span >= 120ms
+RED_MERGE_GAP_S = 0.05    # rule 2: bridge non-red gaps <= 50ms (blips that split a leading red zone)
+
+
+def rms_frames(path: Path):
+    proc = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(RATE),
+         "-f", "s16le", "pipe:1"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if proc.returncode != 0 or not proc.stdout:
+        return None, 0.0
+    s = array("h"); s.frombytes(proc.stdout)
+    total = len(s)
+    if total == 0:
+        return None, 0.0
+    dur = total / RATE
+    frame = max(1, int(RATE * RMS_FRAME_S))
+    vals = []
+    for start in range(0, total, frame):
+        chunk = s[start:start + frame]
+        if not chunk:
+            continue
+        vals.append(math.sqrt(sum((v / 32768.0) ** 2 for v in chunk) / len(chunk)))
+    return vals, dur
+
+
+def red_zones(rms, dur):
+    thr = max(0.006, min(0.035, (max(rms) if rms else 0.0) * 0.12))
+    need = max(1, int(RED_MIN_S / RMS_FRAME_S))
+    zones, gs = [], None
+    for idx, v in enumerate(rms + [1.0]):
+        low = v < thr
+        if low and gs is None:
+            gs = idx
+        elif not low and gs is not None:
+            if idx - gs >= need:
+                zones.append((gs * RMS_FRAME_S, min(dur, idx * RMS_FRAME_S)))
+            gs = None
+    return zones
+
+
+def leading_prefix_end(path: Path, peaks, dur):
+    """End of the leading low-energy prefix per Ethan's waveform algorithm, or 0.0 if the clip
+    starts with speech (rule 3). Merges rule-2 split noises; but if a distinct SOFT syllable
+    (a -40dB run >= MIN_RUN followed by a real gap, e.g. find.zh 「找」) sits inside the leading
+    red zone, stop there so that real syllable is preserved (rule 4)."""
+    rms, _ = rms_frames(path)
+    zones = red_zones(rms, dur)
+    if not zones or zones[0][0] > 0.06:      # rule 3: starts with speech -> no leading prefix
+        return 0.0
+    end = zones[0][1]
+    for s, e in zones[1:]:                     # rule 2: merge red zones split by <=50ms non-red blips
+        if s - end <= RED_MERGE_GAP_S:
+            end = e
+        else:
+            break
+    # rule 4 guard: if a distinct real syllable (-40dB run >= MIN_RUN, then a >=80ms gap) begins
+    # before `end`, keep from that syllable instead of trimming through it.
+    thr = PEAK_THRESH
+    bridge = max(1, int(BRIDGE_S / FRAME_S)); need = max(1, int(MIN_RUN_S / FRAME_S))
+    n = len(peaks); i = 0
+    while i < n and i * FRAME_S < end:
         if peaks[i] >= thr:
-            cnt = sum(1 for k in range(max(0, i - win + 1), i + 1) if peaks[k] >= thr)
-            if cnt >= ONSET_MIN_COUNT:
-                return i + 1
-    return None
+            j = i; last = i; gap = 0
+            while j < n:
+                if peaks[j] >= thr:
+                    last = j; gap = 0
+                else:
+                    gap += 1
+                    if gap > bridge:
+                        break
+                j += 1
+            if (last - i + 1) >= need:
+                # a real run; is it followed by a real gap (>=80ms below thr) before `end`?
+                g = 0; k = last + 1
+                while k < n and peaks[k] < thr:
+                    g += 1; k += 1
+                if g * FRAME_S >= 0.08:
+                    return i * FRAME_S       # distinct soft syllable -> keep it
+                # otherwise it's a continuous ramp into the loud word -> keep scanning
+            i = last + 1
+        else:
+            i += 1
+    return end
 
 
 def trim_one(path: Path, do_trailing: bool) -> dict:
@@ -104,14 +212,14 @@ def trim_one(path: Path, do_trailing: bool) -> dict:
     if peaks is None:
         return {"file": str(path), "error": "decode failed", "rewritten": False}
     thr = PEAK_THRESH
-    onf = onset_frame(peaks, thr)
+    lead_end = leading_prefix_end(path, peaks, dur)
+    onf = int(lead_end / FRAME_S) if lead_end > 0 else 0
     off = offset_frame(peaks, thr)
+    if off is None:
+        off = len(peaks)
     r = {"file": str(path.relative_to(REPO)) if path.is_relative_to(REPO) else str(path),
-         "duration_s": round(dur, 3), "onset_s": round((onf or 0) * FRAME_S, 3),
-         "offset_s": round((off or len(rms)) * FRAME_S, 3), "rewritten": False}
-    if onf is None:
-        r["error"] = "no sustained speech found"
-        return r
+         "duration_s": round(dur, 3), "onset_s": round(onf * FRAME_S, 3),
+         "offset_s": round(off * FRAME_S, 3), "rewritten": False}
     onset_s = onf * FRAME_S
     offset_s = off * FRAME_S
     new_start = 0.0
